@@ -1,0 +1,56 @@
+{
+  "name": "jora",
+  "version": "1.0.0",
+  "description": "JavaScript object sample query engine",
+  "keywords": [],
+  "homepage": "https://github.com/lahmatiy/jora",
+  "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
+  "maintainers": [
+    {
+      "name": "Roman Dvornov",
+      "email": "rdvornov@gmail.com",
+      "github-username": "lahmatiy"
+    }
+  ],
+  "license": "MIT",
+  "repository": "csstree/csstree",
+  "bugs": {
+    "url": "https://github.com/csstree/csstree/issues"
+  },
+  "main": "./src/index",
+  "browser": {
+    "./src/parser.js": "./dist/parser.js"
+  },
+  "scripts": {
+    "lint": "eslint src test",
+    "lint-and-test": "npm run lint && npm test",
+    "test": "mocha --reporter progress",
+    "build": "npm run build:parser && browserify --standalone jora src/index.js > dist/jora.js && uglifyjs dist/jora.js --compress --mangle -o dist/jora.min.js",
+    "build:parser": "node -e \"console.log(require('./src/parser').generateModule() + ';module.exports=parser;');\" > dist/parser.js",
+    "prepublish": "npm run build",
+    "coverage": "istanbul cover _mocha -- -R min",
+    "travis": "npm run lint-and-test && npm run coveralls",
+    "coveralls": "istanbul cover _mocha --report lcovonly -- -R min && cat ./coverage/lcov.info | coveralls"
+  },
+  "dependencies": {
+    "jison": "^0.4.18"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.2",
+    "coveralls": "^3.0.2",
+    "eslint": "^5.1.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^5.2.0",
+    "uglify-es": "^3.3.9"
+  },
+  "engines": {
+    "node": "^8.0.0"
+  },
+  "files": [
+    "dist",
+    "src",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ]
+}
