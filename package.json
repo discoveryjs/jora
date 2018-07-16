@@ -13,9 +13,9 @@
     }
   ],
   "license": "MIT",
-  "repository": "csstree/csstree",
+  "repository": "lahmatiy/jora",
   "bugs": {
-    "url": "https://github.com/csstree/csstree/issues"
+    "url": "https://github.com/lahmatiy/jora/issues"
   },
   "main": "./src/index",
   "browser": {
