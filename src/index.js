@@ -1,5 +1,6 @@
 const parser = require('./parser');
 const hasOwnProperty = Object.prototype.hasOwnProperty;
+const cache = Object.create(null);
 
 const TYPE_ARRAY = 1;
 const TYPE_OBJECT = 2;
@@ -300,14 +301,13 @@ var methods = Object.freeze({
     }
 });
 
-module.exports = function createQuery(expression, extraFunctions, debug) {
-    var localMethods = extraFunctions ? Object.assign({}, methods, extraFunctions) : methods;
-    var tree = parser.parse(expression.trim());
+function compileFunction(query, debug) {
+    var tree = parser.parse(query);
     var js = [];
 
     if (debug) {
-        console.log('\n=======');
-        console.log('expression:', expression);
+        console.log('\n==== compile ===');
+        console.log('query:', query);
         console.log('tree:', tree);
     }
 
@@ -323,14 +323,19 @@ module.exports = function createQuery(expression, extraFunctions, debug) {
         console.log('js', js.join(''));
     }
 
-    var func = new Function('fn', 'method', 'data', 'subject', 'current', 'return ' + js.join(''));
+    return cache[query] = new Function('fn', 'method', 'data', 'subject', 'var current = data;\nreturn ' + js.join(''));
+}
+
+module.exports = function createQuery(query, extraFunctions, debug) {
+    var localMethods = extraFunctions ? Object.assign({}, methods, extraFunctions) : methods;
+    var func = cache[query.trim()] || compileFunction(query.trim(), debug);
 
     if (debug) {
         console.log('fn', func.toString());
     }
 
     return function(data, subject) {
-        return func(buildin, localMethods, data, subject, data);
+        return func(buildin, localMethods, data, subject);
     };
 };
 
