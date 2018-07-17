@@ -437,6 +437,13 @@ describe('syntax test', () => {
                     .filter(item => item.errors && item.errors.length)
             );
         });
+
+        it('should allow to use on separate line', () => {
+            assert.deepEqual(
+                query('errors.owner\n[type="css"]\n.type')(data),
+                ['css']
+            );
+        });
     });
 
     describe('method', () => {

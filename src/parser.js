@@ -22,7 +22,7 @@ var grammar = {
             // ['\\%', 'return "%";'],
             ['\\({ows}', 'return "(";'],
             ['{ows}\\)', 'return ")";'],
-            ['\\[{ows}', 'return "[";'],
+            ['{ows}\\[{ows}', 'return "[";'],
             ['{ows}\\]', 'return "]";'],
             ['\\{{ows}', 'return "{";'],
             ['{ows}\\}', 'return "}";'],
