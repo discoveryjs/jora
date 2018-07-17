@@ -194,6 +194,9 @@ var buildin = {
 };
 
 var methods = {
+    bool: function(current) {
+        return buildin.bool(current);
+    },
     keys: function(current) {
         return Object.keys(current || {});
     },

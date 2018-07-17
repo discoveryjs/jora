@@ -494,7 +494,38 @@ describe('syntax test', () => {
             );
         });
 
-        describe('buildin functions', () => {
+        describe('buildin methods', () => {
+            describe('bool()', () => {
+                it('basic', () => {
+                    assert.equal(
+                        query('bool()')(data),
+                        true
+                    );
+                });
+
+                it('should return false for empty arrays', () => {
+                    assert.equal(
+                        query('[foo].bool()')(data),
+                        false
+                    );
+                    assert.deepEqual(
+                        query('().bool()')(data),
+                        false
+                    );
+                });
+
+                it('should return false for empty objects', () => {
+                    assert.equal(
+                        query('bool()')({}),
+                        false
+                    );
+                    assert.deepEqual(
+                        query('bool()')({ foo: 1}),
+                        true
+                    );
+                });
+            });
+
             describe('size()', () => {
                 it('basic', () => {
                     assert.equal(
