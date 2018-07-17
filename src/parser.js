@@ -89,6 +89,7 @@ var grammar = {
 
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
+            ['REGEXP', code`$1`],
             ['function', code`$1`],
 
             ['array', code`$1`],
@@ -106,7 +107,7 @@ var grammar = {
             ['e <= e', code`fn.lte($1, $3)`],
             ['e > e', code`fn.gt($1, $3)`],
             ['e >= e', code`fn.gte($1, $3)`],
-            ['e ~= REGEXP', code`fn.regexp($1, $3)`]
+            ['e ~= e', code`fn.regexp($1, $3)`]
         ],
 
         data: [

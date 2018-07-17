@@ -34,6 +34,18 @@ describe('syntax test', () => {
             );
         });
 
+        it('a regexp', () => {
+            assert.deepEqual(
+                query('/foo/')(data),
+                /foo/
+            );
+
+            assert.deepEqual(
+                query('/foo/i')(data),
+                /foo/i
+            );
+        });
+
         it('a function', () => {
             assert.strictEqual(
                 query('<foo>')(data).toString(),
@@ -948,6 +960,15 @@ describe('syntax test', () => {
             it('should apply as a filter for array', () => {
                 assert.deepEqual(
                     query('filename~=/\\.js$/')(data),
+                    data
+                        .map(item => item.filename)
+                        .filter(item => /\.js$/.test(item))
+                );
+            });
+
+            it('regexp can be fetched by get request', () => {
+                assert.deepEqual(
+                    query('filename~=#.rx')(data, { rx: /\.js$/ }),
                     data
                         .map(item => item.filename)
                         .filter(item => /\.js$/.test(item))
