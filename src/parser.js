@@ -89,7 +89,6 @@ var grammar = {
 
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
-            ['object', code`$1`],
             ['function', code`$1`],
 
             ['array', code`$1`],
@@ -120,7 +119,8 @@ var grammar = {
             ['@', code`data`],
             ['#', code`subject`],
             ['$', code`current`],
-            ['SYMBOL', code`fn.get(current, $1)`]
+            ['SYMBOL', code`fn.get(current, $1)`],
+            ['object', code`$1`]
         ],
 
         query: [

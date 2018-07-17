@@ -80,17 +80,31 @@ describe('syntax test', () => {
             );
         });
 
-        it('should address to <data> when @ is using', () => {
+        it('should refer to <data> when @ is using', () => {
             assert.deepEqual(
                 query('@')(data),
                 data
             );
         });
 
-        it('should address to <subject> when # is using', () => {
+        it('should refer to <subject> when # is using', () => {
             assert.deepEqual(
                 query('#')(data, data[0]),
                 data[0]
+            );
+        });
+
+        it('a symbol can be a data root (alias to $.symbol)', () => {
+            assert.deepEqual(
+                query('errors')(data),
+                query('$.errors')(data)
+            );
+        });
+
+        it('an object can be a data root', () => {
+            assert.deepEqual(
+                query('{ foo: 1 }.({ foo: foo > 0 })')(data),
+                { foo: true}
             );
         });
     });
@@ -521,6 +535,14 @@ describe('syntax test', () => {
                     );
                     assert.deepEqual(
                         query('bool()')({ foo: 1}),
+                        true
+                    );
+                    assert.equal(
+                        query('{}.bool()')(),
+                        false
+                    );
+                    assert.equal(
+                        query('{ foo: 1 }.bool()')(),
                         true
                     );
                 });
