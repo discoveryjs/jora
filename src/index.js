@@ -29,7 +29,7 @@ function addToSet(value, set) {
     }
 }
 
-var buildin = {
+var buildin = Object.freeze({
     type: function(value) {
         if (Array.isArray(value)) {
             return TYPE_ARRAY;
@@ -191,9 +191,9 @@ var buildin = {
                 return [];
         }
     }
-};
+});
 
-var methods = {
+var methods = Object.freeze({
     bool: function(current) {
         return buildin.bool(current);
     },
@@ -298,7 +298,7 @@ var methods = {
     map: function(current, fn) {
         return buildin.get(current, fn);
     }
-};
+});
 
 module.exports = function createQuery(expression, extraFunctions, debug) {
     var localMethods = extraFunctions ? Object.assign({}, methods, extraFunctions) : methods;
@@ -333,3 +333,6 @@ module.exports = function createQuery(expression, extraFunctions, debug) {
         return func(buildin, localMethods, data, subject, data);
     };
 };
+
+module.exports.buildin = buildin;
+module.exports.methods = methods;
