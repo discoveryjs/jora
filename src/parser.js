@@ -179,6 +179,7 @@ var grammar = {
         property: [
             ['SYMBOL', code`$1: fn.get(current, $1)`],
             ['SYMBOL : e', code`$1: $3`],
+            ['...', code`...current`],
             ['... data', code`...$2`]
         ],
 

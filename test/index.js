@@ -56,14 +56,14 @@ describe('syntax test', () => {
         describe('an object', () => {
             it('empty object', () => {
                 assert.deepEqual(
-                    query('{}')(data),
+                    query('{}')(),
                     {}
                 );
             });
 
             it('single property object', () => {
                 assert.deepEqual(
-                    query('{ foo: 1 }')(data),
+                    query('{ foo: 1 }')(),
                     { foo: 1 }
                 );
             });
@@ -77,8 +77,20 @@ describe('syntax test', () => {
 
             it('spread object', () => {
                 assert.deepEqual(
-                    query('{ foo: 1, ...# }')(data, data[1]),
+                    query('{ foo: 1, ...@ }')(data[1]),
                     Object.assign({ foo: 1 }, data[1])
+                );
+            });
+
+            it('... is an alias for ...$', () => {
+                assert.deepEqual(
+                    query('{ foo: 1, ...,  baz: 3 }')({ foo: 2, bar: 2 }),
+                    query('{ foo: 1, ...$, baz: 3 }')({ foo: 2, bar: 2 })
+                );
+
+                assert.deepEqual(
+                    query('{ foo: 1, ...,  baz: 3 }')({ foo: 2, bar: 2 }),
+                    Object.assign({ foo: 1 }, { foo: 2, bar: 2 }, { baz: 3 })
                 );
             });
         });
