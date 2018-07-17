@@ -1273,4 +1273,25 @@ describe('syntax test', () => {
             );
         });
     });
+
+    describe('misc', () => {
+        it('comments', () => {
+            assert.deepEqual(
+                query('// empty query')(data),
+                data
+            );
+            assert.deepEqual(
+                query(`
+                    errors
+                    // comments
+                    .owner
+                    // can be
+                    [type="css"]// at any place
+                    // until the line ending
+                    .type
+                `)(data),
+                ['css']
+            );
+        });
+    });
 });

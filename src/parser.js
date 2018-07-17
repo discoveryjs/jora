@@ -55,7 +55,10 @@ var grammar = {
             ['#', 'return "#";'],
             ['\\$', 'return "$";'],
 
-            // End
+            // comment
+            ['{ows}//.*?(\\n|$)', '/* a comment */'],
+
+            // end
             ['$', 'return "EOF";']
         ]
     },
