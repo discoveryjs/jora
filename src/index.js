@@ -167,7 +167,7 @@ var buildin = Object.freeze({
                 return [...result];
 
             default:
-                return fn(data);
+                return data !== undefined ? fn(data) : data;
         }
     },
     recursive: function(data, getter) {

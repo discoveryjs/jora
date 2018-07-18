@@ -539,6 +539,16 @@ describe('syntax test', () => {
             );
         });
 
+        it('should not call a method in map when undefined on object path', () => {
+            const extra = createExtraFn();
+
+            query('dontexists.(log())', extra)({});
+            assert.deepEqual(
+                extra.calls,
+                []
+            );
+        });
+
         describe('buildin methods', () => {
             describe('bool()', () => {
                 it('basic', () => {
