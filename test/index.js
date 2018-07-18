@@ -690,6 +690,41 @@ describe('syntax test', () => {
                 });
             });
 
+            describe('mapToArray()', () => {
+                it('basic', () => {
+                    assert.deepEqual(
+                        query('mapToArray("foo")')({
+                            a: { value: 1 },
+                            b: { value: 2 }
+                        }),
+                        [
+                            { foo: 'a', value: 1 },
+                            { foo: 'b', value: 2 }
+                        ]
+                    );
+                });
+
+                it('should use key property to store key value when name is not passed', () => {
+                    assert.deepEqual(
+                        query('mapToArray()')({
+                            a: { value: 1 },
+                            b: { value: 2 }
+                        }),
+                        [
+                            { key: 'a', value: 1 },
+                            { key: 'b', value: 2 }
+                        ]
+                    );
+                });
+
+                it('should not fail on non-object values', () => {
+                    assert.deepEqual(
+                        query('mapToArray()')(),
+                        []
+                    );
+                });
+            });
+
             describe('sort()', () => {
                 it('basic', () => {
                     assert.deepEqual(

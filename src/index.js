@@ -219,6 +219,19 @@ var methods = Object.freeze({
             .keys(current)
             .map(key => ({ key, value: current[key] }));
     },
+    mapToArray: function(current, keyProperty = 'key') {
+        const result = [];
+
+        for (let key in current) {
+            if (hasOwnProperty.call(current, key)) {
+                result.push(
+                    Object.assign({ [keyProperty]: key }, current[key])
+                );
+            }
+        }
+
+        return result;
+    },
     size: function(current) {
         return (current && current.length) || 0;
     },
