@@ -42,6 +42,7 @@ var grammar = {
             ['{ws}not{ws}in{ws}', 'return "NOTIN";'],
             ['not?{ws}', 'return "NOT";'],
 
+            ['::self', 'return "SELF";'],
             ['[0-9]+(?:\\.[0-9]+)?\\b', 'return "NUMBER";'], // 212.321
             ['"(?:\\\\.|[^"])*"', 'return "STRING";'], // "foo" "with \" escaped"
             ['/.+/i?', 'return "REGEXP"'],    // /foo/i
@@ -89,6 +90,10 @@ var grammar = {
 
         e: [
             ['data', code`$1`],
+
+            ['SELF', code`(current) => self(current, subject)`],
+            ['SELF ( )', code`self(current, subject)`],
+            ['SELF ( e )', code`self($3, subject)`],
 
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
