@@ -8,10 +8,14 @@ JavaScript object sample query engine
 
 ## Quick demo
 
-Fetch npm dependencies that have more than one version.
+Get npm dependency paths (as a tree) that have packages with more than one version:
 
 ```js
 const jora = require('../src');
+
+function printTree() {
+    // see implementation in examples/npm-ls.js
+}
 
 require('child_process')
     .exec('npm ls --json', (error, stdout) => {
@@ -20,43 +24,56 @@ require('child_process')
         }
 
         const npmTree = JSON.parse(stdout);
-        console.log(
-            jora(`
-                ..(
-                    dependencies
-                        .entries()
-                        .({
-                            name: key,
-                            ...value
-                        })
-                )
-                .group(<name>, <version>)[value.size() > 1]
-                .({ name: key, versions: value.sort() })
-            `)(npmTree)
-        );
+        const multipleVersionPackages = jora(`
+            ..(dependencies.mapToArray("name"))
+            .group(<name>, <version>)
+            .({ name: key, versions: value })
+            [versions.size() > 1]
+        `)(npmTree);
+
+        const depsPathsToMultipleVersionPackages = jora(`
+            .({
+                name,
+                version,
+                otherVersions: #[name=@.name].versions - version,
+                dependencies: dependencies
+                    .mapToArray("name")
+                    .map(::self)
+                    [name in #.name or dependencies]
+            })
+        `)(npmTree, multipleVersionPackages);
+
+        printTree(depsPathsToMultipleVersionPackages);
     });
 ```
 
 Example of output:
 
 ```
-[ { name: 'glob', versions: [ '5.0.15', '7.1.2' ] },
-  { name: 'inherits', versions: [ '2.0.1', '2.0.3' ] },
-  { name: 'punycode', versions: [ '1.3.2', '1.4.1' ] },
-  { name: 'resolve', versions: [ '1.1.7', '1.8.1' ] },
-  { name: 'util', versions: [ '0.10.3', '0.10.4' ] },
-  { name: 'minimist', versions: [ '0.0.8', '1.2.0' ] },
-  { name: 'escodegen', versions: [ '1.3.3', '1.8.1' ] },
-  { name: 'esprima', versions: [ '1.1.1', '2.7.3', '4.0.1' ] },
-  { name: 'supports-color', versions: [ '3.2.3', '5.4.0' ] },
-  { name: 'wordwrap', versions: [ '0.0.2', '0.0.3', '1.0.0' ] },
-  { name: 'commander', versions: [ '2.13.0', '2.15.1' ] },
-  { name: 'source-map',
-    versions: [ '0.1.43', '0.2.0', '0.4.4', '0.5.7', '0.6.1' ] },
-  { name: 'isarray', versions: [ '1.0.0', '2.0.4' ] },
-  { name: 'estraverse', versions: [ '1.5.1', '1.9.3' ] },
-  { name: 'esutils', versions: [ '1.0.0', '2.0.2' ] },
-  { name: 'has-flag', versions: [ '1.0.0', '3.0.0' ] } ]
+jora@1.0.0
+├─ browserify@16.2.2
+│  ├─ assert@1.4.1
+│  │  └─ util@0.10.3 [other versions: 0.10.4]
+│  │     └─ inherits@2.0.1 [other versions: 2.0.3]
+│  ├─ browser-pack@6.1.0
+│  │  └─ combine-source-map@0.8.0
+│  │     ├─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
+│  │     └─ inline-source-map@0.6.2
+│  │        └─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
+│  ├─ browser-resolve@1.11.3
+│  │  └─ resolve@1.1.7 [other versions: 1.8.1]
+│  ├─ concat-stream@1.6.2
+│  │  └─ inherits@2.0.3 [other versions: 2.0.1]
+│  ├─ crypto-browserify@3.12.0
+│  │  ├─ browserify-cipher@1.0.1
+│  │  │  ├─ browserify-aes@1.2.0
+│  │  │  │  └─ inherits@2.0.3 [other versions: 2.0.1]
+│  │  │  └─ browserify-des@1.0.2
+│  │  │     ├─ des.js@1.0.0
+│  │  │     │  └─ inherits@2.0.3 [other versions: 2.0.1]
+│  │  │     └─ inherits@2.0.3 [other versions: 2.0.1]
+│  │  ├─ browserify-sign@4.0.4
+...
 ```
 
 ## License

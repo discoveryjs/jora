@@ -1,5 +1,11 @@
 const jora = require('../src');
 
+function printTree(pkg, level = '') {
+    console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [other versions: ${pkg.otherVersions.join(', ')}]` : ''));
+    level = level.replace('└─ ', '   ').replace('├─ ', '│  ');
+    pkg.dependencies.forEach((dep, idx, arr) => printTree(dep, level + (idx === arr.length - 1 ? '└─ ' : '├─ ')));
+}
+
 require('child_process')
     .exec('npm ls --json', {maxBuffer: 1024 * 1024}, (error, stdout) => {
         if (!stdout) {
@@ -8,39 +14,27 @@ require('child_process')
 
         try {
             const data = JSON.parse(stdout);
-            const dup = jora(`
-                ..(
-                    dependencies
-                        .entries()
-                        .({
-                            name: key,
-                            ...value
-                        })
-                )
-                .group(<name>, <version>)[value.size() > 1]
-                .({ name: key, versions: value.sort() })
+            const multipleVersionPackages = jora(`
+                ..(dependencies.mapToArray("name"))
+                .group(<name>, <version>)
+                .({ name: key, versions: value })
+                [versions.size() > 1]
             `)(data);
-            console.log(
-                dup
-            );
+
+            const depsPathsToMultipleVersionPackages = jora(`
+                .({
+                    name,
+                    version,
+                    otherVersions: #[name=@.name].versions - version,
+                    dependencies: dependencies
+                        .mapToArray("name")
+                        .map(::self)
+                        [name in #.name or dependencies]
+                })
+            `)(data, multipleVersionPackages);
+
+            printTree(depsPathsToMultipleVersionPackages);
         } catch (e) {
             console.error('Error: ', e);
         }
-
-        // console.log(
-        //     jora(`
-        //         ..(
-        //             dependencies
-        //                 .entries()
-        //                 .({
-        //                     name: key,
-        //                     ...value
-        //                 })
-        //         )
-        //         .({
-        //             name,
-        //             deps: dependencies.keys()[$ in #.name]
-        //         })[deps]
-        //     `)(data, dup)
-        // );
     });
