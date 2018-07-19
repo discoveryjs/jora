@@ -1404,6 +1404,14 @@ describe('syntax test', () => {
     });
 
     describe('misc', () => {
+        it('can be used with template literals', () => {
+            assert.deepEqual(
+                query`filename`(data),
+                data
+                    .map(item => item.filename)
+            );
+        });
+
         it('comments', () => {
             assert.deepEqual(
                 query('// empty query')(data),

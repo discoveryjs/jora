@@ -314,13 +314,13 @@ var methods = Object.freeze({
     }
 });
 
-function compileFunction(query, debug) {
-    var tree = parser.parse(query);
+function compileFunction(expression, debug) {
+    var tree = parser.parse(expression);
     var js = [];
 
     if (debug) {
         console.log('\n==== compile ===');
-        console.log('query:', query);
+        console.log('expression:', expression);
         console.log('tree:', tree);
     }
 
@@ -336,12 +336,14 @@ function compileFunction(query, debug) {
         console.log('js', js.join(''));
     }
 
-    return cache[query] = new Function('fn', 'method', 'data', 'subject', 'self', 'var current = data;\nreturn ' + js.join(''));
+    return cache[expression] = new Function('fn', 'method', 'data', 'subject', 'self', 'var current = data;\nreturn ' + js.join(''));
 }
 
-module.exports = function createQuery(query, extraFunctions, debug) {
+module.exports = function createQuery(expression, extraFunctions, debug) {
+    expression = String(expression).trim();
+
     var localMethods = extraFunctions ? Object.assign({}, methods, extraFunctions) : methods;
-    var func = cache[query.trim()] || compileFunction(query.trim(), debug);
+    var func = cache[expression] || compileFunction(expression, debug);
 
     if (debug) {
         console.log('fn', func.toString());
