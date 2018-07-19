@@ -1,3 +1,5 @@
+// See an equivalent solution in plain JavaScript in npm-ls-in-js.js
+
 const jora = require('../src');
 
 function printTree(pkg, level = '') {
@@ -13,25 +15,25 @@ require('child_process')
         }
 
         try {
-            const data = JSON.parse(stdout);
-            const multipleVersionPackages = jora(`
+            const tree = JSON.parse(stdout);
+            const multipleVersionPackages = jora`
                 ..(dependencies.mapToArray("name"))
                 .group(<name>, <version>)
-                .({ name: key, versions: value })
+                .({ name: key, versions: value.sort() })
                 [versions.size() > 1]
-            `)(data);
+            `(tree);
 
-            const depsPathsToMultipleVersionPackages = jora(`
-                .({
+            const depsPathsToMultipleVersionPackages = jora`
+                .($1:{
                     name,
                     version,
-                    otherVersions: #[name=@.name].versions - version,
+                    otherVersions: #[name=$1.name].versions - version,
                     dependencies: dependencies
                         .mapToArray("name")
                         .map(::self)
-                        [name in #.name or dependencies]
+                        [$2: name in #.name or dependencies]
                 })
-            `)(data, multipleVersionPackages);
+            `(tree, multipleVersionPackages);
 
             printTree(depsPathsToMultipleVersionPackages);
         } catch (e) {
