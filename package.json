@@ -1,6 +1,6 @@
 {
   "name": "jora",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "JavaScript object sample query engine",
   "keywords": [],
   "homepage": "https://github.com/lahmatiy/jora",
