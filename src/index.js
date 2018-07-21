@@ -233,7 +233,16 @@ var methods = Object.freeze({
         return result;
     },
     size: function(current) {
-        return (current && current.length) || 0;
+        switch (buildin.type(current)) {
+            case TYPE_ARRAY:
+                return current.length;
+
+            case TYPE_OBJECT:
+                return Object.keys(current).length;
+
+            default:
+                return (current && current.length) || 0;
+        }
     },
     sort: function(current, fn) {
         if (buildin.type(current) !== TYPE_ARRAY) {
