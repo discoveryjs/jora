@@ -175,7 +175,7 @@ var grammar = {
         ],
 
         object: [
-            ['{ }', code`{}`],
+            ['{ }', code`({})`],
             ['{ properties }', code`({ $2 })`]
         ],
 

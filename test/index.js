@@ -225,6 +225,14 @@ describe('syntax test', () => {
                     }))
             );
         });
+
+        it('should work as a map (empty object)', () => {
+            assert.deepEqual(
+                query('.({ })')(data),
+                data
+                    .map(() => ({ }))
+            );
+        });
     });
 
     describe('recursive path', () => {
