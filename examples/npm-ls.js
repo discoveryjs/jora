@@ -24,14 +24,14 @@ require('child_process')
             `(tree);
 
             const depsPathsToMultipleVersionPackages = jora`
-                .($1:{
+                .({
                     name,
                     version,
-                    otherVersions: #[name=$1.name].versions - version,
+                    otherVersions: #[name=@.name].versions - version,
                     dependencies: dependencies
                         .mapToArray("name")
                         .map(::self)
-                        [$2: name in #.name or dependencies]
+                        [name in #.name or dependencies]
                 })
             `(tree, multipleVersionPackages);
 
