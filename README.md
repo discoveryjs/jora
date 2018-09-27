@@ -6,6 +6,8 @@
 
 JavaScript object sample query engine
 
+> STATUS: A proof of concept
+
 ## Quick demo
 
 Get npm dependency paths (as a tree) that have packages with more than one version:
