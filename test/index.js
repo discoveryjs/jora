@@ -1054,6 +1054,13 @@ describe('syntax test', () => {
                         .filter(item => /\.js$/.test(item))
                 );
             });
+
+            it('issue #2 - regexp shouldn\'t be hungry', () => {
+                assert.deepEqual(
+                    query('[filename~=/./ and "a/b" in refs]')(data),
+                    []
+                );
+            });
         });
 
         describe('not', () => {
@@ -1433,6 +1440,7 @@ describe('syntax test', () => {
                 query('// empty query')(data),
                 data
             );
+
             assert.deepEqual(
                 query(`
                     errors
@@ -1444,6 +1452,27 @@ describe('syntax test', () => {
                     .type
                 `)(data),
                 ['css']
+            );
+
+            assert.deepEqual(
+                query(`
+                    (errors)
+                    // comments
+                    .owner
+                    // can be
+                    // at any place
+                    [type="css"]
+                    // and contain /anything/ you like "foo/bar"
+                    .type
+                    // until the
+                    // line ending
+                `)(data),
+                ['css']
+            );
+
+            assert.deepEqual(
+                query('(1)\n//\n///\n')(data),
+                [1]
             );
         });
     });
