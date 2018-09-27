@@ -91,7 +91,7 @@ var grammar = {
         e: [
             ['data', code`$1`],
 
-            ['SELF', code`(current) => self(current, subject)`],
+            ['SELF', code`current => self(current, subject)`],
             ['SELF ( )', code`self(current, subject)`],
             ['SELF ( e )', code`self($3, subject)`],
 
@@ -101,7 +101,7 @@ var grammar = {
             ['function', code`$1`],
 
             ['array', code`$1`],
-            ['array query', code`((current) => $2)($1)`],
+            ['array query', code`(current => $2)($1)`],
             ['NOT e', code`!fn.bool($2)`],
             ['e IN e', code`fn.in($1, $3)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
@@ -120,7 +120,7 @@ var grammar = {
 
         data: [
             ['dataRoot', code`$1`],
-            ['dataRoot query', code`((current) => $2)($1)`],
+            ['dataRoot query', code`(current => $2)($1)`],
             ['query', code`$1`]
         ],
 
@@ -142,20 +142,20 @@ var grammar = {
         path: [
             ['. SYMBOL', code`fn.get(current, $2)`],
             ['query . SYMBOL', code`fn.get($1, $3)`],
-            ['. ( e )', code`fn.get(current, (current) => $3)`],
-            ['query . ( e )', code`fn.get($1, (current) => $4)`]
+            ['. ( e )', code`fn.get(current, current => $3)`],
+            ['query . ( e )', code`fn.get($1, current => $4)`]
         ],
 
         recursive: [
             ['.. SYMBOL', code`fn.recursive(current, $2)`],
             ['query .. SYMBOL', code`fn.recursive($1, $3)`],
-            ['.. ( e )', code`fn.recursive(current, (current) => $3)`],
-            ['query .. ( e )', code`fn.recursive($1, (current) => $4)`]
+            ['.. ( e )', code`fn.recursive(current, current => $3)`],
+            ['query .. ( e )', code`fn.recursive($1, current => $4)`]
         ],
 
         filter: [
-            ['[ e ]', code`fn.filter(current, (current) => $2)`],
-            ['query [ e ]', code`fn.filter($1, (current) => $3)`]
+            ['[ e ]', code`fn.filter(current, current => $2)`],
+            ['query [ e ]', code`fn.filter($1, current => $3)`]
         ],
 
         method: [
@@ -203,7 +203,7 @@ var grammar = {
         ],
 
         function: [
-            ['< e >', code`(current) => $2`]
+            ['< e >', code`current => $2`]
         ]
     }
 };

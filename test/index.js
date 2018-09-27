@@ -49,7 +49,7 @@ describe('syntax test', () => {
         it('a function', () => {
             assert.strictEqual(
                 query('<foo>')(data).toString(),
-                '(current) => fn.get(current, "foo")'
+                'current => fn.get(current, "foo")'
             );
         });
 
