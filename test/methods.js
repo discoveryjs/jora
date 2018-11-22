@@ -243,7 +243,7 @@ describe('method', () => {
         });
 
         describe('mapToArray()', () => {
-            it('basic', () => {
+            it('key only', () => {
                 assert.deepEqual(
                     query('mapToArray("foo")')({
                         a: { value: 1 },
@@ -252,6 +252,19 @@ describe('method', () => {
                     [
                         { foo: 'a', value: 1 },
                         { foo: 'b', value: 2 }
+                    ]
+                );
+            });
+
+            it('key and value', () => {
+                assert.deepEqual(
+                    query('mapToArray("foo", "bar")')({
+                        a: 1,
+                        b: { value: 2 }
+                    }),
+                    [
+                        { foo: 'a', bar: 1 },
+                        { foo: 'b', bar: { value: 2 } }
                     ]
                 );
             });
