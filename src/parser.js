@@ -101,9 +101,6 @@ var grammar = {
             ['SELF ( )', code`self(current, context)`],
             ['SELF ( e )', code`self($3, context)`],
 
-            ['STRING', code`$1`],
-            ['NUMBER', code`$1`],
-            ['REGEXP', code`$1`],
             ['keyword', code`$1`],
             ['function', code`$1`],
 
@@ -143,6 +140,9 @@ var grammar = {
             ['#', code`context`],
             ['$', code`current`],
             ['SYMBOL', code`fn.get(current, $1)`],
+            ['STRING', code`$1`],
+            ['NUMBER', code`$1`],
+            ['REGEXP', code`$1`],
             ['object', code`$1`]
         ],
 

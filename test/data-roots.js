@@ -31,6 +31,37 @@ describe('query roots', () => {
         );
     });
 
+    it('a string can be a data root', () => {
+        assert.deepEqual(
+            query('"test".({ foo: $ })')(data),
+            { foo: 'test' }
+        );
+    });
+
+    it('a number can be a data root', () => {
+        assert.deepEqual(
+            query('42.({ foo: $ })')(data),
+            { foo: 42 }
+        );
+
+        assert.deepEqual(
+            query('4.2.({ foo: $ })')(data),
+            { foo: 4.2 }
+        );
+
+        assert.deepEqual(
+            query('4.({ foo: $ })')(data),
+            { foo: 4 }
+        );
+    });
+
+    it('a regexp can be a data root', () => {
+        assert.deepEqual(
+            query('/rx/.({ foo: $ })')(data),
+            { foo: /rx/ }
+        );
+    });
+
     it('an object can be a data root', () => {
         assert.deepEqual(
             query('{ foo: 1 }.({ foo: foo > 0 })')(data),
