@@ -345,7 +345,7 @@ function compileFunction(expression, debug) {
         console.log('js', js.join(''));
     }
 
-    return cache[expression] = new Function('fn', 'method', 'data', 'subject', 'self', 'var current = data;\nreturn ' + js.join(''));
+    return cache[expression] = new Function('fn', 'method', 'data', 'context', 'self', 'var current = data;\nreturn ' + js.join(''));
 }
 
 module.exports = function createQuery(expression, extraFunctions, debug) {
@@ -358,8 +358,8 @@ module.exports = function createQuery(expression, extraFunctions, debug) {
         console.log('fn', func.toString());
     }
 
-    return function query(data, subject) {
-        return func(buildin, localMethods, data, subject, query);
+    return function query(data, context) {
+        return func(buildin, localMethods, data, context, query);
     };
 };
 

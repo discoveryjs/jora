@@ -91,9 +91,9 @@ var grammar = {
         e: [
             ['data', code`$1`],
 
-            ['SELF', code`current => self(current, subject)`],
-            ['SELF ( )', code`self(current, subject)`],
-            ['SELF ( e )', code`self($3, subject)`],
+            ['SELF', code`current => self(current, context)`],
+            ['SELF ( )', code`self(current, context)`],
+            ['SELF ( e )', code`self($3, context)`],
 
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
@@ -126,7 +126,7 @@ var grammar = {
 
         dataRoot: [
             ['@', code`data`],
-            ['#', code`subject`],
+            ['#', code`context`],
             ['$', code`current`],
             ['SYMBOL', code`fn.get(current, $1)`],
             ['object', code`$1`]
