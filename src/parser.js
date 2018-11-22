@@ -154,8 +154,8 @@ var grammar = {
         ],
 
         filter: [
-            ['[ e ]', code`fn.filter(current, current => $2)`],
-            ['query [ e ]', code`fn.filter($1, current => $3)`]
+            ['. [ e ]', code`fn.filter(current, current => $3)`],
+            ['query . [ e ]', code`fn.filter($1, current => $4)`]
         ],
 
         method: [

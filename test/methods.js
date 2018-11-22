@@ -56,7 +56,7 @@ describe('method', () => {
     it('should accept params', () => {
         const extra = createExtraFn();
 
-        query('[filename="1.css"].(log(1, 2, 3))', extra)(data);
+        query('.[filename="1.css"].(log(1, 2, 3))', extra)(data);
         assert.deepEqual(
             extra.calls,
             [[data[0], 1, 2, 3]]
@@ -104,7 +104,7 @@ describe('method', () => {
 
             it('should return false for empty arrays', () => {
                 assert.equal(
-                    query('[foo].bool()')(data),
+                    query('.[foo].bool()')(data),
                     false
                 );
                 assert.deepEqual(
@@ -186,7 +186,7 @@ describe('method', () => {
         describe('values()', () => {
             it('basic', () => {
                 assert.deepEqual(
-                    query('[filename="1.css"].(values())')(data),
+                    query('.[filename="1.css"].(values())')(data),
                     [...new Set(
                         Object.values(data[0])
                             .reduce((res, item) => res.concat(item), [])
@@ -418,7 +418,7 @@ describe('method', () => {
         describe('filter()', () => {
             it('should be the same as []', () => {
                 assert.deepEqual(
-                    query('[type="js"]')(data),
+                    query('.[type="js"]')(data),
                     query('.filter(<(type="js")>)')(data)
                 );
             });

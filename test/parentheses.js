@@ -5,7 +5,7 @@ const query = require('../src');
 describe('parentheses', () => {
     it('basic', () => {
         assert.deepEqual(
-            query('[not (errors and type="js")]')(data),
+            query('.[not (errors and type="js")]')(data),
             data
                 .filter(item => !((item.errors && item.errors.length) && item.type === 'js'))
         );
@@ -13,7 +13,7 @@ describe('parentheses', () => {
 
     it('should not change the meaning', () => {
         assert.deepEqual(
-            query('[not (errors) and (type="js")]')(data),
+            query('.[not (errors) and (type="js")]')(data),
             data
                 .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
         );
@@ -21,7 +21,7 @@ describe('parentheses', () => {
 
     it('should allow optional whitespaces inside', () => {
         assert.deepEqual(
-            query('[not ( errors ) and ( type="js" )]')(data),
+            query('.[not ( errors ) and ( type="js" )]')(data),
             data
                 .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
         );

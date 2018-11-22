@@ -20,18 +20,18 @@ require('child_process')
                 ..(dependencies.mapToArray("name"))
                 .group(<name>, <version>)
                 .({ name: key, versions: value.sort() })
-                [versions.size() > 1]
+                .[versions.size() > 1]
             `(tree);
 
             const depsPathsToMultipleVersionPackages = jora`
                 .({
                     name,
                     version,
-                    otherVersions: #[name=@.name].versions - version,
+                    otherVersions: #.[name=@.name].versions - version,
                     dependencies: dependencies
                         .mapToArray("name")
                         .map(::self)
-                        [name in #.name or dependencies]
+                        .[name in #.name or dependencies]
                 })
             `(tree, multipleVersionPackages);
 

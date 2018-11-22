@@ -23,7 +23,7 @@ describe('misc', () => {
                 // comments
                 .owner
                 // can be
-                [type="css"]// at any place
+                .[type="css"]// at any place
                 // until the line ending
                 .type
             `)(data),
@@ -37,7 +37,7 @@ describe('misc', () => {
                 .owner
                 // can be
                 // at any place
-                [type="css"]
+                .[type="css"]
                 // and contain /anything/ you like "foo/bar"
                 .type
                 // until the
