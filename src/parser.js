@@ -10,6 +10,7 @@ var grammar = {
     // Lexical tokens
     lex: {
         macros: {
+            wb: '\\b',
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+'    // required whitespaces
         },
@@ -41,6 +42,11 @@ var grammar = {
             ['{ws}in{ws}', 'return "IN";'],
             ['{ws}not{ws}in{ws}', 'return "NOTIN";'],
             ['not?{ws}', 'return "NOT";'],
+
+            ['{wb}true{wb}', 'return "TRUE";'],
+            ['{wb}false{wb}', 'return "FALSE";'],
+            ['{wb}null{wb}', 'return "NULL";'],
+            ['{wb}undefined{wb}', 'return "UNDEFINED";'],
 
             ['::self', 'return "SELF";'],
             ['[0-9]+(?:\\.[0-9]+)?\\b', 'return "NUMBER";'], // 212.321
@@ -98,6 +104,7 @@ var grammar = {
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
             ['REGEXP', code`$1`],
+            ['keyword', code`$1`],
             ['function', code`$1`],
 
             ['array', code`$1`],
@@ -116,6 +123,13 @@ var grammar = {
             ['e > e', code`fn.gt($1, $3)`],
             ['e >= e', code`fn.gte($1, $3)`],
             ['e ~= e', code`fn.regexp($1, $3)`]
+        ],
+
+        keyword: [
+            ['TRUE', code`true`],
+            ['FALSE', code`false`],
+            ['NULL', code`null`],
+            ['UNDEFINED', code`undefined`]
         ],
 
         data: [

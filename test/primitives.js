@@ -3,6 +3,39 @@ const data = require('./fixture/simple');
 const query = require('../src');
 
 describe('primitives', () => {
+    describe('keywords', () => {
+        const keywords = [
+            true,
+            false,
+            null,
+            undefined
+        ];
+
+        keywords.forEach(keyword => {
+            it(String(keyword), () => {
+                assert.strictEqual(
+                    query(String(keyword))({ [keyword]: 42 }),
+                    keyword
+                );
+
+                assert.strictEqual(
+                    query(' ' + keyword + ' ')({ [keyword]: 42 }),
+                    keyword
+                );
+
+                assert.strictEqual(
+                    query('x' + keyword)({ ['x' + keyword]: 42 }),
+                    42
+                );
+
+                assert.strictEqual(
+                    query(keyword + 'x')({ [keyword + 'x']: 42 }),
+                    42
+                );
+            });
+        });
+    });
+
     it('a number', () => {
         assert.strictEqual(
             query('123')(data),
