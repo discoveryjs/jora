@@ -32,6 +32,11 @@ describe('primitives', () => {
             query('/foo/i')(data),
             /foo/i
         );
+
+        assert.deepEqual(
+            query('/fo\\/o/')(data),
+            /fo\/o/
+        );
     });
 
     it('a function', () => {

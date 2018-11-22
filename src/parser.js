@@ -45,7 +45,7 @@ var grammar = {
             ['::self', 'return "SELF";'],
             ['[0-9]+(?:\\.[0-9]+)?\\b', 'return "NUMBER";'], // 212.321
             ['"(?:\\\\.|[^"])*"', 'return "STRING";'], // "foo" "with \" escaped"
-            ['/(?:[^/]|\\.)+/i?', 'return "REGEXP"'],    // /foo/i
+            ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],    // /foo/i
             ['[a-zA-Z_][a-zA-Z_$0-9]*', 'yytext = JSON.stringify(yytext); return "SYMBOL";'], // foo123
             ["'(?:\\\\.|[^'])*'", 'return "SYMBOL";'], // 'some-symbol' 'with \' escaped'
 
