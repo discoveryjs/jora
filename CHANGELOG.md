@@ -1,3 +1,11 @@
+## 1.0.0-alpha.3 (November 23, 2018)
+
+- Changed filter syntax to start with a dot, i.e. `[expr]` -> `.[expr]`
+- Added `true`, `false`, `null` and `undefined` keywords
+- Added a value argument for `mapToArray()`
+- Allowed a string, a number or a regexp to be a path root
+- Fixed escaping in regexp syntax
+
 ## 1.0.0-alpha.2 (September 27, 2018)
 
 - Changed `size()` method to return own keys count for a plain object
