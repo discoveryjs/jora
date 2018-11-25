@@ -267,6 +267,31 @@ describe('operators', () => {
         });
     });
 
+    describe('?:', () => {
+        it('basic', () => {
+            assert.deepEqual(
+                query('(1 ? 2 : 3, 0 ? 2 : 3)')(data),
+                [2, 3]
+            );
+        });
+
+        it('should process arrays as a bool', () => {
+            assert.deepEqual(
+                query('.[errors ? type="js" : false]')(data),
+                data
+                    .filter(item => (item.errors && item.errors.length) && item.type === 'js')
+            );
+        });
+
+        it('should has lower precedence than `not`', () => {
+            assert.deepEqual(
+                query('.[not errors ? type="js" : false]')(data),
+                data
+                    .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
+            );
+        });
+    });
+
     describe('+', () => {
         it('basic', () => {
             const expected = data.filter(item => item.uniqueNumber === 456);

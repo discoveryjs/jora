@@ -56,6 +56,7 @@ var grammar = {
             ["'(?:\\\\.|[^'])*'", 'return "SYMBOL";'], // 'some-symbol' 'with \' escaped'
 
             ['{ows}\\.{1,3}', 'return yytext.trim();'],
+            ['{ows}\\?{ows}', 'return "?";'],
             ['{ows},{ows}', 'return ",";'],
             ['{ows}:{ows}', 'return ":";'],
             ['@', 'return "@";'],
@@ -72,7 +73,7 @@ var grammar = {
     // Operator precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
-        // ['left', '?', ':'],
+        ['left', '?', ':'],
         ['left', ','],
         ['left', 'OR'],
         ['left', 'AND'],
@@ -109,8 +110,9 @@ var grammar = {
             ['NOT e', code`!fn.bool($2)`],
             ['e IN e', code`fn.in($1, $3)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
-            ['e AND e', code`fn.bool($1) && fn.bool($3) ? $3 : false`],
+            ['e AND e', code`fn.bool($1) ? $3 : $1`],
             ['e OR e', code`fn.bool($1) ? $1 : $3`],
+            ['e ? e : e', code`fn.bool($1) ? $3 : $5`],
             ['e + e', code`fn.add($1, $3)`],
             ['e - e', code`fn.sub($1, $3)`],
             ['e = e', code`fn.eq($1, $3)`],
