@@ -103,13 +103,22 @@ var buildin = Object.freeze({
 
             case TYPE_OBJECT:
                 // not sure what we need do here:
-                // - just filter keys from a
+                // - just filter keys from `a`
                 // - or filter key+value pairs?
                 // - take in account type of b? (array, Object.keys(b), scalar as a key)
 
             default:
                 return a - b;
         }
+    },
+    mul: function(a, b) {
+        return a * b;
+    },
+    div: function(a, b) {
+        return a / b;
+    },
+    mod: function(a, b) {
+        return a % b;
     },
     eq: function(a, b) {
         return a === b;

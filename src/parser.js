@@ -15,12 +15,6 @@ var grammar = {
             ws: '\\s+'    // required whitespaces
         },
         rules: [
-            // ['\\*', 'return "*";'],
-            // ['\\/', 'return "/";'],
-            ['{ows}-{ows}', 'return "-";'],
-            ['{ows}\\+{ows}', 'return "+";'],
-            // ['\\^', 'return "^";'],
-            // ['\\%', 'return "%";'],
             ['\\({ows}', 'return "(";'],
             ['{ows}\\)', 'return ")";'],
             ['{ows}\\[{ows}', 'return "[";'],
@@ -35,8 +29,6 @@ var grammar = {
             ['{ows}<={ows}', 'return "<=";'],
             ['{ows}<{ows}', 'return "<";'],
             ['{ows}>{ows}', 'return ">";'],
-            // ['\\?', 'return "?";'],
-            // ['\\:', 'return ":";'],
             ['{ws}and{ws}', 'return "AND";'],
             ['{ws}or{ws}' , 'return "OR";'],
             ['{ws}in{ws}', 'return "IN";'],
@@ -50,21 +42,27 @@ var grammar = {
 
             ['::self', 'return "SELF";'],
             ['[0-9]+(?:\\.[0-9]+)?\\b', 'return "NUMBER";'], // 212.321
-            ['"(?:\\\\.|[^"])*"', 'return "STRING";'], // "foo" "with \" escaped"
-            ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],    // /foo/i
+            ['"(?:\\\\.|[^"])*"', 'return "STRING";'],       // "foo" "with \" escaped"
+            ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],      // /foo/i
             ['[a-zA-Z_][a-zA-Z_$0-9]*', 'yytext = JSON.stringify(yytext); return "SYMBOL";'], // foo123
-            ["'(?:\\\\.|[^'])*'", 'return "SYMBOL";'], // 'some-symbol' 'with \' escaped'
+            ["'(?:\\\\.|[^'])*'", 'return "SYMBOL";'],       // 'some-symbol' 'with \' escaped'
+
+            // comment
+            ['{ows}//.*?(\\n|$)', '/* a comment */'],
 
             ['{ows}\\.{1,3}', 'return yytext.trim();'],
             ['{ows}\\?{ows}', 'return "?";'],
             ['{ows},{ows}', 'return ",";'],
             ['{ows}:{ows}', 'return ":";'],
+            ['{ows}\\-{ows}', 'return "-";'],
+            ['{ows}\\+{ows}', 'return "+";'],
+            ['{ows}\\*{ows}', 'return "*";'],
+            ['{ows}\\/{ows}', 'return "/";'],
+            ['{ows}\\%{ows}', 'return "%";'],
+            // ['{ows}\\^{ows}', 'return "%";'],
             ['@', 'return "@";'],
             ['#', 'return "#";'],
             ['\\$', 'return "$";'],
-
-            // comment
-            ['{ows}//.*?(\\n|$)', '/* a comment */'],
 
             // end
             ['$', 'return "EOF";']
@@ -82,10 +80,9 @@ var grammar = {
         ['left', '=', '!=', '~='],
         ['left', '<', '<=', '>', '>='],
         ['left', '+', '-'],
-        // ['left', '*', '/', '%'],
+        ['left', '*', '/', '%'],
         // ['left', '^'],
         ['left', '.', '..', '...']
-        // ['left', '@', '#']
     ],
     // Grammar
     start: 'root',
@@ -115,6 +112,9 @@ var grammar = {
             ['e ? e : e', code`fn.bool($1) ? $3 : $5`],
             ['e + e', code`fn.add($1, $3)`],
             ['e - e', code`fn.sub($1, $3)`],
+            ['e * e', code`fn.mul($1, $3)`],
+            ['e / e', code`fn.div($1, $3)`],
+            ['e % e', code`fn.mod($1, $3)`],
             ['e = e', code`fn.eq($1, $3)`],
             ['e != e', code`fn.ne($1, $3)`],
             ['e < e', code`fn.lt($1, $3)`],

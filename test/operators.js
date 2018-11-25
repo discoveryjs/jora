@@ -390,6 +390,48 @@ describe('operators', () => {
         });
     });
 
+    describe('*', () => {
+        it('basic', () => {
+            assert.equal(
+                query('6*8')(data),
+                48
+            );
+
+            assert.equal(
+                query('6 * 8')(data),
+                48
+            );
+        });
+    });
+
+    describe('*', () => {
+        it('basic', () => {
+            assert.equal(
+                query('48/8')(data),
+                6
+            );
+
+            assert.equal(
+                query('48 / 8')(data),
+                6
+            );
+        });
+    });
+
+    describe('%', () => {
+        it('basic', () => {
+            assert.equal(
+                query('42%10')(data),
+                2
+            );
+
+            assert.equal(
+                query('42 % 10')(data),
+                2
+            );
+        });
+    });
+
     describe('optional spaces around', () => {
         const operators = [
             '=',
