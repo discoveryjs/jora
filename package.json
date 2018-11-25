@@ -1,7 +1,7 @@
 {
   "name": "jora",
-  "version": "1.0.0-alpha.3",
-  "description": "JavaScript object sample query engine",
+  "version": "1.0.0-alpha.4",
+  "description": "JavaScript object query engine",
   "keywords": [],
   "homepage": "https://github.com/lahmatiy/jora",
   "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",

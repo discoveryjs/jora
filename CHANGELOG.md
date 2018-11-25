@@ -1,3 +1,8 @@
+## 1.0.0-alpha.4 (November 25, 2018)
+
+- Added ternary operator (i.e. `a ? b : c`)
+- Added operators `*`, `/` and `%`
+
 ## 1.0.0-alpha.3 (November 23, 2018)
 
 - Changed filter syntax to start with a dot, i.e. `[expr]` -> `.[expr]`
