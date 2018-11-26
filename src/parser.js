@@ -93,7 +93,7 @@ var grammar = {
         ],
 
         e: [
-            ['data', code`$1`],
+            ['query', code`$1`],
 
             ['SELF', code`current => self(current, context)`],
             ['SELF ( )', code`self(current, context)`],
@@ -102,8 +102,6 @@ var grammar = {
             ['keyword', code`$1`],
             ['function', code`$1`],
 
-            ['array', code`$1`],
-            ['array query', code`(current => $2)($1)`],
             ['NOT e', code`!fn.bool($2)`],
             ['e IN e', code`fn.in($1, $3)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
@@ -131,59 +129,38 @@ var grammar = {
             ['UNDEFINED', code`undefined`]
         ],
 
-        data: [
-            ['dataRoot', code`$1`],
-            ['dataRoot query', code`(current => $2)($1)`],
-            ['query', code`$1`],
-            ['relativeQuery', code`$1`],
-            ['relativeQuery query', code`(current => $2)($1)`]
+        query: [
+            ['queryRoot', code`$1`],
+            ['relativePath', code`$1`]
         ],
 
-        dataRoot: [
+        queryRoot: [
             ['@', code`data`],
             ['#', code`context`],
             ['$', code`current`],
-            ['SYMBOL', code`fn.get(current, $1)`],
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
             ['REGEXP', code`$1`],
-            ['object', code`$1`]
-        ],
-
-        relativeQuery: [
-            ['data [ e ]', code`fn.get($1, $3, true)`]
-        ],
-
-        query: [
-            ['path', code`$1`],
-            ['recursive', code`$1`],
-            ['filter', code`$1`],
-            ['method', code`$1`]
-        ],
-
-        path: [
+            ['object', code`$1`],
+            ['array', code`$1`],
+            ['SYMBOL', code`fn.get(current, $1)`],
             ['. SYMBOL', code`fn.get(current, $2)`],
-            ['query . SYMBOL', code`fn.get($1, $3)`],
             ['. ( e )', code`fn.get(current, current => $3)`],
-            ['query . ( e )', code`fn.get($1, current => $4)`]
-        ],
-
-        recursive: [
-            ['.. SYMBOL', code`fn.recursive(current, $2)`],
-            ['query .. SYMBOL', code`fn.recursive($1, $3)`],
-            ['.. ( e )', code`fn.recursive(current, current => $3)`],
-            ['query .. ( e )', code`fn.recursive($1, current => $4)`]
-        ],
-
-        filter: [
-            ['. [ e ]', code`fn.filter(current, current => $3)`],
-            ['query . [ e ]', code`fn.filter($1, current => $4)`]
-        ],
-
-        method: [
             ['SYMBOL ( arguments )', code`method[$1](current$3)`],
             ['. SYMBOL ( arguments )', code`method[$2](current$4)`],
-            ['query . SYMBOL ( arguments )', code`method[$3]($1$5)`]
+            ['. [ e ]', code`fn.filter(current, current => $3)`],
+            ['.. SYMBOL', code`fn.recursive(current, $2)`],
+            ['.. ( e )', code`fn.recursive(current, current => $3)`]
+        ],
+
+        relativePath: [
+            ['query [ e ]', code`fn.get($1, $3, true)`],
+            ['query . SYMBOL', code`fn.get($1, $3)`],
+            ['query . SYMBOL ( arguments )', code`method[$3]($1$5)`],
+            ['query . ( e )', code`fn.get($1, current => $4)`],
+            ['query .. SYMBOL', code`fn.recursive($1, $3)`],
+            ['query .. ( e )', code`fn.recursive($1, current => $4)`],
+            ['query . [ e ]', code`fn.filter($1, current => $4)`]
         ],
 
         arguments: [
@@ -211,7 +188,7 @@ var grammar = {
             ['SYMBOL : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
             ['...', code`...current`],
-            ['... data', code`...$2`]
+            ['... query', code`...$2`]
         ],
 
         array: [

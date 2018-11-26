@@ -1,7 +1,8 @@
 ## next
 
-- Added computed properties support in object literals
+- Added computed property names support in object literals
 - Added array-like notation to access properties, e.g. `foo["bar"]` or `array[1]`
+- Fixed scope issue for method arguments, a scope the same as for query root (#1)
 
 ## 1.0.0-alpha.4 (November 25, 2018)
 
