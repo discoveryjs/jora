@@ -354,4 +354,41 @@ describe('buildin methods', () => {
             );
         });
     });
+
+    describe('pick()', () => {
+        it('should return undefined for falsy values', () => {
+            assert.deepEqual(
+                query('pick()')(),
+                undefined
+            );
+        });
+
+        it('should return a value by key for object', () => {
+            assert.deepEqual(
+                query('pick("foo")')({ foo: 42 }),
+                42
+            );
+        });
+
+        it('should return a value by key `undefined` for object when key is not passed', () => {
+            assert.deepEqual(
+                query('pick()')({ foo: 42, undefined: 45 }),
+                45
+            );
+        });
+
+        it('should return an element by index for array', () => {
+            assert.deepEqual(
+                query('pick(2)')([0, 11, 22, 33]),
+                22
+            );
+        });
+
+        it('should return first element for array when index is not passed', () => {
+            assert.deepEqual(
+                query('pick()')([42, 11, 22, 33]),
+                42
+            );
+        });
+    });
 });

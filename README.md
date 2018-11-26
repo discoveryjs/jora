@@ -95,6 +95,7 @@ keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | The same as `Object.entries()` in JS
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
+pick("key") | Get a value by a key, can be used for (e.g. `array.pick(5)` returns 6th element in an array, however `array[5]` applies `[5]` for each element in an array)
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
 sort(<getter>) | Sort an array by a value fetched with getter
 reverse() | Reverse order of items
