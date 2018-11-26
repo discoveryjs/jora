@@ -42,4 +42,17 @@ describe('definitions', () => {
             42
         );
     });
+
+    describe('should throw when reserved name is used for a definition', () => {
+        const preserved = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
+
+        preserved.forEach(name =>
+            it(name, () =>
+                assert.throws(
+                    () => query(name + ':1;')(),
+                    new RegExp('Identifier \'\\' + name + '\' has already been declared')
+                )
+            )
+        );
+    });
 });
