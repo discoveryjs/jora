@@ -49,8 +49,8 @@ x <= y | Less than or equal to
 x > y | Greater than
 x >= y | Greater than or equal to
 x ~= y | Regular expression match
-x in (a, b, c) | Equivalent to `x === a or x === b or x === c`
-x not in (a, b, c) | Equivalent to `x !== a and x !== b and x !== c`
+x in [a, b, c] | Equivalent to `x === a or x === b or x === c`
+x not in [a, b, c] | Equivalent to `x !== a and x !== b and x !== c`
 
 ### Boolean logic
 
@@ -96,13 +96,13 @@ keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | The same as `Object.entries()` in JS
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
-pick("key") | Get a value by a key, can be used for (e.g. `array.pick(5)` returns 6th element in an array, however `array[5]` applies `[5]` for each element in an array)
+pick("key") | Get a value by a key or an index. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(<getter>) | Sort an array by a value fetched with getter
+sort(\<getter>) | Sort an array by a value fetched with getter
 reverse() | Reverse order of items
-group(<getter>[, <getter>]) | Group an array items by a value fetched with first getter.
-filter() | The same as `Array#filter()` in JS
-map() | The same as `Array#map()` in JS
+group(\<getter>[, \<getter>]) | Group an array items by a value fetched with first getter.
+filter(\<fn>) | The same as `Array#filter()` in JS
+map(\<fn>) | The same as `Array#map()` in JS
 
 ## Quick demo
 
