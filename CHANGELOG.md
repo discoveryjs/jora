@@ -1,6 +1,7 @@
 ## next
 
 - Added computed properties support in object literals
+- Added array-like notation to access properties, e.g. `foo["bar"]` or `array[1]`
 
 ## 1.0.0-alpha.4 (November 25, 2018)
 

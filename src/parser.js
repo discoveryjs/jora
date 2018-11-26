@@ -134,7 +134,9 @@ var grammar = {
         data: [
             ['dataRoot', code`$1`],
             ['dataRoot query', code`(current => $2)($1)`],
-            ['query', code`$1`]
+            ['query', code`$1`],
+            ['relativeQuery', code`$1`],
+            ['relativeQuery query', code`(current => $2)($1)`]
         ],
 
         dataRoot: [
@@ -146,6 +148,10 @@ var grammar = {
             ['NUMBER', code`$1`],
             ['REGEXP', code`$1`],
             ['object', code`$1`]
+        ],
+
+        relativeQuery: [
+            ['data [ e ]', code`fn.get($1, $3, true)`]
         ],
 
         query: [

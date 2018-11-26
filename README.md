@@ -36,7 +36,7 @@ Jora | Description
 { } | Object initializer/literal syntax
 ( ) | Array initializer/literal syntax<br>NOTE: Syntax will be changed to `[]`
 < > | A function<br>NOTE: Syntax will be changed
-symbol<br>'sym \'bol!' | A sequence of chars that matches to `[a-zA-Z_][a-zA-Z_$0-9]*`, otherwise it should be wrapped into single quotes
+symbol<br>'sym \'bol!' | A sequence of chars that matches to `[a-zA-Z_][a-zA-Z_$0-9]*`, otherwise it must be enclosed in quotes
 
 ### Comparisons
 

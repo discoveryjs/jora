@@ -160,12 +160,12 @@ var buildin = Object.freeze({
                 return rx.test(data);
         }
     },
-    get: function(data, getter) {
+    get: function(data, getter, ignoreType) {
         const fn = typeof getter === 'function'
             ? getter
             : current => getPropertyValue(current, getter);
 
-        switch (this.type(data)) {
+        switch (!ignoreType && this.type(data)) {
             case TYPE_ARRAY:
                 const result = new Set();
 

@@ -61,6 +61,38 @@ describe('path', () => {
         );
     });
 
+    it('array like notation to access properties and array elements', () => {
+        assert.deepEqual(
+            query('$["foo"]')({ foo: 42 }),
+            42
+        );
+
+        assert.deepEqual(
+            query('$["foo"]["bar"]')({ foo: { bar: 42 } }),
+            42
+        );
+
+        assert.deepEqual(
+            query('$["foo"].bar["baz"]')({ foo: { bar: { baz: 42 } } }),
+            42
+        );
+
+        assert.deepEqual(
+            query('$[foo]')({ foo: 'bar', bar: 2 }),
+            2
+        );
+
+        assert.deepEqual(
+            query('$[1]')([1, 2, 3]),
+            2
+        );
+
+        assert.deepEqual(
+            query('"hello"[1]')(),
+            'e'
+        );
+    });
+
     it('should allow expressions in parentheses', () => {
         assert.deepEqual(
             query('.(deps + dependants).filename')(data).sort(),
