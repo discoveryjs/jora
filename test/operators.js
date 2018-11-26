@@ -270,7 +270,7 @@ describe('operators', () => {
     describe('?:', () => {
         it('basic', () => {
             assert.deepEqual(
-                query('(1 ? 2 : 3, 0 ? 2 : 3)')(data),
+                query('[1 ? 2 : 3, 0 ? 2 : 3]')(data),
                 [2, 3]
             );
         });

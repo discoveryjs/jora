@@ -17,7 +17,7 @@ describe('buildin methods', () => {
                 false
             );
             assert.deepEqual(
-                query('().bool()')(data),
+                query('[].bool()')(data),
                 false
             );
         });
@@ -230,7 +230,7 @@ describe('buildin methods', () => {
 
         it('should sort by several values', () => {
             assert.deepEqual(
-                query('.sort(<(dependants.size(), deps.size())>).({filename, deps: deps.size(), dependants: dependants.size()})')(data),
+                query('.sort(<[dependants.size(), deps.size()]>).({filename, deps: deps.size(), dependants: dependants.size()})')(data),
                 data
                     .slice()
                     .sort((a, b) => ((a.dependants.length - b.dependants.length) || (a.deps.length - b.deps.length)))

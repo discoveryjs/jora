@@ -26,33 +26,4 @@ describe('parentheses', () => {
                 .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
         );
     });
-
-    it('should produce an array', () => {
-        assert.deepEqual(
-            query('()')(data),
-            []
-        );
-
-        assert.deepEqual(
-            query('(1)')(data),
-            [1]
-        );
-
-        assert.deepEqual(
-            query('(1, 2)')(data),
-            [1, 2]
-        );
-    });
-
-    it('should produce an empty array when single term is falsy', () => {
-        assert.deepEqual(
-            query('(0)')(data),
-            []
-        );
-
-        assert.deepEqual(
-            query('({})')(data),
-            []
-        );
-    });
 });

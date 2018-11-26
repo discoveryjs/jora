@@ -50,7 +50,7 @@ describe('recursive invocation', () => {
             query(`
                 .({
                     filename,
-                    deps: deps.map(<::self({ filename: "stub", deps: () })>)
+                    deps: deps.map(<::self({ filename: "stub", deps: [] })>)
                 })
             `)(data[3]),
             expected
@@ -61,7 +61,7 @@ describe('recursive invocation', () => {
             query(`
                 .({
                     filename,
-                    deps: deps.(::self({ filename: "stub", deps: () }))
+                    deps: deps.(::self({ filename: "stub", deps: [] }))
                 })
             `)(data[3]),
             expected

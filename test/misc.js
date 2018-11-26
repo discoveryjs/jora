@@ -48,7 +48,7 @@ describe('misc', () => {
 
         assert.deepEqual(
             query('(1)\n//\n///\n')(data),
-            [1]
+            1
         );
     });
 });

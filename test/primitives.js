@@ -156,4 +156,40 @@ describe('primitives', () => {
             );
         });
     });
+
+    describe('an array', () => {
+        it('basic', () => {
+            assert.deepEqual(
+                query('[]')(data),
+                []
+            );
+
+            assert.deepEqual(
+                query('[1]')(data),
+                [1]
+            );
+
+            assert.deepEqual(
+                query('[1, 2]')(data),
+                [1, 2]
+            );
+        });
+
+        it('should works well with falsy values', () => {
+            assert.deepEqual(
+                query('[0]')(data),
+                [0]
+            );
+
+            assert.deepEqual(
+                query('[{}]')(data),
+                [{}]
+            );
+
+            assert.deepEqual(
+                query('[[]]')(data),
+                [[]]
+            );
+        });
+    });
 });

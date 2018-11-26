@@ -143,6 +143,7 @@ var grammar = {
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
+            ['( e )', code`($2)`],
             ['SYMBOL', code`fn.get(current, $1)`],
             ['. SYMBOL', code`fn.get(current, $2)`],
             ['. ( e )', code`fn.get(current, current => $3)`],
@@ -192,9 +193,9 @@ var grammar = {
         ],
 
         array: [
-            ['( )', code`[]`],
-            ['( e )', code`fn.toArray($2)`],
-            ['( e , arrayItems )', code`[$2, $4]`]
+            ['[ ]', code`[]`],
+            ['[ e ]', code`[$2]`],
+            ['[ e , arrayItems ]', code`[$2, $4]`]
         ],
 
         arrayItems: [
