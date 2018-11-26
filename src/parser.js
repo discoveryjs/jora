@@ -45,7 +45,7 @@ var grammar = {
             ['"(?:\\\\.|[^"])*"', 'return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", 'return "STRING";'],       // 'foo' 'with \' escaped'
             ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],      // /foo/i
-            ['[a-zA-Z_][a-zA-Z_$0-9]*', 'yytext = JSON.stringify(yytext); return "SYMBOL";'], // foo123
+            ['[a-zA-Z_][a-zA-Z_$0-9]*', 'return "SYMBOL";'], // foo123
 
             // comment
             ['{ows}//.*?(\\n|$)', '/* a comment */'],
@@ -54,6 +54,7 @@ var grammar = {
             ['{ows}\\?{ows}', 'return "?";'],
             ['{ows},{ows}', 'return ",";'],
             ['{ows}:{ows}', 'return ":";'],
+            ['{ows};{ows}', 'return ";";'],
             ['{ows}\\-{ows}', 'return "-";'],
             ['{ows}\\+{ows}', 'return "+";'],
             ['{ows}\\*{ows}', 'return "*";'],
@@ -88,8 +89,24 @@ var grammar = {
     start: 'root',
     bnf: {
         root: [
-            ['e EOF', 'return $$ = $1;'],
-            ['EOF', 'return $$ = ["data"];']
+            ['block EOF', 'return $$ = $1;']
+        ],
+
+        block: [
+            ['definitions e', code`$1\nreturn $2`],
+            ['definitions', code`$1\nreturn current`],
+            ['e', code`return $1`],
+            ['', code`return current`]
+        ],
+
+        definitions: [
+            ['def', code`$1`],
+            ['definitions def', code`$1\n$2`]
+        ],
+
+        def: [
+            ['$ SYMBOL ;', code`const $$2 = fn.get(current, "$2");`],
+            ['$ SYMBOL : e ;', code`const $$2 = $4;`]
         ],
 
         e: [
@@ -138,29 +155,30 @@ var grammar = {
             ['@', code`data`],
             ['#', code`context`],
             ['$', code`current`],
+            ['$ SYMBOL', code`$$2`],
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['SYMBOL', code`fn.get(current, $1)`],
-            ['. SYMBOL', code`fn.get(current, $2)`],
+            ['SYMBOL', code`fn.get(current, "$1")`],
+            ['. SYMBOL', code`fn.get(current, "$2")`],
             ['( e )', code`($2)`],
-            ['. ( e )', code`fn.get(current, current => $3)`],
-            ['SYMBOL ( arguments )', code`method[$1](current$3)`],
-            ['. SYMBOL ( arguments )', code`method[$2](current$4)`],
-            ['.. SYMBOL', code`fn.recursive(current, $2)`],
-            ['.. ( e )', code`fn.recursive(current, current => $3)`],
-            ['. [ e ]', code`fn.filter(current, current => $3)`]
+            ['. ( block )', code`fn.get(current, current => { $3 })`],
+            ['SYMBOL ( arguments )', code`method.$1(current$3)`],
+            ['. SYMBOL ( arguments )', code`method.$2(current$4)`],
+            ['.. SYMBOL', code`fn.recursive(current, "$2")`],
+            ['.. ( block )', code`fn.recursive(current, current => { $3 })`],
+            ['. [ block ]', code`fn.filter(current, current => { $3 })`]
         ],
 
         relativePath: [
-            ['query . SYMBOL', code`fn.get($1, $3)`],
-            ['query . SYMBOL ( arguments )', code`method[$3]($1$5)`],
-            ['query . ( e )', code`fn.get($1, current => $4)`],
-            ['query .. SYMBOL', code`fn.recursive($1, $3)`],
-            ['query .. ( e )', code`fn.recursive($1, current => $4)`],
-            ['query . [ e ]', code`fn.filter($1, current => $4)`],
+            ['query . SYMBOL', code`fn.get($1, "$3")`],
+            ['query . SYMBOL ( arguments )', code`method.$3($1$5)`],
+            ['query . ( block )', code`fn.get($1, current => { $4 })`],
+            ['query .. SYMBOL', code`fn.recursive($1, "$3")`],
+            ['query .. ( block )', code`fn.recursive($1, current => { $4 })`],
+            ['query . [ block ]', code`fn.filter($1, current => { $4 })`],
             ['query [ e ]', code`fn.get($1, $3)`]
         ],
 
@@ -185,7 +203,7 @@ var grammar = {
         ],
 
         property: [
-            ['SYMBOL', code`$1: fn.get(current, $1)`],
+            ['SYMBOL', code`$1: fn.get(current, "$1")`],
             ['SYMBOL : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
             ['...', code`...current`],

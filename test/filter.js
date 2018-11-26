@@ -2,7 +2,7 @@ const assert = require('assert');
 const data = require('./fixture/simple');
 const query = require('../src');
 
-describe('filter', () => {
+describe('filter | .[]', () => {
     it('should filter a current array', () => {
         assert.deepEqual(
             query('.[type="js"]')(data),
@@ -111,6 +111,22 @@ describe('filter', () => {
         assert.deepEqual(
             query('errors.owner\n.[type="css"]\n.type')(data),
             ['css']
+        );
+    });
+
+    it('should support for definitions', () => {
+        const expected = data.filter(({ filename }) => filename === '5.js');
+
+        assert.equal(expected.length, 1);
+
+        assert.deepEqual(
+            query('.[$fn:"5.js"; filename = $fn]')(data),
+            expected
+        );
+
+        assert.deepEqual(
+            query('deep.[$fn:"5.js"; filename = $fn]')({ deep: data }),
+            expected
         );
     });
 });

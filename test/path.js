@@ -51,17 +51,17 @@ describe('path', () => {
 
     it('should allow escaped symbols in paths', () => {
         assert.deepEqual(
-            query('something.does.($["not"]).exists')(data),
+            query('something.does["not"].exists')(data),
             []
         );
 
         assert.deepEqual(
-            query('.($[\'\\\'"\'])')(data),
+            query('$[\'\\\'"\']')(data),
             ['a key with special chars']
         );
 
         assert.deepEqual(
-            query('.($["\'\\""])')(data),
+            query('$["\'\\""]')(data),
             ['a key with special chars']
         );
     });
@@ -100,48 +100,6 @@ describe('path', () => {
         assert.deepEqual(
             query('"hello"[1]')(),
             'e'
-        );
-    });
-
-    it('should allow expressions in parentheses', () => {
-        assert.deepEqual(
-            query('.(deps + dependants).filename')(data).sort(),
-            [...new Set(
-                data
-                    .reduce((res, item) => res.concat(item.deps, item.dependants), [])
-                    .map(item => item.filename)
-            )].sort()
-        );
-    });
-
-    it('should allow expressions in parentheses as subquery', () => {
-        assert.deepEqual(
-            query('errors.owner.($ + deps + dependants).filename')(data).sort(),
-            [...new Set(
-                data
-                    .reduce((res, item) => res.concat(item.errors.map(item => item.owner)), [])
-                    .reduce((res, item) => res.concat(item, item.deps, item.dependants), [])
-                    .map(item => item.filename)
-            )].sort()
-        );
-    });
-
-    it('should work as a map', () => {
-        assert.deepEqual(
-            query('.({ filename, deps: deps.size() })')(data),
-            data
-                .map(item => ({
-                    filename: item.filename,
-                    deps: item.deps.length
-                }))
-        );
-    });
-
-    it('should work as a map (empty object)', () => {
-        assert.deepEqual(
-            query('.({ })')(data),
-            data
-                .map(() => ({ }))
         );
     });
 });

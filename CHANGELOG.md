@@ -3,6 +3,7 @@
 - Added computed property names support in object literals
 - Added `pick()` method
 - Added array-like notation to access properties, e.g. `foo["bar"]`. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array
+- Added syntax to define a block scoped constant, e.g. `.($foo:$.some.path.to.cache(); bar=$foo or baz=$foo)`
 - Changed single quoted string meaning to treat it as a string (used before for a property access with prohibited characters in name)
 - Changed array literals to use brackets instead of parentheses
 - Fixed scope issue for method arguments, a scope the same as for query root (#1)

@@ -363,7 +363,7 @@ function compileFunction(expression, debug) {
         console.log('js', js.join(''));
     }
 
-    return cache[expression] = new Function('fn', 'method', 'data', 'context', 'self', 'var current = data;\nreturn ' + js.join(''));
+    return cache[expression] = new Function('fn', 'method', 'data', 'context', 'self', 'let current = data;\n' + js.join(''));
 }
 
 module.exports = function createQuery(expression, extraFunctions, debug) {

@@ -129,4 +129,22 @@ describe('recursive path', () => {
                 .sort()
         );
     });
+
+    it('should support for definitions', () => {
+        const expected =
+            [
+                ...new Set(data
+                    .reduce((res, item) => res.concat(item.refs.map(ref => ref.expr)), []))
+            ];
+
+        assert.deepEqual(
+            query('..($name:"refs";$[$name].expr)')(data),
+            expected
+        );
+
+        assert.deepEqual(
+            query('deep..($name:"refs";$[$name].expr)')({ deep: data }),
+            expected
+        );
+    });
 });
