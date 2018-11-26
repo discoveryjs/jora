@@ -78,7 +78,7 @@ describe('path', () => {
         );
 
         assert.deepEqual(
-            query('$[keys()[1]]')({ foo: 'asd', bar: 42 }),
+            query('$[keys().pick(1)]')({ foo: 'asd', bar: 42 }),
             42
         );
 
@@ -94,7 +94,7 @@ describe('path', () => {
 
         assert.deepEqual(
             query('$[1]')([1, 2, 3]),
-            2
+            []
         );
 
         assert.deepEqual(

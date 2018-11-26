@@ -143,25 +143,25 @@ var grammar = {
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['( e )', code`($2)`],
             ['SYMBOL', code`fn.get(current, $1)`],
             ['. SYMBOL', code`fn.get(current, $2)`],
+            ['( e )', code`($2)`],
             ['. ( e )', code`fn.get(current, current => $3)`],
             ['SYMBOL ( arguments )', code`method[$1](current$3)`],
             ['. SYMBOL ( arguments )', code`method[$2](current$4)`],
-            ['. [ e ]', code`fn.filter(current, current => $3)`],
             ['.. SYMBOL', code`fn.recursive(current, $2)`],
-            ['.. ( e )', code`fn.recursive(current, current => $3)`]
+            ['.. ( e )', code`fn.recursive(current, current => $3)`],
+            ['. [ e ]', code`fn.filter(current, current => $3)`]
         ],
 
         relativePath: [
-            ['query [ e ]', code`fn.get($1, $3, true)`],
             ['query . SYMBOL', code`fn.get($1, $3)`],
             ['query . SYMBOL ( arguments )', code`method[$3]($1$5)`],
             ['query . ( e )', code`fn.get($1, current => $4)`],
             ['query .. SYMBOL', code`fn.recursive($1, $3)`],
             ['query .. ( e )', code`fn.recursive($1, current => $4)`],
-            ['query . [ e ]', code`fn.filter($1, current => $4)`]
+            ['query . [ e ]', code`fn.filter($1, current => $4)`],
+            ['query [ e ]', code`fn.get($1, $3)`]
         ],
 
         arguments: [

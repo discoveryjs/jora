@@ -31,10 +31,10 @@ const result = query(data, context);
 Jora | Description
 --- | ---
 42<br>4.222<br>-12.34e56 | Numbers
-"string" | A string
+"string"<br>'string' | A string
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
-{ } | Object initializer/literal syntax
-( ) | Array initializer/literal syntax<br>NOTE: Syntax will be changed to `[]`
+{ } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
+[ ] | Array initializer/literal syntax
 < > | A function<br>NOTE: Syntax will be changed
 symbol<br>'sym \'bol!' | A sequence of chars that matches to `[a-zA-Z_][a-zA-Z_$0-9]*`, otherwise it must be enclosed in quotes
 
@@ -85,6 +85,7 @@ SYMBOL | The same as `$.SYMBOL`
 .[ e ] | Filter a current data. Equivalent to a `.filter(<e>)`
 .( e ) | Map a current data. Equivalent to a `.map(<e>)`
 .method() | Invoke a method to current data, or each element of current data if it is an array
+path[key] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 
 ## Build-in methods
 

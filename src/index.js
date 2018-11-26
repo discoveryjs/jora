@@ -160,12 +160,12 @@ var buildin = Object.freeze({
                 return rx.test(data);
         }
     },
-    get: function(data, getter, ignoreType) {
+    get: function(data, getter) {
         const fn = typeof getter === 'function'
             ? getter
             : current => getPropertyValue(current, getter);
 
-        switch (!ignoreType && this.type(data)) {
+        switch (this.type(data)) {
             case TYPE_ARRAY:
                 const result = new Set();
 
@@ -301,13 +301,13 @@ var methods = Object.freeze({
 
         return current.slice().reverse();
     },
-    group: function(current, keyFetcher, valueFetcher) {
-        if (typeof keyFetcher !== 'function') {
-            keyFetcher = noop;
+    group: function(current, keyGetter, valueGetter) {
+        if (typeof keyGetter !== 'function') {
+            keyGetter = noop;
         }
 
-        if (typeof valueFetcher !== 'function') {
-            valueFetcher = self;
+        if (typeof valueGetter !== 'function') {
+            valueGetter = self;
         }
 
         if (buildin.type(current) !== TYPE_ARRAY) {
@@ -318,12 +318,12 @@ var methods = Object.freeze({
         const result = [];
 
         current.forEach(item => {
-            const key = keyFetcher(item);
+            const key = keyGetter(item);
 
             if (map.has(key)) {
-                map.get(key).add(valueFetcher(item));
+                map.get(key).add(valueGetter(item));
             } else {
-                map.set(key, new Set([valueFetcher(item)]));
+                map.set(key, new Set([valueGetter(item)]));
             }
         });
 
