@@ -1,3 +1,7 @@
+## next
+
+- Added computed properties support in object literals
+
 ## 1.0.0-alpha.4 (November 25, 2018)
 
 - Added ternary operator (i.e. `a ? b : c`)

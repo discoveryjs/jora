@@ -101,10 +101,32 @@ describe('primitives', () => {
             );
         });
 
+        it('computed properties', () => {
+            assert.deepEqual(
+                query('{ [foo]: "foo" }')({ foo: 'bar' }),
+                { bar: 'foo' }
+            );
+
+            assert.deepEqual(
+                query('{ ["property" + @.bar]: "foo" }')({ foo: 'bar', bar: 1 }),
+                { property1: 'foo' }
+            );
+        });
+
         it('spread object', () => {
             assert.deepEqual(
-                query('{ foo: 1, ...@ }')(data[1]),
-                Object.assign({ foo: 1 }, data[1])
+                query('{ foo: 1, ...bar }')({ bar: { baz: 1 } }),
+                { foo: 1, baz: 1 }
+            );
+
+            assert.deepEqual(
+                query('{ foo: 1, ...bar.baz }')({ bar: { baz: { qux: 1 } } }),
+                { foo: 1, qux: 1 }
+            );
+
+            assert.deepEqual(
+                query('{ foo: 1, ...@ }')({ bar: 2, baz: 3 }),
+                { foo: 1, bar: 2, baz: 3 }
             );
         });
 
@@ -115,8 +137,8 @@ describe('primitives', () => {
             );
 
             assert.deepEqual(
-                query('{ foo: 1, ...,  baz: 3 }')({ foo: 2, bar: 2 }),
-                Object.assign({ foo: 1 }, { foo: 2, bar: 2 }, { baz: 3 })
+                query('{ foo: 1, ...,  baz: 3 }')({ foo: 2, bar: 2, baz: 2 }),
+                { foo: 2, bar: 2, baz: 3 }
             );
         });
     });
