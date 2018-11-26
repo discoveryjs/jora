@@ -1,6 +1,6 @@
 {
   "name": "jora",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "JavaScript object query engine",
   "keywords": [],
   "homepage": "https://github.com/lahmatiy/jora",
@@ -27,7 +27,7 @@
     "test": "mocha --reporter progress",
     "build": "npm run build:parser && browserify --standalone jora src/index.js > dist/jora.js && uglifyjs dist/jora.js --compress --mangle -o dist/jora.min.js",
     "build:parser": "node -e \"console.log(require('./src/parser').generateModule() + ';module.exports=parser;');\" > dist/parser.js",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "coverage": "istanbul cover _mocha -- -R min",
     "travis": "npm run lint-and-test && npm run coveralls",
     "coveralls": "istanbul cover _mocha --report lcovonly -- -R min && cat ./coverage/lcov.info | coveralls"

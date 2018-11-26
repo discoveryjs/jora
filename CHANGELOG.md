@@ -1,4 +1,4 @@
-## next
+## 1.0.0-alpha.5 (November 26, 2018)
 
 - Added computed property names support in object literals
 - Added `pick()` method
