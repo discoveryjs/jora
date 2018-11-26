@@ -43,16 +43,30 @@ describe('primitives', () => {
         );
     });
 
-    it('a string', () => {
-        assert.strictEqual(
-            query('"string"')(data),
-            'string'
-        );
+    describe('a string', () => {
+        it('double quote', () => {
+            assert.strictEqual(
+                query('"string"')(data),
+                'string'
+            );
 
-        assert.strictEqual(
-            query('"str\\"ing"')(data),
-            'str"ing'
-        );
+            assert.strictEqual(
+                query('"str\\"ing"')(data),
+                'str"ing'
+            );
+        });
+
+        it('single quote', () => {
+            assert.strictEqual(
+                query("'string'")(data),
+                'string'
+            );
+
+            assert.strictEqual(
+                query("'str\\'ing'")(data),
+                "str'ing"
+            );
+        });
     });
 
     it('a regexp', () => {

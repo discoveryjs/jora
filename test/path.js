@@ -51,12 +51,17 @@ describe('path', () => {
 
     it('should allow escaped symbols in paths', () => {
         assert.deepEqual(
-            query('something.does.\'not\'.exists')(data),
+            query('something.does.($["not"]).exists')(data),
             []
         );
 
         assert.deepEqual(
-            query('\'\\\'"\'')(data),
+            query('.($[\'\\\'"\'])')(data),
+            ['a key with special chars']
+        );
+
+        assert.deepEqual(
+            query('.($["\'\\""])')(data),
             ['a key with special chars']
         );
     });
@@ -69,6 +74,11 @@ describe('path', () => {
 
         assert.deepEqual(
             query('$["foo"]["bar"]')({ foo: { bar: 42 } }),
+            42
+        );
+
+        assert.deepEqual(
+            query('$[keys()[1]]')({ foo: 'asd', bar: 42 }),
             42
         );
 
