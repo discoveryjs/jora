@@ -139,16 +139,12 @@ var buildin = Object.freeze({
         return a >= b;
     },
     in: function(a, b) {
-        if (this.type(b) !== TYPE_ARRAY) {
-            return false;
-        }
-
-        switch (this.type(a)) {
-            // case TYPE_ARRAY:
-            //     break;
+        switch (this.type(b)) {
+            case TYPE_OBJECT:
+                return hasOwnProperty.call(b, a);
 
             default:
-                return b.indexOf(a) !== -1;
+                return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
         }
     },
     regexp: function(data, rx) {

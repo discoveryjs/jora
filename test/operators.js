@@ -190,11 +190,24 @@ describe('operators', () => {
     });
 
     describe('in', () => {
-        it('basic', () => {
+        it('basic usage with an array', () => {
             assert.deepEqual(
-                query('.[type in #]')(data, ['css', 'svg']),
-                data
-                    .filter(item => item.type === 'css' || item.type === 'svg')
+                query('.[$ in #]')(['foo', 'bar', 'baz'], ['foo', 'baz', 'qux']),
+                ['foo', 'baz']
+            );
+        });
+
+        it('basic usage with an object', () => {
+            assert.deepEqual(
+                query('.[$ in #]')(['foo', 'bar', 'baz'], { foo: 1, baz: undefined, qux: 2 }),
+                ['foo', 'baz']
+            );
+        });
+
+        it('basic usage with a string', () => {
+            assert.deepEqual(
+                query('.[$ in #]')(['foo', 'bar', 'baz'], 'foobaz'),
+                ['foo', 'baz']
             );
         });
 
@@ -208,9 +221,18 @@ describe('operators', () => {
 
         it('a not in b', () => {
             assert.deepEqual(
-                query('.[type not in #]')(data, ['css', 'svg']),
-                data
-                    .filter(item => item.type !== 'css' && item.type !== 'svg')
+                query('.[$ not in #]')(['foo', 'bar', 'baz'], ['foo', 'baz', 'qux']),
+                ['bar']
+            );
+
+            assert.deepEqual(
+                query('.[$ not in #]')(['foo', 'bar', 'baz'], { foo: 1, baz: undefined, qux: 2 }),
+                ['bar']
+            );
+
+            assert.deepEqual(
+                query('.[$ not in #]')(['foo', 'bar', 'baz'], 'foobaz'),
+                ['bar']
             );
         });
     });
