@@ -423,8 +423,10 @@ describe('buildin methods', () => {
             });
 
             it('should works fine for falsy values', () => {
-                query('pick(< $ > 20 >)')(),
-                undefined
+                assert.deepEqual(
+                    query('pick(< $ > 20 >)')(),
+                    undefined
+                );
             });
         });
     });
