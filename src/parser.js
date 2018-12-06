@@ -72,7 +72,7 @@ var grammar = {
     // Operator precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
-        ['left', '?', ':'],
+        ['right', '?', ':'],
         ['left', ','],
         ['left', 'OR'],
         ['left', 'AND'],

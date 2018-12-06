@@ -270,7 +270,36 @@ describe('operators', () => {
     describe('?:', () => {
         it('basic', () => {
             assert.deepEqual(
-                query('[1 ? 2 : 3, 0 ? 2 : 3]')(data),
+                query('1 ? 42 : 3')(data),
+                42
+            );
+
+            assert.deepEqual(
+                query('0 ? 2 : 42')(data),
+                42
+            );
+
+            assert.deepEqual(
+                query('[] ? 2 : 42')(data),
+                42
+            );
+
+            assert.deepEqual(
+                query('{} ? 2 : 42')(data),
+                42
+            );
+        });
+
+        it('nested', () => {
+            assert.deepEqual(
+                query('.($="foo" ? 1 : $="bar" ? 2 : 3)')(['foo', 'bar', 'baz']),
+                [1, 2, 3]
+            );
+        });
+
+        it('nested 2', () => {
+            assert.deepEqual(
+                query('.($="foo" ? $="bar" ? 1 : 2 : 3)')(['foo', 'bar', 'baz']),
                 [2, 3]
             );
         });
