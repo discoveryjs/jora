@@ -390,5 +390,42 @@ describe('buildin methods', () => {
                 42
             );
         });
+
+        describe('a function as a reference', () => {
+            it('should works as Array#find() for an array', () => {
+                assert.deepEqual(
+                    query('pick(< $ > 20 >)')([0, 11, 22, 33]),
+                    22
+                );
+            });
+
+            it('should return an entry for anything else', () => {
+                assert.deepEqual(
+                    query('pick(<($ = 2)>)')({ foo: 1, bar: 2, baz: 3 }),
+                    { key: 'bar', value: 2 }
+                );
+
+                assert.deepEqual(
+                    query('pick(<($ = "a")>)')('foobar'),
+                    { key: 4, value: 'a' }
+                );
+            });
+
+            it('should return undefined when nothing found', () => {
+                assert.deepEqual(
+                    query('pick(< $ > 100 >)')([0, 11, 22, 33]),
+                    undefined
+                );
+                assert.deepEqual(
+                    query('pick(<($ = 42)>)')({ foo: 1, bar: 2, baz: 3 }),
+                    undefined
+                );
+            });
+
+            it('should works fine for falsy values', () => {
+                query('pick(< $ > 20 >)')(),
+                undefined
+            });
+        });
     });
 });

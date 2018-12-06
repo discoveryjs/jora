@@ -224,12 +224,28 @@ var methods = Object.freeze({
             .keys(current)
             .map(key => ({ key, value: current[key] }));
     },
-    pick: function(current, key) {
+    pick: function(current, ref) {
         if (!current) {
             return undefined;
         }
 
-        return Array.isArray(current) ? current[key || 0] : current[key];
+        if (typeof ref === 'function') {
+            if (Array.isArray(current)) {
+                return current.find(item => ref(item));
+            }
+
+            for (const key in current) {
+                if (hasOwnProperty.call(current, key)) {
+                    if (ref(current[key])) {
+                        return { key, value: current[key] };
+                    }
+                }
+            }
+
+            return;
+        }
+
+        return Array.isArray(current) ? current[ref || 0] : current[ref];
     },
     mapToArray: function(current, keyProperty = 'key', valueProperty) {
         const result = [];
