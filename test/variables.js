@@ -10,7 +10,7 @@ describe('definitions', () => {
         );
     });
 
-    it('unsing a definition', () => {
+    it('using a definition', () => {
         assert.deepEqual(
             query('$a:42;$a')(),
             42
@@ -40,6 +40,13 @@ describe('definitions', () => {
         assert.deepEqual(
             query('$a ; $b : 2 ; $a * $b')({ a: 21 }),
             42
+        );
+    });
+
+    it('should destruct to a regular key when using in short form on object', () => {
+        assert.deepEqual(
+            query('$a;{$a}')({ a: 42 }),
+            { a: 42 }
         );
     });
 

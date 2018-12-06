@@ -1,6 +1,7 @@
 ## next
 
 - Fixed nested ternary operator precendence
+- Added destuction for variables when used on object literal with no value (i.e. `{ $foo, bar: 1}` the same as `{ foo: $foo, bar: 1 }`)
 
 ## 1.0.0-alpha.5 (November 26, 2018)
 
