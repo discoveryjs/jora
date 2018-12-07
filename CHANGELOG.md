@@ -1,4 +1,4 @@
-## next
+## 1.0.0-alpha.6 (December 7, 2018)
 
 - Fixed nested ternary operator precendence
 - Added destuction for variables when used on object literal with no value (i.e. `{ $foo, bar: 1}` the same as `{ foo: $foo, bar: 1 }`)
