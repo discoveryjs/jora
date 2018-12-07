@@ -59,13 +59,6 @@ var buildin = Object.freeze({
                 return Boolean(data);
         }
     },
-    toArray: function(value) {
-        return Array.isArray(value)
-            ? value
-            : this.bool(value)
-                ? [value]
-                : [];
-    },
     add: function(a, b) {
         const typeA = this.type(a);
         const typeB = this.type(b);
