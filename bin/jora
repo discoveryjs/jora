@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+const clap = require('clap');
+const { toJson } = require('really-relaxed-json');
+const fs = require('fs');
+const jora = require('../src/index');
+
+// define command
+const command = clap.create('jora', '[file] [query]')
+    .version(require('../package.json').version)
+    .action(function(args) {
+        if (fs.existsSync(args[0])) {
+            const fileRaw = fs.readFileSync(args[0], 'utf-8')
+            const data = JSON.parse(toJson(fileRaw));
+            const query = jora(args[1]);
+            console.log(query(data));
+        } else {
+            throw Error('First argument must be a path to a file, can\'t find: ' + args[0]);
+        }
+    });
+
+// run command
+try {
+    command.run();
+} catch (e) {
+    // output user frendly message if cli error
+    if (e instanceof clap.Error) {
+        console.error(e.message || e);
+        process.exit(2);
+    }
+
+    // otherwise re-throw exception
+    throw e;
+}

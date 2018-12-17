@@ -174,6 +174,33 @@ jora@1.0.0
 ...
 ```
 
+## Use jora as a CLI tool
+
+You can use jora in terminal. Right now cli mode works only with files.
+
+## Quick CLI demo
+
+First you need to install jora globaly.
+```bash
+npm i -g jora
+```
+
+Then you can do this wonderful requests in terminal
+```bash
+# get all dependencies as array
+jora package.json '.dependencies.keys()+.devDependencies.keys()'
+
+# find dublicated packages
+npm ls --json > temp.json; # saving output as temp file
+jora temp.json "
+    ..(dependencies.mapToArray())
+        .group(<key>, <version>)
+        .({ name: key, versions: value })
+        .[versions.size() > 1]
+";
+rm temp.json # removing temp file
+```
+
 ## License
 
 MIT
