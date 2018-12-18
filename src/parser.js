@@ -92,10 +92,14 @@ var grammar = {
             ['block EOF', 'return $$ = $1;']
         ],
 
-        block: [
+        nonEmptyBlock: [
             ['definitions e', code`$1\nreturn $2`],
+            ['e', code`return $1`]
+        ],
+
+        block: [
+            ['nonEmptyBlock', code`$1`],
             ['definitions', code`$1\nreturn current`],
-            ['e', code`return $1`],
             ['', code`return current`]
         ],
 
@@ -118,7 +122,10 @@ var grammar = {
 
             ['keyword', code`$1`],
             ['function', code`$1`],
+            ['op', code`$1`]
+        ],
 
+        op: [
             ['NOT e', code`!fn.bool($2)`],
             ['e IN e', code`fn.in($1, $3)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
@@ -213,8 +220,7 @@ var grammar = {
 
         array: [
             ['[ ]', code`[]`],
-            ['[ e ]', code`[$2]`],
-            ['[ e , arrayItems ]', code`[$2, $4]`]
+            ['[ arrayItems ]', code`[$2]`]
         ],
 
         arrayItems: [
