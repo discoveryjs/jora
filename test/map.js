@@ -60,4 +60,11 @@ describe('map | .()', () => {
             expected
         );
     });
+
+    it('a whitespace between dot and parenthesis is prohibited', () => {
+        assert.throws(
+            () => query('. (deps)')(data),
+            /Lexical error/
+        );
+    });
 });

@@ -129,4 +129,11 @@ describe('filter | .[]', () => {
             expected
         );
     });
+
+    it('a whitespace between dot and bracket is prohibited', () => {
+        assert.throws(
+            () => query('. [filename]')(data),
+            /Parse error/
+        );
+    });
 });

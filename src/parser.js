@@ -50,6 +50,9 @@ var grammar = {
             // comment
             ['{ows}//.*?(\\n|$)', '/* a comment */'],
 
+            ['{ows}\\.\\.\\({ows}', 'return "..(";'],
+            ['{ows}\\.\\({ows}', 'return ".(";'],
+            ['{ows}\\.\\[{ows}', 'return ".[";'],
             ['{ows}\\.{1,3}', 'return yytext.trim();'],
             ['{ows}\\?{ows}', 'return "?";'],
             ['{ows},{ows}', 'return ",";'],
@@ -83,7 +86,8 @@ var grammar = {
         ['left', '+', '-'],
         ['left', '*', '/', '%'],
         // ['left', '^'],
-        ['left', '.', '..', '...']
+        ['left', '.', '..', '...'],
+        ['left', '.(', '.[', '..(']
     ],
     // Grammar
     start: 'root',
@@ -171,21 +175,21 @@ var grammar = {
             ['SYMBOL', code`fn.get(current, "$1")`],
             ['. SYMBOL', code`fn.get(current, "$2")`],
             ['( e )', code`($2)`],
-            ['. ( block )', code`fn.get(current, current => { $3 })`],
+            ['.( block )', code`fn.get(current, current => { $2 })`],
             ['SYMBOL ( arguments )', code`method.$1(current$3)`],
             ['. SYMBOL ( arguments )', code`method.$2(current$4)`],
             ['.. SYMBOL', code`fn.recursive(current, "$2")`],
-            ['.. ( block )', code`fn.recursive(current, current => { $3 })`],
-            ['. [ block ]', code`fn.filter(current, current => { $3 })`]
+            ['..( block )', code`fn.recursive(current, current => { $2 })`],
+            ['.[ block ]', code`fn.filter(current, current => { $2 })`]
         ],
 
         relativePath: [
             ['query . SYMBOL', code`fn.get($1, "$3")`],
             ['query . SYMBOL ( arguments )', code`method.$3($1$5)`],
-            ['query . ( block )', code`fn.get($1, current => { $4 })`],
+            ['query .( block )', code`fn.get($1, current => { $3 })`],
             ['query .. SYMBOL', code`fn.recursive($1, "$3")`],
-            ['query .. ( block )', code`fn.recursive($1, current => { $4 })`],
-            ['query . [ block ]', code`fn.filter($1, current => { $4 })`],
+            ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
+            ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
             ['query [ e ]', code`fn.get($1, $3)`]
         ],
 
