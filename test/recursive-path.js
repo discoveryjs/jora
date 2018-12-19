@@ -151,7 +151,7 @@ describe('recursive path', () => {
     it('a whitespace between dots and parenthesis is prohibited', () => {
         assert.throws(
             () => query('.. (deps)')(data),
-            /Lexical error/
+            /Parse error/
         );
     });
 });
