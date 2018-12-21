@@ -1,3 +1,8 @@
+## next
+
+- Disallowed a whitespace between a dot and a bracket in `.[`, `.(` and `..(` tokens
+- Changed filter (i.e. `.[]` or `.filter()`) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise
+
 ## 1.0.0-alpha.6 (December 7, 2018)
 
 - Fixed nested ternary operator precendence

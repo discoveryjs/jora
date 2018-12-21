@@ -99,6 +99,26 @@ describe('filter | .[]', () => {
         );
     });
 
+    describe('should return a value itself for a non-array value when expression is truthy or undefined otherwise', () => {
+        [
+            ['.[]', { foo: 42 }, { foo: 42 }],
+            ['.[foo=42]', { foo: 42 }, { foo: 42 }],
+            ['.[foo=43]', { foo: 42 }, undefined],
+            ['.[]', 42, 42],
+            ['.[$=42]', 42, 42],
+            ['.[$=43]', 42, undefined],
+            ['.[]', false, undefined],
+            ['.[true]', false, false]
+        ].forEach(([queryString, data, expected]) => {
+            it(queryString, () => {
+                assert.deepEqual(
+                    query(queryString)(data),
+                    expected
+                );
+            });
+        });
+    });
+
     it('optional whitespaces inside brackets', () => {
         assert.deepEqual(
             query('.[ errors ]')(data),

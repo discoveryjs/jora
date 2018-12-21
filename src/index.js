@@ -187,7 +187,7 @@ var buildin = Object.freeze({
                 );
 
             default:
-                return [];
+                return this.bool(query(data)) ? data : undefined;
         }
     }
 });
