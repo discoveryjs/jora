@@ -17,7 +17,9 @@ const jora = require('jora');
 const query = jora('foo.bar') ;
 // or with custom methods
 const query = jora('foo.myMethod()', {
-    myMethod(current) { /* do something and return a new value */ }
+    methods: {
+        myMethod(current) { /* do something and return a new value */ }
+    }
 });
 
 // perform a query
@@ -31,12 +33,11 @@ const result = query(data, context);
 Jora | Description
 --- | ---
 42<br>4.222<br>-12.34e56 | Numbers
-"string"<br>'string' | A string
+"string"<br>'string' | Strings
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax
 < > | A function<br>NOTE: Syntax will be changed
-symbol<br>'sym \'bol!' | A sequence of chars that matches to `[a-zA-Z_][a-zA-Z_$0-9]*`, otherwise it must be enclosed in quotes
 
 ### Comparisons
 
@@ -80,8 +81,8 @@ jora | Description
 $ | The current data object
 \# | The context
 SYMBOL | The same as `$.SYMBOL`
-.e | Child member operator (example: `foo.bar.baz`, `#.foo.'use any symbols for name'`)
-..e | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
+.e | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name]`)
+..SYMBOL<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ e ] | Filter a current data. Equivalent to a `.filter(<e>)`
 .( e ) | Map a current data. Equivalent to a `.map(<e>)`
 .method() | Invoke a method to current data, or each element of current data if it is an array

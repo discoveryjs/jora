@@ -7,8 +7,10 @@ describe('method', () => {
         const calls = [];
         return {
             calls,
-            log: function() {
-                calls.push([...arguments]);
+            methods: {
+                log() {
+                    calls.push([...arguments]);
+                }
             }
         };
     }

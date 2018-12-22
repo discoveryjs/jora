@@ -1,71 +1,106 @@
-const Jison = require('jison');
+const { Parser } = require('jison');
 
 function code(s) {
     return '$$ = [' +
-        s[0].split(/(\$\d+)/g).map((x, i) => i % 2 ? x : JSON.stringify(x)) +
+        s[0].split(/(\$[\da-zA-Z_]+|\/\*\S*@[\da-zA-Z_$]+(?:\/\S*@[\da-zA-Z_$]+)*\*\/\$?[\da-zA-Z_]+)/g).map(
+            (m, i) => {
+                if (i % 2) {
+                    if (m[0] === '/') {
+                        const content = m.substring(2, m.indexOf('*/'));
+                        const expr = m.substr(content.length + 4);
+                        const ranges = content.split('/').map(range => {
+                            const [context, loc] = range.split('@');
+                            return '"+@' + loc + '.range+",' + context;
+                        });
+
+                        return (
+                            '"/*s*/",' +
+                            (expr[0] === '$' ? expr : '"' + expr + '"') +
+                            ',"/*' + ranges + '*/"'
+                        );
+                    } else {
+                        return m;
+                    }
+                } else {
+                    return JSON.stringify(m);
+                }
+            }
+        ).filter(term => term !== '""') +
     '];';
 }
 
-var grammar = {
+const grammar = {
     // Lexical tokens
     lex: {
+        options: {
+            ranges: true
+        },
         macros: {
             wb: '\\b',
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+'    // required whitespaces
         },
         rules: [
-            ['\\({ows}', 'return "(";'],
-            ['{ows}\\)', 'return ")";'],
-            ['\\[{ows}', 'return "[";'],
-            ['{ows}\\]', 'return "]";'],
-            ['\\{{ows}', 'return "{";'],
-            ['{ows}\\}', 'return "}";'],
+            // ignore comments and whitespaces
+            ['//.*?(\\r|\\n|$)', '/* a comment */'],
+            ['{ws}', '/* a whitespace */'],
 
-            ['{ows}={ows}', 'return "=";'],
-            ['{ows}!={ows}', 'return "!=";'],
-            ['{ows}~={ows}', 'return "~=";'],
-            ['{ows}>={ows}', 'return ">=";'],
-            ['{ows}<={ows}', 'return "<=";'],
-            ['{ows}<{ows}', 'return "<";'],
-            ['{ows}>{ows}', 'return ">";'],
-            ['{ws}and{ws}', 'return "AND";'],
-            ['{ws}or{ws}' , 'return "OR";'],
-            ['{ws}in{ws}', 'return "IN";'],
-            ['{ws}not{ws}in{ws}', 'return "NOTIN";'],
-            ['not?{ws}', 'return "NOT";'],
+            // braces
+            ['\\(', 'return "(";'],
+            ['\\)', 'return ")";'],
+            ['\\[', 'return "[";'],
+            ['\\]', 'return "]";'],
+            ['\\{', 'return "{";'],
+            ['\\}', 'return "}";'],
 
-            ['{wb}true{wb}', 'return "TRUE";'],
-            ['{wb}false{wb}', 'return "FALSE";'],
-            ['{wb}null{wb}', 'return "NULL";'],
-            ['{wb}undefined{wb}', 'return "UNDEFINED";'],
+            // operators
+            ['=', 'return "=";'],
+            ['!=', 'return "!=";'],
+            ['~=', 'return "~=";'],
+            ['>=', 'return ">=";'],
+            ['<=', 'return "<=";'],
+            ['<', 'return "<";'],
+            ['>', 'return ">";'],
+            ['and{wb}', 'return "AND";'],
+            ['or{wb}' , 'return "OR";'],
+            ['in{wb}', 'return "IN";'],
+            ['not{ws}in{wb}', 'return "NOTIN";'],
+            ['not?{wb}', 'return "NOT";'],
 
+            // keywords
+            ['true{wb}', 'return "TRUE";'],
+            ['false{wb}', 'return "FALSE";'],
+            ['null{wb}', 'return "NULL";'],
+            ['undefined{wb}', 'return "UNDEFINED";'],
+
+            // self
             ['::self', 'return "SELF";'],
-            ['[0-9]+(?:\\.[0-9]+)?\\b', 'return "NUMBER";'], // 212.321
+
+            // primitives
+            ['\\d+(?:\\.\\d+)?{wb}', 'return "NUMBER";'],    // 212.321
             ['"(?:\\\\.|[^"])*"', 'return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", 'return "STRING";'],       // 'foo' 'with \' escaped'
             ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],      // /foo/i
             ['[a-zA-Z_][a-zA-Z_$0-9]*', 'return "SYMBOL";'], // foo123
 
-            // comment
-            ['{ows}//.*?(\\n|$)', '/* a comment */'],
+            // operators
+            ['\\.\\.\\(', 'return "..(";'],
+            ['\\.\\(', 'return ".(";'],
+            ['\\.\\[', 'return ".[";'],
+            ['\\.\\.\\.', 'return "...";'],
+            ['\\.\\.', 'return "..";'],
+            ['\\.', 'return ".";'],
+            ['\\?', 'return "?";'],
+            [',', 'return ",";'],
+            [':', 'return ":";'],
+            [';', 'return ";";'],
+            ['\\-', 'return "-";'],
+            ['\\+', 'return "+";'],
+            ['\\*', 'return "*";'],
+            ['\\/', 'return "/";'],
+            ['\\%', 'return "%";'],
 
-            ['{ows}\\.\\.\\({ows}', 'return "..(";'],
-            ['{ows}\\.\\({ows}', 'return ".(";'],
-            ['{ows}\\.\\[{ows}', 'return ".[";'],
-            ['{ows}\\.\\.\\.{ows}', 'return "...";'],
-            ['{ows}\\.\\.{ows}', 'return "..";'],
-            ['{ows}\\.{ows}', 'return ".";'],
-            ['{ows}\\?{ows}', 'return "?";'],
-            ['{ows},{ows}', 'return ",";'],
-            ['{ows}:{ows}', 'return ":";'],
-            ['{ows};{ows}', 'return ";";'],
-            ['{ows}\\-{ows}', 'return "-";'],
-            ['{ows}\\+{ows}', 'return "+";'],
-            ['{ows}\\*{ows}', 'return "*";'],
-            ['{ows}\\/{ows}', 'return "/";'],
-            ['{ows}\\%{ows}', 'return "%";'],
-            // ['{ows}\\^{ows}', 'return "%";'],
+            // special vars
             ['@', 'return "@";'],
             ['#', 'return "#";'],
             ['\\$', 'return "$";'],
@@ -87,7 +122,6 @@ var grammar = {
         ['left', '<', '<=', '>', '>='],
         ['left', '+', '-'],
         ['left', '*', '/', '%'],
-        // ['left', '^'],
         ['left', '.', '..', '...'],
         ['left', '.(', '.[', '..(']
     ],
@@ -106,7 +140,7 @@ var grammar = {
         block: [
             ['nonEmptyBlock', code`$1`],
             ['definitions', code`$1\nreturn current`],
-            ['', code`return current`]
+            ['', code`return /*@$*/current`]
         ],
 
         definitions: [
@@ -174,39 +208,37 @@ var grammar = {
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['SYMBOL', code`fn.get(current, "$1")`],
-            ['. SYMBOL', code`fn.get(current, "$2")`],
+            ['SYMBOL', code`fn.get(/*@1*/current, "$1")`],
+            ['. SYMBOL', code`fn.get(/*@2*/current, "$2")`],
             ['( e )', code`($2)`],
             ['.( block )', code`fn.get(current, current => { $2 })`],
-            ['SYMBOL ( arguments )', code`method.$1(current$3)`],
-            ['. SYMBOL ( arguments )', code`method.$2(current$4)`],
-            ['.. SYMBOL', code`fn.recursive(current, "$2")`],
+            ['SYMBOL ( )', code`method.$1(/*@1/@2*/current)`],
+            ['SYMBOL ( arguments )', code`method.$1(/*@1*/current, $3)`],
+            ['. SYMBOL ( )', code`method.$2(/*@2/@3*/current)`],
+            ['. SYMBOL ( arguments )', code`method.$2(/*@2*/current, $4)`],
+            ['.. SYMBOL', code`fn.recursive(/*@2*/current, "$2")`],
             ['..( block )', code`fn.recursive(current, current => { $2 })`],
             ['.[ block ]', code`fn.filter(current, current => { $2 })`]
         ],
 
         relativePath: [
-            ['query . SYMBOL', code`fn.get($1, "$3")`],
-            ['query . SYMBOL ( arguments )', code`method.$3($1$5)`],
+            ['query . SYMBOL', code`fn.get(/*@3*/$1, "$3")`],
+            ['query . SYMBOL ( )', code`method.$3(/*@3/@4*/$1)`],
+            ['query . SYMBOL ( arguments )', code`method.$3(/*@3*/$1, $5)`],
             ['query .( block )', code`fn.get($1, current => { $3 })`],
-            ['query .. SYMBOL', code`fn.recursive($1, "$3")`],
+            ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],
             ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
             ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
             ['query [ e ]', code`fn.get($1, $3)`]
         ],
 
         arguments: [
-            ['', code``],
-            ['argumentList', code`$1`]
-        ],
-
-        argumentList: [
-            ['e', code`, $1`],
-            ['argumentList , e', code`$1, $3`]
+            ['e', code`$1`],
+            ['arguments , e', code`$1, $3`]
         ],
 
         object: [
-            ['{ }', code`({})`],
+            ['{ }', code`(/*@1*/current, {})`],
             ['{ properties }', code`({ $2 })`]
         ],
 
@@ -216,7 +248,7 @@ var grammar = {
         ],
 
         property: [
-            ['SYMBOL', code`$1: fn.get(current, "$1")`],
+            ['SYMBOL', code`$1: fn.get(/*@1*/current, "$1")`],
             ['$ SYMBOL', code`$2: $$2`],
             ['SYMBOL : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
@@ -225,7 +257,7 @@ var grammar = {
         ],
 
         array: [
-            ['[ ]', code`[]`],
+            ['[ ]', code`(/*@1*/current, [])`],
             ['[ arrayItems ]', code`[$2]`]
         ],
 
@@ -240,4 +272,55 @@ var grammar = {
     }
 };
 
-module.exports = new Jison.Parser(grammar);
+const tollerantScopeStart = new Set([
+    '\\.', '\\.\\.', ',',
+    '\\+', '\\-', '\\*', '\\/', '\\%',
+    '=', '!=', '~=', '>=', '<=', /* '<',*/ '>',
+    'and{wb}', 'or{wb}', 'in{wb}', 'not{ws}in{wb}', 'not?{wb}'
+]);
+const tollerantGrammar = Object.assign({}, grammar, {
+    lex: Object.assign({}, grammar.lex, {
+        startConditions: {
+            suggestPoint: 1,
+            suggestPointWhenWhitespace: 1
+        },
+        rules: [
+            [['suggestPoint'],
+                '(?=({ows}//.*([\\r\\n]+|$))*{ows}([\\]\\)\\}\\>,]|$))',
+                'this.popState(); yytext = "_"; return "SYMBOL";'
+            ],
+            [['suggestPointWhenWhitespace'],
+                '{ws}',
+                'this.popState(); this.begin("suggestPoint");'
+            ],
+            [['suggestPoint', 'suggestPointWhenWhitespace'],
+                '',
+                'this.popState();'
+            ]
+        ].concat(
+            grammar.lex.rules.map(([rule, action]) => {
+                if (tollerantScopeStart.has(rule)) {
+                    action = `this.begin("suggestPoint${
+                        rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
+                    }"); ${action}`;
+                }
+
+                return [rule, action];
+            })
+        )
+    })
+});
+
+// guard to keep in sync tollerantScopeStart and lex rules
+tollerantScopeStart.forEach(rule => {
+    if (tollerantGrammar.lex.rules.every(lexRule => lexRule[0] !== rule)) {
+        throw new Error('Rule missed in lexer: ' + rule);
+    }
+});
+
+const strictParser = new Parser(grammar);
+const tollerantParser = new Parser(tollerantGrammar);
+
+module.exports = strictParser;
+module.exports.strict = strictParser;
+module.exports.tollerant = tollerantParser;
