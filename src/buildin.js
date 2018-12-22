@@ -1,74 +1,49 @@
 const {
-    TYPE_ARRAY,
-    TYPE_OBJECT,
     addToSet,
-    getType,
     getPropertyValue,
     isPlainObject
 } = require('./utils');
 
 module.exports = Object.freeze({
-    bool: function(data) {
-        switch (getType(data)) {
-            case TYPE_ARRAY:
-                return data.length > 0;
-
-            case TYPE_OBJECT:
-                for (let key in data) {
-                    if (hasOwnProperty.call(data, key)) {
-                        return true;
-                    }
-                }
-                return false;
-
-            default:
-                return Boolean(data);
+    bool: function(value) {
+        if (Array.isArray(value)) {
+            return value.length > 0;
         }
+
+        if (isPlainObject(value)) {
+            for (const key in value) {
+                if (hasOwnProperty.call(value, key)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return Boolean(value);
     },
     add: function(a, b) {
-        const typeA = getType(a);
-        const typeB = getType(b);
-
-        if (typeA !== TYPE_ARRAY) {
-            if (typeB === TYPE_ARRAY) {
-                [a, b] = [b, a];
-            }
+        if (Array.isArray(a) || Array.isArray(b)) {
+            return [...new Set([].concat(a, b))];
         }
 
-        switch (getType(a)) {
-            case TYPE_ARRAY:
-                return [...new Set([].concat(a, b))];
-
-            case TYPE_OBJECT:
-                return Object.assign({}, a, b);
-
-            default:
-                return a + b;
-        }
+        return a + b;
     },
     sub: function(a, b) {
-        switch (getType(a)) {
-            case TYPE_ARRAY:
-                const result = new Set(a);
+        if (Array.isArray(a)) {
+            const result = new Set(a);
 
-                // filter b items from a
-                if (Array.isArray(b)) {
-                    b.forEach(item => result.delete(item));
-                } else {
-                    result.delete(b);
-                }
+            // filter b items from a
+            if (Array.isArray(b)) {
+                b.forEach(item => result.delete(item));
+            } else {
+                result.delete(b);
+            }
 
-                return [...result];
-
-            case TYPE_OBJECT:
-                // not sure what we need do here:
-                // - just filter keys from `a`
-                // - or filter key+value pairs?
-                // - take in account type of b? (array, Object.keys(b), scalar as a key)
-
-            default:
-                return a - b;
+            return [...result];
         }
+
+        return a - b;
     },
     mul: function(a, b) {
         return a * b;
@@ -98,46 +73,40 @@ module.exports = Object.freeze({
         return a >= b;
     },
     in: function(a, b) {
-        switch (getType(b)) {
-            case TYPE_OBJECT:
-                return hasOwnProperty.call(b, a);
-
-            default:
-                return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
+        if (isPlainObject(b)) {
+            return hasOwnProperty.call(b, a);
         }
-    },
-    regexp: function(data, rx) {
-        switch (getType(data)) {
-            case TYPE_ARRAY:
-                return this.filter(data, current => rx.test(current));
 
-            default:
-                return rx.test(data);
-        }
+        return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
     },
-    get: function(data, getter) {
+    regexp: function(value, rx) {
+        if (Array.isArray(value)) {
+            return this.filter(value, current => rx.test(current));
+        }
+
+        return rx.test(value);
+    },
+    get: function(value, getter) {
         const fn = typeof getter === 'function'
             ? getter
             : current => getPropertyValue(current, getter);
 
-        switch (getType(data)) {
-            case TYPE_ARRAY:
-                const result = new Set();
+        if (Array.isArray(value)) {
+            const result = new Set();
 
-                for (let i = 0; i < data.length; i++) {
-                    addToSet(fn(data[i]), result);
-                }
+            for (let i = 0; i < value.length; i++) {
+                addToSet(fn(value[i]), result);
+            }
 
-                return [...result];
-
-            default:
-                return data !== undefined ? fn(data) : data;
+            return [...result];
         }
+
+        return value !== undefined ? fn(value) : value;
     },
-    recursive: function(data, getter) {
+    recursive: function(value, getter) {
         const result = new Set();
 
-        addToSet(this.get(data, getter), result);
+        addToSet(this.get(value, getter), result);
 
         result.forEach(current =>
             addToSet(this.get(current, getter), result)
@@ -145,18 +114,14 @@ module.exports = Object.freeze({
 
         return [...result];
     },
-    filter: function(data, query) {
-        switch (getType(data)) {
-            case TYPE_ARRAY:
-                return data.filter(current =>
-                    this.bool(query(current))
-                );
-
-            default:
-                return this.bool(query(data)) ? data : undefined;
+    filter: function(value, fn) {
+        if (Array.isArray(value)) {
+            return value.filter(current => this.bool(fn(current)));
         }
+
+        return this.bool(fn(value)) ? value : undefined;
     },
-    suggest: function(data, idx, suggests) {
+    suggest: function(value, idx, suggests) {
         let list;
 
         if (!suggests.has(idx)) {
@@ -166,16 +131,16 @@ module.exports = Object.freeze({
             list = suggests.get(idx);
         }
 
-        if (Array.isArray(data)) {
-            data.forEach(item => {
+        if (Array.isArray(value)) {
+            value.forEach(item => {
                 if (isPlainObject(item)) {
                     addToSet(Object.keys(item), list);
                 }
             });
-        } else if (isPlainObject(data)) {
-            addToSet(Object.keys(data), list);
+        } else if (isPlainObject(value)) {
+            addToSet(Object.keys(value), list);
         }
 
-        return data;
+        return value;
     }
 });

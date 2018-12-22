@@ -1,9 +1,7 @@
 const buildin = require('./buildin');
 const {
-    TYPE_ARRAY,
-    TYPE_OBJECT,
     addToSet,
-    getType
+    isPlainObject
 } = require('./utils');
 
 function noop() {}
@@ -13,29 +11,33 @@ function self(value) {
 }
 
 module.exports = Object.freeze({
-    bool: function(current) {
-        return buildin.bool(current);
-    },
+    bool: buildin.bool,
+    filter: buildin.filter,
+    map: buildin.get,
     keys: function(current) {
         return Object.keys(current || {});
     },
     values: function(current) {
         const values = new Set();
 
-        Object
-            .values(current || {})
-            .forEach(value => addToSet(value, values));
+        for (const key in current) {
+            if (hasOwnProperty.call(current, key)) {
+                addToSet(current[key], values);
+            }
+        }
 
         return [...values];
     },
     entries: function(current) {
-        if (!current) {
-            return [];
+        const entries = [];
+
+        for (const key in current) {
+            if (hasOwnProperty.call(current, key)) {
+                entries.push({ key, value: current[key] });
+            }
         }
 
-        return Object
-            .keys(current)
-            .map(key => ({ key, value: current[key] }));
+        return entries;
     },
     pick: function(current, ref) {
         if (!current) {
@@ -63,7 +65,7 @@ module.exports = Object.freeze({
     mapToArray: function(current, keyProperty = 'key', valueProperty) {
         const result = [];
 
-        for (let key in current) {
+        for (const key in current) {
             if (hasOwnProperty.call(current, key)) {
                 result.push(
                     valueProperty
@@ -76,11 +78,11 @@ module.exports = Object.freeze({
         return result;
     },
     size: function(current) {
-        switch (getType(current)) {
-            case TYPE_ARRAY:
+        switch (true) {
+            case Array.isArray(current):
                 return current.length;
 
-            case TYPE_OBJECT:
+            case isPlainObject(current):
                 return Object.keys(current).length;
 
             default:
@@ -88,7 +90,7 @@ module.exports = Object.freeze({
         }
     },
     sort: function(current, fn) {
-        if (getType(current) !== TYPE_ARRAY) {
+        if (!Array.isArray(current)) {
             return current;
         }
 
@@ -120,7 +122,7 @@ module.exports = Object.freeze({
         return current.slice().sort();
     },
     reverse: function(current) {
-        if (getType(current) !== TYPE_ARRAY) {
+        if (!Array.isArray(current)) {
             return current;
         }
 
@@ -135,7 +137,7 @@ module.exports = Object.freeze({
             valueGetter = self;
         }
 
-        if (getType(current) !== TYPE_ARRAY) {
+        if (!Array.isArray(current)) {
             current = [current];
         }
 
@@ -157,11 +159,5 @@ module.exports = Object.freeze({
         );
 
         return result;
-    },
-    filter: function(current, fn) {
-        return buildin.filter(current, fn);
-    },
-    map: function(current, fn) {
-        return buildin.get(current, fn);
     }
 });
