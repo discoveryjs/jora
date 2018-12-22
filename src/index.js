@@ -15,27 +15,29 @@ function isWhiteSpace(str, offset) {
 }
 
 function valuesToSuggestions(values) {
-    return [...[...values].reduce(
-        (list, value) => {
-            if (Array.isArray(value)) {
-                value.forEach(item => {
-                    if (isPlainObject(item)) {
-                        addToSet(list, Object.keys(item));
-                    }
-                });
-            } else if (isPlainObject(value)) {
-                addToSet(list, Object.keys(value));
-            }
-            return list;
-        },
-        new Set()
-    )];
+    const suggestions = new Set();
+
+    values.forEach(value => {
+        if (Array.isArray(value)) {
+            value.forEach(item => {
+                if (isPlainObject(item)) {
+                    addToSet(suggestions, Object.keys(item));
+                }
+            });
+        } else if (isPlainObject(value)) {
+            addToSet(suggestions, Object.keys(value));
+        }
+    });
+
+    return [...suggestions];
 }
 
 function compileFunction(source, suggestMode, debug) {
     const parser = suggestMode ? tollerantParser : strictParser;
     const code = [];
-    let body;
+    const suggestPoints = [];
+    let suggestSets = [];
+    let body = [];
     let tree;
 
     if (debug) {
@@ -62,8 +64,8 @@ function compileFunction(source, suggestMode, debug) {
             if (node === '/*s*/') {
                 code.push('suggestPoint(');
             } else {
+                const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
                 const items = node.substring(2, node.length - 2).split(',');
-                const ranges = [];
 
                 // FIXME: position correction should be in parser
                 for (let i = 0; i < items.length; i += 3) {
@@ -81,39 +83,32 @@ function compileFunction(source, suggestMode, debug) {
                         }
                     }
 
-                    ranges.push(from, to, context);
+                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context}"]`);
                 }
 
-                code.push(`, "${ranges}")`);
+                code.push(`, sp${pointId})`);
             }
         } else {
             code.push(node);
         }
     });
 
-    body = [
-        'const $data = undefined, $context = undefined, $ctx = undefined, $array = undefined, $idx = undefined, $index = undefined;', // preserved variables
+    if (suggestSets.length) {
+        body.push(
+            'const ' + suggestSets.join(', ') + ';',
+            'const suggestPoint = (value, set) => set.add(value) && value;'
+        );
+    }
+
+    body.push(
+        // preserved variables
+        'const $data = undefined, $context = undefined, $ctx = undefined, $array = undefined, $idx = undefined, $index = undefined;',
         'let current = data;',
         code.join('')
-    ];
+    );
 
     if (suggestMode) {
-        body.unshift(
-            `function suggestPoint(value, idx) {
-                if (!suggests.has(idx)) {
-                    suggests.set(idx, new Set([value]));
-                } else {
-                    suggests.get(idx).add(value);
-                }
-            
-                return value;
-            }`,
-            'const suggests = new Map();'
-        );
-        body.push(body.pop().replace(/^return\s+/, ''));
-        body.push('return suggests');
-    } else {
-        body.unshift('const suggests = undefined;');
+        body.push(`,[${suggestPoints}]`);
     }
 
     if (debug) {
@@ -147,45 +142,37 @@ module.exports = function createQuery(source, options) {
 
     if (suggestMode) {
         return function query(data, context, suggestPos = -1) {
-            const suggestions = fn(buildin, localMethods, data, context, query);
+            const points = fn(buildin, localMethods, data, context, query);
 
             if (suggestPos === -1) {
-                suggestions.forEach((values, key, map) => {
-                    map.set(key, valuesToSuggestions(values));
-                });
-
-                return suggestions;
+                return points.map(([values, from, to, context]) => ({
+                    context: context || 'path',
+                    list: valuesToSuggestions(values),
+                    from,
+                    to
+                }));
             }
 
-            const points = [...suggestions.keys()];
-
             for (let i = 0; i < points.length; i++) {
-                const range = points[i];
-                let items = range.split(',');
+                let [values, from, to, context] = points[i];
 
-                for (let j = 0; j < items.length; j += 3) {
-                    let from = Number(items[j]);
-                    let to = Number(items[j + 1]);
-                    let context = items[j + 2];
+                if (suggestPos >= from && suggestPos <= to) {
+                    let current = source.substring(from, to);
 
-                    if (suggestPos >= from && suggestPos <= to) {
-                        let current = source.substring(from, to);
-
-                        if (!/\S/.test(current)) {
-                            current = '';
-                            from = to = suggestPos;
-                        }
-
-                        // console.log({current, variants:[...suggestions.get(range)], suggestions })
-                        return {
-                            context: context || 'path',
-                            current,
-                            list: [...valuesToSuggestions(suggestions.get(range))]
-                                .map(name => `property:${name}`), // .concat(Object.keys(localMethods).map(name => `method:${name}()`)),
-                            from,
-                            to
-                        };
+                    if (!/\S/.test(current)) {
+                        current = '';
+                        from = to = suggestPos;
                     }
+
+                    // console.log({current, variants:[...suggestions.get(range)], suggestions })
+                    return {
+                        context: context || 'path',
+                        current,
+                        list: valuesToSuggestions(values)
+                            .map(name => `property:${name}`), // .concat(Object.keys(localMethods).map(name => `method:${name}()`)),
+                        from,
+                        to
+                    };
                 }
             }
 
