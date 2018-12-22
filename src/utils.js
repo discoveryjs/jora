@@ -1,4 +1,4 @@
-function addToSet(value, set) {
+function addToSet(set, value) {
     if (value !== undefined) {
         if (Array.isArray(value)) {
             value.forEach(item => set.add(item));
@@ -6,6 +6,8 @@ function addToSet(value, set) {
             set.add(value);
         }
     }
+
+    return set;
 }
 
 function getPropertyValue(value, property) {

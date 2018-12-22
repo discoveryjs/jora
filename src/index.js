@@ -4,6 +4,7 @@ const {
     strict: strictParser,
     tollerant: tollerantParser
 } = require('./parser');
+const { addToSet, isPlainObject} = require('./utils');
 
 const cacheRegular = new Map();
 const cacheSuggest = new Map();
@@ -11,6 +12,24 @@ const cacheSuggest = new Map();
 function isWhiteSpace(str, offset) {
     const code = str.charCodeAt(offset);
     return code === 9 || code === 10 || code === 13 || code === 32;
+}
+
+function valuesToSuggestions(values) {
+    return [...[...values].reduce(
+        (list, value) => {
+            if (Array.isArray(value)) {
+                value.forEach(item => {
+                    if (isPlainObject(item)) {
+                        addToSet(list, Object.keys(item));
+                    }
+                });
+            } else if (isPlainObject(value)) {
+                addToSet(list, Object.keys(value));
+            }
+            return list;
+        },
+        new Set()
+    )];
 }
 
 function compileFunction(source, suggestMode, debug) {
@@ -41,7 +60,7 @@ function compileFunction(source, suggestMode, debug) {
             node.forEach(toCode);
         } else if (suggestMode && node.startsWith('/*')) {
             if (node === '/*s*/') {
-                code.push('fn.suggest(');
+                code.push('suggestPoint(');
             } else {
                 const items = node.substring(2, node.length - 2).split(',');
                 const ranges = [];
@@ -65,7 +84,7 @@ function compileFunction(source, suggestMode, debug) {
                     ranges.push(from, to, context);
                 }
 
-                code.push(`, "${ranges}", suggests)`);
+                code.push(`, "${ranges}")`);
             }
         } else {
             code.push(node);
@@ -79,7 +98,18 @@ function compileFunction(source, suggestMode, debug) {
     ];
 
     if (suggestMode) {
-        body.unshift('const suggests = new Map();');
+        body.unshift(
+            `function suggestPoint(value, idx) {
+                if (!suggests.has(idx)) {
+                    suggests.set(idx, new Set([value]));
+                } else {
+                    suggests.get(idx).add(value);
+                }
+            
+                return value;
+            }`,
+            'const suggests = new Map();'
+        );
         body.push(body.pop().replace(/^return\s+/, ''));
         body.push('return suggests');
     } else {
@@ -120,6 +150,10 @@ module.exports = function createQuery(source, options) {
             const suggestions = fn(buildin, localMethods, data, context, query);
 
             if (suggestPos === -1) {
+                suggestions.forEach((values, key, map) => {
+                    map.set(key, valuesToSuggestions(values));
+                });
+
                 return suggestions;
             }
 
@@ -146,7 +180,7 @@ module.exports = function createQuery(source, options) {
                         return {
                             context: context || 'path',
                             current,
-                            list: [...suggestions.get(range)]
+                            list: [...valuesToSuggestions(suggestions.get(range))]
                                 .map(name => `property:${name}`), // .concat(Object.keys(localMethods).map(name => `method:${name}()`)),
                             from,
                             to

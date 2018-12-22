@@ -92,13 +92,12 @@ module.exports = Object.freeze({
             : current => getPropertyValue(current, getter);
 
         if (Array.isArray(value)) {
-            const result = new Set();
-
-            for (let i = 0; i < value.length; i++) {
-                addToSet(fn(value[i]), result);
-            }
-
-            return [...result];
+            return [
+                ...value.reduce(
+                    (set, item) => addToSet(set, fn(item)),
+                    new Set()
+                )
+            ];
         }
 
         return value !== undefined ? fn(value) : value;
@@ -106,10 +105,10 @@ module.exports = Object.freeze({
     recursive: function(value, getter) {
         const result = new Set();
 
-        addToSet(this.get(value, getter), result);
+        addToSet(result, this.get(value, getter));
 
         result.forEach(current =>
-            addToSet(this.get(current, getter), result)
+            addToSet(result, this.get(current, getter))
         );
 
         return [...result];
@@ -120,27 +119,5 @@ module.exports = Object.freeze({
         }
 
         return this.bool(fn(value)) ? value : undefined;
-    },
-    suggest: function(value, idx, suggests) {
-        let list;
-
-        if (!suggests.has(idx)) {
-            list = new Set();
-            suggests.set(idx, list);
-        } else {
-            list = suggests.get(idx);
-        }
-
-        if (Array.isArray(value)) {
-            value.forEach(item => {
-                if (isPlainObject(item)) {
-                    addToSet(Object.keys(item), list);
-                }
-            });
-        } else if (isPlainObject(value)) {
-            addToSet(Object.keys(value), list);
-        }
-
-        return value;
     }
 });

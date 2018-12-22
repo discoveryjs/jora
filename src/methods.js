@@ -22,7 +22,7 @@ module.exports = Object.freeze({
 
         for (const key in current) {
             if (hasOwnProperty.call(current, key)) {
-                addToSet(current[key], values);
+                addToSet(values, current[key]);
             }
         }
 
