@@ -23,13 +23,17 @@ function suggestQuery(str, data, context) {
 }
 
 function suggestion(current, list, from, to = from) {
-    return {
-        context: 'path',
-        current,
-        list: list.map(text => 'property:' + text),
-        from,
-        to
-    };
+    return list.map(item => {
+        const [value, type = 'property'] = item.split(':');
+
+        return {
+            current,
+            type,
+            value,
+            from,
+            to
+        };
+    });
 }
 
 describe('suggest', () => {
@@ -242,7 +246,7 @@ describe('suggest: autocorrection', () => {
             suggestQuery('.foo.[.|].|', data),
             [
                 suggestion('', ['a', 'b', 'c', 'd'], 7),
-                suggestion('', [], 9)
+                null
             ]
         );
     });
@@ -338,6 +342,34 @@ describe('suggest: autocorrection', () => {
                     [
                         null,
                         suggestion('', ['foo', 'bar'], queryString.length + 1)
+                    ]
+                );
+            });
+        });
+    });
+
+    describe('value suggestion', () => {
+        it('in', () => {
+            assert.deepEqual(
+                suggestQuery('|a| |i|n| ["a", "b", 3]', data),
+                [
+                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
+                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
+                    null,
+                    null,
+                    null
+                ]
+            );
+        });
+
+        ['=', '!='].forEach(operator => {
+            const queryString = 'foo.b ' + operator + '| |';
+            it(queryString, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data),
+                    [
+                        suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 3),
+                        suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 2)
                     ]
                 );
             });

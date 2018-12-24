@@ -167,7 +167,7 @@ const grammar = {
 
         op: [
             ['NOT e', code`!fn.bool($2)`],
-            ['e IN e', code`fn.in($1, $3)`],
+            ['e IN e', code`fn.in($1, /*in-value@1*/$3)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
             ['e AND e', code`fn.bool($1) ? $3 : $1`],
             ['e OR e', code`fn.bool($1) ? $1 : $3`],
@@ -177,8 +177,8 @@ const grammar = {
             ['e * e', code`fn.mul($1, $3)`],
             ['e / e', code`fn.div($1, $3)`],
             ['e % e', code`fn.mod($1, $3)`],
-            ['e = e', code`fn.eq($1, $3)`],
-            ['e != e', code`fn.ne($1, $3)`],
+            ['e = e', code`fn.eq(/*value@3*/$1, $3)`],
+            ['e != e', code`fn.ne(/*value@3*/$1, $3)`],
             ['e < e', code`fn.lt($1, $3)`],
             ['e <= e', code`fn.lte($1, $3)`],
             ['e > e', code`fn.gt($1, $3)`],

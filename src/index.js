@@ -8,26 +8,68 @@ const { addToSet, isPlainObject} = require('./utils');
 
 const cacheRegular = new Map();
 const cacheSuggest = new Map();
+const contextToType = {
+    '': 'property',
+    'path': 'property',
+    'value': 'value',
+    'in-value': 'value'
+};
 
 function isWhiteSpace(str, offset) {
     const code = str.charCodeAt(offset);
     return code === 9 || code === 10 || code === 13 || code === 32;
 }
 
-function valuesToSuggestions(values) {
+function valuesToSuggestions(context, values) {
     const suggestions = new Set();
+    const addValue = value => {
+        switch (typeof value) {
+            case 'string':
+                addToSet(suggestions, JSON.stringify(value));
+                break;
+            case 'number':
+                addToSet(suggestions, String(value));
+                break;
+        }
+    };
 
-    values.forEach(value => {
-        if (Array.isArray(value)) {
-            value.forEach(item => {
-                if (isPlainObject(item)) {
-                    addToSet(suggestions, Object.keys(item));
+    switch (context) {
+        case '':
+        case 'path':
+            values.forEach(value => {
+                if (Array.isArray(value)) {
+                    value.forEach(item => {
+                        if (isPlainObject(item)) {
+                            addToSet(suggestions, Object.keys(item));
+                        }
+                    });
+                } else if (isPlainObject(value)) {
+                    addToSet(suggestions, Object.keys(value));
                 }
             });
-        } else if (isPlainObject(value)) {
-            addToSet(suggestions, Object.keys(value));
-        }
-    });
+            break;
+
+        case 'value':
+            values.forEach(value => {
+                if (Array.isArray(value)) {
+                    value.forEach(addValue);
+                } else {
+                    addValue(value);
+                }
+            });
+            break;
+
+        case 'in-value':
+            values.forEach(value => {
+                if (Array.isArray(value)) {
+                    value.forEach(addValue);
+                } else if (isPlainObject(value)) {
+                    Object.keys(value).forEach(addValue);
+                } else {
+                    addValue(value);
+                }
+            });
+    }
 
     return [...suggestions];
 }
@@ -143,11 +185,12 @@ module.exports = function createQuery(source, options) {
     if (suggestMode) {
         return function query(data, context, suggestPos = -1) {
             const points = fn(buildin, localMethods, data, context, query);
+            const suggestions = [];
 
             if (suggestPos === -1) {
                 return points.map(([values, from, to, context]) => ({
                     context: context || 'path',
-                    list: valuesToSuggestions(values),
+                    list: valuesToSuggestions(context, values),
                     from,
                     to
                 }));
@@ -165,18 +208,20 @@ module.exports = function createQuery(source, options) {
                     }
 
                     // console.log({current, variants:[...suggestions.get(range)], suggestions })
-                    return {
-                        context: context || 'path',
-                        current,
-                        list: valuesToSuggestions(values)
-                            .map(name => `property:${name}`), // .concat(Object.keys(localMethods).map(name => `method:${name}()`)),
-                        from,
-                        to
-                    };
+                    suggestions.push(
+                        ...valuesToSuggestions(context, values)
+                            .map(value => ({
+                                current,
+                                type: contextToType[context],
+                                value,
+                                from,
+                                to
+                            }))
+                    );
                 }
             }
 
-            return null;
+            return suggestions.length ? suggestions : null;
         };
     }
 
