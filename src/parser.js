@@ -288,7 +288,7 @@ const grammar = {
 const tollerantScopeStart = new Set([
     '\\.', '\\.\\.', ',',
     '\\+', '\\-', '\\*', '\\/', '\\%',
-    '=', '!=', '~=', '>=', '<=', /* '<',*/ '>',
+    '=', '!=', '~=', '>=', '<=', /* '<', '>', */
     'and{wb}', 'or{wb}', 'in{wb}', 'not{ws}in{wb}', 'not?{wb}'
 ]);
 const tollerantGrammar = Object.assign({}, grammar, {

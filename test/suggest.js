@@ -324,9 +324,9 @@ describe('suggest: autocorrection', () => {
     describe('operators', () => {
         [
             '+', '-', '*', '/', '%',
-            '=', '!=', '~=', '>=', '<=', /* '<',*/ '>'
+            '=', '!=', '~=', '>=', '<=', '<', '>'
         ].forEach(operator => {
-            (['/', '~='].includes(operator) ? it.skip : it)('foo ' + operator, () => {
+            (['/', '~=', '<', '>'].includes(operator) ? it.skip : it)('foo ' + operator, () => {
                 assert.deepEqual(
                     suggestQuery('foo ' + operator + '| |', data),
                     [
