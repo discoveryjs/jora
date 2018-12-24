@@ -29,6 +29,7 @@ function code(s) {
     '];';
 }
 
+const switchToPreventRxState = 'if (this._input) this.begin("preventRx"); ';
 const grammar = {
     // Lexical tokens
     lex: {
@@ -38,18 +39,30 @@ const grammar = {
         macros: {
             wb: '\\b',
             ows: '\\s*',  // optional whitespaces
-            ws: '\\s+'    // required whitespaces
+            ws: '\\s+',   // required whitespaces
+            comment: '//.*?(\\r|\\n|$)+',
+            rx: '/(?:\\\\.|[^/])+/i?'
+        },
+        startConditions: {
+            preventRx: 0
         },
         rules: [
             // ignore comments and whitespaces
-            ['//.*?(\\r|\\n|$)', '/* a comment */'],
+            ['{comment}', '/* a comment */'],
             ['{ws}', '/* a whitespace */'],
+
+            // hack to prevent regexp consumption
+            [['preventRx'], '\\/', 'this.popState(); return "/";'],
+            // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
+            // when no input left and doesn't take into account current state;
+            // should be fixed in `regexp-lexer`
+            [['preventRx'], '', 'this.done = false; this.popState();'],
 
             // braces
             ['\\(', 'return "(";'],
-            ['\\)', 'return ")";'],
+            ['\\)', switchToPreventRxState + 'return ")";'],
             ['\\[', 'return "[";'],
-            ['\\]', 'return "]";'],
+            ['\\]', switchToPreventRxState + 'return "]";'],
             ['\\{', 'return "{";'],
             ['\\}', 'return "}";'],
 
@@ -77,11 +90,11 @@ const grammar = {
             ['::self', 'return "SELF";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?{wb}', 'return "NUMBER";'],    // 212.321
-            ['"(?:\\\\.|[^"])*"', 'return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\.|[^'])*'", 'return "STRING";'],       // 'foo' 'with \' escaped'
-            ['/(?:\\\\.|[^/])+/i?', 'return "REGEXP"'],      // /foo/i
-            ['[a-zA-Z_][a-zA-Z_$0-9]*', 'return "SYMBOL";'], // foo123
+            ['\\d+(?:\\.\\d+)?{wb}', switchToPreventRxState + 'return "NUMBER";'],    // 212.321
+            ['"(?:\\\\.|[^"])*"', switchToPreventRxState + 'return "STRING";'],       // "foo" "with \" escaped"
+            ["'(?:\\\\.|[^'])*'", switchToPreventRxState + 'return "STRING";'],       // 'foo' 'with \' escaped'
+            ['{rx}', 'return "REGEXP"'],                                              // /foo/i
+            ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventRxState + 'return "SYMBOL";'], // foo123
 
             // operators
             ['\\.\\.\\(', 'return "..(";'],
@@ -280,14 +293,22 @@ const tollerantScopeStart = new Set([
 ]);
 const tollerantGrammar = Object.assign({}, grammar, {
     lex: Object.assign({}, grammar.lex, {
-        startConditions: {
+        startConditions: Object.assign({}, grammar.lex.startConditions, {
             suggestPoint: 1,
             suggestPointWhenWhitespace: 1
-        },
+        }),
         rules: [
             [['suggestPoint'],
-                '(?=({ows}//.*([\\r\\n]+|$))*{ows}([\\]\\)\\}\\>,]|$))',
-                'this.popState(); yytext = "_"; return "SYMBOL";'
+                // prevent suggestions before rx
+                '(?=({ows}{comment})*{ows}{rx})',
+                'this.popState();'
+            ],
+            [['suggestPoint'],
+                '(?=({ows}{comment})*{ows}([\\]\\)\\}\\<\\>\\+\\-\\*\\/,~!=]|$))',
+                // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
+                // when no input left and doesn't take into account current state;
+                // should be fixed in `regexp-lexer`
+                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventRxState + 'return "SYMBOL";'
             ],
             [['suggestPointWhenWhitespace'],
                 '{ws}',
@@ -298,14 +319,16 @@ const tollerantGrammar = Object.assign({}, grammar, {
                 'this.popState();'
             ]
         ].concat(
-            grammar.lex.rules.map(([rule, action]) => {
+            grammar.lex.rules.map(entry => {
+                let [sc, rule, action] = entry.length === 3 ? entry : [undefined, ...entry];
+
                 if (tollerantScopeStart.has(rule)) {
                     action = `this.begin("suggestPoint${
                         rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
                     }"); ${action}`;
                 }
 
-                return [rule, action];
+                return entry.length === 3 ? [sc, rule, action] : [rule, action];
             })
         )
     })

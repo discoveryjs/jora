@@ -7,7 +7,7 @@ const data = {
         {},
         { d: 5 }
     ],
-    bar: 2
+    bar: 32
 };
 
 function suggestQuery(str, data, context) {
@@ -223,6 +223,20 @@ describe('suggest: autocorrection', () => {
         );
     });
 
+    describe('trailing full stop before operators', () => {
+        ['=', '!=', '>', '<', '~=', '*', '/', '+', '-'].forEach(operator => {
+            const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
+            it(operator, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data),
+                    [
+                        suggestion('', ['foo', 'bar'], 1)
+                    ]
+                );
+            });
+        });
+    });
+
     it('trailing double full stop', () => {
         assert.deepEqual(
             suggestQuery('.|.|', data),
@@ -370,6 +384,23 @@ describe('suggest: autocorrection', () => {
                     [
                         suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 3),
                         suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 2)
+                    ]
+                );
+            });
+        });
+    });
+
+    describe('influence on division (/) interference with regexp', () => {
+        [
+            // '.| / 2 / 2',
+            'size(1, /a/, /b/, |)',
+            'size(1/2, 1/4, |)'
+        ].forEach(queryString => {
+            it(queryString, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, { foo: 32, bar: { baz: 32 } }),
+                    [
+                        suggestion('', ['foo', 'bar'], queryString.indexOf('|'))
                     ]
                 );
             });

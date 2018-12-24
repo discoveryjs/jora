@@ -455,7 +455,7 @@ describe('operators', () => {
         });
     });
 
-    describe('*', () => {
+    describe('/', () => {
         it('basic', () => {
             assert.equal(
                 query('48/8')(data),
@@ -466,6 +466,24 @@ describe('operators', () => {
                 query('48 / 8')(data),
                 6
             );
+        });
+
+        describe('interference with regexp', () => {
+            [
+                '(8 / 2) + (16 / 4)',
+                '(8 / 2) +\n(16 / 4)',
+                '(32) / (16 / 4)',
+                '32 / 2 / 2',
+                'foo / 2 / 2',
+                'bar["baz"] / 2 / 2'
+            ].forEach(queryString => {
+                it(queryString, () => {
+                    assert.equal(
+                        query(queryString)({ foo: 32, bar: { baz: 32 } }),
+                        8
+                    );
+                });
+            });
         });
     });
 

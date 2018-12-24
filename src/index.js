@@ -87,12 +87,6 @@ function compileFunction(source, suggestMode, debug) {
         console.log('source:', source);
     }
 
-    if (suggestMode) {
-        // FIXME: add a comment due to parser missed to add a placeholder when no input left,
-        // should be fixed in the parser
-        source += '//';
-    }
-
     tree = parser.parse(source);
 
     // if (debug) {
