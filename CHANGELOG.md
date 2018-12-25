@@ -1,10 +1,12 @@
-## next
+## 1.0.0-alpha.7
 
 - Disallowed a whitespace between a dot and a bracket in `.[`, `.(` and `..(` tokens
 - Changed filter (i.e. `.[]` or `.filter()`) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise
-- Changed semanthic of main jora method `jora(query, methods?, debug?)` -> `jora(query, options?)` where `options` is `{ methods?, debug? }`
-- Implemented stat mode (turn on by `stat` option, i.e. `jora(query, { stat: true })`) to return a query stat interface instead of resulting data
-- Implemented tolerant parse mode (turn on by `tolerant` option, i.e. `jora(query, { tolerant: true })`) to supress parsing errors when possible
+- Changed semanthic `jora(query, methods?, debug?)` -> `jora(query, options?)` where `options` is `{ methods?, debug? }`
+- Added stat mode (turns on by `stat` option, i.e. `jora(query, { stat: true })`) to return a query stat interface (an object with `stat()` and `suggestion()` methods) instead of resulting data
+- Added tolerant parse mode (turns on by `tolerant` option, i.e. `jora(query, { tolerant: true })`) to supress parsing errors when possible
+- Added library `version` to export
+- Fixed parser edge cases for division (`/`) and regexp
 
 ## 1.0.0-alpha.6 (December 7, 2018)
 
