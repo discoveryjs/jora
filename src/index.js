@@ -11,7 +11,6 @@ const cacheStrictStat = new Map();
 const cacheTollerant = new Map();
 const cacheTollerantStat = new Map();
 const contextToType = {
-    '': 'property',
     'path': 'property',
     'key': 'property',
     'value': 'value',
@@ -182,7 +181,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                         }
                     }
 
-                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context}"]`);
+                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context || 'path'}"]`);
                 }
 
                 code.push(`, sp${pointId})`);

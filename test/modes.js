@@ -78,7 +78,7 @@ describe('modes', () => {
             assert.equal(typeof res.stat, 'function');
             assert.equal(typeof res.suggestion, 'function');
             assert.deepEqual(res.stat(2), [{
-                context: '',
+                context: 'path',
                 current: 'foo',
                 from: 0,
                 to: 3,
@@ -95,7 +95,7 @@ describe('modes', () => {
 
             const res = jora('foo.', options)({ foo: { bar: 42 } });
             assert.deepEqual(res.stat(4), [{
-                context: '',
+                context: 'path',
                 current: '',
                 from: 4,
                 to: 4,
