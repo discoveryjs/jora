@@ -93,6 +93,33 @@ function valuesToSuggestions(context, values) {
     return [...suggestions];
 }
 
+function findSourcePosPoints(source, pos, points, includeEmpty) {
+    const result = [];
+
+    for (let i = 0; i < points.length; i++) {
+        let [values, from, to, context] = points[i];
+
+        if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
+            let current = source.substring(from, to);
+
+            if (!/\S/.test(current)) {
+                current = '';
+                from = to = pos;
+            }
+
+            result.push({
+                context,
+                current,
+                from,
+                to,
+                values
+            });
+        }
+    }
+
+    return result;
+}
+
 function compileFunction(source, statMode, tolerantMode, debug) {
     function astToCode(node, scopeVars) {
         if (Array.isArray(node)) {
@@ -240,33 +267,33 @@ module.exports = function createQuery(source, options) {
             const points = fn(buildin, localMethods, data, context, query);
 
             return {
-                suggestion(pos) {
+                stat(pos, includeEmpty) {
+                    const ranges = findSourcePosPoints(source, pos, points, includeEmpty);
+
+                    ranges.forEach(entry => {
+                        entry.values = [...entry.values];
+                    });
+
+                    return ranges.length ? ranges : null;
+                },
+                suggestion(pos, includeEmpty) {
                     const suggestions = [];
 
-                    for (let i = 0; i < points.length; i++) {
-                        let [values, from, to, context] = points[i];
+                    findSourcePosPoints(source, pos, points, includeEmpty).forEach(entry => {
+                        const { context, current, from, to, values } = entry;
 
-                        if (pos >= from && pos <= to) {
-                            let current = source.substring(from, to);
-
-                            if (!/\S/.test(current)) {
-                                current = '';
-                                from = to = pos;
-                            }
-
-                            // console.log({current, variants:[...suggestions.get(range)], suggestions })
-                            suggestions.push(
-                                ...valuesToSuggestions(context, values)
-                                    .map(value => ({
-                                        current,
-                                        type: contextToType[context],
-                                        value,
-                                        from,
-                                        to
-                                    }))
-                            );
-                        }
-                    }
+                        // console.log({current, variants:[...suggestions.get(range)], suggestions })
+                        suggestions.push(
+                            ...valuesToSuggestions(context, values)
+                                .map(value => ({
+                                    current,
+                                    type: contextToType[context],
+                                    value,
+                                    from,
+                                    to
+                                }))
+                        );
+                    });
 
                     return suggestions.length ? suggestions : null;
                 }
