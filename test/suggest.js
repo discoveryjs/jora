@@ -16,10 +16,9 @@ function suggestQuery(str, data, context) {
         suggestPoints.push(idx - suggestPoints.length);
         return '';
     });
+    const stat = query(clearedStr, { tolerant: true, stat: true })(data, context);
 
-    return suggestPoints.map(idx =>
-        query(clearedStr, { suggest: true })(data, context, idx)
-    );
+    return suggestPoints.map(idx => stat.suggestion(idx));
 }
 
 function suggestion(current, list, from, to = from) {
@@ -252,7 +251,7 @@ describe('suggest', () => {
     });
 });
 
-describe('suggest: autocorrection', () => {
+describe('suggest in tolerant parsing mode (autocorrection)', () => {
     it('trailing full stop', () => {
         assert.deepEqual(
             suggestQuery('.|', data),

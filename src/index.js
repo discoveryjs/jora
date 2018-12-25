@@ -2,12 +2,14 @@ const buildin = require('./buildin');
 const methods = require('./methods');
 const {
     strict: strictParser,
-    tollerant: tollerantParser
+    tolerant: tolerantParser
 } = require('./parser');
 const { addToSet, isPlainObject} = require('./utils');
 
-const cacheRegular = new Map();
-const cacheSuggest = new Map();
+const cacheStrict = new Map();
+const cacheStrictStat = new Map();
+const cacheTollerant = new Map();
+const cacheTollerantStat = new Map();
 const contextToType = {
     '': 'property',
     'path': 'property',
@@ -91,7 +93,7 @@ function valuesToSuggestions(context, values) {
     return [...suggestions];
 }
 
-function compileFunction(source, suggestMode, debug) {
+function compileFunction(source, statMode, tolerantMode, debug) {
     function astToCode(node, scopeVars) {
         if (Array.isArray(node)) {
             const first = node[0];
@@ -120,7 +122,7 @@ function compileFunction(source, suggestMode, debug) {
             if (varName) {
                 scopeVars.push(`"${varName}"`);
             }
-        } else if (suggestMode && node.startsWith('/*')) {
+        } else if (statMode && node.startsWith('/*')) {
             if (node === '/*s*/') {
                 code.push('suggestPoint(');
             } else if (node.startsWith('/*var:')) {
@@ -163,7 +165,7 @@ function compileFunction(source, suggestMode, debug) {
         }
     }
 
-    const parser = suggestMode ? tollerantParser : strictParser;
+    const parser = tolerantMode ? tolerantParser : strictParser;
     const code = [];
     const suggestPoints = [];
     let suggestSets = [];
@@ -197,7 +199,7 @@ function compileFunction(source, suggestMode, debug) {
         code.join('')
     );
 
-    if (suggestMode) {
+    if (statMode) {
         body.push(`,[${suggestPoints}]`);
     }
 
@@ -212,17 +214,20 @@ module.exports = function createQuery(source, options) {
     options = options || {};
 
     const debug = Boolean(options.debug);
-    const suggestMode = Boolean(options.suggest);
+    const statMode = Boolean(options.stat);
+    const tolerantMode = Boolean(options.tolerant);
     const localMethods = options.methods ? Object.assign({}, methods, options.methods) : methods;
-    const cache = suggestMode ? cacheSuggest : cacheRegular;
+    const cache = statMode
+        ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
+        : (tolerantMode ? cacheTollerant : cacheStrict);
     let fn;
 
-    source = suggestMode ? String(source) : String(source).trim();
+    source = String(source);
 
     if (cache.has(source)) {
         fn = cache.get(source);
     } else {
-        fn = compileFunction(source, suggestMode, debug);
+        fn = compileFunction(source, statMode, tolerantMode, debug);
         cache.set(source, fn);
     }
 
@@ -230,46 +235,42 @@ module.exports = function createQuery(source, options) {
         console.log('fn', fn.toString());
     }
 
-    if (suggestMode) {
-        return function query(data, context, suggestPos = -1) {
+    if (statMode) {
+        return function query(data, context) {
             const points = fn(buildin, localMethods, data, context, query);
-            const suggestions = [];
 
-            if (suggestPos === -1) {
-                return points.map(([values, from, to, context]) => ({
-                    context: context || 'path',
-                    list: valuesToSuggestions(context, values),
-                    from,
-                    to
-                }));
-            }
+            return {
+                suggestion(pos) {
+                    const suggestions = [];
 
-            for (let i = 0; i < points.length; i++) {
-                let [values, from, to, context] = points[i];
+                    for (let i = 0; i < points.length; i++) {
+                        let [values, from, to, context] = points[i];
 
-                if (suggestPos >= from && suggestPos <= to) {
-                    let current = source.substring(from, to);
+                        if (pos >= from && pos <= to) {
+                            let current = source.substring(from, to);
 
-                    if (!/\S/.test(current)) {
-                        current = '';
-                        from = to = suggestPos;
+                            if (!/\S/.test(current)) {
+                                current = '';
+                                from = to = pos;
+                            }
+
+                            // console.log({current, variants:[...suggestions.get(range)], suggestions })
+                            suggestions.push(
+                                ...valuesToSuggestions(context, values)
+                                    .map(value => ({
+                                        current,
+                                        type: contextToType[context],
+                                        value,
+                                        from,
+                                        to
+                                    }))
+                            );
+                        }
                     }
 
-                    // console.log({current, variants:[...suggestions.get(range)], suggestions })
-                    suggestions.push(
-                        ...valuesToSuggestions(context, values)
-                            .map(value => ({
-                                current,
-                                type: contextToType[context],
-                                value,
-                                from,
-                                to
-                            }))
-                    );
+                    return suggestions.length ? suggestions : null;
                 }
-            }
-
-            return suggestions.length ? suggestions : null;
+            };
         };
     }
 

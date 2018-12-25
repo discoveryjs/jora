@@ -293,14 +293,14 @@ const grammar = {
     }
 };
 
-const tollerantScopeStart = new Set([
+const tolerantScopeStart = new Set([
     ':', ';',
     '\\.', '\\.\\.', ',',
     '\\+', '\\-', '\\*', '\\/', '\\%',
     '=', '!=', '~=', '>=', '<=', /* '<', '>', */
     'and{wb}', 'or{wb}', 'in{wb}', 'not{ws}in{wb}', 'not?{wb}'
 ]);
-const tollerantGrammar = Object.assign({}, grammar, {
+const tolerantGrammar = Object.assign({}, grammar, {
     lex: Object.assign({}, grammar.lex, {
         startConditions: Object.assign({}, grammar.lex.startConditions, {
             suggestPoint: 1,
@@ -341,7 +341,7 @@ const tollerantGrammar = Object.assign({}, grammar, {
 
                 if (rule === '\\$') {
                     action = `this.begin("suggestPointVar"); ${action}`;
-                } else if (tollerantScopeStart.has(rule)) {
+                } else if (tolerantScopeStart.has(rule)) {
                     action = `this.begin("suggestPoint${
                         rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
                     }"); ${action}`;
@@ -353,16 +353,16 @@ const tollerantGrammar = Object.assign({}, grammar, {
     })
 });
 
-// guard to keep in sync tollerantScopeStart and lex rules
-tollerantScopeStart.forEach(rule => {
-    if (!tollerantGrammar.lex.rules.some(lexRule => lexRule[0] === rule)) {
+// guard to keep in sync tolerantScopeStart and lex rules
+tolerantScopeStart.forEach(rule => {
+    if (!tolerantGrammar.lex.rules.some(lexRule => lexRule[0] === rule)) {
         throw new Error('Rule missed in lexer: "' + rule.replace(/\\/g, '\\\\') + '"');
     }
 });
 
 const strictParser = new Parser(grammar);
-const tollerantParser = new Parser(tollerantGrammar);
+const tolerantParser = new Parser(tolerantGrammar);
 
 module.exports = strictParser;
 module.exports.strict = strictParser;
-module.exports.tollerant = tollerantParser;
+module.exports.tolerant = tolerantParser;

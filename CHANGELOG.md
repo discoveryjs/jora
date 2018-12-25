@@ -3,7 +3,8 @@
 - Disallowed a whitespace between a dot and a bracket in `.[`, `.(` and `..(` tokens
 - Changed filter (i.e. `.[]` or `.filter()`) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise
 - Changed semanthic of main jora method `jora(query, methods?, debug?)` -> `jora(query, options?)` where `options` is `{ methods?, debug? }`
-- Implemented suggest mode (turn on by `suggest` option, i.e. `jora(query, { suggest: true })`), when a query suggestion points return instead of resulting data
+- Implemented stat mode (turn on by `stat` option, i.e. `jora(query, { stat: true })`) to return a query stat interface instead of resulting data
+- Implemented tolerant parse mode (turn on by `tolerant` option, i.e. `jora(query, { tolerant: true })`) to supress parsing errors when possible
 
 ## 1.0.0-alpha.6 (December 7, 2018)
 

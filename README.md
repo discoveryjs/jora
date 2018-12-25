@@ -26,6 +26,36 @@ const query = jora('foo.myMethod()', {
 const result = query(data, context);
 ```
 
+Options:
+
+- methods
+
+  Type: `Object`  
+  Default: `undefined`
+
+  Additional methods for using in query passed as an object, where a key is a method name and a value is a function to perform an action. It can override build-in methods.
+
+- debug
+
+  Type: `Boolean`  
+  Default: `false`
+
+  Enables debug output.
+
+- tolerant
+
+  Type: `Boolean`  
+  Default: `false`
+
+  Enables tolerant parsing mode. This mode supresses parsing errors when possible.
+
+- stat
+
+  Type: `Boolean`  
+  Default: `false`
+
+  Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
+
 ## Syntax
 
 ### Primitives
@@ -38,6 +68,15 @@ Jora | Description
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax
 < > | A function<br>NOTE: Syntax will be changed
+
+### Keywords
+
+The follow keyword can be used as in JavaScript:
+
+- `true`
+- `false`
+- `null`
+- `undefined`
 
 ### Comparisons
 
@@ -60,12 +99,12 @@ Jora | Description
 x or y | Boolean or (as `\|\|` in JS)
 x and y | Boolean and (as `&&` in JS)
 not x | Boolean not (a `!` in JS)
-x ? y : z | If boolean x, value y, else z
+x ? y : z | If `x` is truthy than return `y` else return `z`
 ( x ) | Explicity operator precedence
 
 ### Operators
 
-jora | Description
+Jora | Description
 --- | ---
 x + y | Add
 x - y | Subtract
@@ -73,20 +112,46 @@ x * y | Multiply
 x / y | Divide
 x % y | Modulo
 
-### Queries
+### Special variables
+
+Jora | Description
+--- | ---
+@ | The root data object
+$ | The current data object, depends on scope
+\# | The context
+
+### A block
+
+A block contains of a definition list (should comes first) and an expression. Both are optional. When an expression is empty a current value (i.e. `$`) returns.
+
+The syntax of definition (white spaces between any part are optional):
+
+```
+$ SYMBOL ;
+$ SYMBOL : expression ;
+```
+
+For example:
+
+```
+$foo:123;          // Define `$foo` variable
+$bar;              // The same as `$bar:$.bar;` or `$a:bar;`
+$baz: $foo + $bar; // Variables can be used inside an expression after its definition 
+```
+
+A block creates a new scope. Variables can't be redefined in the same and nested scopes, otherwise it cause to error.
+
+### Path chaining
 
 jora | Description
 --- | ---
-@ | The root data object
-$ | The current data object
-\# | The context
 SYMBOL | The same as `$.SYMBOL`
-.e | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name]`)
+.SYMBOL | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
 ..SYMBOL<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
-.[ e ] | Filter a current data. Equivalent to a `.filter(<e>)`
-.( e ) | Map a current data. Equivalent to a `.map(<e>)`
+.[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
+.( block ) | Map a current data. Equivalent to a `.map(<block>)`
 .method() | Invoke a method to current data, or each element of current data if it is an array
-path[key] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
+path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 
 ## Build-in methods
 
@@ -97,11 +162,11 @@ keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | The same as `Object.entries()` in JS
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
-pick("key") | Get a value by a key or an index. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
+pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(\<getter>) | Sort an array by a value fetched with getter
+sort(\<fn>) | Sort an array by a value fetched with getter
 reverse() | Reverse order of items
-group(\<getter>[, \<getter>]) | Group an array items by a value fetched with first getter.
+group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
 filter(\<fn>) | The same as `Array#filter()` in JS
 map(\<fn>) | The same as `Array#map()` in JS
 
