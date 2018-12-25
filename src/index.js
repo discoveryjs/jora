@@ -305,5 +305,6 @@ module.exports = function createQuery(source, options) {
     };
 };
 
+module.exports.version = require('../package.json').version;
 module.exports.buildin = buildin;
 module.exports.methods = methods;
