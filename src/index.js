@@ -11,8 +11,10 @@ const cacheSuggest = new Map();
 const contextToType = {
     '': 'property',
     'path': 'property',
+    'key': 'property',
     'value': 'value',
-    'in-value': 'value'
+    'in-value': 'value',
+    'var': 'variable'
 };
 
 function isWhiteSpace(str, offset) {
@@ -25,10 +27,10 @@ function valuesToSuggestions(context, values) {
     const addValue = value => {
         switch (typeof value) {
             case 'string':
-                addToSet(suggestions, JSON.stringify(value));
+                suggestions.add(JSON.stringify(value));
                 break;
             case 'number':
-                addToSet(suggestions, String(value));
+                suggestions.add(String(value));
                 break;
         }
     };
@@ -44,6 +46,14 @@ function valuesToSuggestions(context, values) {
                         }
                     });
                 } else if (isPlainObject(value)) {
+                    addToSet(suggestions, Object.keys(value));
+                }
+            });
+            break;
+
+        case 'key':
+            values.forEach(value => {
+                if (isPlainObject(value)) {
                     addToSet(suggestions, Object.keys(value));
                 }
             });
@@ -69,12 +79,90 @@ function valuesToSuggestions(context, values) {
                     addValue(value);
                 }
             });
+            break;
+
+        case 'var':
+            values.forEach(value => {
+                suggestions.add('$' + value);
+            });
+            break;
     }
 
     return [...suggestions];
 }
 
 function compileFunction(source, suggestMode, debug) {
+    function astToCode(node, scopeVars) {
+        if (Array.isArray(node)) {
+            const first = node[0];
+            let varName = false;
+            let i = 0;
+
+            if (first === '/*scope*/') {
+                // create new scope
+                scopeVars = scopeVars.slice();
+                i++;
+            } else if (typeof first === 'string' && first.startsWith('/*define:')) {
+                let [from, to] = first.substring(9, first.length - 2).split(',');
+                varName = source.substring(from, to);
+
+                if (scopeVars.includes(`"${varName}"`)) {
+                    throw new Error(`Identifier '$${varName}' has already been declared`);
+                }
+
+                i++;
+            }
+
+            for (; i < node.length; i++) {
+                astToCode(node[i], scopeVars);
+            }
+
+            if (varName) {
+                scopeVars.push(`"${varName}"`);
+            }
+        } else if (suggestMode && node.startsWith('/*')) {
+            if (node === '/*s*/') {
+                code.push('suggestPoint(');
+            } else if (node.startsWith('/*var:')) {
+                let [from, to] = node.substring(6, node.length - 2).split(',');
+
+                if (from === to) {
+                    while (to < source.length && isWhiteSpace(source, to)) {
+                        to++;
+                    }
+                }
+
+                suggestPoints.push(`[[${scopeVars}], ${from}, ${to}, "var"]`);
+            } else {
+                const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
+                const items = node.substring(2, node.length - 2).split(',');
+
+                // FIXME: position correction should be in parser
+                for (let i = 0; i < items.length; i += 3) {
+                    let from = Number(items[i]);
+                    let to = Number(items[i + 1]);
+                    let context = items[i + 2];
+                    const frag = source.substring(from, to);
+
+                    if (frag === '.[' || frag === '.(' || frag === '..(' ||
+                        frag === '{' || frag === '[' || frag === '(' ||
+                        from === to) {
+                        from = to;
+                        while (to < source.length && isWhiteSpace(source, to)) {
+                            to++;
+                        }
+                    }
+
+                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context}"]`);
+                }
+
+                code.push(`, sp${pointId})`);
+            }
+        } else {
+            code.push(node);
+        }
+    }
+
     const parser = suggestMode ? tollerantParser : strictParser;
     const code = [];
     const suggestPoints = [];
@@ -93,41 +181,7 @@ function compileFunction(source, suggestMode, debug) {
     //     console.log('tree:', JSON.stringify(tree, null, 4));
     // }
 
-    tree.forEach(function toCode(node) {
-        if (Array.isArray(node)) {
-            node.forEach(toCode);
-        } else if (suggestMode && node.startsWith('/*')) {
-            if (node === '/*s*/') {
-                code.push('suggestPoint(');
-            } else {
-                const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
-                const items = node.substring(2, node.length - 2).split(',');
-
-                // FIXME: position correction should be in parser
-                for (let i = 0; i < items.length; i += 3) {
-                    let from = Number(items[i]);
-                    let to = Number(items[i + 1]);
-                    let context = items[i + 2];
-                    const frag = source.substring(from, to);
-
-                    if (frag === '.[' || frag === '.(' || frag === '..(' ||
-                        frag === '{' || frag === '[' || frag === '(' ||
-                        (from === to && isWhiteSpace(source, to))) {
-                        from = to;
-                        while (to < source.length && isWhiteSpace(source, to)) {
-                            to++;
-                        }
-                    }
-
-                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context}"]`);
-                }
-
-                code.push(`, sp${pointId})`);
-            }
-        } else {
-            code.push(node);
-        }
-    });
+    astToCode(tree, []);
 
     if (suggestSets.length) {
         body.push(

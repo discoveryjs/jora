@@ -50,6 +50,26 @@ describe('definitions', () => {
         );
     });
 
+    it('should throw when redefine a variable defined in the same scope', () => {
+        assert.throws(
+            () => query('$a;$a;')(),
+            new RegExp('Identifier \'\\$a\' has already been declared')
+        );
+    });
+
+    it('should not throw when variables with the same name defined in different scopes', () => {
+        assert.doesNotThrow(
+            () => query('$a;.($b;) + .($b;)')()
+        );
+    });
+
+    it('should throw when redefine a variable defined in parent scope', () => {
+        assert.throws(
+            () => query('$a;.($a;)')(),
+            new RegExp('Identifier \'\\$a\' has already been declared')
+        );
+    });
+
     describe('should throw when reserved name is used for a definition', () => {
         const preserved = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
 

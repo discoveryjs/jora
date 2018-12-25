@@ -204,6 +204,52 @@ describe('suggest', () => {
             });
         });
     });
+
+    describe('variables', () => {
+        Object.entries({
+            '$|f|;|': [
+                suggestion('f', ['foo', 'bar'], 1, 2),
+                suggestion('f', ['foo', 'bar'], 1, 2),
+                suggestion('', ['$f:variable', 'foo', 'bar'], 3)
+            ],
+            '$|f|o|o|;| |': [
+                suggestion('foo', ['foo', 'bar'], 1, 4),
+                suggestion('foo', ['foo', 'bar'], 1, 4),
+                suggestion('foo', ['foo', 'bar'], 1, 4),
+                suggestion('foo', ['foo', 'bar'], 1, 4),
+                suggestion('', ['$foo:variable', 'foo', 'bar'], 5),
+                suggestion('', ['$foo:variable', 'foo', 'bar'], 6)
+            ],
+            '$a;foo.(|$|)': [
+                suggestion('$', ['$a:variable'], 8, 9),
+                suggestion('$', ['$a:variable'], 8, 9)
+            ],
+            '$a;$aa;$aaa;{a:| |$|a| |}': [
+                null,
+                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+                null
+            ],
+            '$foo;{| |$|f|,| |f| |}': [
+                null,
+                suggestion('$f', ['$foo:variable'], 7, 9),
+                suggestion('$f', ['$foo:variable'], 7, 9),
+                suggestion('$f', ['$foo:variable'], 7, 9),
+                null,
+                suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+                suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+                null
+            ]
+        }).forEach(([queryString, expected]) => {
+            it(queryString, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data),
+                    expected
+                );
+            });
+        });
+    });
 });
 
 describe('suggest: autocorrection', () => {
@@ -402,6 +448,35 @@ describe('suggest: autocorrection', () => {
                     [
                         suggestion('', ['foo', 'bar'], queryString.indexOf('|'))
                     ]
+                );
+            });
+        });
+    });
+
+    describe('variables', () => {
+        Object.entries({
+            '|$|;|': [
+                null,
+                suggestion('', ['foo', 'bar'], 1, 1),
+                suggestion('', ['foo', 'bar'], 2)
+            ],
+            '$|v|a|r|:|;|': [
+                null,
+                null,
+                null,
+                null,
+                suggestion('', ['foo', 'bar'], 5),
+                suggestion('', ['$var:variable', 'foo', 'bar'], 6)
+            ],
+            '$foo;$var:|;|': [
+                suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
+                suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
+            ]
+        }).forEach(([queryString, expected]) => {
+            it(queryString, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data),
+                    expected
                 );
             });
         });

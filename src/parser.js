@@ -2,28 +2,36 @@ const { Parser } = require('jison');
 
 function code(s) {
     return '$$ = [' +
-        s[0].split(/(\$[\da-zA-Z_]+|\/\*\S*@[\da-zA-Z_$]+(?:\/\S*@[\da-zA-Z_$]+)*\*\/\$?[\da-zA-Z_]+)/g).map(
+        s[0].split(/(\$[\da-zA-Z_]+|\/\*(?:scope|define:\S+?|var:\S+?)\*\/|\/\*\S*@[\da-zA-Z_$]+(?:\/\S*@[\da-zA-Z_$]+)*\*\/\$?[\da-zA-Z_]+)/g).map(
             (m, i) => {
-                if (i % 2) {
-                    if (m[0] === '/') {
-                        const content = m.substring(2, m.indexOf('*/'));
-                        const expr = m.substr(content.length + 4);
-                        const ranges = content.split('/').map(range => {
-                            const [context, loc] = range.split('@');
-                            return '"+@' + loc + '.range+",' + context;
-                        });
-
-                        return (
-                            '"/*s*/",' +
-                            (expr[0] === '$' ? expr : '"' + expr + '"') +
-                            ',"/*' + ranges + '*/"'
-                        );
-                    } else {
-                        return m;
-                    }
-                } else {
+                if (i % 2 === 0 || m === '/*scope*/') {
                     return JSON.stringify(m);
                 }
+
+                if (m.startsWith('/*define:')) {
+                    return '"/*define:" + ' + m.substring(9, m.length - 2) + '.range + "*/"';
+                }
+
+                if (m.startsWith('/*var:')) {
+                    return '"/*var:" + ' + m.substring(6, m.length - 2) + '.range + "*/"';
+                }
+
+                if (m.startsWith('/*')) {
+                    const content = m.substring(2, m.indexOf('*/'));
+                    const expr = m.substr(content.length + 4);
+                    const ranges = content.split('/').map(range => {
+                        const [context, loc] = range.split('@');
+                        return '" + @' + loc + '.range + ",' + context;
+                    });
+
+                    return (
+                        '"/*s*/",' +
+                        (expr[0] === '$' ? expr : '"' + expr + '"') +
+                        ',"/*' + ranges + '*/"'
+                    );
+                }
+
+                return m;
             }
         ).filter(term => term !== '""') +
     '];';
@@ -145,15 +153,15 @@ const grammar = {
             ['block EOF', 'return $$ = $1;']
         ],
 
+        block: [
+            ['nonEmptyBlock', code`/*scope*/$1`],
+            ['definitions', code`/*scope*/$1\nreturn current`],
+            ['', code`/*scope*/return /*@$*/current`]
+        ],
+
         nonEmptyBlock: [
             ['definitions e', code`$1\nreturn $2`],
             ['e', code`return $1`]
-        ],
-
-        block: [
-            ['nonEmptyBlock', code`$1`],
-            ['definitions', code`$1\nreturn current`],
-            ['', code`return /*@$*/current`]
         ],
 
         definitions: [
@@ -162,8 +170,8 @@ const grammar = {
         ],
 
         def: [
-            ['$ SYMBOL ;', code`const $$2 = fn.get(current, "$2");`],
-            ['$ SYMBOL : e ;', code`const $$2 = $4;`]
+            ['$ SYMBOL ;', code`/*define:@2*/const $$2 = fn.get(/*key@2*/current, "$2");`],
+            ['$ SYMBOL : e ;', code`/*define:@2*/const $$2 = $4;`]
         ],
 
         e: [
@@ -214,14 +222,14 @@ const grammar = {
         queryRoot: [
             ['@', code`data`],
             ['#', code`context`],
-            ['$', code`current`],
-            ['$ SYMBOL', code`$$2`],
+            ['$', code`/*var:@1*/current`],
+            ['$ SYMBOL', code`/*var:@$*/typeof $$2 !== 'undefined' ? $$2 : undefined`],
             ['STRING', code`$1`],
             ['NUMBER', code`$1`],
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['SYMBOL', code`fn.get(/*@1*/current, "$1")`],
+            ['SYMBOL', code`/*var:@1*/fn.get(/*@1*/current, "$1", 'xxx')`],
             ['. SYMBOL', code`fn.get(/*@2*/current, "$2")`],
             ['( e )', code`($2)`],
             ['.( block )', code`fn.get(current, current => { $2 })`],
@@ -261,8 +269,8 @@ const grammar = {
         ],
 
         property: [
-            ['SYMBOL', code`$1: fn.get(/*@1*/current, "$1")`],
-            ['$ SYMBOL', code`$2: $$2`],
+            ['SYMBOL', code`/*var:@1*/$1: fn.get(/*@1*/current, "$1")`],
+            ['$ SYMBOL', code`/*var:@$*/$2: typeof $$2 !== 'undefined' ? $$2 : undefined`],
             ['SYMBOL : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
             ['...', code`...current`],
@@ -286,6 +294,7 @@ const grammar = {
 };
 
 const tollerantScopeStart = new Set([
+    ':', ';',
     '\\.', '\\.\\.', ',',
     '\\+', '\\-', '\\*', '\\/', '\\%',
     '=', '!=', '~=', '>=', '<=', /* '<', '>', */
@@ -295,7 +304,8 @@ const tollerantGrammar = Object.assign({}, grammar, {
     lex: Object.assign({}, grammar.lex, {
         startConditions: Object.assign({}, grammar.lex.startConditions, {
             suggestPoint: 1,
-            suggestPointWhenWhitespace: 1
+            suggestPointWhenWhitespace: 1,
+            suggestPointVar: 1
         }),
         rules: [
             [['suggestPoint'],
@@ -304,7 +314,7 @@ const tollerantGrammar = Object.assign({}, grammar, {
                 'this.popState();'
             ],
             [['suggestPoint'],
-                '(?=({ows}{comment})*{ows}([\\]\\)\\}\\<\\>\\+\\-\\*\\/,~!=]|$))',
+                '(?=({ows}{comment})*{ows}([\\]\\)\\}\\<\\>\\+\\-\\*\\/,~!=:;]|$))',
                 // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
                 // when no input left and doesn't take into account current state;
                 // should be fixed in `regexp-lexer`
@@ -314,7 +324,14 @@ const tollerantGrammar = Object.assign({}, grammar, {
                 '{ws}',
                 'this.popState(); this.begin("suggestPoint");'
             ],
-            [['suggestPoint', 'suggestPointWhenWhitespace'],
+            [['suggestPointVar'],
+                '(?=({ows}{comment})*{ows}([:;]|$))',
+                // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
+                // when no input left and doesn't take into account current state;
+                // should be fixed in `regexp-lexer`
+                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventRxState + 'return "SYMBOL";'
+            ],
+            [['suggestPoint', 'suggestPointWhenWhitespace', 'suggestPointVar'],
                 '',
                 'this.popState();'
             ]
@@ -322,7 +339,9 @@ const tollerantGrammar = Object.assign({}, grammar, {
             grammar.lex.rules.map(entry => {
                 let [sc, rule, action] = entry.length === 3 ? entry : [undefined, ...entry];
 
-                if (tollerantScopeStart.has(rule)) {
+                if (rule === '\\$') {
+                    action = `this.begin("suggestPointVar"); ${action}`;
+                } else if (tollerantScopeStart.has(rule)) {
                     action = `this.begin("suggestPoint${
                         rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
                     }"); ${action}`;
@@ -336,8 +355,8 @@ const tollerantGrammar = Object.assign({}, grammar, {
 
 // guard to keep in sync tollerantScopeStart and lex rules
 tollerantScopeStart.forEach(rule => {
-    if (tollerantGrammar.lex.rules.every(lexRule => lexRule[0] !== rule)) {
-        throw new Error('Rule missed in lexer: ' + rule);
+    if (!tollerantGrammar.lex.rules.some(lexRule => lexRule[0] === rule)) {
+        throw new Error('Rule missed in lexer: "' + rule.replace(/\\/g, '\\\\') + '"');
     }
 });
 
