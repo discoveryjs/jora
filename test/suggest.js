@@ -470,9 +470,40 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             '$foo;$var:|;|': [
                 suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
                 suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
+            ],
+            '$|x|:|$|;|$|x|.|': [
+                null,
+                null,
+                null,
+                null,
+                suggestion('$x', ['$x:variable'], 5, 7),
+                suggestion('$x', ['$x:variable'], 5, 7),
+                suggestion('$x', ['$x:variable'], 5, 7),
+                suggestion('', ['foo', 'bar'], 8, 8)
+            ],
+            '$|x|:[{ qux: 1 }]+|$|-|$|;|$|x|.|': [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                suggestion('$x', ['$x:variable'], 20, 22),
+                suggestion('$x', ['$x:variable'], 20, 22),
+                suggestion('$x', ['$x:variable'], 20, 22),
+                suggestion('', ['qux'], 23, 23)
+            ],
+            '{x:|$|}.x.|': [
+                null,
+                null,
+                suggestion('', ['foo', 'bar'], 8)
+            ],
+            '!$_:{ a: 1, b: 2 };{$|}.|': [
+                null,
+                suggestion('', ['a', 'b'], 12)
             ]
         }).forEach(([queryString, expected]) => {
-            it(queryString, () => {
+            (queryString[0] === '!' ? it.skip : it)(queryString, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
                     expected

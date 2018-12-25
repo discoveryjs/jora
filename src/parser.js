@@ -305,7 +305,8 @@ const tolerantGrammar = Object.assign({}, grammar, {
         startConditions: Object.assign({}, grammar.lex.startConditions, {
             suggestPoint: 1,
             suggestPointWhenWhitespace: 1,
-            suggestPointVar: 1
+            suggestPointVar: 1,
+            suggestPointVarDisabled: 0
         }),
         rules: [
             [['suggestPoint'],
@@ -331,6 +332,10 @@ const tolerantGrammar = Object.assign({}, grammar, {
                 // should be fixed in `regexp-lexer`
                 'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventRxState + 'return "SYMBOL";'
             ],
+            [['suggestPointVarDisabled'],
+                '(?=;)',
+                'this.popState();'
+            ],
             [['suggestPoint', 'suggestPointWhenWhitespace', 'suggestPointVar'],
                 '',
                 'this.popState();'
@@ -340,11 +345,15 @@ const tolerantGrammar = Object.assign({}, grammar, {
                 let [sc, rule, action] = entry.length === 3 ? entry : [undefined, ...entry];
 
                 if (rule === '\\$') {
-                    action = `this.begin("suggestPointVar"); ${action}`;
+                    action = `if (this.conditionStack.indexOf("suggestPointVarDisabled") === -1) this.begin("suggestPointVar"); ${action}`;
                 } else if (tolerantScopeStart.has(rule)) {
                     action = `this.begin("suggestPoint${
                         rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
                     }"); ${action}`;
+                }
+
+                if (rule === ':') {
+                    action = 'this.begin("suggestPointVarDisabled"); ' + action;
                 }
 
                 return entry.length === 3 ? [sc, rule, action] : [rule, action];
