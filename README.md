@@ -13,6 +13,8 @@ Related projects:
 - [Discovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Hackable JSON discovery tool. Uses jora to query a data for views
 - [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Chrome extension built on Discovery which allows you to discover a JSON documents and make beautiful reports on the fly
 
+Table of content:
+
 <!-- TOC depthFrom:2 -->
 
 - [Install](#install)
