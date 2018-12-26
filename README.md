@@ -8,6 +8,36 @@ JavaScript object query engine
 
 > STATUS: A proof of concept
 
+Related projects:
+
+- [Discovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Hackable JSON discovery tool. Uses jora to query a data for views
+- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Chrome extension built on Discovery which allows you to discover a JSON documents and make beautiful reports on the fly
+
+<!-- TOC depthFrom:2 -->
+
+- [Install](#install)
+- [API](#api)
+- [Quick demo](#quick-demo)
+- [Syntax](#syntax)
+    - [Primitives](#primitives)
+    - [Keywords](#keywords)
+    - [Comparisons](#comparisons)
+    - [Boolean logic](#boolean-logic)
+    - [Operators](#operators)
+    - [Block, scope and variables](#block-scope-and-variables)
+    - [Special variables](#special-variables)
+    - [Path chaining](#path-chaining)
+    - [Build-in methods](#build-in-methods)
+- [License](#license)
+
+<!-- /TOC -->
+
+## Install
+
+```
+npm install jora
+```
+
 ## API
 
 ```js
@@ -16,7 +46,7 @@ const jora = require('jora');
 // create a query
 const query = jora('foo.bar') ;
 // or with custom methods
-const query = jora('foo.myMethod()', {
+const queryWithCustomMethods = jora('foo.myMethod()', {
     methods: {
         myMethod(current) { /* do something and return a new value */ }
     }
@@ -55,6 +85,66 @@ Options:
   Default: `false`
 
   Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
+
+## Quick demo
+
+Get npm dependency paths (as a tree) that have packages with more than one version:
+
+```js
+const jora = require('jora');
+
+function printTree() {
+    // see implementation in examples/npm-ls.js
+}
+
+require('child_process').exec('npm ls --json', (error, stdout) => {
+    if (error) {
+        return;
+    }
+
+    const npmTree = JSON.parse(stdout);
+    const multipleVersionPackages = jora(`
+        ..(dependencies.mapToArray("name"))
+        .group(<name>, <version>)
+        .({ name: key, versions: value })
+        [versions.size() > 1]
+    `)(npmTree);
+
+    const depsPathsToMultipleVersionPackages = jora(`
+        .({
+            name,
+            version,
+            otherVersions: #[name=@.name].versions - version,
+            dependencies: dependencies
+                .mapToArray("name")
+                .map(::self)
+                [name in #.name or dependencies]
+        })
+    `)(npmTree, multipleVersionPackages);
+
+    printTree(depsPathsToMultipleVersionPackages);
+});
+```
+
+Example of output:
+
+```
+jora@1.0.0
+├─ browserify@16.2.2
+│  ├─ assert@1.4.1
+│  │  └─ util@0.10.3 [other versions: 0.10.4]
+│  │     └─ inherits@2.0.1 [other versions: 2.0.3]
+│  ├─ browser-pack@6.1.0
+│  │  └─ combine-source-map@0.8.0
+│  │     ├─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
+│  │     └─ inline-source-map@0.6.2
+│  │        └─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
+│  ├─ browser-resolve@1.11.3
+│  │  └─ resolve@1.1.7 [other versions: 1.8.1]
+│  ├─ concat-stream@1.6.2
+│  │  └─ inherits@2.0.3 [other versions: 2.0.1]
+...
+```
 
 ## Syntax
 
@@ -112,15 +202,7 @@ x * y | Multiply
 x / y | Divide
 x % y | Modulo
 
-### Special variables
-
-Jora | Description
---- | ---
-@ | The root data object
-$ | The current data object, depends on scope
-\# | The context
-
-### A block
+### Block, scope and variables
 
 A block contains of a definition list (should comes first) and an expression. Both are optional. When an expression is empty a current value (i.e. `$`) returns.
 
@@ -141,6 +223,14 @@ $baz: $foo + $bar; // Variables can be used inside an expression after its defin
 
 A block creates a new scope. Variables can't be redefined in the same and nested scopes, otherwise it cause to error.
 
+### Special variables
+
+Jora | Description
+--- | ---
+@ | The root data object
+$ | The current data object, depends on scope
+\# | The context
+
 ### Path chaining
 
 jora | Description
@@ -153,7 +243,7 @@ SYMBOL | The same as `$.SYMBOL`
 .method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 
-## Build-in methods
+### Build-in methods
 
 jora | Description
 --- | ---
@@ -169,76 +259,6 @@ reverse() | Reverse order of items
 group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
 filter(\<fn>) | The same as `Array#filter()` in JS
 map(\<fn>) | The same as `Array#map()` in JS
-
-## Quick demo
-
-Get npm dependency paths (as a tree) that have packages with more than one version:
-
-```js
-const jora = require('../src');
-
-function printTree() {
-    // see implementation in examples/npm-ls.js
-}
-
-require('child_process')
-    .exec('npm ls --json', (error, stdout) => {
-        if (error) {
-            return;
-        }
-
-        const npmTree = JSON.parse(stdout);
-        const multipleVersionPackages = jora(`
-            ..(dependencies.mapToArray("name"))
-            .group(<name>, <version>)
-            .({ name: key, versions: value })
-            [versions.size() > 1]
-        `)(npmTree);
-
-        const depsPathsToMultipleVersionPackages = jora(`
-            .({
-                name,
-                version,
-                otherVersions: #[name=@.name].versions - version,
-                dependencies: dependencies
-                    .mapToArray("name")
-                    .map(::self)
-                    [name in #.name or dependencies]
-            })
-        `)(npmTree, multipleVersionPackages);
-
-        printTree(depsPathsToMultipleVersionPackages);
-    });
-```
-
-Example of output:
-
-```
-jora@1.0.0
-├─ browserify@16.2.2
-│  ├─ assert@1.4.1
-│  │  └─ util@0.10.3 [other versions: 0.10.4]
-│  │     └─ inherits@2.0.1 [other versions: 2.0.3]
-│  ├─ browser-pack@6.1.0
-│  │  └─ combine-source-map@0.8.0
-│  │     ├─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
-│  │     └─ inline-source-map@0.6.2
-│  │        └─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
-│  ├─ browser-resolve@1.11.3
-│  │  └─ resolve@1.1.7 [other versions: 1.8.1]
-│  ├─ concat-stream@1.6.2
-│  │  └─ inherits@2.0.3 [other versions: 2.0.1]
-│  ├─ crypto-browserify@3.12.0
-│  │  ├─ browserify-cipher@1.0.1
-│  │  │  ├─ browserify-aes@1.2.0
-│  │  │  │  └─ inherits@2.0.3 [other versions: 2.0.1]
-│  │  │  └─ browserify-des@1.0.2
-│  │  │     ├─ des.js@1.0.0
-│  │  │     │  └─ inherits@2.0.3 [other versions: 2.0.1]
-│  │  │     └─ inherits@2.0.3 [other versions: 2.0.1]
-│  │  ├─ browserify-sign@4.0.4
-...
-```
 
 ## License
 
