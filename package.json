@@ -26,7 +26,7 @@
     "lint-and-test": "npm run lint && npm test",
     "test": "mocha --reporter progress",
     "build": "npm run build:parser && browserify -t package-json-versionify --standalone jora src/index.js > dist/jora.js && uglifyjs dist/jora.js --compress --mangle -o dist/jora.min.js",
-    "build:parser": "node -e \"var { strict, tolerant } = require('./src/parser');console.log(strict.generateModule({ moduleName: 'strictParser' }) + '\\x0a' + tolerant.generateModule({ moduleName: 'tolerantParser' }) + '\\x0amodule.exports = strictParser;\\x0astrictParser.strict = strictParser;\\x0astrictParser.tolerant = tolerantParser;');\" > dist/parser.js",
+    "build:parser": "node scripts/build > dist/parser.js",
     "prepublishOnly": "npm run build",
     "coverage": "istanbul cover _mocha -- -R min",
     "travis": "npm run lint-and-test && npm run coveralls",

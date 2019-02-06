@@ -1,4 +1,5 @@
 const { Parser } = require('jison');
+const patchParsers = require('./parser-patch');
 
 function code(s) {
     return '$$ = [' +
@@ -380,21 +381,13 @@ tolerantScopeStart.forEach(rule => {
 const strictParser = new Parser(grammar);
 const tolerantParser = new Parser(tolerantGrammar);
 
-// patch setInput method to add additional lexer fields on init
-strictParser.lexer.setInput =
-tolerantParser.lexer.setInput = (function(orig) {
-    return function(...args) {
-        this.fnOpened = 0;
-        this.fnOpenedStack = [];
-        return orig.apply(this, args);
-    };
-}(strictParser.lexer.setInput));
+patchParsers(strictParser, tolerantParser);
 
 // tolerantParser.lexer.setInput('$a: <a>;');
 // while (!tolerantParser.lexer.done) {
 //     console.log(tolerantParser.lexer.conditionStack);
-//     console.log('>>', tolerantParser.lexer.next());
-//     console.log(tolerantParser.lexer);
+//     console.log('>>', tolerantParser.lexer.lex(), tolerantParser.lexer.prevLex);
+//     // console.log(tolerantParser.lexer);
 // }
 // process.exit();
 
