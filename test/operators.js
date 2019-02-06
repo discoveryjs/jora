@@ -67,6 +67,13 @@ describe('operators', () => {
                     .filter(item => item.uniqueNumber < 500)
             );
         });
+
+        it('should has greater precedence than a logical operators', () => {
+            assert.deepEqual(
+                query('a < 5 or b < 10')({ a: 12, b: 4 }),
+                true
+            );
+        });
     });
 
     describe('<=', () => {
@@ -101,6 +108,29 @@ describe('operators', () => {
                 query('.[uniqueNumber>400]')(data),
                 data
                     .filter(item => item.uniqueNumber > 400)
+            );
+        });
+
+        it('should has greater precedence than a logical operators', () => {
+            assert.equal(
+                query('a > 5 or b > 10')({ a: 4, b: 12 }),
+                true
+            );
+        });
+    });
+
+    describe('a pair or `<` and `>`', () => {
+        it('inside a range', () => {
+            assert.deepEqual(
+                [0, 10, 20].map(value => query('$ > 5 and $ < 15')(value)),
+                [false, true, false]
+            );
+        });
+
+        it('outside a range', () => {
+            assert.deepEqual(
+                [0, 10, 20].map(value => query('$ < 5 or $ > 15')(value)),
+                [true, false, true]
             );
         });
     });

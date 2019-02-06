@@ -1,4 +1,8 @@
-## 1.0.0-alpha.7
+## next
+
+- Fixed a function consumption, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
+
+## 1.0.0-alpha.7 (December 25, 2018)
 
 - Disallowed a whitespace between a dot and a bracket in `.[`, `.(` and `..(` tokens
 - Changed filter (i.e. `.[]` or `.filter()`) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise

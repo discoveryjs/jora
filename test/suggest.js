@@ -371,7 +371,7 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             '+', '-', '*', '/', '%',
             '=', '!=', '~=', '>=', '<=', '<', '>'
         ].forEach(operator => {
-            (['/', '~=', '<', '>'].includes(operator) ? it.skip : it)('foo ' + operator, () => {
+            (['/', '~=', '<'].includes(operator) ? it.skip : it)('foo ' + operator, () => {
                 assert.deepEqual(
                     suggestQuery('foo ' + operator + '| |', data),
                     [

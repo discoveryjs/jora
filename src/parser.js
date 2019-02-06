@@ -37,7 +37,9 @@ function code(s) {
     '];';
 }
 
-const switchToPreventRxState = 'if (this._input) this.begin("preventRx"); ';
+const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
+const openScope = 'this.fnOpenedStack.push(this.fnOpened); this.fnOpened = 0; ';
+const closeScope = 'this.fnOpened = this.fnOpenedStack.pop() || 0; ';
 const grammar = {
     // Lexical tokens
     lex: {
@@ -52,27 +54,55 @@ const grammar = {
             rx: '/(?:\\\\.|[^/])+/i?'
         },
         startConditions: {
-            preventRx: 0
+            preventPrimitive: 0
         },
         rules: [
             // ignore comments and whitespaces
             ['{comment}', '/* a comment */'],
             ['{ws}', '/* a whitespace */'],
 
-            // hack to prevent regexp consumption
-            [['preventRx'], '\\/', 'this.popState(); return "/";'],
-            // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
+            // hack to prevent primitive (i.e. regexp and function) consumption
+            [['preventPrimitive'], '\\/', 'this.popState(); return "/";'],
+            [['preventPrimitive'], '<(?!=)', 'this.popState(); return "<";'],
+            // FIXME: using `this.done = false;` is a hack, since `regexp-lexer` set done=true
             // when no input left and doesn't take into account current state;
             // should be fixed in `regexp-lexer`
-            [['preventRx'], '', 'this.done = false; this.popState();'],
+            [['preventPrimitive'], '', 'this.done = false; this.popState();'],
 
             // braces
-            ['\\(', 'return "(";'],
-            ['\\)', switchToPreventRxState + 'return ")";'],
-            ['\\[', 'return "[";'],
-            ['\\]', switchToPreventRxState + 'return "]";'],
-            ['\\{', 'return "{";'],
-            ['\\}', 'return "}";'],
+            ['\\(', openScope + 'return "(";'],
+            ['\\)', closeScope + switchToPreventPrimitiveState + 'return ")";'],
+            ['\\[', openScope + 'return "[";'],
+            ['\\]', closeScope + switchToPreventPrimitiveState + 'return "]";'],
+            ['\\{', openScope + 'return "{";'],
+            ['\\}', closeScope + switchToPreventPrimitiveState + 'return "}";'],
+
+            // keywords (should goes before SYMBOL)
+            ['true{wb}', 'return "TRUE";'],
+            ['false{wb}', 'return "FALSE";'],
+            ['null{wb}', 'return "NULL";'],
+            ['undefined{wb}', 'return "UNDEFINED";'],
+
+            // keyword operators (should goes before SYMBOL)
+            ['and{wb}', 'return "AND";'],
+            ['or{wb}' , 'return "OR";'],
+            ['in{wb}', 'return "IN";'],
+            ['not{ws}in{wb}', 'return "NOTIN";'],
+            ['not?{wb}', 'return "NOT";'],
+
+            // special vars
+            ['@', switchToPreventPrimitiveState + 'return "@";'],
+            ['#', switchToPreventPrimitiveState + 'return "#";'],
+            ['\\$', switchToPreventPrimitiveState + 'return "$";'],
+            ['::self', 'return "SELF";'],
+
+            // primitives
+            ['\\d+(?:\\.\\d+)?{wb}', switchToPreventPrimitiveState + 'return "NUMBER";'],    // 212.321
+            ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'return "STRING";'],       // "foo" "with \" escaped"
+            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'return "STRING";'],       // 'foo' 'with \' escaped'
+            ['{rx}', switchToPreventPrimitiveState + 'return "REGEXP"'],                                              // /foo/i
+            ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
+            ['<(?!=)', 'this.fnOpened++; return "FUNCTION_START"'],
 
             // operators
             ['=', 'return "=";'],
@@ -81,33 +111,16 @@ const grammar = {
             ['>=', 'return ">=";'],
             ['<=', 'return "<=";'],
             ['<', 'return "<";'],
-            ['>', 'return ">";'],
-            ['and{wb}', 'return "AND";'],
-            ['or{wb}' , 'return "OR";'],
-            ['in{wb}', 'return "IN";'],
-            ['not{ws}in{wb}', 'return "NOTIN";'],
-            ['not?{wb}', 'return "NOT";'],
-
-            // keywords
-            ['true{wb}', 'return "TRUE";'],
-            ['false{wb}', 'return "FALSE";'],
-            ['null{wb}', 'return "NULL";'],
-            ['undefined{wb}', 'return "UNDEFINED";'],
-
-            // self
-            ['::self', 'return "SELF";'],
-
-            // primitives
-            ['\\d+(?:\\.\\d+)?{wb}', switchToPreventRxState + 'return "NUMBER";'],    // 212.321
-            ['"(?:\\\\.|[^"])*"', switchToPreventRxState + 'return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\.|[^'])*'", switchToPreventRxState + 'return "STRING";'],       // 'foo' 'with \' escaped'
-            ['{rx}', 'return "REGEXP"'],                                              // /foo/i
-            ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventRxState + 'return "SYMBOL";'], // foo123
-
-            // operators
-            ['\\.\\.\\(', 'return "..(";'],
-            ['\\.\\(', 'return ".(";'],
-            ['\\.\\[', 'return ".[";'],
+            ['>', `
+                if (this.fnOpened) {
+                    this.fnOpened--;
+                    return "FUNCTION_END";
+                }
+                return ">";
+            `],
+            ['\\.\\.\\(', openScope + 'return "..(";'],
+            ['\\.\\(', openScope + 'return ".(";'],
+            ['\\.\\[', openScope + 'return ".[";'],
             ['\\.\\.\\.', 'return "...";'],
             ['\\.\\.', 'return "..";'],
             ['\\.', 'return ".";'],
@@ -121,12 +134,7 @@ const grammar = {
             ['\\/', 'return "/";'],
             ['\\%', 'return "%";'],
 
-            // special vars
-            ['@', 'return "@";'],
-            ['#', 'return "#";'],
-            ['\\$', 'return "$";'],
-
-            // end
+            // eof
             ['$', 'return "EOF";']
         ]
     },
@@ -288,7 +296,7 @@ const grammar = {
         ],
 
         function: [
-            ['< e >', code`current => $2`]
+            ['FUNCTION_START e FUNCTION_END', code`current => $2`]
         ]
     }
 };
@@ -297,7 +305,7 @@ const tolerantScopeStart = new Set([
     ':', ';',
     '\\.', '\\.\\.', ',',
     '\\+', '\\-', '\\*', '\\/', '\\%',
-    '=', '!=', '~=', '>=', '<=', /* '<', '>', */
+    '=', '!=', '~=', '>=', '<=', '<', '>',
     'and{wb}', 'or{wb}', 'in{wb}', 'not{ws}in{wb}', 'not?{wb}'
 ]);
 const tolerantGrammar = Object.assign({}, grammar, {
@@ -319,7 +327,7 @@ const tolerantGrammar = Object.assign({}, grammar, {
                 // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
                 // when no input left and doesn't take into account current state;
                 // should be fixed in `regexp-lexer`
-                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventRxState + 'return "SYMBOL";'
+                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventPrimitiveState + 'return "SYMBOL";'
             ],
             [['suggestPointWhenWhitespace'],
                 '{ws}',
@@ -330,7 +338,7 @@ const tolerantGrammar = Object.assign({}, grammar, {
                 // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
                 // when no input left and doesn't take into account current state;
                 // should be fixed in `regexp-lexer`
-                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventRxState + 'return "SYMBOL";'
+                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventPrimitiveState + 'return "SYMBOL";'
             ],
             [['suggestPointVarDisabled'],
                 '(?=;)',
@@ -371,6 +379,24 @@ tolerantScopeStart.forEach(rule => {
 
 const strictParser = new Parser(grammar);
 const tolerantParser = new Parser(tolerantGrammar);
+
+// patch setInput method to add additional lexer fields on init
+strictParser.lexer.setInput =
+tolerantParser.lexer.setInput = (function(orig) {
+    return function(...args) {
+        this.fnOpened = 0;
+        this.fnOpenedStack = [];
+        return orig.apply(this, args);
+    };
+}(strictParser.lexer.setInput));
+
+// tolerantParser.lexer.setInput('$a: <a>;');
+// while (!tolerantParser.lexer.done) {
+//     console.log(tolerantParser.lexer.conditionStack);
+//     console.log('>>', tolerantParser.lexer.next());
+//     console.log(tolerantParser.lexer);
+// }
+// process.exit();
 
 module.exports = strictParser;
 module.exports.strict = strictParser;
