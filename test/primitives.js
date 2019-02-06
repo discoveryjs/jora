@@ -87,10 +87,24 @@ describe('primitives', () => {
     });
 
     describe('a function', () => {
+        it('empty function', () => {
+            assert.strictEqual(
+                typeof query('<>')(),
+                'function'
+            );
+        });
+
         it('body is a query', () => {
             assert.strictEqual(
                 typeof query('<foo>')(),
                 'function'
+            );
+        });
+
+        it('allow definitions in a function', () => {
+            assert.strictEqual(
+                query('map(<$a;$a>)')({ a: 42}),
+                42
             );
         });
 

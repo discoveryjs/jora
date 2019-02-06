@@ -296,7 +296,7 @@ const grammar = {
         ],
 
         function: [
-            ['FUNCTION_START e FUNCTION_END', code`current => $2`]
+            ['FUNCTION_START block FUNCTION_END', code`current => { $2 }`]
         ]
     }
 };

@@ -1,6 +1,7 @@
 ## next
 
 - Fixed a function consumption, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
+- Allowed a block inside a function
 
 ## 1.0.0-alpha.7 (December 25, 2018)
 

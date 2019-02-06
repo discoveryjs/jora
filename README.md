@@ -159,7 +159,7 @@ Jora | Description
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax
-< > | A function<br>NOTE: Syntax will be changed
+< block > | A function<br>NOTE: Syntax will be changed
 
 ### Keywords
 
