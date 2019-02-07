@@ -33,7 +33,7 @@ module.exports = function patchParsers(strictParser) {
                 range: [0, 0]
             };
             const keywords = [
-                'AND', 'OR', 'IN', 'NOTIN', 'NOT'
+                'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO', 'NOT'
             ];
             const operators = [
                 '+', '-', '*', '/', '%',
@@ -48,7 +48,8 @@ module.exports = function patchParsers(strictParser) {
             const defaultNext = new Set([
                 ',', '?', ':', ';', 'EOF',
                 ']', ')', '}',
-                ...operators
+                ...operators,
+                ...keywords
             ]);
             const tokenPair = prev.reduce(
                 (map, prevToken) => map.set(prevToken, defaultNext),

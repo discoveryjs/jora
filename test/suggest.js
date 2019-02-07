@@ -267,7 +267,10 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
     });
 
     describe('trailing full stop before operators', () => {
-        ['=', '!=', '>', '<', '~=', '*', '/', '+', '-'].forEach(operator => {
+        [
+            '=', '!=', '~=', '>=', '<=', '<', '>',
+            '*', '/', '+', '-', '%'
+        ].forEach(operator => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
             it(operator, () => {
                 assert.deepEqual(
@@ -337,8 +340,8 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
 
     describe('operators', () => {
         [
-            '+', '-', '*', '/', '%',
-            '=', '!=', '~=', '>=', '<=', '<', '>'
+            '=', '!=', '~=', '>=', '<=', '<', '>',
+            '+', '-', '*', '/', '%'
         ].forEach(operator => {
             (['/', '~=', '<'].includes(operator) ? it.skip : it)('foo ' + operator, () => {
                 assert.deepEqual(
@@ -352,7 +355,10 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
         });
 
         [
-            'true and', 'false or', 'foo in', 'foo not in', 'no', 'not'
+            'true and', 'false or',
+            'foo in', 'foo not in',
+            '[] has', '[] has no',
+            'no', 'not'
         ].forEach(queryString => {
             it(queryString + '| |', () => {
                 assert.deepEqual(
@@ -386,6 +392,20 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
                     null,
                     null,
                     null
+                ]
+            );
+        });
+
+        it('has', () => {
+            assert.deepEqual(
+                suggestQuery('["a", "b", 3] |h|a|s| |a|', data),
+                [
+                    null,
+                    null,
+                    null,
+                    null,
+                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19),
+                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19)
                 ]
             );
         });

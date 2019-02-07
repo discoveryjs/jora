@@ -87,6 +87,8 @@ const grammar = {
             // keyword operators (should goes before SYMBOL)
             ['and{wb}', 'return "AND";'],
             ['or{wb}' , 'return "OR";'],
+            ['has{ws}no{wb}', 'return "HASNO";'],
+            ['has{wb}', 'return "HAS";'],
             ['in{wb}', 'return "IN";'],
             ['not{ws}in{wb}', 'return "NOTIN";'],
             ['not?{wb}', 'return "NOT";'],
@@ -147,7 +149,7 @@ const grammar = {
         ['left', 'OR'],
         ['left', 'AND'],
         ['left', 'NOT'],
-        ['left', 'IN', 'NOTIN'],
+        ['left', 'IN', 'NOTIN', 'HAS', 'HASNO'],
         ['left', '=', '!=', '~='],
         ['left', '<', '<=', '>', '>='],
         ['left', '+', '-'],
@@ -199,7 +201,9 @@ const grammar = {
         op: [
             ['NOT e', code`!fn.bool($2)`],
             ['e IN e', code`fn.in($1, /*in-value@1*/$3)`],
+            ['e HAS e', code`fn.in($3, /*in-value@3*/$1)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],
+            ['e HASNO e', code`!fn.in($3, $1)`],
             ['e AND e', code`fn.bool($1) ? $3 : $1`],
             ['e OR e', code`fn.bool($1) ? $1 : $3`],
             ['e ? e : e', code`fn.bool($1) ? $3 : $5`],

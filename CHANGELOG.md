@@ -1,7 +1,11 @@
 ## next
 
 - Fixed a function consumption, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
-- Allowed a block inside a function
+- Allowed a block inside a function, i.e. function can be empty (returns a current in this case) and definitions are allowed in function's body
+- Reworked tolerant parsing mode
+    - Improved suggestions
+    - Reduced lib size: 64Kb -> 37Kb
+- Added `has` and `has no` operators as inverse of `in` and `not in`
 
 ## 1.0.0-alpha.7 (December 25, 2018)
 

@@ -267,6 +267,54 @@ describe('operators', () => {
         });
     });
 
+    describe('has', () => {
+        it('basic usage with an array', () => {
+            assert.deepEqual(
+                query('.[# has $]')(['foo', 'bar', 'baz'], ['foo', 'baz', 'qux']),
+                ['foo', 'baz']
+            );
+        });
+
+        it('basic usage with an object', () => {
+            assert.deepEqual(
+                query('.[# has $]')(['foo', 'bar', 'baz'], { foo: 1, baz: undefined, qux: 2 }),
+                ['foo', 'baz']
+            );
+        });
+
+        it('basic usage with a string', () => {
+            assert.deepEqual(
+                query('.[# has $]')(['foo', 'bar', 'baz'], 'foobaz'),
+                ['foo', 'baz']
+            );
+        });
+
+        it('not a has b', () => {
+            assert.deepEqual(
+                query('.[not # has type]')(data, ['css', 'svg']),
+                data
+                    .filter(item => item.type !== 'css' && item.type !== 'svg')
+            );
+        });
+
+        it('a has not b', () => {
+            assert.deepEqual(
+                query('.[# has no $]')(['foo', 'bar', 'baz'], ['foo', 'baz', 'qux']),
+                ['bar']
+            );
+
+            assert.deepEqual(
+                query('.[# has no $]')(['foo', 'bar', 'baz'], { foo: 1, baz: undefined, qux: 2 }),
+                ['bar']
+            );
+
+            assert.deepEqual(
+                query('.[# has no $]')(['foo', 'bar', 'baz'], 'foobaz'),
+                ['bar']
+            );
+        });
+    });
+
     describe('or', () => {
         it('basic', () => {
             assert.deepEqual(
