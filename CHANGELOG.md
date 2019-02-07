@@ -1,7 +1,7 @@
 ## 1.0.0-alpha.8 (February 7, 2019)
 
 - Reworked tolerant parsing mode, less failures and better suggestions
-- Reworked lib building, lib size reduced from 64Kb to 37Kb
+- Reworked lib building, lib size reduced from 71Kb to 39Kb
 - Fixed a function parsing, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
 - Allowed a block inside a function, i.e. function can be empty (returns a `current` in this case) and definitions are allowed in function's body
 - Added `has` and `has no` operators as inverse of `in` and `not in`
