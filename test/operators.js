@@ -339,6 +339,28 @@ describe('operators', () => {
                     .filter(item => !(item.errors && item.errors.length) || item.unique)
             );
         });
+
+        it('should not evaluate right expression when left expression is truthy', () => {
+            let left = 0;
+            let right = 0;
+            const value = { foo: 123 };
+            const result = query('left() or right()', {
+                methods: {
+                    left() {
+                        left++;
+                        return value;
+                    },
+                    right() {
+                        right++;
+                        return true;
+                    }
+                }
+            })();
+
+            assert.strictEqual(result, value, 'should return truthy expression result as is');
+            assert.strictEqual(left, 1, 'should evaluate left expression once');
+            assert.strictEqual(right, 0, 'should not evaluate right expression');
+        });
     });
 
     describe('and', () => {
@@ -364,6 +386,28 @@ describe('operators', () => {
                 data
                     .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
             );
+        });
+
+        it('should not evaluate right expression when left expression is falsy', () => {
+            let left = 0;
+            let right = 0;
+            const value = {};
+            const result = query('left() and right()', {
+                methods: {
+                    left() {
+                        left++;
+                        return value;
+                    },
+                    right() {
+                        right++;
+                        return true;
+                    }
+                }
+            })();
+
+            assert.strictEqual(result, value, 'should return falsy expression result as is');
+            assert.strictEqual(left, 1, 'should evaluate left expression once');
+            assert.strictEqual(right, 0, 'should not evaluate right expression');
         });
     });
 

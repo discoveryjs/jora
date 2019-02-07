@@ -261,6 +261,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         // preserved variables
         'const $data = undefined, $context = undefined, $ctx = undefined, $array = undefined, $idx = undefined, $index = undefined;',
         'let current = data;',
+        'let tmp;',
         code.join('')
     );
 

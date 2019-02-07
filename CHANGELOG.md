@@ -6,6 +6,7 @@
     - Improved suggestions
     - Reduced lib size: 64Kb -> 37Kb
 - Added `has` and `has no` operators as inverse of `in` and `not in`
+- Fixed `and` and `or` operators to evaluate left expression only once (good for performance and eliminates duplicates in suggestions)
 
 ## 1.0.0-alpha.7 (December 25, 2018)
 
