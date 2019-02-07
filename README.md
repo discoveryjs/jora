@@ -16,6 +16,12 @@ Features:
 - Stat collecting mode (powers suggestions)
 - Tolerant parsing mode (useful to provide suggestions on a query editing in an editor)
 - Extensible DSL by providing a additional method list on query build
+ntl
+
+Related projects:
+
+- [Discovery](https://github.com/discoveryjs/discovery) – Hackable JSON discovery tool. Uses jora to query a data for views
+- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Chrome extension built on Discovery which allows you to discover a JSON documents and make beautiful reports on the fly
 
 TODO:
 
@@ -26,11 +32,7 @@ TODO:
 - [ ] Query transforming, e.g. query merge, subquery to a query, context inlining
 - [ ] Method namespaces, e.g. semver, path, math etc
 - [ ] Prettifier
-
-Related projects:
-
-- [Discovery](https://github.com/discoveryjs/discovery) – Hackable JSON discovery tool. Uses jora to query a data for views
-- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – Chrome extension built on Discovery which allows you to discover a JSON documents and make beautiful reports on the fly
+- [ ] Move jison to dev dependencies
 
 Table of content:
 

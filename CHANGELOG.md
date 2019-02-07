@@ -1,10 +1,9 @@
-## next
+## 1.0.0-alpha.8 (February 7, 2019)
 
-- Fixed a function consumption, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
-- Allowed a block inside a function, i.e. function can be empty (returns a current in this case) and definitions are allowed in function's body
-- Reworked tolerant parsing mode
-    - Improved suggestions
-    - Reduced lib size: 64Kb -> 37Kb
+- Reworked tolerant parsing mode, less failures and better suggestions
+- Reworked lib building, lib size reduced from 64Kb to 37Kb
+- Fixed a function parsing, now it's greedy and a parentheses needed **only** around expressions with `>` operator when used outside braces, since `>` will end a function definition (i.e. `<a > 20>` causes to a parse error, but `<(a > 20)>` or `<foo.[a > 20]>` is not)
+- Allowed a block inside a function, i.e. function can be empty (returns a `current` in this case) and definitions are allowed in function's body
 - Added `has` and `has no` operators as inverse of `in` and `not in`
 - Fixed `and` and `or` operators to evaluate left expression only once (good for performance and eliminates duplicates in suggestions)
 
