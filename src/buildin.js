@@ -22,6 +22,12 @@ module.exports = Object.freeze({
 
         return Boolean(value);
     },
+    and: function(a, b) {
+        return this.bool(a) ? b : a;
+    },
+    or: function(a, b) {
+        return this.bool(a) ? a : b;
+    },
     add: function(a, b) {
         if (Array.isArray(a) || Array.isArray(b)) {
             return [...new Set([].concat(a, b))];

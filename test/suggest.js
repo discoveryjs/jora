@@ -269,14 +269,20 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
     describe('trailing full stop before operators', () => {
         [
             '=', '!=', '~=', '>=', '<=', '<', '>',
-            '*', '/', '+', '-', '%'
+            '*', '/', '+', '-', '%',
+            'and', 'or', 'in', 'not in', 'has', 'has no'
         ].forEach(operator => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
-            it(operator, () => {
+            (operator === 'in' ? it.skip : it)(operator, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
                     [
                         suggestion('', ['foo', 'bar'], 1)
+                        // .concat(
+                        //     operator === 'in'
+                        //         ? suggestion('', ['5:value'], 1, 1)
+                        //         : []
+                        // )
                     ]
                 );
             });
@@ -340,10 +346,10 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
 
     describe('operators', () => {
         [
-            '=', '!=', '~=', '>=', '<=', '<', '>',
+            '=', '!=', '>=', '<=', '<', '>',
             '+', '-', '*', '/', '%'
         ].forEach(operator => {
-            (['/', '~=', '<'].includes(operator) ? it.skip : it)('foo ' + operator, () => {
+            it('foo ' + operator, () => {
                 assert.deepEqual(
                     suggestQuery('foo ' + operator + '| |', data),
                     [
