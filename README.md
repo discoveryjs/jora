@@ -6,7 +6,26 @@
 
 JavaScript object query engine
 
-> STATUS: A proof of concept
+> STATUS: A proof of concept. Syntax may change in next releases.
+
+Features:
+
+- Tolerant to data stucture queries (e.g. just returns *nothing* for paths that not reachable)
+- Compact syntax for common tasks
+- Aggregate values across arrays and eliminate duplicates by default
+- Stat collecting mode (powers suggestions)
+- Tolerant parsing mode (useful to provide suggestions on a query editing in an editor)
+- Extensible DSL by providing a additional method list on query build
+
+TODO:
+
+- [ ] AST
+- [ ] Immutable paths hoisting (reduce computations -> performance)
+- [ ] Smart computation caching across queries
+- [ ] Query parts performance stat
+- [ ] Query transforming, e.g. query merge, subquery to a query, context inlining
+- [ ] Method namespaces, e.g. semver, path, math etc
+- [ ] Prettifier
 
 Related projects:
 
@@ -188,10 +207,10 @@ x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x !== a and x !== b an
 
 Jora | Description
 --- | ---
-x or y | Boolean or (as `\|\|` in JS)
-x and y | Boolean and (as `&&` in JS)
-not x | Boolean not (a `!` in JS)
-x ? y : z | If `x` is truthy than return `y` else return `z`
+x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
+x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
+not x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
+x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bool()` method
 ( x ) | Explicity operator precedence
 
 ### Operators
@@ -249,7 +268,7 @@ path[e] | Array-like notation to access properties. It works like in JS for ever
 
 jora | Description
 --- | ---
-bool() | The same as `Boolean()` in JS, with exception that empty arrays and objects with no keys treats as false
+bool() | The same as `Boolean()` in JS, with exception that *empty arrays* and *objects with no keys* treats as falsy
 keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | The same as `Object.entries()` in JS
