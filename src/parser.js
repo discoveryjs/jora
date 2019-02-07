@@ -59,7 +59,7 @@ const grammar = {
         },
         rules: [
             // ignore comments and whitespaces
-            ['{comment}', '/* a comment */'],
+            ['{comment}', 'yy.commentRanges.push(yylloc.range); /* a comment */'],
             ['{ws}', '/* a whitespace */'],
 
             // hack to prevent primitive (i.e. regexp and function) consumption
@@ -123,8 +123,8 @@ const grammar = {
             ['\\.\\(', openScope + 'return ".(";'],
             ['\\.\\[', openScope + 'return ".[";'],
             ['\\.\\.\\.', 'return "...";'],
-            ['\\.\\.', 'return "..";'],
-            ['\\.', 'return ".";'],
+            ['\\.\\.', switchToPreventPrimitiveState + 'return "..";'],
+            ['\\.', switchToPreventPrimitiveState + 'return ".";'],
             ['\\?', 'return "?";'],
             [',', 'return ",";'],
             [':', 'return ":";'],
@@ -159,7 +159,7 @@ const grammar = {
     start: 'root',
     bnf: {
         root: [
-            ['block EOF', 'return $$ = $1;']
+            ['block EOF', 'return $$ = { ast: $1, commentRanges: yy.commentRanges };']
         ],
 
         block: [
@@ -179,6 +179,7 @@ const grammar = {
         ],
 
         def: [
+            ['$ ;', code`/*key@1*/current;`], // do nothing, but collect stat (suggestions)
             ['$ SYMBOL ;', code`/*define:@2*/const $$2 = fn.get(/*key@2*/current, "$2");`],
             ['$ SYMBOL : e ;', code`/*define:@2*/const $$2 = $4;`]
         ],
@@ -279,10 +280,11 @@ const grammar = {
 
         property: [
             ['SYMBOL', code`/*var:@1*/$1: fn.get(/*@1*/current, "$1")`],
+            ['$', code`[Symbol()]: /*var:@$*/0`],  // do nothing, but collect stat (suggestions)
             ['$ SYMBOL', code`/*var:@$*/$2: typeof $$2 !== 'undefined' ? $$2 : undefined`],
             ['SYMBOL : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
-            ['...', code`...current`],
+            ['...', code`.../*var:@1*//*@1*/current`],
             ['... query', code`...$2`]
         ],
 
@@ -302,95 +304,4 @@ const grammar = {
     }
 };
 
-const tolerantScopeStart = new Set([
-    ':', ';',
-    '\\.', '\\.\\.', ',',
-    '\\+', '\\-', '\\*', '\\/', '\\%',
-    '=', '!=', '~=', '>=', '<=', '<', '>',
-    'and{wb}', 'or{wb}', 'in{wb}', 'not{ws}in{wb}', 'not?{wb}'
-]);
-const tolerantGrammar = Object.assign({}, grammar, {
-    lex: Object.assign({}, grammar.lex, {
-        startConditions: Object.assign({}, grammar.lex.startConditions, {
-            suggestPoint: 1,
-            suggestPointWhenWhitespace: 1,
-            suggestPointVar: 1,
-            suggestPointVarDisabled: 0
-        }),
-        rules: [
-            [['suggestPoint'],
-                // prevent suggestions before rx
-                '(?=({ows}{comment})*{ows}{rx})',
-                'this.popState();'
-            ],
-            [['suggestPoint'],
-                '(?=({ows}{comment})*{ows}([\\]\\)\\}\\<\\>\\+\\-\\*\\/,~!=:;]|$))',
-                // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
-                // when no input left and doesn't take into account current state;
-                // should be fixed in `regexp-lexer`
-                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventPrimitiveState + 'return "SYMBOL";'
-            ],
-            [['suggestPointWhenWhitespace'],
-                '{ws}',
-                'this.popState(); this.begin("suggestPoint");'
-            ],
-            [['suggestPointVar'],
-                '(?=({ows}{comment})*{ows}([:;]|$))',
-                // FIXME: using `this.done = false;` is hack, since `regexp-lexer` set done=true
-                // when no input left and doesn't take into account current state;
-                // should be fixed in `regexp-lexer`
-                'this.popState(); this.done = false; yytext = "_"; ' + switchToPreventPrimitiveState + 'return "SYMBOL";'
-            ],
-            [['suggestPointVarDisabled'],
-                '(?=;)',
-                'this.popState();'
-            ],
-            [['suggestPoint', 'suggestPointWhenWhitespace', 'suggestPointVar'],
-                '',
-                'this.popState();'
-            ]
-        ].concat(
-            grammar.lex.rules.map(entry => {
-                let [sc, rule, action] = entry.length === 3 ? entry : [undefined, ...entry];
-
-                if (rule === '\\$') {
-                    action = `if (this.conditionStack.indexOf("suggestPointVarDisabled") === -1) this.begin("suggestPointVar"); ${action}`;
-                } else if (tolerantScopeStart.has(rule)) {
-                    action = `this.begin("suggestPoint${
-                        rule.endsWith('{wb}') ? 'WhenWhitespace' : ''
-                    }"); ${action}`;
-                }
-
-                if (rule === ':') {
-                    action = 'this.begin("suggestPointVarDisabled"); ' + action;
-                }
-
-                return entry.length === 3 ? [sc, rule, action] : [rule, action];
-            })
-        )
-    })
-});
-
-// guard to keep in sync tolerantScopeStart and lex rules
-tolerantScopeStart.forEach(rule => {
-    if (!tolerantGrammar.lex.rules.some(lexRule => lexRule[0] === rule)) {
-        throw new Error('Rule missed in lexer: "' + rule.replace(/\\/g, '\\\\') + '"');
-    }
-});
-
-const strictParser = new Parser(grammar);
-const tolerantParser = new Parser(tolerantGrammar);
-
-patchParsers(strictParser, tolerantParser);
-
-// tolerantParser.lexer.setInput('$a: <a>;');
-// while (!tolerantParser.lexer.done) {
-//     console.log(tolerantParser.lexer.conditionStack);
-//     console.log('>>', tolerantParser.lexer.lex(), tolerantParser.lexer.prevLex);
-//     // console.log(tolerantParser.lexer);
-// }
-// process.exit();
-
-module.exports = strictParser;
-module.exports.strict = strictParser;
-module.exports.tolerant = tolerantParser;
+module.exports = patchParsers(new Parser(grammar));

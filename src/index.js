@@ -96,23 +96,29 @@ function findSourcePosPoints(source, pos, points, includeEmpty) {
     const result = [];
 
     for (let i = 0; i < points.length; i++) {
-        let [values, from, to, context] = points[i];
+        const [values, ranges, context] = points[i];
 
-        if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
-            let current = source.substring(from, to);
+        for (let j = 0; j < ranges.length; j += 2) {
+            let from = ranges[j];
+            let to = ranges[j + 1];
 
-            if (!/\S/.test(current)) {
-                current = '';
-                from = to = pos;
+            if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
+                let current = source.substring(from, to);
+
+                if (!/\S/.test(current)) {
+                    current = '';
+                    from = to = pos;
+                }
+
+                result.push({
+                    context,
+                    current,
+                    from,
+                    to,
+                    values
+                });
             }
 
-            result.push({
-                context,
-                current,
-                from,
-                to,
-                values
-            });
         }
     }
 
@@ -120,6 +126,36 @@ function findSourcePosPoints(source, pos, points, includeEmpty) {
 }
 
 function compileFunction(source, statMode, tolerantMode, debug) {
+    function getSuggestRanges(from, to) {
+        const ranges = [];
+
+        for (let i = 0; i < commentRanges.length; i++) {
+            const [commentFrom, commentTo] = commentRanges[i];
+
+            if (commentFrom > to) {
+                break;
+            }
+
+            if (commentFrom < from) {
+                continue;
+            }
+
+            if (commentFrom === from) {
+                ranges.push(from, from);
+            } else {
+                ranges.push(from, commentFrom);
+            }
+
+            from = commentTo;
+        }
+
+        if (from !== source.length || !noSuggestOnEofPos) {
+            ranges.push(from, to);
+        }
+
+        return ranges;
+    }
+
     function astToCode(node, scopeVars) {
         if (Array.isArray(node)) {
             const first = node[0];
@@ -160,7 +196,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                     }
                 }
 
-                suggestPoints.push(`[[${scopeVars}], ${from}, ${to}, "var"]`);
+                suggestPoints.push(`[[${scopeVars}], [${getSuggestRanges(from, to)}], "var"]`);
             } else {
                 const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
                 const items = node.substring(2, node.length - 2).split(',');
@@ -174,6 +210,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
                     if (frag === '.[' || frag === '.(' || frag === '..(' ||
                         frag === '{' || frag === '[' || frag === '(' ||
+                        frag === '...' ||
                         from === to) {
                         from = to;
                         while (to < source.length && isWhiteSpace(source, to)) {
@@ -181,7 +218,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                         }
                     }
 
-                    suggestPoints.push(`[sp${pointId}, ${from}, ${to}, "${context || 'path'}"]`);
+                    suggestPoints.push(`[sp${pointId}, [${getSuggestRanges(from, to)}], "${context || 'path'}"]`);
                 }
 
                 code.push(`, sp${pointId})`);
@@ -191,25 +228,27 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         }
     }
 
-    const parser = tolerantMode ? tolerantParser : strictParser;
-    const code = [];
-    const suggestPoints = [];
-    let suggestSets = [];
-    let body = [];
-    let tree;
-
     if (debug) {
         console.log('\n== compile ======');
         console.log('source:', source);
     }
 
-    tree = parser.parse(source);
+    const parser = tolerantMode ? tolerantParser : strictParser;
+    const { ast, commentRanges } = parser.parse(source);
+    const code = [];
+    const suggestPoints = [];
+    const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
+        commentRanges.length &&
+        commentRanges[commentRanges.length - 1][1] === source.length &&
+        !/[\r\n]$/.test(source);
+    let suggestSets = [];
+    let body = [];
 
     // if (debug) {
-    //     console.log('tree:', JSON.stringify(tree, null, 4));
+    //     console.log('ast:', JSON.stringify(ast, null, 4));
     // }
 
-    astToCode(tree, []);
+    astToCode(ast, []);
 
     if (suggestSets.length) {
         body.push(

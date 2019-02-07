@@ -35,6 +35,19 @@ function suggestion(current, list, from, to = from) {
     });
 }
 
+function describeCases(title, cases) {
+    describe(title, () => {
+        Object.entries(cases).forEach(([queryString, expected]) => {
+            (queryString[0] === '!' ? it.skip : it)(queryString, () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data),
+                    expected
+                );
+            });
+        });
+    });
+}
+
 describe('suggest', () => {
     it('empty query', () => {
         assert.deepEqual(
@@ -63,7 +76,8 @@ describe('suggest', () => {
         map: ['.(', ')'],
         recursiveMap: ['..(', ')'],
         object: ['.({', '})'],
-        array: ['.([', '])']
+        array: ['.([', '])'],
+        x: ['.({...', '})']
     }).forEach(([name, [begin, end]]) => {
         const sbegin = begin.replace(/./g, '$&|');
         const send = end.replace(/./g, '$&|');
@@ -204,68 +218,52 @@ describe('suggest', () => {
         });
     });
 
-    describe('variables', () => {
-        Object.entries({
-            '$|f|;|': [
-                suggestion('f', ['foo', 'bar'], 1, 2),
-                suggestion('f', ['foo', 'bar'], 1, 2),
-                suggestion('', ['$f:variable', 'foo', 'bar'], 3)
-            ],
-            '$|f|o|o|;| |': [
-                suggestion('foo', ['foo', 'bar'], 1, 4),
-                suggestion('foo', ['foo', 'bar'], 1, 4),
-                suggestion('foo', ['foo', 'bar'], 1, 4),
-                suggestion('foo', ['foo', 'bar'], 1, 4),
-                suggestion('', ['$foo:variable', 'foo', 'bar'], 5),
-                suggestion('', ['$foo:variable', 'foo', 'bar'], 6)
-            ],
-            '$a;foo.(|$|)': [
-                suggestion('$', ['$a:variable'], 8, 9),
-                suggestion('$', ['$a:variable'], 8, 9)
-            ],
-            '$a;$aa;$aaa;{a:| |$|a| |}': [
-                null,
-                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
-                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
-                suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
-                null
-            ],
-            '$foo;{| |$|f|,| |f| |}': [
-                null,
-                suggestion('$f', ['$foo:variable'], 7, 9),
-                suggestion('$f', ['$foo:variable'], 7, 9),
-                suggestion('$f', ['$foo:variable'], 7, 9),
-                null,
-                suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
-                suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
-                null
-            ]
-        }).forEach(([queryString, expected]) => {
-            it(queryString, () => {
-                assert.deepEqual(
-                    suggestQuery(queryString, data),
-                    expected
-                );
-            });
-        });
+    describeCases('variables', {
+        '$|f|;|': [
+            suggestion('f', ['foo', 'bar'], 1, 2),
+            suggestion('f', ['foo', 'bar'], 1, 2),
+            suggestion('', ['$f:variable', 'foo', 'bar'], 3)
+        ],
+        '$|f|o|o|;| |': [
+            suggestion('foo', ['foo', 'bar'], 1, 4),
+            suggestion('foo', ['foo', 'bar'], 1, 4),
+            suggestion('foo', ['foo', 'bar'], 1, 4),
+            suggestion('foo', ['foo', 'bar'], 1, 4),
+            suggestion('', ['$foo:variable', 'foo', 'bar'], 5),
+            suggestion('', ['$foo:variable', 'foo', 'bar'], 6)
+        ],
+        '$a;foo.(|$|)': [
+            suggestion('$', ['$a:variable'], 8, 9),
+            suggestion('$', ['$a:variable'], 8, 9)
+        ],
+        '$a;$aa;$aaa;{a:| |$|a| |}': [
+            null,
+            suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+            suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+            suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
+            null
+        ],
+        '$foo;{| |$|f|,| |f| |}': [
+            null,
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            null,
+            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+            null
+        ]
     });
 });
 
 describe('suggest in tolerant parsing mode (autocorrection)', () => {
-    it('trailing full stop', () => {
-        assert.deepEqual(
-            suggestQuery('.|', data),
-            [
-                suggestion('', ['foo', 'bar'], 1, 1)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.foo.|', data),
-            [
-                suggestion('', ['a', 'b', 'c', 'd'], 5, 5)
-            ]
-        );
+    describeCases('trailing full stop', {
+        '.|': [
+            suggestion('', ['foo', 'bar'], 1, 1)
+        ],
+        '.foo.|': [
+            suggestion('', ['a', 'b', 'c', 'd'], 5, 5)
+        ]
     });
 
     describe('trailing full stop before operators', () => {
@@ -282,22 +280,15 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
         });
     });
 
-    it('trailing double full stop', () => {
-        assert.deepEqual(
-            suggestQuery('.|.|', data),
-            [
-                null,
-                suggestion('', ['foo', 'bar'], 2, 2)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.foo.|.|', data),
-            [
-                null,
-                suggestion('', ['a', 'b', 'c', 'd'], 6, 6)
-            ]
-        );
+    describeCases('trailing double full stop', {
+        '.|.|': [
+            null,
+            suggestion('', ['foo', 'bar'], 2, 2)
+        ],
+        '.foo.|.|': [
+            null,
+            suggestion('', ['a', 'b', 'c', 'd'], 6, 6)
+        ]
     });
 
     it('nested trailing full stop', () => {
@@ -310,51 +301,29 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
         );
     });
 
-    it('trailing full stop with trailing whitespaces', () => {
-        assert.deepEqual(
-            suggestQuery('.| |', data),
-            [
-                suggestion('', ['foo', 'bar'], 1),
-                suggestion('', ['foo', 'bar'], 2)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.|\n  ', data),
-            [
-                suggestion('', ['foo', 'bar'], 1)
-            ]
-        );
+    describeCases('trailing full stop with trailing whitespaces', {
+        '.| |': [
+            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar'], 2)
+        ],
+        '.|\n  ': [
+            suggestion('', ['foo', 'bar'], 1)
+        ]
     });
 
-    it('trailing full stop with trailing comment', () => {
-        assert.deepEqual(
-            suggestQuery('.|//', data),
-            [
-                suggestion('', ['foo', 'bar'], 1)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.|  //', data),
-            [
-                suggestion('', ['foo', 'bar'], 1)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.|  //1\n  //2\n//3\n  ', data),
-            [
-                suggestion('', ['foo', 'bar'], 1)
-            ]
-        );
-
-        assert.deepEqual(
-            suggestQuery('.foo.|//', data),
-            [
-                suggestion('', ['a', 'b', 'c', 'd'], 5)
-            ]
-        );
+    describeCases('trailing full stop with trailing comment', {
+        '.|//': [
+            suggestion('', ['foo', 'bar'], 1)
+        ],
+        '.|  //': [
+            suggestion('', ['foo', 'bar'], 1)
+        ],
+        '.|  //1\n  //2\n//3\n  ': [
+            suggestion('', ['foo', 'bar'], 1)
+        ],
+        '.foo.|//': [
+            suggestion('', ['a', 'b', 'c', 'd'], 5)
+        ]
     });
 
     it('trailing comma', () => {
@@ -452,63 +421,62 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
         });
     });
 
-    describe('variables', () => {
-        Object.entries({
-            '|$|;|': [
-                null,
-                suggestion('', ['foo', 'bar'], 1, 1),
-                suggestion('', ['foo', 'bar'], 2)
-            ],
-            '$|v|a|r|:|;|': [
-                null,
-                null,
-                null,
-                null,
-                suggestion('', ['foo', 'bar'], 5),
-                suggestion('', ['$var:variable', 'foo', 'bar'], 6)
-            ],
-            '$foo;$var:|;|': [
-                suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
-                suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
-            ],
-            '$|x|:|$|;|$|x|.|': [
-                null,
-                null,
-                null,
-                null,
-                suggestion('$x', ['$x:variable'], 5, 7),
-                suggestion('$x', ['$x:variable'], 5, 7),
-                suggestion('$x', ['$x:variable'], 5, 7),
-                suggestion('', ['foo', 'bar'], 8, 8)
-            ],
-            '$|x|:[{ qux: 1 }]+|$|-|$|;|$|x|.|': [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                suggestion('$x', ['$x:variable'], 20, 22),
-                suggestion('$x', ['$x:variable'], 20, 22),
-                suggestion('$x', ['$x:variable'], 20, 22),
-                suggestion('', ['qux'], 23, 23)
-            ],
-            '{x:|$|}.x.|': [
-                null,
-                null,
-                suggestion('', ['foo', 'bar'], 8)
-            ],
-            '!$_:{ a: 1, b: 2 };{$|}.|': [
-                null,
-                suggestion('', ['a', 'b'], 12)
-            ]
-        }).forEach(([queryString, expected]) => {
-            (queryString[0] === '!' ? it.skip : it)(queryString, () => {
-                assert.deepEqual(
-                    suggestQuery(queryString, data),
-                    expected
-                );
-            });
-        });
+    describeCases('variables', {
+        '|$|;|': [
+            suggestion('$', ['foo', 'bar'], 0, 1),
+            suggestion('$', ['foo', 'bar'], 0, 1),
+            suggestion('', ['foo', 'bar'], 2)
+        ],
+        '| |$| |;| |': [
+            null,
+            suggestion('$', ['foo', 'bar'], 1, 2),
+            suggestion('$', ['foo', 'bar'], 1, 2),
+            null,
+            suggestion('', ['foo', 'bar'], 4),
+            suggestion('', ['foo', 'bar'], 5)
+        ],
+        '$|v|a|r|:|;|': [
+            null,
+            null,
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 5),
+            suggestion('', ['$var:variable', 'foo', 'bar'], 6)
+        ],
+        '$foo;$var:|;|': [
+            suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
+            suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
+        ],
+        '$|x|:|$|;|$|x|.|': [
+            null,
+            null,
+            null,
+            null,
+            suggestion('$x', ['$x:variable'], 5, 7),
+            suggestion('$x', ['$x:variable'], 5, 7),
+            suggestion('$x', ['$x:variable'], 5, 7),
+            suggestion('', ['foo', 'bar'], 8, 8)
+        ],
+        '$|x|:[{ qux: 1 }]+|$|-|$|;|$|x|.|': [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            suggestion('$x', ['$x:variable'], 20, 22),
+            suggestion('$x', ['$x:variable'], 20, 22),
+            suggestion('$x', ['$x:variable'], 20, 22),
+            suggestion('', ['qux'], 23, 23)
+        ],
+        '{x:|$|}.x.|': [
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 8)
+        ],
+        '$_:{ a: 1, b: 2 };{$|}.|': [
+            suggestion('$', ['$_:variable'], 19, 20),
+            null
+        ]
     });
 });
