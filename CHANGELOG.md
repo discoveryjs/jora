@@ -1,3 +1,8 @@
+## next
+
+- Added support for numbers with exponent
+- Added support for strings as property name in object literals
+
 ## 1.0.0-alpha.8 (February 7, 2019)
 
 - Reworked tolerant parsing mode, less failures and better suggestions

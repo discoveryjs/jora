@@ -25,6 +25,13 @@ describe('primitive: object', () => {
         );
     });
 
+    it('a string as property name', () => {
+        assert.deepEqual(
+            query('{ "foo": 1, "a b": 2, \'bar\': 3, \'c d\': 4 }')(),
+            { foo: 1, 'a b': 2, bar: 3, 'c d': 4 }
+        );
+    });
+
     it('computed properties', () => {
         assert.deepEqual(
             query('{ [foo]: "foo" }')({ foo: 'bar' }),

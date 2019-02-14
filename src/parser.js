@@ -287,6 +287,7 @@ const grammar = {
             ['$', code`[Symbol()]: /*var:@$*/0`],  // do nothing, but collect stat (suggestions)
             ['$ SYMBOL', code`/*var:@$*/$2: typeof $$2 !== 'undefined' ? $$2 : undefined`],
             ['SYMBOL : e', code`$1: $3`],
+            ['STRING : e', code`$1: $3`],
             ['[ e ] : e', code`[$2]: $5`],
             ['...', code`.../*var:@1*//*@1*/current`],
             ['... query', code`...$2`]
