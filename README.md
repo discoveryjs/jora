@@ -187,7 +187,7 @@ Jora | Description
 
 ### Keywords
 
-The follow keyword can be used as in JavaScript:
+Following keywords can be used as in JavaScript:
 
 - `true`
 - `false`
@@ -205,8 +205,8 @@ x <= y | Less than or equal to
 x > y | Greater than
 x >= y | Greater than or equal to
 x ~= y | Regular expression match
-x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x === a or x === b or x === c`
-x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x !== a and x !== b and x !== c`
+x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
+x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 
 ### Boolean logic
 
@@ -214,7 +214,7 @@ Jora | Description
 --- | ---
 x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
 x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
-not x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
+not x<br>no x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
 x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bool()` method
 ( x ) | Explicity operator precedence
 

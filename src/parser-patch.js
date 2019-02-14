@@ -13,101 +13,130 @@ module.exports = function patchParsers(strictParser) {
     [strictParser.lexer, tolerantParser.lexer].forEach(subject =>
         patch(subject, {
             setInput: orig => function(input, yy) {
+                yy.commentRanges = [];
                 this.fnOpened = 0;
                 this.fnOpenedStack = [];
-                yy.commentRanges = [];
+                this.prevToken = null;
+                this.prevYylloc = {
+                    first_line: 1,
+                    last_line: 1,
+                    first_column: 0,
+                    last_column: 0,
+                    range: [0, 0]
+                };
 
                 return orig.call(this, input, yy);
             }
         })
     );
 
-    patch(tolerantParser.lexer, {
-        lex: orig => {
-            let prevToken = null;
-            let prevYylloc = {
-                first_line: 1,
-                last_line: 1,
-                first_column: 0,
-                last_column: 0,
-                range: [0, 0]
-            };
-            const keywords = [
-                'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO', 'NOT'
-            ];
-            const operators = [
-                '+', '-', '*', '/', '%',
-                '=', '!=', '~=', '>=', '<=', '<', '>'
-            ];
-            const prev = [
-                null, ':', ';',
-                ',', '.', '..',
-                ...operators,
-                ...keywords
-            ];
-            const defaultNext = new Set([
-                ',', '?', ':', ';', 'EOF',
-                ']', ')', '}',
-                ...operators,
-                ...keywords
-            ]);
-            const tokenPair = prev.reduce(
-                (map, prevToken) => map.set(prevToken, defaultNext),
-                new Map()
-            );
-            // special cases
-            tokenPair.set('{', new Set([',']));
-            tokenPair.set('[', new Set([',']));
+    // patch lex method
+    const keywords = [
+        'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO'
+    ];
+    const words = [...keywords, 'NOT'];
+    const operators = [
+        '+', '-', '*', '/', '%',
+        '=', '!=', '~=', '>=', '<=', '<', '>'
+    ];
+    const prev = [
+        null, ':', ';',
+        ',', '.', '..',
+        ...operators,
+        ...keywords, 'NOT'
+    ];
+    const defaultNext = new Set([
+        ',', '?', ':', ';', 'EOF',
+        ']', ')', '}',
+        ...operators,
+        ...keywords
+    ]);
+    const tokenPair = prev.reduce(
+        (map, prevToken) => map.set(prevToken, defaultNext),
+        new Map()
+    );
+    // special cases
+    tokenPair.set('{', new Set([',']));
+    tokenPair.set('[', new Set([',']));
+    tokenPair.set('(', new Set([',']));
 
-            return function patchedLex() {
-                this.lex = orig;
+    patch(tolerantParser.lexer, {
+        lex: origLex =>
+            function patchedLex() {
+                this.lex = origLex;
+                const prevInput = this._input;
                 const nextToken = this.lex(this);
                 this.lex = patchedLex;
 
-                if (tokenPair.has(prevToken) && tokenPair.get(prevToken).has(nextToken)) {
+                if (tokenPair.has(this.prevToken) && tokenPair.get(this.prevToken).has(nextToken)) {
                     const yylloc = {
-                        first_line: prevYylloc.last_line,
+                        first_line: this.prevYylloc.last_line,
                         last_line: this.yylloc.first_line,
-                        first_column: prevYylloc.last_column,
+                        first_column: this.prevYylloc.last_column,
                         last_column: this.yylloc.first_column,
-                        range: [prevYylloc.range[1], this.yylloc.range[0]]
+                        range: [this.prevYylloc.range[1], this.yylloc.range[0]]
                     };
                     this.unput(this.yytext);
+                    this.pushState('preventPrimitive');
                     this.done = false;
                     this.yytext = '_';
-                    this.yylloc = prevYylloc = yylloc;
-                    this.pushState('preventPrimitive');
+                    this.yylloc = this.prevYylloc = yylloc;
 
-                    return prevToken = 'SYMBOL';
+                    // position correction for a white space before a keyword
+                    if (prevInput !== this._input && words.includes(nextToken)) {
+                        const prevChIndex = prevInput.length - this._input.length - 1;
+
+                        switch (prevInput[prevChIndex]) {
+                            case ' ':
+                            case '\t':
+                                yylloc.last_column--;
+                                yylloc.range[1]--;
+                                break;
+
+                            case '\n': {
+                                const lastN = prevInput.lastIndexOf('\n', prevChIndex - 1);
+
+                                yylloc.last_line--;
+                                yylloc.last_column = lastN === -1
+                                    ? yylloc.last_column - 1
+                                    : prevChIndex - lastN;
+                                yylloc.range[1]--;
+                                break;
+                            }
+                        }
+                    }
+
+                    return this.prevToken = 'SYMBOL';
                 }
 
-                prevYylloc = this.yylloc;
-                if (keywords.includes(nextToken)) {
+                this.prevYylloc = this.yylloc;
+
+                // position correction for a white space after a keyword
+                if (words.includes(nextToken)) {
                     switch (this._input[0]) {
                         case ' ':
                         case '\t':
-                            prevYylloc = Object.assign({}, prevYylloc, {
-                                last_column: prevYylloc.last_column + 1,
-                                range: [prevYylloc.range[0], prevYylloc.range[1] + 1]
+                            this.prevYylloc = Object.assign({}, this.prevYylloc, {
+                                last_column: this.prevYylloc.last_column + 1,
+                                range: [this.prevYylloc.range[0], this.prevYylloc.range[1] + 1]
                             });
                             break;
 
                         case '\n':
-                            prevYylloc = Object.assign({}, prevYylloc, {
-                                last_line: prevYylloc.last_line + 1,
+                            this.prevYylloc = Object.assign({}, this.prevYylloc, {
+                                last_line: this.prevYylloc.last_line + 1,
                                 last_column: 0,
-                                range: [prevYylloc.range[0], prevYylloc.range[1] + 1]
+                                range: [this.prevYylloc.range[0], this.prevYylloc.range[1] + 1]
                             });
                             break;
                     }
                 }
 
-                return prevToken = nextToken;
-            };
-        }
+                return this.prevToken = nextToken;
+            }
     });
 
-    // tolerantParser.lexer.setInput('. < 5', {});
+    // tolerantParser.lexer.setInput('\n//test\n\nor', {});
     // while (!tolerantParser.lexer.done) {
     //     console.log(tolerantParser.lexer.conditionStack);
     //     console.log('>', tolerantParser.lexer.lex());

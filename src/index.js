@@ -23,6 +23,14 @@ function isWhiteSpace(str, offset) {
     return code === 9 || code === 10 || code === 13 || code === 32;
 }
 
+function suggestProhitedChar(str, offset) {
+    return (
+        offset >= 0 &&
+        offset < str.length &&
+        /[a-zA-Z_$0-9]/.test(str[offset])
+    );
+}
+
 function valuesToSuggestions(context, values) {
     const suggestions = new Set();
     const addValue = value => {
@@ -191,8 +199,22 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                 let [from, to] = node.substring(6, node.length - 2).split(',');
 
                 if (from === to) {
-                    while (to < source.length && isWhiteSpace(source, to)) {
+                    // when starts on keyword/number/var end
+                    if (suggestProhitedChar(source, from - 1)) {
+                        return;
+                    }
+
+                    // extend a range by white spaces
+                    while (to < source.length - 1 && isWhiteSpace(source, to)) {
                         to++;
+                    }
+
+                    // when ends on keyword/number/var start
+                    if (suggestProhitedChar(source, to)) {
+                        if (from === to) {
+                            return;
+                        }
+                        to--;
                     }
                 }
 
@@ -213,8 +235,23 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                         frag === '...' ||
                         from === to) {
                         from = to;
-                        while (to < source.length && isWhiteSpace(source, to)) {
+
+                        // when starts on keyword/number/var end
+                        if (suggestProhitedChar(source, from - 1)) {
+                            continue;
+                        }
+
+                        // extend a range by white spaces
+                        while (to < source.length - 1 && isWhiteSpace(source, to)) {
                             to++;
+                        }
+
+                        // when ends on keyword/number/var start
+                        if (suggestProhitedChar(source, to)) {
+                            if (from === to) {
+                                continue;
+                            }
+                            to--;
                         }
                     }
 

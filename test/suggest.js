@@ -359,33 +359,159 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
                 );
             });
         });
+    });
 
-        [
-            'true and', 'false or',
-            'foo in', 'foo not in',
-            '[] has', '[] has no',
+    describe('keyword operators', () => {
+        const keywords = [
+            'and', 'or',  // add 1 before `and` to force right expression evaluation
+            'in', 'not in',
+            'has', 'has no',
             'no', 'not'
-        ].forEach(queryString => {
-            it(queryString + '| |', () => {
-                assert.deepEqual(
-                    suggestQuery(queryString + '| |', data),
-                    [
-                        null,
-                        suggestion('', ['foo', 'bar'], queryString.length + 1)
-                    ]
-                );
-            });
+        ];
+        const ensureRightExprEvaluate = keywords.map(keyword =>
+            // add 1 before `and` to force right expression evaluation
+            keyword === 'and' ? '1 and' : keyword
+        );
 
-            it(queryString + '|[|]', () => {
-                assert.deepEqual(
-                    suggestQuery(queryString + '|[|]', data),
-                    [
-                        null,
-                        suggestion('', ['foo', 'bar'], queryString.length + 1)
-                    ]
-                );
-            });
-        });
+        describe('nothing around', () =>
+            keywords.forEach(operator => {
+                const queryString = '|' + operator + '|';
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            null,
+                            null
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('space before keyword', () =>
+            keywords.forEach(operator => {
+                const queryString = '| |' + operator;
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            operator === 'no' || operator === 'not'
+                                ? null
+                                : suggestion('', ['foo', 'bar'], 0),
+                            null
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('newline before keyword', () =>
+            keywords.forEach(operator => {
+                const queryString = '|\n|' + operator;
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            operator === 'no' || operator === 'not'
+                                ? null
+                                : suggestion('', ['foo', 'bar'], 0),
+                            null
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('array before keyword', () =>
+            keywords.filter(operator => !/^not?$/.test(operator)).forEach(operator => {
+                const queryString = '|[|]|' + operator;
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            null,
+                            suggestion('', ['foo', 'bar'], 1),
+                            null
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('newline and comment before keyword', () =>
+            keywords.forEach(operator => {
+                const queryString = '|\n|//test|\n|\n|' + operator;
+
+                it(JSON.stringify(queryString).slice(1, -1), () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            operator === 'no' || operator === 'not'
+                                ? null
+                                : suggestion('', ['foo', 'bar'], 0),
+                            operator === 'no' || operator === 'not'
+                                ? null
+                                : suggestion('', ['foo', 'bar'], 1),
+                            null,
+                            operator === 'no' || operator === 'not'
+                                ? null
+                                : suggestion('', ['foo', 'bar'], 8),
+                            null
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('a space after keyword', () =>
+            ensureRightExprEvaluate.forEach(operator => {
+                const queryString = operator + '| |';
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            null,
+                            suggestion('', ['foo', 'bar'], operator.length + 1)
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('newline after keyword', () =>
+            ensureRightExprEvaluate.forEach(operator => {
+                const queryString = operator + '|\n|';
+
+                it(queryString, () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        [
+                            null,
+                            suggestion('', ['foo', 'bar'], operator.length + 1)
+                        ]
+                    );
+                });
+            })
+        );
+
+        describe('array after keyword', () =>
+            ensureRightExprEvaluate.forEach(queryString => {
+                it(queryString + '|[|]', () => {
+                    assert.deepEqual(
+                        suggestQuery(queryString + '|[|]', data),
+                        [
+                            null,
+                            suggestion('', ['foo', 'bar'], queryString.length + 1)
+                        ]
+                    );
+                });
+            })
+        );
     });
 
     describe('value suggestion', () => {

@@ -51,7 +51,7 @@ const grammar = {
             wb: '\\b',
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+',   // required whitespaces
-            comment: '//.*?(\\r|\\n|$)+',
+            comment: '//.*?(\\r|\\n|$)',
             rx: '/(?:\\\\.|[^/])+/i?'
         },
         startConditions: {
