@@ -3,6 +3,7 @@
 - Added support for numbers with exponent
 - Added support for strings as property name in object literals
 - Fixed edge cases with suggestions around keywords
+- Allowed `-` and `+` operators to be unary
 
 ## 1.0.0-alpha.8 (February 7, 2019)
 

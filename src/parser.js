@@ -200,6 +200,8 @@ const grammar = {
 
         op: [
             ['NOT e', code`!fn.bool($2)`],
+            ['- e', code`-$2`],
+            ['+ e', code`+$2`],
             ['e IN e', code`fn.in($1, /*in-value@1*/$3)`],
             ['e HAS e', code`fn.in($3, /*in-value@3*/$1)`],
             ['e NOTIN e', code`!fn.in($1, $3)`],

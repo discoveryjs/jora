@@ -346,18 +346,31 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
 
     describe('operators', () => {
         [
-            '=', '!=', '>=', '<=', '<', '>',
+            '=', '!=', '>=', '<=', /* '<', */ '>', // `<` is special case, see bellow
             '+', '-', '*', '/', '%'
         ].forEach(operator => {
-            it('foo ' + operator, () => {
+            it('| |' + operator + '| |', () => {
                 assert.deepEqual(
-                    suggestQuery('foo ' + operator + '| |', data),
+                    suggestQuery('| |' + operator + '| |', data),
                     [
-                        suggestion('', ['foo', 'bar'], operator.length + 4),
-                        suggestion('', ['foo', 'bar'], operator.length + 5)
+                        suggestion('', ['foo', 'bar'], 0),
+                        suggestion('', ['foo', 'bar'], 1),
+                        suggestion('', ['foo', 'bar'], operator.length + 1),
+                        suggestion('', ['foo', 'bar'], operator.length + 2)
                     ]
                 );
             });
+        });
+
+        // make a separate test sice `<` may to be beginning of function
+        it('foo <| |', () => {
+            assert.deepEqual(
+                suggestQuery('foo <| |', data),
+                [
+                    suggestion('', ['foo', 'bar'], 5),
+                    suggestion('', ['foo', 'bar'], 6)
+                ]
+            );
         });
     });
 

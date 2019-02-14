@@ -178,7 +178,7 @@ jora@1.0.0
 
 Jora | Description
 --- | ---
-42<br>4.222<br>1e3<br>1e-2 | Numbers
+42<br>-123<br>4.22<br>1e3<br>1e-2 | Numbers
 "string"<br>'string' | Strings
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
