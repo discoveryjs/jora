@@ -100,7 +100,7 @@ const grammar = {
             ['::self', 'return "SELF";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?{wb}', switchToPreventPrimitiveState + 'return "NUMBER";'],    // 212.321
+            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'return "NUMBER";'],    // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'return "REGEXP"'],                                              // /foo/i

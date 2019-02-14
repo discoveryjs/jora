@@ -3,9 +3,13 @@ const query = require('../src');
 const values = [
     '0',
     '123',
-    '123.456'
-    // '1e3',
-    // '5e-1'
+    '123.456',
+    '1e3',
+    '1E3',
+    '1e+3',
+    '1E+3',
+    '5e-1',
+    '5E-1'
 ];
 
 describe('primitive: number', () => {

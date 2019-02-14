@@ -31,8 +31,11 @@ TODO:
 - [ ] Query parts performance stat
 - [ ] Query transforming, e.g. query merge, subquery to a query, context inlining
 - [ ] Method namespaces, e.g. semver, path, math etc
+- [ ] Syntax highlighting
 - [ ] Prettifier
 - [ ] Move jison to dev dependencies
+- [ ] Debugging (step by step evaluation)
+- [ ] Prediction a shape of data suitable for a query (touching pathes)
 
 Table of content:
 
@@ -175,7 +178,7 @@ jora@1.0.0
 
 Jora | Description
 --- | ---
-42<br>4.222<br>-12.34e56 | Numbers
+42<br>4.222<br>1e3<br>1e-2 | Numbers
 "string"<br>'string' | Strings
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
