@@ -346,7 +346,7 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
 
     describe('operators', () => {
         [
-            '=', '!=', '>=', '<=', /* '<', */ '>', // `<` is special case, see bellow
+            '=', '!=', '>=', '<=', '~=', /* '<', */ '>', // `<` is special case, see bellow
             '+', '-', '*', '/', '%'
         ].forEach(operator => {
             it('| |' + operator + '| |', () => {

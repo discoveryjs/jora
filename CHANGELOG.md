@@ -5,6 +5,7 @@
 - Fixed edge cases with suggestions around keywords
 - Allowed `-` and `+` operators to be unary
 - Renamed `get` buildin method to `map`
+- Changed `~=` operator to take any value as tester (not regexp only); when value is a function it's behaves like `filter()`, when `null` or `undefined` it's always truthy otherwise falsy
 
 ## 1.0.0-alpha.8 (February 7, 2019)
 

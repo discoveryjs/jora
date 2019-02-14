@@ -1,7 +1,8 @@
 const {
     addToSet,
     getPropertyValue,
-    isPlainObject
+    isPlainObject,
+    isRegExp
 } = require('./utils');
 
 module.exports = Object.freeze({
@@ -85,12 +86,20 @@ module.exports = Object.freeze({
 
         return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
     },
-    regexp: function(value, rx) {
-        if (Array.isArray(value)) {
-            return this.filter(value, current => rx.test(current));
+    match: function(value, tester) {
+        if (typeof tester === 'function') {
+            return this.filter(value, tester);
         }
 
-        return rx.test(value);
+        if (isRegExp(tester)) {
+            return this.filter(value, tester.test.bind(tester));
+        }
+
+        if (tester === null || tester === undefined) {
+            return true;
+        }
+
+        return false;
     },
     map: function(value, getter) {
         const fn = typeof getter === 'function'

@@ -1,3 +1,5 @@
+const toString = Object.prototype.toString;
+
 function addToSet(set, value) {
     if (value !== undefined) {
         if (Array.isArray(value)) {
@@ -18,8 +20,13 @@ function isPlainObject(value) {
     return value && typeof value === 'object' && value.constructor === Object;
 }
 
+function isRegExp(value) {
+    return toString.call(value) === '[object RegExp]';
+}
+
 module.exports = {
     addToSet,
     getPropertyValue,
-    isPlainObject
+    isPlainObject,
+    isRegExp
 };

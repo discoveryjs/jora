@@ -220,7 +220,7 @@ const grammar = {
             ['e <= e', code`fn.lte($1, $3)`],
             ['e > e', code`fn.gt($1, $3)`],
             ['e >= e', code`fn.gte($1, $3)`],
-            ['e ~= e', code`fn.regexp($1, $3)`]
+            ['e ~= e', code`fn.match($1, $3)`]
         ],
 
         keyword: [

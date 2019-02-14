@@ -204,7 +204,7 @@ x < y | Less than
 x <= y | Less than or equal to
 x > y | Greater than
 x >= y | Greater than or equal to
-x ~= y | Regular expression match
+x ~= y | Match operator, behaviour depends on `y` type:<br>RegExp – test against regexp<br>function – test like `filter()`<br>`null` or `undefined` – always truthy<br>anything else – always falsy
 x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
 x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 

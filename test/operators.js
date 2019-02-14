@@ -194,6 +194,28 @@ describe('operators', () => {
                 []
             );
         });
+
+        it('should take a function as tester', () => {
+            assert.deepEqual(
+                query('.[$ ~= <refs>]')(data),
+                data
+                    .filter(item => item.refs && item.refs.length)
+            );
+        });
+
+        it('should be positive when tester is `null`', () => {
+            assert.deepEqual(
+                query('.[$ ~= null]')(data),
+                data
+            );
+        });
+
+        it('should be positive when tester is `undefined`', () => {
+            assert.deepEqual(
+                query('.[$ ~= udefined]')(data),
+                data
+            );
+        });
     });
 
     describe('not', () => {
