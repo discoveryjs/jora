@@ -182,7 +182,7 @@ const grammar = {
 
         def: [
             ['$ ;', code`/*key@1*/current;`], // do nothing, but collect stat (suggestions)
-            ['$ SYMBOL ;', code`/*define:@2*/const $$2 = fn.get(/*key@2*/current, "$2");`],
+            ['$ SYMBOL ;', code`/*define:@2*/const $$2 = fn.map(/*key@2*/current, "$2");`],
             ['$ SYMBOL : e ;', code`/*define:@2*/const $$2 = $4;`]
         ],
 
@@ -245,10 +245,10 @@ const grammar = {
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['SYMBOL', code`/*var:@1*/fn.get(/*@1*/current, "$1", 'xxx')`],
-            ['. SYMBOL', code`fn.get(/*@2*/current, "$2")`],
+            ['SYMBOL', code`/*var:@1*/fn.map(/*@1*/current, "$1", 'xxx')`],
+            ['. SYMBOL', code`fn.map(/*@2*/current, "$2")`],
             ['( e )', code`($2)`],
-            ['.( block )', code`fn.get(current, current => { $2 })`],
+            ['.( block )', code`fn.map(current, current => { $2 })`],
             ['SYMBOL ( )', code`method.$1(/*@1/@2*/current)`],
             ['SYMBOL ( arguments )', code`method.$1(/*@1*/current, $3)`],
             ['. SYMBOL ( )', code`method.$2(/*@2/@3*/current)`],
@@ -259,14 +259,14 @@ const grammar = {
         ],
 
         relativePath: [
-            ['query . SYMBOL', code`fn.get(/*@3*/$1, "$3")`],
+            ['query . SYMBOL', code`fn.map(/*@3*/$1, "$3")`],
             ['query . SYMBOL ( )', code`method.$3(/*@3/@4*/$1)`],
             ['query . SYMBOL ( arguments )', code`method.$3(/*@3*/$1, $5)`],
-            ['query .( block )', code`fn.get($1, current => { $3 })`],
+            ['query .( block )', code`fn.map($1, current => { $3 })`],
             ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],
             ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
             ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
-            ['query [ e ]', code`fn.get($1, $3)`]
+            ['query [ e ]', code`fn.map($1, $3)`]
         ],
 
         arguments: [
@@ -285,7 +285,7 @@ const grammar = {
         ],
 
         property: [
-            ['SYMBOL', code`/*var:@1*/$1: fn.get(/*@1*/current, "$1")`],
+            ['SYMBOL', code`/*var:@1*/$1: fn.map(/*@1*/current, "$1")`],
             ['$', code`[Symbol()]: /*var:@$*/0`],  // do nothing, but collect stat (suggestions)
             ['$ SYMBOL', code`/*var:@$*/$2: typeof $$2 !== 'undefined' ? $$2 : undefined`],
             ['SYMBOL : e', code`$1: $3`],

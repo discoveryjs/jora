@@ -13,7 +13,7 @@ function self(value) {
 module.exports = Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
-    map: buildin.get,
+    map: buildin.map,
     keys: function(current) {
         return Object.keys(current || {});
     },

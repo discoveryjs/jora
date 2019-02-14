@@ -92,7 +92,7 @@ module.exports = Object.freeze({
 
         return rx.test(value);
     },
-    get: function(value, getter) {
+    map: function(value, getter) {
         const fn = typeof getter === 'function'
             ? getter
             : current => getPropertyValue(current, getter);
@@ -111,10 +111,10 @@ module.exports = Object.freeze({
     recursive: function(value, getter) {
         const result = new Set();
 
-        addToSet(result, this.get(value, getter));
+        addToSet(result, this.map(value, getter));
 
         result.forEach(current =>
-            addToSet(result, this.get(current, getter))
+            addToSet(result, this.map(current, getter))
         );
 
         return [...result];
