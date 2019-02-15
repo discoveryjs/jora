@@ -2,7 +2,7 @@
 
 - Added support for numbers with exponent
 - Added support for strings as property name in object literals
-- Fixed edge cases with suggestions around keywords
+- Fixed edge cases with suggestions around keywords and inside functions
 - Allowed `-` and `+` operators to be unary
 - Renamed `get` buildin method to `map`
 - Changed `~=` operator to take any value as tester (not regexp only); when value is a function it's behaves like `filter()`, when `null` or `undefined` it's always truthy otherwise falsy

@@ -231,7 +231,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                     const frag = source.substring(from, to);
 
                     if (frag === '.[' || frag === '.(' || frag === '..(' ||
-                        frag === '{' || frag === '[' || frag === '(' ||
+                        frag === '{' || frag === '[' || frag === '(' || frag === '<' ||
                         frag === '...' ||
                         from === to) {
                         from = to;
@@ -290,7 +290,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
     if (suggestSets.length) {
         body.push(
             'const ' + suggestSets.join(', ') + ';',
-            'const suggestPoint = (value, set) => set.add(value) && value;'
+            'const suggestPoint = (set, value) => (set.add(value), value);'
         );
     }
 

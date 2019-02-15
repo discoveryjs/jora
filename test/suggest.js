@@ -167,6 +167,17 @@ describe('suggest', () => {
         );
     });
 
+    it('function context', () => {
+        assert.deepEqual(
+            suggestQuery('map(|<|>|)', data),
+            [
+                null,
+                suggestion('', ['foo', 'bar'], 5, 5),
+                null
+            ]
+        );
+    });
+
     describe('method context', () => {
         ['', '.', '$.'].forEach(prefix => {
             describe(`${prefix}method(...)`, () => {
