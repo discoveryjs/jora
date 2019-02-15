@@ -47,9 +47,9 @@ Table of content:
 - [Syntax](#syntax)
     - [Primitives](#primitives)
     - [Keywords](#keywords)
+    - [Operators](#operators)
     - [Comparisons](#comparisons)
     - [Boolean logic](#boolean-logic)
-    - [Operators](#operators)
     - [Block, scope and variables](#block-scope-and-variables)
     - [Special variables](#special-variables)
     - [Path chaining](#path-chaining)
@@ -194,6 +194,16 @@ Following keywords can be used as in JavaScript:
 - `null`
 - `undefined`
 
+### Operators
+
+Jora | Description
+--- | ---
+x + y | Add<br>In case one of the operands is an array it produces new array with elements from `x` and `y` excluding duplicates
+x - y | Subtract<br>In case one of the operands is an array with elements from `x` excluding elements from `y`
+x * y | Multiply
+x / y | Divide
+x % y | Modulo
+
 ### Comparisons
 
 Jora | Description
@@ -205,28 +215,18 @@ x <= y | Less than or equal to
 x > y | Greater than
 x >= y | Greater than or equal to
 x ~= y | Match operator, behaviour depends on `y` type:<br>RegExp – test against regexp<br>function – test like `filter()`<br>`null` or `undefined` – always truthy<br>anything else – always falsy
-x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
-x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 
 ### Boolean logic
 
 Jora | Description
 --- | ---
+( x ) | Explicity operator precedence
 x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
 x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
 not x<br>no x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
 x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bool()` method
-( x ) | Explicity operator precedence
-
-### Operators
-
-Jora | Description
---- | ---
-x + y | Add
-x - y | Subtract
-x * y | Multiply
-x / y | Divide
-x % y | Modulo
+x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
+x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 
 ### Block, scope and variables
 

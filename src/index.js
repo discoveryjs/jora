@@ -193,9 +193,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                 scopeVars.push(`"${varName}"`);
             }
         } else if (statMode && node.startsWith('/*')) {
-            if (node === '/*s*/') {
-                code.push('suggestPoint(');
-            } else if (node.startsWith('/*var:')) {
+            if (node.startsWith('/*var:')) {
                 let [from, to] = node.substring(6, node.length - 2).split(',');
 
                 if (from === to) {
@@ -219,9 +217,9 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                 }
 
                 suggestPoints.push(`[[${scopeVars}], [${getSuggestRanges(from, to)}], "var"]`);
-            } else {
+            } else if (node.startsWith('/*sp:')) {
                 const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
-                const items = node.substring(2, node.length - 2).split(',');
+                const items = node.substring(5, node.length - 2).split(',');
 
                 // FIXME: position correction should be in parser
                 for (let i = 0; i < items.length; i += 3) {
@@ -257,8 +255,9 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
                     suggestPoints.push(`[sp${pointId}, [${getSuggestRanges(from, to)}], "${context || 'path'}"]`);
                 }
-
-                code.push(`, sp${pointId})`);
+                code.push(`suggestPoint(sp${pointId}, `);
+            } else if (node === '/**/') {
+                code.push(')');
             }
         } else {
             code.push(node);
@@ -346,8 +345,8 @@ module.exports = function createQuery(source, options) {
                 stat(pos, includeEmpty) {
                     const ranges = findSourcePosPoints(source, pos, points, includeEmpty);
 
-                    ranges.forEach(entry => {
-                        entry.values = [...entry.values];
+                    ranges.forEach(range => {
+                        range.values = [...range.values];
                     });
 
                     return ranges.length ? ranges : null;

@@ -26,9 +26,9 @@ function code(s) {
                     });
 
                     return (
-                        '"/*s*/",' +
+                        '"/*sp:' + ranges + '*/",' +
                         (expr[0] === '$' ? expr : '"' + expr + '"') +
-                        ',"/*' + ranges + '*/"'
+                        ',"/**/"'
                     );
                 }
 
