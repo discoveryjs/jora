@@ -1,4 +1,4 @@
 /.vscode/
 /.cache/
+/.nyc_output/
 /node_modules/
-/coverage/
