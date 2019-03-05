@@ -1,3 +1,7 @@
+## next
+
+- Fixed arguments context suggestion for chained methods with no arguments
+
 ## 1.0.0-alpha.9 (March 5, 2019)
 
 - Added support for numbers with exponent

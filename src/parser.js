@@ -245,7 +245,7 @@ const grammar = {
             ['REGEXP', code`$1`],
             ['object', code`$1`],
             ['array', code`$1`],
-            ['SYMBOL', code`/*var:@1*/fn.map(/*@1*/current, "$1", 'xxx')`],
+            ['SYMBOL', code`/*var:@1*/fn.map(/*@1*/current, "$1")`],
             ['. SYMBOL', code`fn.map(/*@2*/current, "$2")`],
             ['( e )', code`($2)`],
             ['.( block )', code`fn.map(current, current => { $2 })`],
@@ -260,7 +260,7 @@ const grammar = {
 
         relativePath: [
             ['query . SYMBOL', code`fn.map(/*@3*/$1, "$3")`],
-            ['query . SYMBOL ( )', code`method.$3(/*@3/@4*/$1)`],
+            ['query . SYMBOL ( )', code`method.$3((/*@4*/current, /*@3*/$1))`],
             ['query . SYMBOL ( arguments )', code`method.$3(/*@3*/$1, $5)`],
             ['query .( block )', code`fn.map($1, current => { $3 })`],
             ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],

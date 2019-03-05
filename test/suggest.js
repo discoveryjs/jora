@@ -263,6 +263,26 @@ describe('suggest', () => {
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             null
+        ],
+        '.entries|(|).sort|(|)': [
+            suggestion('entries', ['foo', 'bar'], 1, 8),
+            suggestion('', ['foo', 'bar'], 9, 9),
+            suggestion('sort', ['key', 'value'], 11, 15),
+            suggestion('', ['foo', 'bar'], 16, 16)
+        ],
+        '.entries|(|a|,| |b|).sort|(|a|,| |b|)': [
+            suggestion('entries', ['foo', 'bar'], 1, 8),
+            suggestion('a', ['foo', 'bar'], 9, 10),
+            suggestion('a', ['foo', 'bar'], 9, 10),
+            null,
+            suggestion('b', ['foo', 'bar'], 12, 13),
+            suggestion('b', ['foo', 'bar'], 12, 13),
+            suggestion('sort', ['key', 'value'], 15, 19),
+            suggestion('a', ['foo', 'bar'], 20, 21),
+            suggestion('a', ['foo', 'bar'], 20, 21),
+            null,
+            suggestion('b', ['foo', 'bar'], 23, 24),
+            suggestion('b', ['foo', 'bar'], 23, 24)
         ]
     });
 });
