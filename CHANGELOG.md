@@ -1,4 +1,4 @@
-## next
+## 1.0.0-alpha.9 (March 5, 2019)
 
 - Added support for numbers with exponent
 - Added support for strings as property name in object literals
