@@ -298,7 +298,7 @@ describe('buildin methods', () => {
     });
 
     describe('group()', () => {
-        it('should be applicable for non-array values', () => {
+        it('basic', () => {
             assert.deepEqual(
                 query('.group(<type>)')(data),
                 ['css', 'js', 'svg']
@@ -333,6 +333,17 @@ describe('buildin methods', () => {
             assert.deepEqual(
                 query('.group()')(data),
                 [{ key: undefined, value: data }]
+            );
+        });
+
+        it('should group by an element when key value is an array', () => {
+            assert.deepEqual(
+                query('.group(<refs.type>)')(data),
+                ['svg', 'css', 'js']
+                    .map(type => ({
+                        key: type,
+                        value: data.filter(item => item.refs.find(ref => ref.type === type))
+                    }))
             );
         });
     });

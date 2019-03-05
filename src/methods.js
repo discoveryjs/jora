@@ -145,13 +145,19 @@ module.exports = Object.freeze({
         const result = [];
 
         current.forEach(item => {
-            const key = keyGetter(item);
+            let keys = keyGetter(item);
 
-            if (map.has(key)) {
-                map.get(key).add(valueGetter(item));
-            } else {
-                map.set(key, new Set([valueGetter(item)]));
+            if (!Array.isArray(keys)) {
+                keys = [keys];
             }
+
+            keys.forEach(key => {
+                if (map.has(key)) {
+                    map.get(key).add(valueGetter(item));
+                } else {
+                    map.set(key, new Set([valueGetter(item)]));
+                }
+            });
         });
 
         map.forEach((value, key) =>
