@@ -37,10 +37,10 @@
   },
   "devDependencies": {
     "browserify": "^16.2.3",
-    "coveralls": "^3.0.3",
-    "eslint": "^5.15.1",
+    "coveralls": "^3.0.4",
+    "eslint": "^6.0.1",
     "mocha": "^5.2.0",
-    "nyc": "^13.3.0",
+    "nyc": "^14.1.0",
     "package-json-versionify": "^1.0.4",
     "uglify-es": "^3.3.9"
   },
