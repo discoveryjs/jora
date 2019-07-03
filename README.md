@@ -1,8 +1,8 @@
 # Jora
 
 [![NPM version](https://img.shields.io/npm/v/jora.svg)](https://www.npmjs.com/package/jora)
-[![Build Status](https://travis-ci.org/lahmatiy/jora.svg?branch=master)](https://travis-ci.org/lahmatiy/jora)
-[![Coverage Status](https://coveralls.io/repos/github/lahmatiy/jora/badge.svg?branch=master)](https://coveralls.io/github/lahmatiy/jora?branch=master)
+[![Build Status](https://travis-ci.org/discoveryjs/jora.svg?branch=master)](https://travis-ci.org/discoveryjs/jora)
+[![Coverage Status](https://coveralls.io/repos/github/discoveryjs/jora/badge.svg?branch=master)](https://coveralls.io/github/discoveryjs/jora?branch=master)
 
 JavaScript object query engine
 

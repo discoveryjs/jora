@@ -3,7 +3,7 @@
   "version": "1.0.0-alpha.10",
   "description": "JavaScript object query engine",
   "keywords": [],
-  "homepage": "https://github.com/lahmatiy/jora",
+  "homepage": "https://github.com/discoveryjs/jora",
   "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
   "maintainers": [
     {
@@ -13,9 +13,9 @@
     }
   ],
   "license": "MIT",
-  "repository": "lahmatiy/jora",
+  "repository": "discoveryjs/jora",
   "bugs": {
-    "url": "https://github.com/lahmatiy/jora/issues"
+    "url": "https://github.com/discoveryjs/jora/issues"
   },
   "main": "./src/index",
   "browser": {
