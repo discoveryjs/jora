@@ -129,7 +129,7 @@ module.exports = Object.freeze({
         return current.slice().reverse();
     },
     slice: function(current, from, to) {
-        if (!Array.isArray(current)) {
+        if (!Array.isArray(current) && typeof current !== 'string') {
             return current;
         }
 

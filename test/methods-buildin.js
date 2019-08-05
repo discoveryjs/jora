@@ -73,6 +73,42 @@ describe('buildin methods', () => {
         });
     });
 
+    describe('slice()', () => {
+        it('arrays', () => {
+            assert.deepEqual(
+                query('filename.slice()')(data),
+                ['1.css', '2.js', '3.svg', '4.js', '5.js', '6.css', '7.css']
+            );
+
+            assert.deepEqual(
+                query('filename.slice(1)')(data),
+                ['2.js', '3.svg', '4.js', '5.js', '6.css', '7.css']
+            );
+
+            assert.deepEqual(
+                query('filename.slice(1, 3)')(data),
+                ['2.js', '3.svg']
+            );
+        });
+
+        it('string', () => {
+            assert.deepEqual(
+                query('filename.pick().slice()')(data),
+                '1.css'
+            );
+
+            assert.deepEqual(
+                query('filename.pick().slice(1)')(data),
+                '.css'
+            );
+            
+            assert.deepEqual(
+                query('filename.pick().slice(1, 2)')(data),
+                '.'
+            );
+        });
+    });
+
     describe('keys()', () => {
         it('basic', () => {
             assert.deepEqual(

@@ -117,6 +117,13 @@ module.exports = Object.freeze({
 
         return value !== undefined ? fn(value) : value;
     },
+    slice: function(value, from, to) {
+        if (Array.isArray(value) || typeof value === 'string') {
+            return value.slice(from, to);
+        }
+
+        return value;
+    },
     recursive: function(value, getter) {
         const result = new Set();
 

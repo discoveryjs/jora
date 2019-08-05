@@ -255,7 +255,11 @@ const grammar = {
             ['. SYMBOL ( arguments )', code`method.$2(/*@2*/current, $4)`],
             ['.. SYMBOL', code`fn.recursive(/*@2*/current, "$2")`],
             ['..( block )', code`fn.recursive(current, current => { $2 })`],
-            ['.[ block ]', code`fn.filter(current, current => { $2 })`]
+            ['.[ block ]', code`fn.filter(current, current => { $2 })`],
+            ['[ e : e ]', code`fn.slice(current, $2, $4)`],
+            ['[ : e ]', code`fn.slice(current, 0, $3)`],
+            ['[ e : ]', code`fn.slice(current, $2, current.legnth)`],
+            ['[ : ]', code`fn.slice(current, 0, current.legnth)`]
         ],
 
         relativePath: [
@@ -266,7 +270,11 @@ const grammar = {
             ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],
             ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
             ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
-            ['query [ e ]', code`fn.map($1, $3)`]
+            ['query [ e ]', code`fn.map($1, $3)`],
+            ['query [ e : e ]', code`fn.slice($1, $3, $5)`],
+            ['query [ : e ]', code`fn.slice($1, 0, $4)`],
+            ['query [ e : ]', code`fn.slice($1, $3, $1.length)`],
+            ['query [ : ]', code`fn.slice($1, 0, $1.length)`]
         ],
 
         arguments: [
