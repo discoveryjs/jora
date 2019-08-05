@@ -101,7 +101,7 @@ describe('buildin methods', () => {
                 query('filename.pick().slice(1)')(data),
                 '.css'
             );
-            
+
             assert.deepEqual(
                 query('filename.pick().slice(1, 2)')(data),
                 '.'
