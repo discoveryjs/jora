@@ -3,9 +3,8 @@ const data = require('./fixture/simple');
 const query = require('../src');
 
 // https://github.com/tc39/proposal-slice-notation/blob/master/README.md
-// without a `step` argument
 
-describe('size | [N:N]', () => {
+describe('slice | [from:to]', () => {
     it('should be a data root', () => {
         assert.deepEqual(
             query('[0:3]')(data),
@@ -60,6 +59,130 @@ describe('size | [N:N]', () => {
         assert.deepEqual(
             query('filename[:]')(data),
             data.map(i => i.filename).slice()
+        );
+    });
+});
+
+describe('[from:to:step]', () => {
+    it('should be a data root', () => {
+        const fixture = data.slice(0, 3);
+
+        assert.deepEqual(
+            query('[0:3:2]')(data),
+            [fixture[0], fixture[2]]
+        );
+    });
+
+    it('should be a subquery', () => {
+        const fixture = data.slice(0, 3).map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[0:3:2]')(data),
+            [fixture[0], fixture[2]]
+        );
+    });
+
+    it('nagative from/to from root', () => {
+        const fixture = data.slice(-4, -1);
+
+        assert.deepEqual(
+            query('[-4:-1:2]')(data),
+            [fixture[0], fixture[2]]
+        );
+    });
+
+    it('nagative from/to from subquery', () => {
+        const fixture = data.slice(-4, -1).map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[-4:-1:2]')(data),
+            [fixture[0], fixture[2]]
+        );
+    });
+
+    it('reverse from root', () => {
+        const fixture = data.slice(0, 3);
+
+        assert.deepEqual(
+            query('[0:3:-1]')(data),
+            [fixture[2], fixture[1], fixture[0]]
+        );
+    });
+
+    it('reverse from subquery', () => {
+        const fixture = data.slice(0, 3).map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[0:3:-1]')(data),
+            [fixture[2], fixture[1], fixture[0]]
+        );
+    });
+
+    it('reverse with nagative from/to from root', () => {
+        const fixture = data.slice(-4, -1);
+
+        assert.deepEqual(
+            query('[-4:-1:-2]')(data),
+            [fixture[2], fixture[0]]
+        );
+    });
+
+    it('reverse with nagative from/to from subquery', () => {
+        const fixture = data.slice(-4, -1).map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[-4:-1:-2]')(data),
+            [fixture[2], fixture[0]]
+        );
+    });
+
+    it('negative from root', () => {
+        const fixture = data.slice(0, 3);
+
+        assert.deepEqual(
+            query('[0:3:-2]')(data),
+            [fixture[2], fixture[0]]
+        );
+    });
+
+    it('negative from subquery', () => {
+        const fixture = data.slice(0, 3).map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[0:3:-2]')(data),
+            [fixture[2], fixture[0]]
+        );
+    });
+
+    it('pass from/to args from root', () => {
+        const fixture = data.slice();
+
+        assert.deepEqual(
+            query('[::-2]')(data),
+            [fixture[6], fixture[4], fixture[2], fixture[0]]
+        );
+    });
+
+    it('pass from/to args from query', () => {
+        const fixture = data.map(i => i.filename);
+
+        assert.deepEqual(
+            query('filename[::-2]')(data),
+            [fixture[6], fixture[4], fixture[2], fixture[0]]
+        );
+    });
+
+    it('pass all args from root', () => {
+        assert.deepEqual(
+            query('[::]')(data),
+            data.slice()
+        );
+    });
+
+    it('pass all args from query', () => {
+        assert.deepEqual(
+            query('filename[::]')(data),
+            data.map(i => i.filename)
         );
     });
 });

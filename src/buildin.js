@@ -117,12 +117,37 @@ module.exports = Object.freeze({
 
         return value !== undefined ? fn(value) : value;
     },
-    slice: function(value, from, to) {
-        if (Array.isArray(value) || typeof value === 'string') {
-            return value.slice(from, to);
+    slice: function(value, from, to, step) {
+        if (!Array.isArray(value) && typeof value !== 'string') {
+            return value;
         }
 
-        return value;
+        if (step && step !== 1) {
+            const result = [];
+            const reverse = step < 0;
+
+            step *= Math.sign(step);
+
+            if (from < 0) {
+                from = value.length + from;
+            }
+
+            if (to < 0) {
+                to = value.length + to;
+            }
+
+            for (let i = from; i < to; i += step) {
+                result.push(value[i]);
+            }
+
+            if (reverse) {
+                result.reverse();
+            }
+
+            return result;
+        }
+
+        return value.slice(from, to);
     },
     recursive: function(value, getter) {
         const result = new Set();

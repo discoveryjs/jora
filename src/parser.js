@@ -256,10 +256,15 @@ const grammar = {
             ['.. SYMBOL', code`fn.recursive(/*@2*/current, "$2")`],
             ['..( block )', code`fn.recursive(current, current => { $2 })`],
             ['.[ block ]', code`fn.filter(current, current => { $2 })`],
-            ['[ e : e ]', code`fn.slice(current, $2, $4)`],
-            ['[ : e ]', code`fn.slice(current, 0, $3)`],
-            ['[ e : ]', code`fn.slice(current, $2, current.legnth)`],
-            ['[ : ]', code`fn.slice(current, 0, current.legnth)`]
+            ['[ e : e ]', code`fn.slice(current, $2, $4, 1)`],
+            ['[ e : e : e ]', code`fn.slice(current, $2, $4, $6)`],
+            ['[ : e ]', code`fn.slice(current, 0, $3, 1)`],
+            ['[ : e : e ]', code`fn.slice(current, 0, $3, $5)`],
+            ['[ e : ]', code`fn.slice(current, $2, current.length, 1)`],
+            ['[ e : : e ]', code`fn.slice(current, $2, current.length, $5)`],
+            ['[ : ]', code`fn.slice(current, 0, current.length, 1)`],
+            ['[ : : e ]', code`fn.slice(current, 0, current.length, $4)`],
+            ['[ : : ]', code`fn.slice(current, 0, current.length, 1)`]
         ],
 
         relativePath: [
@@ -271,10 +276,15 @@ const grammar = {
             ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
             ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
             ['query [ e ]', code`fn.map($1, $3)`],
-            ['query [ e : e ]', code`fn.slice($1, $3, $5)`],
-            ['query [ : e ]', code`fn.slice($1, 0, $4)`],
-            ['query [ e : ]', code`fn.slice($1, $3, $1.length)`],
-            ['query [ : ]', code`fn.slice($1, 0, $1.length)`]
+            ['query [ e : e ]', code`fn.slice($1, $3, $5, 1)`],
+            ['query [ e : e : e ]', code`fn.slice($1, $3, $5, $7)`],
+            ['query [ : e ]', code`fn.slice($1, 0, $4, 1)`],
+            ['query [ : e : e ]', code`fn.slice($1, 0, $4, $6)`],
+            ['query [ e : ]', code`fn.slice($1, $3, $1.length, 1)`],
+            ['query [ e : : e ]', code`fn.slice($1, $2, $1.length, $6)`],
+            ['query [ : ]', code`fn.slice($1, 0, $1.length, 1)`],
+            ['query [ : : e ]', code`fn.slice($1, 0, $1.length, $5)`],
+            ['query [ : : ]', code`fn.slice($1, 0, $1.length, 1)`]
         ],
 
         arguments: [
