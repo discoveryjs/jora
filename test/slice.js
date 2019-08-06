@@ -186,3 +186,91 @@ describe('[from:to:step]', () => {
         );
     });
 });
+
+describe('spec examples', () => {
+    it('default', () => {
+        assert.deepEqual(
+            query('[6:]')('hello world'),
+            'world'
+        );
+
+        assert.deepEqual(
+            query('[1:3]')({ 0: 'a', 1: 'b', 2: 'c', 3: 'd', length: 4 }),
+            ['b', 'c']
+        );
+
+        assert.deepEqual(
+            query('[:3:1]')(['a', 'b', 'c', 'd']),
+            ['a', 'b', 'c']
+        );
+
+        assert.deepEqual(
+            query('[1::1]')(['a', 'b', 'c', 'd']),
+            ['b', 'c', 'd']
+        );
+
+        assert.deepEqual(
+            query('[1:]')(['a', 'b', 'c', 'd']),
+            ['b', 'c', 'd']
+        );
+
+        assert.deepEqual(
+            query('[:3]')(['a', 'b', 'c', 'd']),
+            ['a', 'b', 'c']
+        );
+
+        assert.deepEqual(
+            query('[1::2]')(['a', 'b', 'c', 'd']),
+            ['b', 'd']
+        );
+
+        assert.deepEqual(
+            query('[:3:2]')(['a', 'b', 'c', 'd']),
+            ['a', 'c']
+        );
+
+        assert.deepEqual(
+            query('[:]')(['a', 'b', 'c', 'd']),
+            ['a', 'b', 'c', 'd']
+        );
+    });
+
+    it('negative indices', () => {
+        assert.deepEqual(
+            query('[-2:]')(['a', 'b', 'c', 'd']),
+            ['c', 'd']
+        );
+
+        assert.deepEqual(
+            query('[-10:]')(['a', 'b', 'c', 'd']),
+            ['a', 'b', 'c', 'd']
+        );
+
+        assert.deepEqual(
+            query('[:-2]')(['a', 'b', 'c', 'd']),
+            ['a', 'b']
+        );
+
+        assert.deepEqual(
+            query('[:-10]')(['a', 'b', 'c', 'd']),
+            []
+        );
+
+        assert.deepEqual(
+            query('[::-1]')(['a', 'b', 'c', 'd']),
+            ['d', 'c', 'b', 'a']
+        );
+    });
+
+    it('out of bounds indices', () => {
+        assert.deepEqual(
+            query('[100:]')(['a', 'b', 'c', 'd']),
+            []
+        );
+
+        assert.deepEqual(
+            query('[:100]')(['a', 'b', 'c', 'd']),
+            ['a', 'b', 'c', 'd']
+        );
+    });
+});

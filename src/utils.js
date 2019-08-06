@@ -24,9 +24,16 @@ function isRegExp(value) {
     return toString.call(value) === '[object RegExp]';
 }
 
+function isArrayLike(value) {
+    return value &&
+        hasOwnProperty.call(value, 0) &&
+        hasOwnProperty.call(value, 'length');
+}
+
 module.exports = {
     addToSet,
     getPropertyValue,
     isPlainObject,
-    isRegExp
+    isRegExp,
+    isArrayLike
 };

@@ -2,7 +2,8 @@ const {
     addToSet,
     getPropertyValue,
     isPlainObject,
-    isRegExp
+    isRegExp,
+    isArrayLike
 } = require('./utils');
 
 module.exports = Object.freeze({
@@ -118,7 +119,7 @@ module.exports = Object.freeze({
         return value !== undefined ? fn(value) : value;
     },
     slice: function(value, from, to, step) {
-        if (!Array.isArray(value) && typeof value !== 'string') {
+        if (!isArrayLike(value)) {
             return value;
         }
 
@@ -147,7 +148,11 @@ module.exports = Object.freeze({
             return result;
         }
 
-        return value.slice(from, to);
+        if (typeof value.slice === 'function') {
+            return value.slice(from, to);
+        }
+
+        return Array.prototype.slice.call(value, from, to);
     },
     recursive: function(value, getter) {
         const result = new Set();
