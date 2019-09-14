@@ -23,7 +23,7 @@ function isWhiteSpace(str, offset) {
     return code === 9 || code === 10 || code === 13 || code === 32;
 }
 
-function suggestProhitedChar(str, offset) {
+function isSuggestProhibitedChar(str, offset) {
     return (
         offset >= 0 &&
         offset < str.length &&
@@ -198,7 +198,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
                 if (from === to) {
                     // when starts on keyword/number/var end
-                    if (suggestProhitedChar(source, from - 1)) {
+                    if (isSuggestProhibitedChar(source, from - 1)) {
                         return;
                     }
 
@@ -208,7 +208,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                     }
 
                     // when ends on keyword/number/var start
-                    if (suggestProhitedChar(source, to)) {
+                    if (isSuggestProhibitedChar(source, to)) {
                         if (from === to) {
                             return;
                         }
@@ -235,7 +235,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                         from = to;
 
                         // when starts on keyword/number/var end
-                        if (suggestProhitedChar(source, from - 1)) {
+                        if (isSuggestProhibitedChar(source, from - 1)) {
                             continue;
                         }
 
@@ -245,7 +245,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
                         }
 
                         // when ends on keyword/number/var start
-                        if (suggestProhitedChar(source, to)) {
+                        if (isSuggestProhibitedChar(source, to)) {
                             if (from === to) {
                                 continue;
                             }
