@@ -268,7 +268,7 @@ SYMBOL | The same as `$.SYMBOL`
 ..SYMBOL<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
-.method() | Invoke a method to current data, or each element of current data if it is an array
+.method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 
 ### Build-in methods

@@ -1,3 +1,7 @@
+## next
+
+- Added a method invocation for recursive paths (#10)
+
 ## 1.0.0-alpha.10 (March 7, 2019)
 
 - Fixed arguments context suggestion for chained methods with no arguments

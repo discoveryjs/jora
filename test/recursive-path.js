@@ -114,6 +114,53 @@ describe('recursive path', () => {
         );
     });
 
+    describe('should allow a method call', () => {
+        const propGetter = (current, name) => current && current[name || 'foo'];
+        let a;
+        let b;
+        let c;
+        let d;
+        const data = {
+            foo: a = {
+                foo: [
+                    b = { foo: 'b' }
+                ],
+                bar: c = { bar: 'c' }
+            },
+            bar: [
+                d = { bar: 'd' }
+            ]
+        };
+
+        it('top level invocation with no arguments', () => {
+            assert.deepEqual(
+                query('..propGetter()', { methods: { propGetter } })(data),
+                [a, b, 'b']
+            );
+        });
+
+        it('top level invocation with arguments', () => {
+            assert.deepEqual(
+                query('..propGetter("bar")', { methods: { propGetter } })(data),
+                [d, 'd']
+            );
+        });
+
+        it('top level invocation with no arguments', () => {
+            assert.deepEqual(
+                query('foo..propGetter()', { methods: { propGetter } })(data),
+                [b, 'b']
+            );
+        });
+
+        it('top level invocation with arguments', () => {
+            assert.deepEqual(
+                query('foo..propGetter("bar")', { methods: { propGetter } })(data),
+                [c, 'c']
+            );
+        });
+    });
+
     it('include context to a result', () => {
         const context = data[5];
         const expected = addUnique([context], context.deps);

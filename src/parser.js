@@ -254,6 +254,8 @@ const grammar = {
             ['. SYMBOL ( )', code`method.$2(/*@2/@3*/current)`],
             ['. SYMBOL ( arguments )', code`method.$2(/*@2*/current, $4)`],
             ['.. SYMBOL', code`fn.recursive(/*@2*/current, "$2")`],
+            ['.. SYMBOL ( )', code`fn.recursive(/*@2/@3*/current, method.$2)`],
+            ['.. SYMBOL ( arguments )', code`fn.recursive(/*@2*/current, current => method.$2(current, $4))`],
             ['..( block )', code`fn.recursive(current, current => { $2 })`],
             ['.[ block ]', code`fn.filter(current, current => { $2 })`]
         ],
@@ -264,6 +266,8 @@ const grammar = {
             ['query . SYMBOL ( arguments )', code`method.$3(/*@3*/$1, $5)`],
             ['query .( block )', code`fn.map($1, current => { $3 })`],
             ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],
+            ['query .. SYMBOL ( )', code`fn.recursive((/*@4*/current, /*@3*/$1), method.$3)`],
+            ['query .. SYMBOL ( arguments )', code`fn.recursive(/*@3*/$1, current => method.$3(current, $5))`],
             ['query ..( block )', code`fn.recursive($1, current => { $3 })`],
             ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
             ['query [ e ]', code`fn.map($1, $3)`]

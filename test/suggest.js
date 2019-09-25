@@ -179,7 +179,7 @@ describe('suggest', () => {
     });
 
     describe('method context', () => {
-        ['', '.', '$.'].forEach(prefix => {
+        ['', '.', '..', '$.', '$..'].forEach(prefix => {
             describe(`${prefix}method(...)`, () => {
                 it('no arguments', () => {
                     assert.deepEqual(
