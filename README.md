@@ -52,8 +52,8 @@ Table of content:
     - [Operators](#operators)
     - [Comparisons](#comparisons)
     - [Boolean logic](#boolean-logic)
-    - [Block, scope and variables](#block-scope-and-variables)
-    - [Special variables](#special-variables)
+    - [Block & definitions](#block--definitions)
+    - [Special references](#special-references)
     - [Path chaining](#path-chaining)
     - [Build-in methods](#build-in-methods)
 - [License](#license)
@@ -222,7 +222,7 @@ x ~= y | Match operator, behaviour depends on `y` type:<br>RegExp – test again
 
 Jora | Description
 --- | ---
-( x ) | Explicity operator precedence
+( x ) | Explicity operator precedence. Definitions are allowed (i.e. `($a: 1; $a + $a)` see bellow)
 x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
 x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
 not x<br>no x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
@@ -230,9 +230,9 @@ x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bo
 x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
 x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 
-### Block, scope and variables
+### Block & definitions
 
-A block contains of a definition list (should comes first) and an expression. Both are optional. When an expression is empty a current value (i.e. `$`) returns.
+Some constructions suppose to use a block, which may consists of a definition list (should comes first) and an expression. Both are optional. When an expression is empty, a current value (i.e. `$`) returns.
 
 The syntax of definition (white spaces between any part are optional):
 
@@ -244,20 +244,22 @@ $ SYMBOL : expression ;
 For example:
 
 ```
-$foo:123;          // Define `$foo` variable
+$foo:123;          // Define `$foo`
 $bar;              // The same as `$bar:$.bar;` or `$a:bar;`
-$baz: $foo + $bar; // Variables can be used inside an expression after its definition 
+$baz: $foo + $bar; // Definitions may be used in following expressions
 ```
 
-A block creates a new scope. Variables can't be redefined in the same and nested scopes, otherwise it cause to error.
+In terms of JavaScript, a block creates a new scope. Variables can't be redefined or change a value in the same or nested scopes, otherwise it cause to error.
 
-### Special variables
+### Special references
 
 Jora | Description
 --- | ---
-@ | The root data object
-$ | The current data object, depends on scope
-\# | The context
+$ | A scope input data (current value). On top level scope it's the same as `@`. In most cases it may be omitted. Used implicitly an input for subquery when no other subjects is defined (e.g. `foo()` and `.foo()` are equivalent for `$.foo()`).
+@ | A query input data
+\# | A query context
+
+Since Jora's query performs as `query(data, context)`, in terms of Jora it looks like `query(@, #)`.
 
 ### Path chaining
 

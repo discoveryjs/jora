@@ -1,6 +1,7 @@
 ## next
 
 - Added a method invocation for recursive paths (#10)
+- Allowed definitions to use in parentheses, e.g. `($a: 1; $a + $a)`
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 

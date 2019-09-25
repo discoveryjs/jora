@@ -248,7 +248,8 @@ const grammar = {
             ['SYMBOL', code`/*var:@1*/fn.map(/*@1*/current, "$1")`],
             ['SYMBOL ( )', code`method.$1(/*@1/@2*/current)`],
             ['SYMBOL ( arguments )', code`method.$1(/*@1*/current, $3)`],
-            ['( e )', code`($2)`],
+            ['( e )', code`($2)`], // NOTE: using e instead of block for preventing a callback creation
+            ['( definitions e )', code`(current => { $2; return $3; })(current)`],
             ['. SYMBOL', code`fn.map(/*@2*/current, "$2")`],
             ['. SYMBOL ( )', code`method.$2(/*@2/@3*/current)`],
             ['. SYMBOL ( arguments )', code`method.$2(/*@2*/current, $4)`],

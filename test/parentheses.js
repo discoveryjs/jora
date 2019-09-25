@@ -26,4 +26,11 @@ describe('parentheses', () => {
                 .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
         );
     });
+
+    it('should allow definitions inside', () => {
+        assert.deepEqual(
+            query('$a: "hello"; ($b:" world"; $b).($a + $)')(),
+            'hello world'
+        );
+    });
 });
