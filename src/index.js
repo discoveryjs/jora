@@ -1,10 +1,11 @@
+const { version } = require('../package.json');
 const buildin = require('./buildin');
 const methods = require('./methods');
 const {
     strict: strictParser,
     tolerant: tolerantParser
 } = require('./parser');
-const { addToSet, isPlainObject} = require('./utils');
+const { addToSet, isPlainObject } = require('./utils');
 
 const cacheStrict = new Map();
 const cacheStrictStat = new Map();
@@ -312,7 +313,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
     return new Function('fn', 'method', 'data', 'context', 'self', body.join('\n'));
 }
 
-module.exports = function createQuery(source, options) {
+function createQuery(source, options) {
     options = options || {};
 
     const debug = Boolean(options.debug);
@@ -381,6 +382,8 @@ module.exports = function createQuery(source, options) {
     };
 };
 
-module.exports.version = require('../package.json').version;
-module.exports.buildin = buildin;
-module.exports.methods = methods;
+module.exports = Object.assign(createQuery, {
+    version,
+    buildin,
+    methods
+});
