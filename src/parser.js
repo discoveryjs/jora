@@ -105,6 +105,7 @@ const grammar = {
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'return "REGEXP"'],                                              // /foo/i
             ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
+            ['=>', 'return "FUNCTION";'],
             ['<(?!=)', 'this.fnOpened++; return "FUNCTION_START"'],
 
             // operators
@@ -144,6 +145,7 @@ const grammar = {
     // Operator precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
+        ['left', 'FUNCTION'],
         ['right', '?', ':'],
         ['left', ','],
         ['left', 'OR'],
@@ -311,7 +313,8 @@ const grammar = {
         ],
 
         function: [
-            ['FUNCTION_START block FUNCTION_END', code`current => { $2 }`]
+            ['FUNCTION_START block FUNCTION_END', code`current => { $2 }`],
+            ['FUNCTION e', code`current => $2`] // TODO: e -> nonEmptyBlock
         ]
     }
 };

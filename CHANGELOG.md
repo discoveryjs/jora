@@ -2,6 +2,7 @@
 
 - Added a method invocation for recursive paths (#10)
 - Allowed definitions to use in parentheses, e.g. `($a: 1; $a + $a)`
+- Added a function definition via `=>`, i.e. `=> body`
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 
