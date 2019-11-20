@@ -92,6 +92,8 @@ const grammar = {
             ['in{wb}', 'return "IN";'],
             ['not{ws}in{wb}', 'return "NOTIN";'],
             ['not?{wb}', 'return "NOT";'],
+            ['asc{wb}', 'return "ASC";'],
+            ['desc{wb}', 'return "DESC";'],
 
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],
@@ -147,6 +149,7 @@ const grammar = {
     operators: [
         ['left', 'FUNCTION'],
         ['right', '?', ':'],
+        ['left', 'sortingRules', 'sortingRule'],
         ['left', ','],
         ['left', 'OR'],
         ['left', 'AND'],
@@ -197,6 +200,7 @@ const grammar = {
 
             ['keyword', code`$1`],
             ['function', code`$1`],
+            ['sortingFunction', code`$1`],
             ['op', code`$1`]
         ],
 
@@ -315,6 +319,21 @@ const grammar = {
         function: [
             ['FUNCTION_START block FUNCTION_END', code`current => { $2 }`],
             ['FUNCTION e', code`current => $2`] // TODO: e -> nonEmptyBlock
+        ],
+
+        sortingFunction: [
+            ['sortingRule', code`$1`],
+            ['sortingRules', code`(rules => (a, b) => rules.reduce((res, rule) => res || rule(a, b), 0))([$1])`]
+        ],
+
+        sortingRules: [
+            ['sortingRule , sortingRule', code`$1, $3`],
+            ['sortingRules , sortingRule', code`$1, $3`]
+        ],
+
+        sortingRule: [
+            ['query ASC', code`(query => (a, b) => fn.cmp(query(a), query(b)))(current => $1)`],
+            ['query DESC', code`(query => (b, a) => fn.cmp(query(a), query(b)))(current => $1)`]
         ]
     }
 };

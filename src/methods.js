@@ -95,6 +95,10 @@ module.exports = Object.freeze({
         }
 
         if (typeof fn === 'function') {
+            if (fn.length === 2) {
+                return current.slice().sort(fn);
+            }
+
             return current.slice().sort((a, b) => {
                 a = fn(a);
                 b = fn(b);

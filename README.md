@@ -185,7 +185,8 @@ Jora | Description
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax
-< block > | A function<br>NOTE: Syntax will be changed
+< block ><br>=> e | A function<br>NOTE: Syntax will be changed
+query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
 
 ### Keywords
 
@@ -284,7 +285,7 @@ entries() | The same as `Object.entries()` in JS
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
 pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(\<fn>) | Sort an array by a value fetched with getter
+sort(\<fn>) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. Following queries are equivalents:<br>`sort(<foo.bar>)` and `sort(foo.bar asc)`<br>`sort(<foo>).reverse()` and `sort(foo desc)`<br>`sort(<[a, b]>)` and `sort(a asc, b asc)`
 reverse() | Reverse order of items
 group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
 filter(\<fn>) | The same as `Array#filter()` in JS
