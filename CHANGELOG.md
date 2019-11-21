@@ -3,7 +3,8 @@
 - Added a method invocation for recursive paths (#10)
 - Allowed definitions to use in parentheses, e.g. `($a: 1; $a + $a)`
 - Added a function definition via `=>`, i.e. `=> body`
-- Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)` or `sort(foo desc, bar asc)`
+- Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)`, `$sorting: foo desc; sort($sorting)` or `sort(foo desc, bar asc)`
+- Changed `sort()` method to use a two argument function as a regular comparator
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 

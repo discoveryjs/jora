@@ -63,12 +63,30 @@ describe('sort()', () => {
         );
     });
 
+    it('should use a two argument function as comparator', () => {
+        const context = {
+            sorting: (a, b) => a.foo - b.foo
+        };
+
+        assert.deepEqual(
+            query('sort(#.sorting)')(data, context),
+            data.slice().sort((a, b) => a.foo - b.foo)
+        );
+    });
+
     describe('with sorting function', () => {
         const data = [1, 2, 3, 2, 1, 4].map((value, idx) => ({ idx, foo: value }));
 
         it('single attribute', () => {
             assert.deepEqual(
                 query('sort(foo asc)')(data),
+                data.slice().sort((a, b) => a.foo - b.foo)
+            );
+        });
+
+        it('by variable', () => {
+            assert.deepEqual(
+                query('$sorting: foo asc; sort($sorting)')(data),
                 data.slice().sort((a, b) => a.foo - b.foo)
             );
         });
