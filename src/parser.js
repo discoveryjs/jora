@@ -1,41 +1,203 @@
 const { Parser } = require('jison');
 const patchParsers = require('./parser-patch');
 
-function code(s) {
-    return '$$ = [' +
-        s[0].split(/(\$[\da-zA-Z_]+|\/\*(?:scope|define:\S+?|var:\S+?)\*\/|\/\*\S*@[\da-zA-Z_$]+(?:\/\S*@[\da-zA-Z_$]+)*\*\/\$?[\da-zA-Z_]+)/g).map(
-            (m, i) => {
-                if (i % 2 === 0 || m === '/*scope*/') {
-                    return JSON.stringify(m);
-                }
+const $1 = '$1';
+const $2 = '$2';
+const $3 = '$3';
+const $4 = '$4';
+const $5 = '$5';
+const asis = '';
 
-                if (m.startsWith('/*define:')) {
-                    return '"/*define:" + ' + m.substring(9, m.length - 2) + '.range + "*/"';
-                }
+function $$(s) {
+    return '$$ = ' + JSON.stringify(s).replace(/:"(\$\d+)"/g, ':$1').replace(/\}$/, ',range:@0.range}');
+}
 
-                if (m.startsWith('/*var:')) {
-                    return '"/*var:" + ' + m.substring(6, m.length - 2) + '.range + "*/"';
-                }
+function Data() {
+    return {
+        type: 'Data'
+    };
+}
 
-                if (m.startsWith('/*')) {
-                    const content = m.substring(2, m.indexOf('*/'));
-                    const expr = m.substr(content.length + 4);
-                    const ranges = content.split('/').map(range => {
-                        const [context, loc] = range.split('@');
-                        return '" + @' + loc + '.range + ",' + context;
-                    });
+function Context() {
+    return {
+        type: 'Context'
+    };
+}
 
-                    return (
-                        '"/*sp:' + ranges + '*/",' +
-                        (expr[0] === '$' ? expr : '"' + expr + '"') +
-                        ',"/**/"'
-                    );
-                }
+function Current() {
+    return {
+        type: 'Current'
+    };
+}
 
-                return m;
-            }
-        ).filter(term => term !== '""') +
-    '];';
+function Literal(value) {
+    return {
+        type: 'Literal',
+        value
+    };
+}
+
+function Unary(operator, argument) {
+    return {
+        type: 'Unary',
+        operator,
+        argument
+    };
+}
+
+function Binary(operator, left, right) {
+    return {
+        type: 'Binary',
+        operator,
+        left,
+        right
+    };
+}
+
+function Conditional(test, consequent, alternate) {
+    return {
+        type: 'Conditional',
+        test,
+        consequent,
+        alternate
+    };
+}
+
+function Object(properties) {
+    return {
+        type: 'Object',
+        properties
+    };
+}
+
+function Property(key, value) {
+    return {
+        type: 'Property',
+        key,
+        value
+    };
+}
+
+function Spread(query) {
+    return {
+        type: 'Spread',
+        query
+    };
+}
+
+function Array(elements) {
+    return {
+        type: 'Array',
+        elements
+    };
+}
+
+function Function(arguments, body) {
+    return {
+        type: 'Function',
+        arguments,
+        body
+    };
+}
+
+function Compare(query, reverse) {
+    return {
+        type: 'Compare',
+        query,
+        reverse
+    };
+}
+
+function SortingFunction(compares) {
+    return {
+        type: 'SortingFunction',
+        compares
+    };
+}
+
+function MethodCall(value, method, arguments) {
+    return {
+        type: 'MethodCall',
+        value,
+        method,
+        arguments
+    };
+}
+
+function Definition(name, value) {
+    return {
+        type: 'Definition',
+        name,
+        value
+    };
+}
+
+function Block(definitions, body) {
+    return {
+        type: 'Block',
+        definitions,
+        body
+    };
+}
+
+function Parentheses(body) {
+    return {
+        type: 'Parentheses',
+        body
+    };
+}
+
+function Reference(name) {
+    return {
+        type: 'Reference',
+        name
+    };
+}
+
+function Identifier(name) {
+    return {
+        type: 'Identifier',
+        name
+    };
+}
+
+function Map(value, query) {
+    return {
+        type: 'Map',
+        value,
+        query
+    };
+}
+
+function Filter(value, query) {
+    return {
+        type: 'Filter',
+        value,
+        query
+    };
+}
+
+function Recursive(value, query) {
+    return {
+        type: 'Recursive',
+        value,
+        query
+    };
+}
+
+function GetProperty(value, property) {
+    return {
+        type: 'GetProperty',
+        value,
+        property
+    };
+}
+
+function createCommaList(name, element) {
+    return [
+        [`${element}`, '$$=[$1]'],
+        [`${name} , ${element}`, '$1.push($3)']
+    ];
 }
 
 const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
@@ -78,7 +240,7 @@ const grammar = {
             ['\\{', openScope + 'return "{";'],
             ['\\}', closeScope + switchToPreventPrimitiveState + 'return "}";'],
 
-            // keywords (should goes before SYMBOL)
+            // keywords (should goes before ident)
             ['true{wb}', 'return "TRUE";'],
             ['false{wb}', 'return "FALSE";'],
             ['null{wb}', 'return "NULL";'],
@@ -102,11 +264,13 @@ const grammar = {
             ['::self', 'return "SELF";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'return "NUMBER";'],    // 212.321
-            ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'return "STRING";'],       // 'foo' 'with \' escaped'
-            ['{rx}', switchToPreventPrimitiveState + 'return "REGEXP"'],                                              // /foo/i
+            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext);return "NUMBER";'],  // 212.321
+            ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = JSON.parse(yytext);return "STRING";'],       // "foo" "with \" escaped"
+            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = JSON.parse(yytext);return "STRING";'],       // 'foo' 'with \' escaped'
             ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
+            ['{rx}', switchToPreventPrimitiveState +
+                'yytext = new RegExp(yytext.substr(1, yytext.lastIndexOf("/") - 1), yytext.substr(yytext.lastIndexOf("/") + 1));' +
+                'return "REGEXP"'], // /foo/i
 
             // functions
             ['=>', 'return "FUNCTION";'],
@@ -146,12 +310,12 @@ const grammar = {
             ['$', 'return "EOF";']
         ]
     },
-    // Operator precedence - lowest precedence first.
+    // Binary precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
         ['left', 'FUNCTION'],
         ['right', '?', ':'],
-        ['left', 'sortingRules', 'sortingRule'],
+        ['left', 'sortingCompareList', 'sortingCompare'],
         ['left', ','],
         ['left', 'OR'],
         ['left', 'AND'],
@@ -172,170 +336,161 @@ const grammar = {
         ],
 
         block: [
-            ['nonEmptyBlock', code`/*scope*/$1`],
-            ['definitions', code`/*scope*/$1\nreturn current`],
-            ['', code`/*scope*/return /*@$*/current`]
+            ['nonEmptyBlock', asis],
+            ['definitions', $$(Block($1, null))],
+            ['', $$(Block([], null))]
         ],
 
         nonEmptyBlock: [
-            ['definitions e', code`$1\nreturn $2`],
-            ['e', code`return $1`]
+            ['definitions e', $$(Block($1, $2))],
+            ['e', $$(Block([], $1))]
         ],
 
         definitions: [
-            ['def', code`$1`],
-            ['definitions def', code`$1\n$2`]
+            ['def', '$$=[$1]'],
+            ['definitions def', '$1.push($2)']
         ],
 
         def: [
-            ['$ ;', code`/*key@1*/current;`], // do nothing, but collect stat (suggestions)
-            ['$ SYMBOL ;', code`/*define:@2*/const $$2 = fn.map(/*key@2*/current, "$2");`],
-            ['$ SYMBOL : e ;', code`/*define:@2*/const $$2 = $4;`]
+            ['$ ;', $$(Definition(null, Current()))], // do nothing, but collect stat (suggestions)
+            ['$ ident ;', $$(Definition($2, GetProperty(Current(), $2)))],
+            ['$ ident : e ;', $$(Definition($2, $4))]
         ],
 
         e: [
-            ['query', code`$1`],
+            ['query', asis],
 
-            ['SELF', code`current => self(current, context)`],
-            ['SELF ( )', code`self(current, context)`],
-            ['SELF ( e )', code`self($3, context)`],
+            // ['SELF', code`current => self(current, context)`],
+            // ['SELF ( )', code`self(current, context)`],
+            // ['SELF ( e )', code`self($3, context)`],
 
-            ['keyword', code`$1`],
-            ['function', code`$1`],
-            ['sortingFunction', code`$1`],
-            ['op', code`$1`]
+            ['keyword', asis],
+            ['function', asis],
+            ['sortingFunction', asis],
+            ['op', asis]
         ],
 
         op: [
-            ['NOT e', code`!fn.bool($2)`],
-            ['- e', code`-$2`],
-            ['+ e', code`+$2`],
-            ['e IN e', code`fn.in($1, /*in-value@1*/$3)`],
-            ['e HAS e', code`fn.in($3, /*in-value@3*/$1)`],
-            ['e NOTIN e', code`!fn.in($1, $3)`],
-            ['e HASNO e', code`!fn.in($3, $1)`],
-            ['e AND e', code`fn.bool(tmp = $1) ? $3 : tmp`],
-            ['e OR e', code`fn.bool(tmp = $1) ? tmp : $3`],
-            ['e ? e : e', code`fn.bool($1) ? $3 : $5`],
-            ['e + e', code`fn.add($1, $3)`],
-            ['e - e', code`fn.sub($1, $3)`],
-            ['e * e', code`fn.mul($1, $3)`],
-            ['e / e', code`fn.div($1, $3)`],
-            ['e % e', code`fn.mod($1, $3)`],
-            ['e = e', code`fn.eq(/*value@3*/$1, $3)`],
-            ['e != e', code`fn.ne(/*value@3*/$1, $3)`],
-            ['e < e', code`fn.lt($1, $3)`],
-            ['e <= e', code`fn.lte($1, $3)`],
-            ['e > e', code`fn.gt($1, $3)`],
-            ['e >= e', code`fn.gte($1, $3)`],
-            ['e ~= e', code`fn.match($1, $3)`]
+            ['NOT e', $$(Unary('not', $2))],
+            ['- e', $$(Unary('-', $2))],
+            ['+ e', $$(Unary('+', $2))],
+            ['e IN e', $$(Binary($2, $1, $3))],
+            ['e HAS e', $$(Binary($2, $1, $3))],
+            ['e NOTIN e', $$(Binary($2, $1, $3))],
+            ['e HASNO e', $$(Binary($2, $1, $3))],
+            ['e AND e', $$(Binary($2, $1, $3))],
+            ['e OR e', $$(Binary($2, $1, $3))],
+            ['e ? e : e', $$(Conditional($1, $3, $5))],
+            ['e + e', $$(Binary($2, $1, $3))],
+            ['e - e', $$(Binary($2, $1, $3))],
+            ['e * e', $$(Binary($2, $1, $3))],
+            ['e / e', $$(Binary($2, $1, $3))],
+            ['e % e', $$(Binary($2, $1, $3))],
+            ['e = e', $$(Binary($2, $1, $3))],
+            ['e != e', $$(Binary($2, $1, $3))],
+            ['e < e', $$(Binary($2, $1, $3))],
+            ['e <= e', $$(Binary($2, $1, $3))],
+            ['e > e', $$(Binary($2, $1, $3))],
+            ['e >= e', $$(Binary($2, $1, $3))],
+            ['e ~= e', $$(Binary($2, $1, $3))]
+        ],
+
+        ident: [
+            ['SYMBOL', $$(Identifier($1))]
         ],
 
         keyword: [
-            ['TRUE', code`true`],
-            ['FALSE', code`false`],
-            ['NULL', code`null`],
-            ['UNDEFINED', code`undefined`]
+            ['TRUE', $$(Literal(true))],
+            ['FALSE', $$(Literal(false))],
+            ['NULL', $$(Literal(null))],
+            ['UNDEFINED', $$(Literal(undefined))]
         ],
 
         query: [
-            ['queryRoot', code`$1`],
-            ['relativePath', code`$1`]
+            ['queryRoot', asis],
+            ['relativePath', asis]
         ],
 
         queryRoot: [
-            ['@', code`data`],
-            ['#', code`context`],
-            ['$', code`/*var:@1*/current`],
-            ['$ SYMBOL', code`/*var:@$*/typeof $$2 !== 'undefined' ? $$2 : undefined`],
-            ['STRING', code`$1`],
-            ['NUMBER', code`$1`],
-            ['REGEXP', code`$1`],
-            ['object', code`$1`],
-            ['array', code`$1`],
-            ['SYMBOL', code`/*var:@1*/fn.map(/*@1*/current, "$1")`],
-            ['SYMBOL ( )', code`method.$1(/*@1/@2*/current)`],
-            ['SYMBOL ( arguments )', code`method.$1(/*@1*/current, $3)`],
-            ['( e )', code`($2)`], // NOTE: using e instead of block for preventing a callback creation
-            ['( definitions e )', code`(current => { $2; return $3; })(current)`],
-            ['. SYMBOL', code`fn.map(/*@2*/current, "$2")`],
-            ['. SYMBOL ( )', code`method.$2(/*@2/@3*/current)`],
-            ['. SYMBOL ( arguments )', code`method.$2(/*@2*/current, $4)`],
-            ['.( block )', code`fn.map(current, current => { $2 })`],
-            ['.[ block ]', code`fn.filter(current, current => { $2 })`],
-            ['.. SYMBOL', code`fn.recursive(/*@2*/current, "$2")`],
-            ['.. SYMBOL ( )', code`fn.recursive(/*@2/@3*/current, method.$2)`],
-            ['.. SYMBOL ( arguments )', code`fn.recursive(/*@2*/current, current => method.$2(current, $4))`],
-            ['..( block )', code`fn.recursive(current, current => { $2 })`]
+            ['@', $$(Data())],
+            ['#', $$(Context())],
+            ['$', $$(Current())],
+            ['$ ident', $$(Reference($2))],
+            ['STRING', $$(Literal($1))],
+            ['NUMBER', $$(Literal($1))],
+            ['REGEXP', $$(Literal($1))],
+            ['object', asis],
+            ['array', asis],
+            ['ident', $$(GetProperty(Current(), $1))],
+            ['ident ( )', $$(MethodCall(Current(), $1, []))],
+            ['ident ( arguments )', $$(MethodCall(Current(), $1, $3))],
+            ['( e )', $$(Parentheses($2))], // NOTE: using e instead of block for preventing a callback creation
+            ['( definitions e )', $$(Parentheses(Block($2, $3)))],
+            ['. ident', $$(GetProperty(Current(), $2))],
+            ['. ident ( )', $$(MethodCall(Current(), $2, []))],
+            ['. ident ( arguments )', $$(MethodCall(Current(), $2, $4))],
+            ['.( block )', $$(Map(Current(), $2))],
+            ['.[ block ]', $$(Filter(Current(), $2))],
+            ['.. ident', $$(Recursive(Current(), GetProperty(Current(), $2)))],
+            ['.. ident ( )', $$(Recursive(Current(), MethodCall(Current(), $2, [])))],
+            ['.. ident ( arguments )', $$(Recursive(Current(), MethodCall(Current(), $2, $4)))],
+            ['..( block )', $$(Recursive(Current(), $2))]
         ],
 
         relativePath: [
-            ['query [ e ]', code`fn.map($1, $3)`],
-            ['query . SYMBOL', code`fn.map(/*@3*/$1, "$3")`],
-            ['query . SYMBOL ( )', code`method.$3((/*@4*/current, /*@3*/$1))`],
-            ['query . SYMBOL ( arguments )', code`method.$3(/*@3*/$1, $5)`],
-            ['query .( block )', code`fn.map($1, current => { $3 })`],
-            ['query .[ block ]', code`fn.filter($1, current => { $3 })`],
-            ['query .. SYMBOL', code`fn.recursive(/*@3*/$1, "$3")`],
-            ['query .. SYMBOL ( )', code`fn.recursive((/*@4*/current, /*@3*/$1), method.$3)`],
-            ['query .. SYMBOL ( arguments )', code`fn.recursive(/*@3*/$1, current => method.$3(current, $5))`],
-            ['query ..( block )', code`fn.recursive($1, current => { $3 })`]
+            ['query [ e ]', $$(GetProperty($1, $3))],
+            ['query . ident', $$(GetProperty($1, $3))],
+            ['query . ident ( )', $$(MethodCall($1, $3, []))],
+            ['query . ident ( arguments )', $$(MethodCall($1, $3, $5))],
+            ['query .( block )', $$(Map($1, $3))],
+            ['query .[ block ]', $$(Filter($1, $3))],
+            ['query .. ident', $$(Recursive($1, GetProperty(Current(), $3)))],
+            ['query .. ident ( )', $$(Recursive($1, MethodCall(Current(), $3, [])))],
+            ['query .. ident ( arguments )', $$(Recursive($1, MethodCall(Current(), $3, $5)))],
+            ['query ..( block )', $$(Recursive($1, $3))]
         ],
 
-        arguments: [
-            ['e', code`$1`],
-            ['arguments , e', code`$1, $3`]
-        ],
+        arguments: createCommaList('arguments', 'e'),
 
         object: [
-            ['{ }', code`(/*@1*/current, {})`],
-            ['{ properties }', code`({ $2 })`]
+            ['{ }', $$(Object([]))],
+            ['{ properties }', $$(Object($2))]
         ],
 
-        properties: [
-            ['property', code`$1`],
-            ['properties , property', code`$1, $3`]
-        ],
+        properties: createCommaList('properties', 'property'),
 
         property: [
-            ['SYMBOL', code`/*var:@1*/$1: fn.map(/*@1*/current, "$1")`],
-            ['$', code`[Symbol()]: /*var:@$*/0`],  // do nothing, but collect stat (suggestions)
-            ['$ SYMBOL', code`/*var:@$*/$2: typeof $$2 !== 'undefined' ? $$2 : undefined`],
-            ['SYMBOL : e', code`$1: $3`],
-            ['STRING : e', code`$1: $3`],
-            ['[ e ] : e', code`[$2]: $5`],
-            ['...', code`.../*var:@1*//*@1*/current`],
-            ['... query', code`...$2`]
+            ['ident', $$(Property($1, GetProperty(Current(), $1)))],
+            ['$', $$(Property(null, Current()))],  // do nothing, but collect stat (suggestions)
+            ['$ ident', $$(Property($2, Reference($2)))],
+            ['ident : e', $$(Property($1, $3))],
+            ['STRING : e', $$(Property(Literal($1), $3))],
+            ['[ e ] : e', $$(Property($2, $5))],
+            ['...', $$(Spread(Current()))],
+            ['... query', $$(Spread($2))]
         ],
 
         array: [
-            ['[ ]', code`(/*@1*/current, [])`],
-            ['[ arrayItems ]', code`[$2]`]
+            ['[ ]', $$(Array([]))],
+            ['[ arrayItems ]', $$(Array($2))]
         ],
 
-        arrayItems: [
-            ['e', code`$1`],
-            ['e , arrayItems', code`$1, $3`]
-        ],
+        arrayItems: createCommaList('arrayItems', 'e'),
 
         function: [
-            ['FUNCTION_START block FUNCTION_END', code`current => { $2 }`],
-            ['FUNCTION e', code`current => $2`] // TODO: e -> nonEmptyBlock
+            ['FUNCTION_START block FUNCTION_END', $$(Function([], $2))],
+            ['FUNCTION e', $$(Function([], $2))] // TODO: e -> nonEmptyBlock
         ],
 
         sortingFunction: [
-            ['sortingRule', code`$1`],
-            ['sortingRules', code`(rules => (a, b) => rules.reduce((res, rule) => res || rule(a, b), 0))([$1])`]
+            ['sortingCompareList', $$(SortingFunction($1))]
         ],
 
-        sortingRules: [
-            ['sortingRule , sortingRule', code`$1, $3`],
-            ['sortingRules , sortingRule', code`$1, $3`]
-        ],
+        sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),
 
-        sortingRule: [
-            ['query ASC', code`(query => (a, b) => fn.cmp(query(a), query(b)))(current => $1)`],
-            ['query DESC', code`(query => (b, a) => fn.cmp(query(a), query(b)))(current => $1)`]
+        sortingCompare: [
+            ['query ASC', $$(Compare($1, false))],
+            ['query DESC', $$(Compare($1, true))]
         ]
     }
 };

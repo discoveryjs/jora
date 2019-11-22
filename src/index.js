@@ -5,6 +5,7 @@ const {
     strict: strictParser,
     tolerant: tolerantParser
 } = require('./parser');
+const stringify = require('./stringify');
 const { addToSet, isPlainObject } = require('./utils');
 
 const cacheStrict = new Map();
@@ -272,6 +273,10 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
     const parser = tolerantMode ? tolerantParser : strictParser;
     const { ast, commentRanges } = parser.parse(source);
+    console.dir(ast, { depth: null });
+    console.log(source);
+    console.log(stringify(ast));
+    process.exit();
     const code = [];
     const suggestPoints = [];
     const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
@@ -385,5 +390,12 @@ function createQuery(source, options) {
 module.exports = Object.assign(createQuery, {
     version,
     buildin,
-    methods
+    methods,
+    syntax: {
+        parse(source, tolerantMode) {
+            const parser = tolerantMode ? tolerantParser : strictParser;
+            return parser.parse(source);
+        },
+        stringify
+    }
 });
