@@ -9,7 +9,8 @@ const $5 = '$5';
 const asis = '';
 
 function $$(s) {
-    return '$$ = ' + JSON.stringify(s).replace(/:"(\$\d+)"/g, ':$1').replace(/\}$/, ',range:@0.range}');
+    s.range = '@0.range';
+    return '$$ = ' + JSON.stringify(s).replace(/:"(\$\d+|@\d+\.range)"/g, ':$1');
 }
 
 function Data() {
@@ -193,6 +194,13 @@ function GetProperty(value, property) {
     };
 }
 
+function SelfCall(value) {
+    return {
+        type: 'SelfCall',
+        value
+    };
+}
+
 function createCommaList(name, element) {
     return [
         [`${element}`, '$$=[$1]'],
@@ -266,7 +274,7 @@ const grammar = {
             // primitives
             ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext);return "NUMBER";'],  // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = JSON.parse(yytext);return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = JSON.parse(yytext);return "STRING";'],       // 'foo' 'with \' escaped'
+            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = yytext.replace(/\\\\?"/g,\'\\\\"\').replace(/\\\\([^"uU])/g,"$1").replace(/^\'|\'$/g,\'"\');yytext = JSON.parse(yytext);return "STRING";'],       // 'foo' 'with \' escaped'
             ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
             ['{rx}', switchToPreventPrimitiveState +
                 'yytext = new RegExp(yytext.substr(1, yytext.lastIndexOf("/") - 1), yytext.substr(yytext.lastIndexOf("/") + 1));' +
@@ -337,8 +345,8 @@ const grammar = {
 
         block: [
             ['nonEmptyBlock', asis],
-            ['definitions', $$(Block($1, null))],
-            ['', $$(Block([], null))]
+            ['definitions', $$(Block($1, Current()))],
+            ['', $$(Block([], Current()))]
         ],
 
         nonEmptyBlock: [
@@ -360,9 +368,9 @@ const grammar = {
         e: [
             ['query', asis],
 
-            // ['SELF', code`current => self(current, context)`],
-            // ['SELF ( )', code`self(current, context)`],
-            // ['SELF ( e )', code`self($3, context)`],
+            ['SELF', $$(SelfCall(null))],
+            ['SELF ( )', $$(SelfCall(Current()))],
+            ['SELF ( e )', $$(SelfCall($3))],
 
             ['keyword', asis],
             ['function', asis],

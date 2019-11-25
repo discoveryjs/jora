@@ -48,7 +48,7 @@ function describeCases(title, cases) {
     });
 }
 
-describe('suggest', () => {
+describe.skip('suggest', () => {
     it('empty query', () => {
         assert.deepEqual(
             suggestQuery('|', data),
@@ -287,7 +287,7 @@ describe('suggest', () => {
     });
 });
 
-describe('suggest in tolerant parsing mode (autocorrection)', () => {
+describe.skip('suggest in tolerant parsing mode (autocorrection)', () => {
     describeCases('trailing full stop', {
         '.|': [
             suggestion('', ['foo', 'bar'], 1, 1)
