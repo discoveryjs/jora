@@ -197,6 +197,10 @@ module.exports = function compile(ast, commentRanges, statMode) {
                     throw new Error(`Identifier '$${node.name.name}' has already been declared`);
                 }
 
+                if (reservedVars.includes(node.name.name)) {
+                    throw new Error(`Identifier '$${node.name.name}' is reserved for future use`);
+                }
+
                 put('const $');
                 walk(node.name);
                 put('=');
@@ -290,12 +294,12 @@ module.exports = function compile(ast, commentRanges, statMode) {
         }
     }
 
-    let scope = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
+    const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
+    let scope = [];
     // const suggestPoints = [];
     const ranges = [];
     const buffer = [
         def('current', 'data'),
-        ...scope.map(name => def('$' + name)),
         'let tmp;',
         'return '
     ];
