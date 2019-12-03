@@ -125,38 +125,47 @@ function findSourcePosPoints(source, pos, points, includeEmpty) {
 
 function compileFunction(source, statMode, tolerantMode, debug) {
     if (debug) {
-        console.log('\n== compile ======');
+        console.log('\n== compile query ======');
         console.log('[Source]');
         console.log(source);
         console.log();
     }
 
     const parser = tolerantMode ? tolerantParser : strictParser;
-    const { ast, suggestRanges } = parser.parse(source);
+    const parseResult = parser.parse(source);
 
     if (debug) {
         const esc = s => JSON.stringify(s).slice(1, -1);
         console.log('[AST]');
-        console.dir(ast, { depth: null });
+        console.dir(parseResult.ast, { depth: null });
         console.log();
 
-        console.log('[suggestRanges]');
-        console.dir(suggestRanges, { depth: null });
-        suggestRanges.sort((a, b) => a[0] - b[0]).forEach(r => {
+        console.log('[Restored source]');
+        console.log(stringify(parseResult.ast));
+        console.log();
+
+        console.log('[Suggest ranges]');
+        // console.dir(parseResult.suggestRanges, { depth: null });
+        parseResult.suggestRanges.sort((a, b) => a[0] - b[0]).forEach(r => {
             console.log(esc(source));
             const pre = esc(source.slice(0, r[0])).length;
             const long = esc(source.substring(r[0], r[1])).length;
             console.log(' '.repeat(r[0] === r[1] && r[0] ? pre - 1 : pre) + (!long ? (r[0] ? '/\\' : '\\') : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3]);
         });
-        console.log(stringify(ast));
-        console.log(compile(ast).toString());
+        console.log();
     }
 
-    // if (debug) {
-    //     console.log('== body =========\n' + body.join('\n') + '\n=================\n');
-    // }
+    const fn = statMode
+        ? compile(parseResult.ast, parseResult.suggestRanges, statMode)
+        : compile(parseResult.ast);
 
-    return compile(ast, suggestRanges, statMode);
+    if (debug) {
+        console.log('[Function]');
+        console.log(fn.toString());
+        console.log();
+    }
+
+    return fn;
 }
 
 function createQuery(source, options) {
@@ -178,10 +187,6 @@ function createQuery(source, options) {
     } else {
         fn = compileFunction(source, statMode, tolerantMode, debug);
         cache.set(source, fn);
-    }
-
-    if (debug) {
-        console.log('fn', fn.toString());
     }
 
     if (statMode) {

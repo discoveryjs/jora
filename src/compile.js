@@ -26,7 +26,7 @@ const binary = {
     '~=': 'match'
 };
 
-module.exports = function compile(ast, suggestRanges = [], statMode) {
+module.exports = function compile(ast, suggestRanges = [], statMode = false) {
     function addSuggestPoint(spName, range, type) {
         let from;
 

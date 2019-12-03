@@ -46,16 +46,19 @@ function stringify(value) {
 
 function $$(node, ...suggestions) {
     node.range = $r0;
-    return '$$ = ' + stringify(node) + suggestions.join('');
+    suggestions = suggestions.length
+        ? '; yy.suggestRanges.push(' + suggestions.filter(Boolean) + ')'
+        : '';
+    return '$$ = ' + stringify(node) + suggestions;
 }
 
 function Suggestion(start, end, types, context) {
-    return `;yy.suggestRange(${[
+    return `[${[
         start ? start.name.replace(/\$/, '@') : 'null',
         end ? end.name.replace(/\$/, '@') : 'null',
         stringify(types),
         stringify(context) || null
-    ].concat(context === 'current' ? '$$' : [])})`;
+    ].concat(context === 'current' ? '$$' : [])}]`;
 }
 
 function SuggestQueryRoot() {
@@ -329,11 +332,11 @@ const grammar = {
             ['::self', 'return "SELF";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext);return "NUMBER";'],  // 212.321
-            ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = yy.toStringLiteral(yytext);return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = yy.toStringLiteral(yytext);return "STRING";'],       // 'foo' 'with \' escaped'
+            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
+            ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
+            ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
             ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
-            ['{rx}', switchToPreventPrimitiveState + 'yytext = yy.toRegExp(yytext);return "REGEXP";'], // /foo/i
+            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
 
             // functions
             ['=>', 'return "FUNCTION";'],
@@ -395,7 +398,7 @@ const grammar = {
     start: 'root',
     bnf: {
         root: [
-            ['block EOF', 'return $$ = { ast: $1, commentRanges: yy.commentRanges, suggestRanges: yy.suggestRanges };']
+            ['block EOF', 'return yy.buildResult($1)']
         ],
 
         block: [
