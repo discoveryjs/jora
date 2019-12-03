@@ -68,7 +68,7 @@ describe('modes', () => {
         });
     });
 
-    describe.skip('tolerant & stat', () => {
+    describe('tolerant & stat', () => {
         const options = { tolerant: true, stat: true };
 
         it('should return a stat interface', () => {

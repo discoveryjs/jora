@@ -48,7 +48,7 @@ function describeCases(title, cases) {
     });
 }
 
-describe.skip('suggest', () => {
+describe('suggest', () => {
     it('empty query', () => {
         assert.deepEqual(
             suggestQuery('|', data),
@@ -287,7 +287,7 @@ describe.skip('suggest', () => {
     });
 });
 
-describe.skip('suggest in tolerant parsing mode (autocorrection)', () => {
+describe('suggest in tolerant parsing mode (autocorrection)', () => {
     describeCases('trailing full stop', {
         '.|': [
             suggestion('', ['foo', 'bar'], 1, 1)
@@ -304,17 +304,17 @@ describe.skip('suggest in tolerant parsing mode (autocorrection)', () => {
             'and', 'or', 'in', 'not in', 'has', 'has no'
         ].forEach(operator => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
-            (operator === 'in' ? it.skip : it)(operator, () => {
+            (it)(operator, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
-                    [
-                        suggestion('', ['foo', 'bar'], 1)
-                        // .concat(
-                        //     operator === 'in'
-                        //         ? suggestion('', ['5:value'], 1, 1)
-                        //         : []
-                        // )
-                    ]
+                    operator === 'in'
+                        ? [[
+                            ...suggestion('.', ['5:value'], 0, 1),
+                            ...suggestion('', ['foo', 'bar'], 1)
+                        ]]
+                        : [
+                            suggestion('', ['foo', 'bar'], 1)
+                        ]
                 );
             });
         });
@@ -563,8 +563,8 @@ describe.skip('suggest in tolerant parsing mode (autocorrection)', () => {
             assert.deepEqual(
                 suggestQuery('|a| |i|n| ["a", "b", 3]', data),
                 [
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
                     null,
                     null,
                     null
@@ -580,8 +580,8 @@ describe.skip('suggest in tolerant parsing mode (autocorrection)', () => {
                     null,
                     null,
                     null,
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19),
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19)
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
                 ]
             );
         });

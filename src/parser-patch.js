@@ -6,6 +6,125 @@ module.exports = function patchParsers(strictParser) {
         );
     }
 
+    function isSuggestProhibitedChar(str, offset) {
+        return (
+            offset >= 0 &&
+            offset < str.length &&
+            /[a-zA-Z_$0-9]/.test(str[offset])
+        );
+    }
+
+    function isWhiteSpace(str, offset) {
+        const code = str.charCodeAt(offset);
+        return code === 9 || code === 10 || code === 13 || code === 32;
+    }
+
+    function onlyWsInRange(str, start, end) {
+        for (; start < end; start++) {
+            if (!isWhiteSpace(str, start)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function getSuggestRanges(from, to, input, commentRanges, noSuggestOnEofPos) {
+        const ranges = [];
+
+        for (let i = 0; i < commentRanges.length; i++) {
+            const [commentFrom, commentTo] = commentRanges[i];
+
+            if (commentFrom > to) {
+                break;
+            }
+
+            if (commentFrom < from) {
+                continue;
+            }
+
+            if (commentFrom === from) {
+                ranges.push(from, from);
+            } else {
+                ranges.push(from, commentFrom);
+            }
+
+            from = commentTo;
+        }
+
+        if (from !== input.length || !noSuggestOnEofPos) {
+            ranges.push(from, to);
+        }
+
+        return ranges;
+    }
+
+    function processSuggestRanges(input, suggestRanges, commentRanges) {
+        const result = [];
+        const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
+            commentRanges.length &&
+            commentRanges[commentRanges.length - 1][1] === input.length &&
+            !/[\r\n]$/.test(input);
+
+        for (let i = 0; i < suggestRanges.length; i++) {
+            let [start, end, types, context, ref] = suggestRanges[i];
+
+            if (start === null) {
+                start = end.range[0];
+                end = end.range[0];
+            } else if (end === null) {
+                end = start.range[1];
+                start = start.range[1];
+            } else if (start.range[0] > end.range[0]) {
+                const tmp = start;
+                start = end.range[1];
+                end = tmp.range[0];
+            } else {
+                start = start.range[0];
+                end = end.range[1];
+            }
+
+            if (onlyWsInRange(input, start, end)) {
+                while (start >= 0 && isWhiteSpace(input, start - 1)) {
+                    start--;
+                }
+
+                while (end < input.length && isWhiteSpace(input, end)) {
+                    end++;
+                }
+
+                // when starts on keyword/number/var end
+                if (isSuggestProhibitedChar(input, start - 1)) {
+                    if (start === end) {
+                        continue;
+                    }
+                    start++;
+                }
+
+                // when ends on keyword/number/var start
+                if (isSuggestProhibitedChar(input, end)) {
+                    if (start === end) {
+                        continue;
+                    }
+                    end--;
+                }
+            }
+
+            if (!Array.isArray(types)) {
+                types = [types];
+            }
+
+            const ranges = getSuggestRanges(start, end, input, commentRanges, noSuggestOnEofPos);
+            for (let j = 0; j < ranges.length; j += 2) {
+                types.forEach(type =>
+                    result.push([ranges[j], ranges[j + 1], type, context, ref || null])
+                );
+            }
+        }
+
+        return result;
+    }
+
     const tolerantParser = new strictParser.Parser();
     tolerantParser.lexer = Object.assign({}, strictParser.lexer);
 
@@ -13,7 +132,28 @@ module.exports = function patchParsers(strictParser) {
     [strictParser.lexer, tolerantParser.lexer].forEach(subject =>
         patch(subject, {
             setInput: orig => function(input, yy) {
-                yy.commentRanges = [];
+                const suggestRanges = [];
+                const commentRanges = [];
+
+                yy.commentRanges = commentRanges;
+                Object.defineProperty(yy, 'suggestRanges', {
+                    get() {
+                        return processSuggestRanges(input, suggestRanges, commentRanges);
+                    }
+                });
+                yy.suggestRange = (...args) => suggestRanges.push(args);
+                yy.toRegExp = value => new RegExp(
+                    value.substr(1, value.lastIndexOf('/') - 1),
+                    value.substr(value.lastIndexOf('/') + 1)
+                );
+                yy.toStringLiteral = value => JSON.parse(
+                    value[0] === '\''
+                        ? value.replace(/\\?"/g, '\\"')
+                            .replace(/\\([^"uU])/g, '$1')
+                            .replace(/^\'|\'$/g, '"')
+                        : value
+                );
+
                 this.fnOpened = 0;
                 this.fnOpenedStack = [];
                 this.prevToken = null;

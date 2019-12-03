@@ -1,7 +1,3 @@
-function def(name, value) {
-    return `const ${name} = ${value};`;
-}
-
 const unary = {
     '-': '-',
     '+': '+',
@@ -30,8 +26,78 @@ const binary = {
     '~=': 'match'
 };
 
-module.exports = function compile(ast, commentRanges, statMode) {
+module.exports = function compile(ast, suggestRanges = [], statMode) {
+    function addSuggestPoint(spName, range, type) {
+        let from;
+
+        if (type === 'var') {
+            from = JSON.stringify(scope);
+        } else {
+            if (!spName) {
+                spName = 'sp' + (suggestAcc++);
+            }
+            from = spName;
+        }
+
+        normalizedSuggestRanges.push([from, JSON.stringify([range[0], range[1]]), JSON.stringify(type)].join(','));
+        return spName;
+    }
+
+    function addSuggestPointsFromRanges(ranges) {
+        return ranges.reduce((spName, range) => {
+            return addSuggestPoint(spName, range, range[2]) || spName;
+        }, undefined);
+    }
+
+    function createScope(fn, defCurrent) {
+        const prevScope = scope;
+        const scopeStart = buffer.length;
+
+        scope = scope.slice();
+        scope.firstCurrent = null;
+        scope.captureCurrent = [];
+
+        fn();
+
+        if (scope.captureCurrent.length) {
+            const spName = addSuggestPointsFromRanges(scope.captureCurrent);
+
+            if (spName) {
+                if (scope.firstCurrent) {
+                    buffer[scope.firstCurrent] = 'suggestPoint(' + spName + ',current)';
+                } else {
+                    buffer[scopeStart] = defCurrent(buffer[scopeStart], 'suggestPoint(' + spName + ',current)');
+                }
+            }
+        }
+
+        scope = prevScope;
+    }
+
     function walk(node) {
+        const collectStat = statMode && suggestNodes.has(node);
+
+        if (collectStat) {
+            const ranges = suggestNodes.get(node);
+            const spName = addSuggestPointsFromRanges(ranges);
+
+            if (spName) {
+                put('suggestPoint(' + spName + ',');
+            }
+
+            suggestNodes.delete();
+        }
+
+        if (statMode && captureCurrent.has(node)) {
+            scope.captureCurrent.push(...captureCurrent.get(node).filter(range => {
+                if (range[2] === 'var') {
+                    addSuggestPoint(null, range, range[2]);
+                } else {
+                    return true;
+                }
+            }));
+        }
+
         switch (node.type) {
             case 'Data':
                 put('data');
@@ -42,6 +108,9 @@ module.exports = function compile(ast, commentRanges, statMode) {
                 break;
 
             case 'Current':
+                if (scope.firstCurrent === null && !scope.captureCurrent.disabled) {
+                    scope.firstCurrent = buffer.length;
+                }
                 put('current');
                 break;
 
@@ -91,14 +160,18 @@ module.exports = function compile(ast, commentRanges, statMode) {
                         put('fn.bool(tmp=');
                         walk(node.left);
                         put(')?tmp:');
+                        scope.captureCurrent.disabled = true;
                         walk(node.right);
+                        scope.captureCurrent.disabled = false;
                         break;
 
                     case 'and':
                         put('fn.bool(tmp=');
                         walk(node.left);
                         put(')?');
+                        scope.captureCurrent.disabled = true;
                         walk(node.right);
+                        scope.captureCurrent.disabled = false;
                         put(':tmp');
                         break;
 
@@ -116,10 +189,12 @@ module.exports = function compile(ast, commentRanges, statMode) {
             case 'Conditional':
                 put('fn.bool(');
                 walk(node.test);
+                scope.captureCurrent.disabled = true;
                 put(')?');
                 walk(node.consequent);
                 put(':');
                 walk(node.alternate);
+                scope.captureCurrent.disabled = false;
                 break;
 
             case 'Object':
@@ -155,15 +230,18 @@ module.exports = function compile(ast, commentRanges, statMode) {
                 put(']');
                 break;
 
-            case 'Function': {
-                const prevScope = scope.slice();
-
-                put('current=>');
-                walk(node.body);
-
-                scope = prevScope;
+            case 'Function':
+                createScope(
+                    () => {
+                        put('current=>');
+                        walk(node.body);
+                    },
+                    (scopeStart, sp) => {
+                        put(')');
+                        return scopeStart + '(' + sp + ',';
+                    }
+                );
                 break;
-            }
 
             case 'Compare':
                 if (node.reverse) {
@@ -193,6 +271,10 @@ module.exports = function compile(ast, commentRanges, statMode) {
                 break;
 
             case 'Definition':
+                if (!node.name) {
+                    break;
+                }
+
                 if (scope.includes(node.name.name)) {
                     throw new Error(`Identifier '$${node.name.name}' has already been declared`);
                 }
@@ -216,15 +298,18 @@ module.exports = function compile(ast, commentRanges, statMode) {
                 break;
 
             case 'Block':
-                const prevScope = scope.slice();
-
-                put('(()=>{');
-                walkList(node.definitions);
-                put('return ');
-                walk(node.body);
-                put('})()');
-
-                scope = prevScope;
+                createScope(
+                    () => {
+                        put('(()=>{');
+                        walkList(node.definitions);
+                        put('return ');
+                        walk(node.body);
+                        put('})()');
+                    },
+                    (scopeStart, sp) => {
+                        return scopeStart + sp + ';';
+                    }
+                );
                 break;
 
             case 'Reference':
@@ -241,31 +326,52 @@ module.exports = function compile(ast, commentRanges, statMode) {
             case 'Map':
                 put('fn.map(');
                 walk(node.value);
-                put(',current=>');
-                walk(node.query);
+                createScope(
+                    () => {
+                        put(',current=>');
+                        walk(node.query);
+                    },
+                    (scopeStart, sp) => {
+                        put(')');
+                        return scopeStart + '(' + sp + ',';
+                    }
+                );
                 put(')');
                 break;
 
             case 'Filter':
                 put('fn.filter(');
                 walk(node.value);
-                put(',current=>');
-                walk(node.query);
+                createScope(
+                    () => {
+                        put(',current=>');
+                        walk(node.query);
+                    },
+                    (scopeStart, sp) => {
+                        put(')');
+                        return scopeStart + '(' + sp + ',';
+                    }
+                );
                 put(')');
                 break;
 
             case 'Recursive':
                 put('fn.recursive(');
                 walk(node.value);
-                put(',current=>');
-                walk(node.query);
+                createScope(
+                    () => {
+                        put(',current=>');
+                        walk(node.query);
+                    },
+                    (scopeStart, sp) => {
+                        put(')');
+                        return scopeStart + '(' + sp + ',';
+                    }
+                );
                 put(')');
                 break;
 
             case 'GetProperty':
-                // ranges.push([scope.slice(), node.value.range, 'var']);
-                // console.log(node.value);
-
                 put('fn.map(');
                 walk(node.value);
                 put(',');
@@ -292,14 +398,17 @@ module.exports = function compile(ast, commentRanges, statMode) {
                 }
                 break;
         }
+
+        if (collectStat) {
+            put(')');
+        }
     }
 
     const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
     let scope = [];
     // const suggestPoints = [];
-    const ranges = [];
     const buffer = [
-        def('current', 'data'),
+        'const current=data;',
         'let tmp;',
         'return '
     ];
@@ -312,11 +421,40 @@ module.exports = function compile(ast, commentRanges, statMode) {
             walk(element);
         });
     };
+    const captureCurrent = suggestRanges.reduce((map, range) => {
+        if (range[3] === 'current') {
+            if (map.has(range[4])) {
+                map.get(range[4]).push(range);
+            } else {
+                map.set(range[4], [range]);
+            }
+        }
+        return map;
+    }, new Map());
+    const suggestNodes = suggestRanges.reduce((map, range) => {
+        if (range[3] && range[3] !== 'current') {
+            if (map.has(range[3])) {
+                map.get(range[3]).push(range);
+            } else {
+                map.set(range[3], [range]);
+            }
+        }
+        return map;
+    }, new Map());
+    let suggestAcc = 0;
+    const normalizedSuggestRanges = [];
 
     walk(ast);
 
     if (statMode) {
-        put(',' + JSON.stringify(ranges));
+        if (suggestAcc > 0) {
+            buffer.unshift('\n');
+            for (let i = suggestAcc - 1; i >= 0; i--) {
+                buffer.unshift('const sp' + i + '=new Set();');
+            }
+            buffer.unshift('const suggestPoint=(set,value)=>(set.add(value),value);');
+        }
+        put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
     return new Function('fn', 'method', 'data', 'context', 'self', buffer.join(''));
