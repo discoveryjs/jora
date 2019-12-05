@@ -68,20 +68,43 @@ describe('recursive invocation', () => {
         );
     });
 
-    it('should preserve context across calls', () => {
-        assert.deepEqual(
-            query(`
-                .({
-                    context: #,
-                    deps: deps.map(<::self()>)
-                })
-            `)(data[3], data[1]),
-            (function rec(entry) {
-                return {
+    describe('should preserve context across calls', () => {
+        it('with no arguments', () => {
+            assert.deepEqual(
+                query(`
+                    .({
+                        context: #,
+                        deps: deps.map(<::self()>)
+                    })
+                `)(data[3], data[1]),
+                (function rec(entry) {
+                    return {
+                        context: data[1],
+                        deps: entry.deps.map(rec)
+                    };
+                }(data[3]))
+            );
+        });
+
+        it('with new data', () => {
+            assert.deepEqual(
+                query(`
+                    .({
+                        context: #,
+                        filename,
+                        deps: deps.map(<::self({ filename: "stub", deps: [] })>)
+                    })
+                `)(data[3], data[1]),
+                {
                     context: data[1],
-                    deps: entry.deps.map(rec)
-                };
-            }(data[3]))
-        );
+                    filename: '4.js',
+                    deps: [{
+                        context: data[1],
+                        filename: 'stub',
+                        deps: []
+                    }]
+                }
+            );
+        });
     });
 });

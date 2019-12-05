@@ -394,7 +394,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 } else {
                     put('self(');
                     walk(node.value);
-                    put(')');
+                    put(',context)');
                 }
                 break;
         }
