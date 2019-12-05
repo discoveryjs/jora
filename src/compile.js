@@ -34,12 +34,15 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             from = JSON.stringify(scope);
         } else {
             if (!spName) {
-                spName = 'sp' + (suggestAcc++);
+                spName = 'v' + (suggestAcc++);
             }
             from = spName;
         }
 
-        normalizedSuggestRanges.push([from, JSON.stringify([range[0], range[1]]), JSON.stringify(type)].join(','));
+        if (from !== '[]') {
+            normalizedSuggestRanges.push([from, JSON.stringify([range[0], range[1]]), JSON.stringify(type)].join(','));
+        }
+
         return spName;
     }
 
@@ -64,9 +67,9 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
 
             if (spName) {
                 if (scope.firstCurrent) {
-                    buffer[scope.firstCurrent] = 'suggestPoint(' + spName + ',current)';
+                    buffer[scope.firstCurrent] = 'stat(' + spName + ',current)';
                 } else {
-                    buffer[scopeStart] = defCurrent(buffer[scopeStart], 'suggestPoint(' + spName + ',current)');
+                    buffer[scopeStart] = defCurrent(buffer[scopeStart], 'stat(' + spName + ',current)');
                 }
             }
         }
@@ -82,7 +85,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             const spName = addSuggestPointsFromRanges(ranges);
 
             if (spName) {
-                put('suggestPoint(' + spName + ',');
+                put('stat(' + spName + ',');
             }
 
             suggestNodes.delete();
@@ -298,18 +301,33 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Block':
-                createScope(
-                    () => {
-                        put('(()=>{');
-                        walkList(node.definitions);
-                        put('return ');
-                        walk(node.body);
-                        put('})()');
-                    },
-                    (scopeStart, sp) => {
-                        return scopeStart + sp + ';';
-                    }
-                );
+                if (node.definitions.length) {
+                    createScope(
+                        () => {
+                            put('(()=>{');
+                            walkList(node.definitions);
+                            put('return ');
+                            walk(node.body);
+                            put('})()');
+                        },
+                        (scopeStart, sp) => {
+                            return scopeStart + sp + ';';
+                        }
+                    );
+                } else if (node.body.type === 'Object') {
+                    createScope(
+                        () => {
+                            put('(');
+                            walk(node.body);
+                            put(')');
+                        },
+                        (scopeStart, sp) => {
+                            return scopeStart + sp + ',';
+                        }
+                    );
+                } else {
+                    walk(node.body);
+                }
                 break;
 
             case 'Reference':
@@ -444,15 +462,21 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
     let suggestAcc = 0;
     const normalizedSuggestRanges = [];
 
-    walk(ast);
+    createScope(
+        () => walk(ast),
+        (scopeStart, sp) => {
+            put(')');
+            return scopeStart + '(' + sp + ',';
+        }
+    );
 
     if (statMode) {
         if (suggestAcc > 0) {
-            buffer.unshift('\n');
-            for (let i = suggestAcc - 1; i >= 0; i--) {
-                buffer.unshift('const sp' + i + '=new Set();');
+            const stores = [];
+            for (let i = 0; i < suggestAcc; i++) {
+                stores.push('v' + i + '=new Set()');
             }
-            buffer.unshift('const suggestPoint=(set,value)=>(set.add(value),value);');
+            buffer.unshift('const stat=(values,v)=>(values.add(v),v);\nconst ' + stores + ';\n');
         }
         put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
