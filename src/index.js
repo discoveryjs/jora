@@ -150,7 +150,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
             console.log(esc(source));
             const pre = esc(source.slice(0, r[0])).length;
             const long = esc(source.substring(r[0], r[1])).length;
-            console.log(' '.repeat(r[0] === r[1] && r[0] ? pre - 1 : pre) + (!long ? (r[0] ? '/\\' : '\\') : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3]);
+            console.log(' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3]);
         });
         console.log();
     }
