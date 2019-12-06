@@ -14,6 +14,16 @@ describe('sorting function', () => {
         );
     });
 
+    it('an object as a query with asc', () => {
+        const fn = query('{a:1,b:2} asc')();
+
+        assert(typeof fn === 'function');
+        assert.deepEqual(
+            data.slice().sort(fn),
+            data.slice().sort()
+        );
+    });
+
     it('basic desc', () => {
         const fn = query('foo desc')();
 
@@ -21,6 +31,16 @@ describe('sorting function', () => {
         assert.deepEqual(
             data.slice().sort(fn),
             data.slice().sort((a, b) => b.foo - a.foo)
+        );
+    });
+
+    it('an object as a query with desc', () => {
+        const fn = query('{a:1,b:2} desc')();
+
+        assert(typeof fn === 'function');
+        assert.deepEqual(
+            data.slice().sort(fn),
+            data.slice().sort()
         );
     });
 

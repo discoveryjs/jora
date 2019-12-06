@@ -131,7 +131,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 }
 
                 if (node.operator === 'not' || node.operator === 'no') {
-                    put('!fn.bool(');
+                    put('!f.bool(');
                     walk(node.argument);
                     put(')');
                 } else {
@@ -152,7 +152,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 switch (node.operator) {
                     case 'has':
                     case 'has no':
-                        put('fn.in(');
+                        put('f.in(');
                         walk(node.right);
                         put(',');
                         walk(node.left);
@@ -160,7 +160,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         break;
 
                     case 'or':
-                        put('fn.bool(tmp=');
+                        put('f.bool(tmp=');
                         walk(node.left);
                         put(')?tmp:');
                         scope.captureCurrent.disabled = true;
@@ -169,7 +169,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         break;
 
                     case 'and':
-                        put('fn.bool(tmp=');
+                        put('f.bool(tmp=');
                         walk(node.left);
                         put(')?');
                         scope.captureCurrent.disabled = true;
@@ -179,7 +179,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         break;
 
                     default:
-                        put('fn.');
+                        put('f.');
                         put(binary[node.operator]);
                         put('(');
                         walk(node.left);
@@ -190,7 +190,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Conditional':
-                put('fn.bool(');
+                put('f.bool(');
                 walk(node.test);
                 scope.captureCurrent.disabled = true;
                 put(')?');
@@ -236,12 +236,12 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             case 'Function':
                 createScope(
                     () => {
-                        put('current=>');
+                        put('current=>(');
                         walk(node.body);
+                        put(')');
                     },
                     (scopeStart, sp) => {
-                        put(')');
-                        return scopeStart + '(' + sp + ',';
+                        return scopeStart + sp + ',';
                     }
                 );
                 break;
@@ -250,8 +250,14 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 if (node.reverse) {
                     put('-');
                 }
-                put('fn.cmp((_q=current=>');
-                walk(node.query);
+                put('f.cmp((_q=current=>');
+                if (node.query.type === 'Object') {
+                    put('(');
+                    walk(node.query);
+                    put(')');
+                } else {
+                    walk(node.query);
+                }
                 put(')(a),_q(b))');
                 break;
 
@@ -262,7 +268,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'MethodCall':
-                put('method.');
+                put('m.');
                 walk(node.method);
                 put('(');
                 walk(node.value);
@@ -315,16 +321,9 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         }
                     );
                 } else if (node.body.type === 'Object') {
-                    createScope(
-                        () => {
-                            put('(');
-                            walk(node.body);
-                            put(')');
-                        },
-                        (scopeStart, sp) => {
-                            return scopeStart + sp + ',';
-                        }
-                    );
+                    put('(');
+                    walk(node.body);
+                    put(')');
                 } else {
                     walk(node.body);
                 }
@@ -342,7 +341,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Map':
-                put('fn.map(');
+                put('f.map(');
                 walk(node.value);
                 createScope(
                     () => {
@@ -358,7 +357,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Filter':
-                put('fn.filter(');
+                put('f.filter(');
                 walk(node.value);
                 createScope(
                     () => {
@@ -374,7 +373,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Recursive':
-                put('fn.recursive(');
+                put('f.recursive(');
                 walk(node.value);
                 createScope(
                     () => {
@@ -390,7 +389,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'GetProperty':
-                put('fn.map(');
+                put('f.map(');
                 walk(node.value);
                 put(',');
                 if (node.property.type === 'Identifier') {
@@ -472,14 +471,11 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
 
     if (statMode) {
         if (suggestAcc > 0) {
-            const stores = [];
-            for (let i = 0; i < suggestAcc; i++) {
-                stores.push('v' + i + '=new Set()');
-            }
-            buffer.unshift('const stat=(values,v)=>(values.add(v),v);\nconst ' + stores + ';\n');
+            buffer.unshift('const ' + Array.from(Array(suggestAcc), (_, i) => 'v' + i + '=new Set()') + ';\n');
+            buffer.unshift('const stat=(values,v)=>(values.add(v),v);\n');
         }
         put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
-    return new Function('fn', 'method', 'data', 'context', 'self', buffer.join(''));
+    return new Function('f', 'm', 'data', 'context', 'self', buffer.join(''));
 };

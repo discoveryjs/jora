@@ -23,6 +23,27 @@ describe('primitive: function `<body>`', () => {
         );
     });
 
+    it('body is an empty object', () => {
+        assert.deepEqual(
+            query('<{}>')()(),
+            {}
+        );
+    });
+
+    it('body is an object with a single key', () => {
+        assert.deepEqual(
+            query('<{foo:1}>')()(),
+            { foo: 1 }
+        );
+    });
+
+    it('body is an object with a couple keys', () => {
+        assert.deepEqual(
+            query('<{foo:1,bar:2}>')()(),
+            { foo: 1, bar: 2 }
+        );
+    });
+
     it('body is an expression', () => {
         assert.strictEqual(
             typeof query('<foo or bar>')(),
@@ -135,6 +156,27 @@ describe('primitive: function `=>body`', () => {
         assert.strictEqual(
             query('map(=>($a;$a))')({ a: 42 }),
             42
+        );
+    });
+
+    it('body is an empty object', () => {
+        assert.deepEqual(
+            query('=>{}')()(),
+            {}
+        );
+    });
+
+    it('body is an object with a single key', () => {
+        assert.deepEqual(
+            query('=>{foo:1}')()(),
+            { foo: 1 }
+        );
+    });
+
+    it('body is an object with a couple keys', () => {
+        assert.deepEqual(
+            query('=>{foo:1,bar:2}')()(),
+            { foo: 1, bar: 2 }
         );
     });
 
