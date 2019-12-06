@@ -66,10 +66,11 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             const spName = addSuggestPointsFromRanges(scope.captureCurrent);
 
             if (spName) {
+                const stat = 'stat(' + spName + ',current)';
                 if (scope.firstCurrent) {
-                    buffer[scope.firstCurrent] = 'stat(' + spName + ',current)';
+                    buffer[scope.firstCurrent] = stat;
                 } else {
-                    buffer[scopeStart] = defCurrent(buffer[scopeStart], 'stat(' + spName + ',current)');
+                    buffer[scopeStart] = defCurrent(buffer[scopeStart], stat);
                 }
             }
         }
@@ -160,6 +161,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         break;
 
                     case 'or':
+                        needTmp = true;
                         put('f.bool(tmp=');
                         walk(node.left);
                         put(')?tmp:');
@@ -169,6 +171,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                         break;
 
                     case 'and':
+                        needTmp = true;
                         put('f.bool(tmp=');
                         walk(node.left);
                         put(')?');
@@ -250,15 +253,16 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 if (node.reverse) {
                     put('-');
                 }
-                put('f.cmp((_q=current=>');
-                if (node.query.type === 'Object') {
-                    put('(');
-                    walk(node.query);
-                    put(')');
-                } else {
-                    walk(node.query);
-                }
-                put(')(a),_q(b))');
+                createScope(
+                    () => {
+                        put('f.cmp((_q=current=>(');
+                        walk(node.query);
+                        put('))(a),_q(b))');
+                    },
+                    (scopeStart, sp) => {
+                        return scopeStart + sp + ',';
+                    }
+                );
                 break;
 
             case 'SortingFunction':
@@ -406,13 +410,9 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                     break;
                 }
 
-                if (node.value.type === 'Current') {
-                    put('self(current,context)');
-                } else {
-                    put('self(');
-                    walk(node.value);
-                    put(',context)');
-                }
+                put('self(');
+                walk(node.value);
+                put(',context)');
                 break;
         }
 
@@ -423,10 +423,9 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
 
     const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
     let scope = [];
-    // const suggestPoints = [];
+    let needTmp = false;
     const buffer = [
         'const current=data;',
-        'let tmp;',
         'return '
     ];
     const put = chunk => buffer.push(chunk);
@@ -468,6 +467,10 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             return scopeStart + '(' + sp + ',';
         }
     );
+
+    if (needTmp) {
+        buffer.unshift('let tmp;');
+    }
 
     if (statMode) {
         if (suggestAcc > 0) {
