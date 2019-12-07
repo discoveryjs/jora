@@ -338,9 +338,11 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                     put('$');
                     walk(node.name);
                 } else {
-                    put('/*bad ref: $');
+                    put('typeof $');
                     walk(node.name);
-                    put('*/undefined');
+                    put('!=="undefined"?$');
+                    walk(node.name);
+                    put(':undefined');
                 }
                 break;
 
