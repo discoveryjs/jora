@@ -16,24 +16,25 @@ require('child_process')
 
         try {
             const tree = JSON.parse(stdout);
-            const multipleVersionPackages = jora`
-                ..(dependencies.mapToArray("name"))
-                .group(<name>, <version>)
-                .({ name: key, versions: value.sort() })
-                .[versions.size() > 1]
-            `(tree);
+            const depsPathsToMultipleVersionPackages = jora(`
+                $multiVersionPackages:
+                    ..(dependencies.mapToArray("name"))
+                    .group(<name>, <version>)
+                    .({ name: key, versions: value.sort() })
+                    .[versions.size() > 1];
 
-            const depsPathsToMultipleVersionPackages = jora`
-                .({
+                $pathToMultiVersionPackages: => .($name; {
                     name,
                     version,
-                    otherVersions: #.[name=@.name].versions - version,
+                    otherVersions: $multiVersionPackages.pick(<name=$name>).versions - version,
                     dependencies: dependencies
                         .mapToArray("name")
-                        .map(::self)
-                        .[name in #.name or dependencies]
-                })
-            `(tree, multipleVersionPackages);
+                        .map($pathToMultiVersionPackages)
+                        .[name in $multiVersionPackages.name or dependencies]
+                });
+
+                map($pathToMultiVersionPackages)
+            `)(tree);
 
             printTree(depsPathsToMultipleVersionPackages);
         } catch (e) {

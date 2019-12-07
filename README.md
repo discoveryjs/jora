@@ -131,24 +131,26 @@ require('child_process').exec('npm ls --json', (error, stdout) => {
     }
 
     const npmTree = JSON.parse(stdout);
-    const multipleVersionPackages = jora(`
-        ..(dependencies.mapToArray("name"))
-        .group(<name>, <version>)
-        .({ name: key, versions: value })
-        [versions.size() > 1]
-    `)(npmTree);
-
+    const tree = JSON.parse(stdout);
     const depsPathsToMultipleVersionPackages = jora(`
-        .({
+        $multiVersionPackages:
+            ..(dependencies.mapToArray("name"))
+            .group(<name>, <version>)
+            .({ name: key, versions: value.sort() })
+            .[versions.size() > 1];
+
+        $pathToMultiVersionPackages: => .($name; {
             name,
             version,
-            otherVersions: #[name=@.name].versions - version,
+            otherVersions: $multiVersionPackages.pick(<name=$name>).versions - version,
             dependencies: dependencies
                 .mapToArray("name")
-                .map(::self)
-                [name in #.name or dependencies]
-        })
-    `)(npmTree, multipleVersionPackages);
+                .map($pathToMultiVersionPackages)
+                .[name in $multiVersionPackages.name or dependencies]
+        });
+
+        map($pathToMultiVersionPackages)
+    `)(tree);
 
     printTree(depsPathsToMultipleVersionPackages);
 });
