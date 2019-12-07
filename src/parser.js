@@ -254,13 +254,6 @@ function GetProperty(value, property) {
     };
 }
 
-function SelfCall(value) {
-    return {
-        type: 'SelfCall',
-        value
-    };
-}
-
 function createCommaList(name, element) {
     return [
         [`${element}`, '$$=[$1]'],
@@ -329,7 +322,6 @@ const grammar = {
             ['@', switchToPreventPrimitiveState + 'return "@";'],
             ['#', switchToPreventPrimitiveState + 'return "#";'],
             ['\\$', switchToPreventPrimitiveState + 'return "$";'],
-            ['::self', 'return "SELF";'],
 
             // primitives
             ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
@@ -425,10 +417,6 @@ const grammar = {
 
         e: [
             ['query', asis],
-
-            ['SELF', $$(SelfCall(null))],
-            ['SELF ( )', $$(SelfCall(Current()))],
-            ['SELF ( e )', $$(SelfCall($3))],
 
             ['keyword', asis],
             ['function', asis],

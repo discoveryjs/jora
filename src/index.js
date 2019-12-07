@@ -190,8 +190,8 @@ function createQuery(source, options) {
     }
 
     if (statMode) {
-        return function query(data, context) {
-            const points = fn(buildin, localMethods, data, context, query);
+        return function(data, context) {
+            const points = fn(buildin, localMethods, data, context);
 
             return {
                 stat(pos, includeEmpty) {

@@ -405,17 +405,6 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 }
                 put(')');
                 break;
-
-            case 'SelfCall':
-                if (!node.value) {
-                    put('current=>self(current,context)');
-                    break;
-                }
-
-                put('self(');
-                walk(node.value);
-                put(',context)');
-                break;
         }
 
         if (collectStat) {
@@ -482,5 +471,5 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
         put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
-    return new Function('f', 'm', 'data', 'context', 'self', buffer.join(''));
+    return new Function('f', 'm', 'data', 'context', buffer.join(''));
 };

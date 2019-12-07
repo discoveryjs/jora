@@ -202,21 +202,6 @@ module.exports = function stringify(ast) {
                 }
                 break;
 
-            case 'SelfCall':
-                if (!node.value) {
-                    put('::self');
-                    break;
-                }
-
-                if (node.value.type === 'Current') {
-                    put('::self()');
-                } else {
-                    put('::self(');
-                    walk(node.value);
-                    put(')');
-                }
-                break;
-
             default:
                 throw new Error('Unknown node type `' + node.type + '`');
         }
