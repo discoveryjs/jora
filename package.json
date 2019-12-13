@@ -13,7 +13,9 @@
     "javascript",
     "json"
   ],
-  "main": "./src/index",
+  "main": "src/index",
+  "unpkg": "dist/jora.min.js",
+  "jsdelivr": "dist/jora.min.js",
   "browser": {
     "./src/parser.js": "./dist/parser.js",
     "./package.json": "./dist/package.json"
