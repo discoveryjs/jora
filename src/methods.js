@@ -78,28 +78,21 @@ module.exports = Object.freeze({
         return result;
     },
     size: function(current) {
-        switch (true) {
-            case Array.isArray(current):
-                return current.length;
-
-            case isPlainObject(current):
-                return Object.keys(current).length;
-
-            default:
-                return (current && current.length) || 0;
+        if (isPlainObject(current)) {
+            return Object.keys(current).length;
         }
+
+        return (current && current.length) || 0;
     },
     sort: function(current, fn) {
+        let sorter;
+
         if (!Array.isArray(current)) {
             return current;
         }
 
         if (typeof fn === 'function') {
-            if (fn.length === 2) {
-                return current.slice().sort(fn);
-            }
-
-            return current.slice().sort((a, b) => {
+            sorter = fn.length === 2 ? fn : (a, b) => {
                 a = fn(a);
                 b = fn(b);
 
@@ -120,10 +113,10 @@ module.exports = Object.freeze({
                 }
 
                 return a < b ? -1 : a > b;
-            });
+            };
         }
 
-        return current.slice().sort();
+        return current.slice().sort(sorter);
     },
     reverse: function(current) {
         if (!Array.isArray(current)) {
