@@ -181,7 +181,7 @@ module.exports = function patchParsers(strictParser) {
     const keywords = [
         'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO'
     ];
-    const words = [...keywords, 'NOT'];
+    const words = [...keywords, 'NOT', 'ASC', 'DESC'];
     const operators = [
         '+', '-', '*', '/', '%',
         '=', '!=', '~=', '>=', '<=', '<', '>'
@@ -196,12 +196,10 @@ module.exports = function patchParsers(strictParser) {
         ',', '?', ':', ';', 'EOF',
         ']', ')', '}',
         ...operators,
-        ...keywords
+        ...keywords,
+        'ASC', 'DESC'
     ]);
-    const tokenPair = prev.reduce(
-        (map, prevToken) => map.set(prevToken, defaultNext),
-        new Map()
-    );
+    const tokenPair = new Map(prev.map(token => [token, defaultNext]));
     // special cases
     tokenPair.set('{', new Set([',']));
     tokenPair.set('[', new Set([',']));
