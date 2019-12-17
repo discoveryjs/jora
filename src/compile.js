@@ -409,16 +409,9 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             case 'SliceNotation':
                 put('f.slice(');
                 walk(node.value);
-                put(',');
-                node.arguments.slice(0, 3).map((item, idx) => {
-                    if (idx) {
-                        put(',');
-                    }
-                    if (item) {
-                        walk(item);
-                    } else {
-                        put('undefined');
-                    }
+                node.arguments.slice(0, 3).forEach(item => {
+                    put(',');
+                    item ? walk(item) : put('undefined');
                 });
                 put(')');
                 break;

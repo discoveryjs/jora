@@ -1,8 +1,7 @@
 const buildin = require('./buildin');
 const {
     addToSet,
-    isPlainObject,
-    isArrayLike
+    isPlainObject
 } = require('./utils');
 
 function noop() {}
@@ -127,11 +126,7 @@ module.exports = Object.freeze({
         return current.slice().reverse();
     },
     slice: function(current, from, to) {
-        if (!isArrayLike(current)) {
-            return current;
-        }
-
-        return current.slice(from, to);
+        return buildin.slice(current, from, to);
     },
     group: function(current, keyGetter, valueGetter) {
         if (typeof keyGetter !== 'function') {

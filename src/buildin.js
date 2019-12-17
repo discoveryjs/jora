@@ -123,35 +123,31 @@ module.exports = Object.freeze({
     },
     slice: function(value, from = 0, to = value && value.length, step = 1) {
         if (!isArrayLike(value)) {
-            return value;
+            return [];
         }
 
-        if (step && step !== 1) {
+        from = parseInt(from, 10) || 0;
+        to = parseInt(to, 10) || value.length;
+        step = parseInt(step, 10) || 1;
+
+        if (step !== 1) {
             const result = [];
-            const reverse = step < 0;
 
-            step *= Math.sign(step);
+            from = from < 0
+                ? Math.max(0, value.length + from)
+                : Math.min(value.length, from);
+            to = to < 0
+                ? Math.max(0, value.length + to)
+                : Math.min(value.length, to);
 
-            if (from < 0) {
-                from = value.length + from;
-            }
-
-            if (to < 0) {
-                to = value.length + to;
-            }
-
-            for (let i = from; i < to; i += step) {
+            for (let i = step > 0 ? from : to - 1; i >= from && i < to; i += step) {
                 result.push(value[i]);
-            }
-
-            if (reverse) {
-                result.reverse();
             }
 
             return result;
         }
 
-        if (typeof value.slice === 'function') {
+        if (typeof value === 'string') {
             return value.slice(from, to);
         }
 

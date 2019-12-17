@@ -25,9 +25,7 @@ function isRegExp(value) {
 }
 
 function isArrayLike(value) {
-    return value &&
-        hasOwnProperty.call(value, 0) &&
-        hasOwnProperty.call(value, 'length');
+    return value && hasOwnProperty.call(value, 'length');
 }
 
 module.exports = {
