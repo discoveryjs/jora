@@ -162,5 +162,13 @@ module.exports = Object.freeze({
         );
 
         return result;
+    },
+    split: function(current, pattern) {
+        return String(current).split(pattern);
+    },
+    join: function(current, separator) {
+        return Array.isArray(current)
+            ? current.join(separator)
+            : String(current);
     }
 });

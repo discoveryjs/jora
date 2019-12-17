@@ -27,7 +27,7 @@ Related projects:
 
 TODO:
 
-- [ ] AST
+- [x] AST
 - [ ] Immutable paths hoisting (reduce computations -> performance)
 - [ ] Smart computation caching across queries
 - [ ] Query parts performance stat
@@ -292,6 +292,8 @@ reverse() | Reverse order of items
 group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
 filter(\<fn>) | The same as `Array#filter()` in JS
 map(\<fn>) | The same as `Array#map()` in JS
+split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
+join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
 
 ## License
 

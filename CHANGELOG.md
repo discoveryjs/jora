@@ -6,6 +6,8 @@
 - Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)`, `$sorting: foo desc; sort($sorting)` or `sort(foo desc, bar asc)`
 - Changed `sort()` method to use a two argument function as a regular comparator
 - Removed `::self` syntax, recusion with a function defined via variable should be used instead
+- Added `split()` method
+- Added `join()` method
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 
