@@ -8,6 +8,8 @@
 - Removed `::self` syntax, recusion with a function defined via variable should be used instead
 - Added `split()` method
 - Added `join()` method
+- Added `slice()` method
+- Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `'"foo"'[1:-1]` (`'foo'`) or `[1,2,3,4,5,6][-3::-1]` (`[6,5,4]`)
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 

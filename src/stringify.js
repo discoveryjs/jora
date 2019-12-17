@@ -202,6 +202,26 @@ module.exports = function stringify(ast) {
                 }
                 break;
 
+            case 'SliceNotation': {
+                const [a, b, c] = node.arguments;
+
+                walkIfNotCurrent(node.value);
+                put('[');
+                if (a) {
+                    walk(a);
+                }
+                put(':');
+                if (b) {
+                    walk(b);
+                }
+                if (c) {
+                    put(':');
+                    walk(c);
+                }
+                put(']');
+                break;
+            }
+
             default:
                 throw new Error('Unknown node type `' + node.type + '`');
         }

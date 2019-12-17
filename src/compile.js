@@ -405,6 +405,16 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 }
                 put(')');
                 break;
+
+            case 'SliceNotation':
+                put('f.slice(');
+                walk(node.value);
+                node.arguments.slice(0, 3).forEach(item => {
+                    put(',');
+                    item ? walk(item) : put('undefined');
+                });
+                put(')');
+                break;
         }
 
         if (collectStat) {

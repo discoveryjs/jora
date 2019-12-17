@@ -125,6 +125,9 @@ module.exports = Object.freeze({
 
         return current.slice().reverse();
     },
+    slice: function(current, from, to) {
+        return buildin.slice(current, from, to);
+    },
     group: function(current, keyGetter, valueGetter) {
         if (typeof keyGetter !== 'function') {
             keyGetter = noop;
