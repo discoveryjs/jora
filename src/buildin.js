@@ -90,16 +90,16 @@ module.exports = Object.freeze({
     cmp: function(a, b) {
         return a > b ? 1 : a < b ? -1 : 0;
     },
-    match: function(value, tester) {
-        if (typeof tester === 'function') {
-            return this.filter(value, tester);
+    match: function(value, pattern) {
+        if (typeof pattern === 'function') {
+            return this.filter(value, pattern);
         }
 
-        if (isRegExp(tester)) {
-            return this.filter(value, tester.test.bind(tester));
+        if (isRegExp(pattern)) {
+            return this.filter(value, pattern.test.bind(pattern));
         }
 
-        if (tester === null || tester === undefined) {
+        if (pattern === null || pattern === undefined) {
             return true;
         }
 

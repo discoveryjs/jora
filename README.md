@@ -275,6 +275,7 @@ SYMBOL | The same as `$.SYMBOL`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
 .method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
+[from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`)
 
 ### Build-in methods
 
@@ -294,6 +295,8 @@ filter(\<fn>) | The same as `Array#filter()` in JS
 map(\<fn>) | The same as `Array#map()` in JS
 split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
 join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
+slice(from, to) | The same as `Array#slice()` or `String#slice()` in JS
+match(pattern, matchAll) | The same as `String#match()`. Since regexp'es in jora doesn't support for `g` flag, use `matchAll` argument to get all matches, i.e. `'abcabc'.match(/ab/, true)` (jora) instead of `'abcabc'.match(/ab/g)` (JS)
 
 ## License
 

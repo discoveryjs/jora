@@ -10,6 +10,16 @@ function self(value) {
     return value;
 }
 
+function matchEntry(match) {
+    return {
+        matched: match.slice(),
+        start: match.index,
+        end: match.index + match[0].length,
+        input: match.input,
+        groups: match.groups || null
+    };
+}
+
 module.exports = Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
@@ -173,5 +183,23 @@ module.exports = Object.freeze({
         return Array.isArray(current)
             ? current.join(separator)
             : String(current);
+    },
+    match: function(current, pattern, matchAll) {
+        const input = String(current);
+
+        if (matchAll) {
+            const result = [];
+            let cursor = new RegExp(pattern, pattern.flags + 'g');
+            let match;
+
+            while (match = cursor.exec(input)) {
+                result.push(matchEntry(match));
+            }
+
+            return result;
+        }
+
+        const match = String(current).match(pattern);
+        return match && matchEntry(match);
     }
 });

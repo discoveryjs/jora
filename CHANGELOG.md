@@ -6,10 +6,11 @@
 - Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)`, `$sorting: foo desc; sort($sorting)` or `sort(foo desc, bar asc)`
 - Changed `sort()` method to use a two argument function as a regular comparator
 - Removed `::self` syntax, recusion with a function defined via variable should be used instead
-- Added `split()` method
-- Added `join()` method
-- Added `slice()` method
-- Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `'"foo"'[1:-1]` (`'foo'`) or `[1,2,3,4,5,6][-3::-1]` (`[6,5,4]`)
+- Added `split(pattern)` method
+- Added `join(separator)` method
+- Added `match(pattern, matchAll)` method
+- Added `slice(from, to)` method
+- Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`)
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 
