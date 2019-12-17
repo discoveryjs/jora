@@ -1,16 +1,18 @@
-## next
+## 1.0.0-alpha.11 (December 17, 2019)
 
-- Added a method invocation for recursive paths (#10)
+- Reworked parsing to produce AST, other parts reworked to consume AST as well
+- Exposed `syntax` interface with 3 methods: `parse(source, tolerantMode)`, `compile(ast, suggestRanges, statMode)` and `stringify(ast)`
+- Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`) (#11)
+- Added `slice(from, to)` method
+- Added `split(pattern)` method
+- Added `join(separator)` method
+- Added `match(pattern, matchAll)` method
+- Fixed method invocation on recursive mapping, i.e. `..method()` doesn't raise an error now and works as expected without surrounding parentheses (#10)
 - Allowed definitions to use in parentheses, e.g. `($a: 1; $a + $a)`
 - Added a function definition via `=>`, i.e. `=> body`
 - Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)`, `$sorting: foo desc; sort($sorting)` or `sort(foo desc, bar asc)`
 - Changed `sort()` method to use a two argument function as a regular comparator
-- Removed `::self` syntax, recusion with a function defined via variable should be used instead
-- Added `split(pattern)` method
-- Added `join(separator)` method
-- Added `match(pattern, matchAll)` method
-- Added `slice(from, to)` method
-- Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`)
+- Removed `::self` syntax, recusion with a function defined by a variable should be used instead
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 
