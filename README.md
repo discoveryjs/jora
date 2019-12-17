@@ -27,7 +27,7 @@ Related projects:
 
 TODO:
 
-- [ ] AST
+- [x] AST
 - [ ] Immutable paths hoisting (reduce computations -> performance)
 - [ ] Smart computation caching across queries
 - [ ] Query parts performance stat
@@ -52,8 +52,8 @@ Table of content:
     - [Operators](#operators)
     - [Comparisons](#comparisons)
     - [Boolean logic](#boolean-logic)
-    - [Block, scope and variables](#block-scope-and-variables)
-    - [Special variables](#special-variables)
+    - [Block & definitions](#block--definitions)
+    - [Special references](#special-references)
     - [Path chaining](#path-chaining)
     - [Build-in methods](#build-in-methods)
 - [License](#license)
@@ -131,24 +131,26 @@ require('child_process').exec('npm ls --json', (error, stdout) => {
     }
 
     const npmTree = JSON.parse(stdout);
-    const multipleVersionPackages = jora(`
-        ..(dependencies.mapToArray("name"))
-        .group(<name>, <version>)
-        .({ name: key, versions: value })
-        [versions.size() > 1]
-    `)(npmTree);
-
+    const tree = JSON.parse(stdout);
     const depsPathsToMultipleVersionPackages = jora(`
-        .({
+        $multiVersionPackages:
+            ..(dependencies.mapToArray("name"))
+            .group(<name>, <version>)
+            .({ name: key, versions: value.sort() })
+            .[versions.size() > 1];
+
+        $pathToMultiVersionPackages: => .($name; {
             name,
             version,
-            otherVersions: #[name=@.name].versions - version,
+            otherVersions: $multiVersionPackages.pick(<name=$name>).versions - version,
             dependencies: dependencies
                 .mapToArray("name")
-                .map(::self)
-                [name in #.name or dependencies]
-        })
-    `)(npmTree, multipleVersionPackages);
+                .map($pathToMultiVersionPackages)
+                .[name in $multiVersionPackages.name or dependencies]
+        });
+
+        map($pathToMultiVersionPackages)
+    `)(tree);
 
     printTree(depsPathsToMultipleVersionPackages);
 });
@@ -185,7 +187,8 @@ Jora | Description
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax
-< block > | A function<br>NOTE: Syntax will be changed
+< block ><br>=> e | A function<br>NOTE: Syntax will be changed
+query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
 
 ### Keywords
 
@@ -222,7 +225,7 @@ x ~= y | Match operator, behaviour depends on `y` type:<br>RegExp – test again
 
 Jora | Description
 --- | ---
-( x ) | Explicity operator precedence
+( x ) | Explicity operator precedence. Definitions are allowed (i.e. `($a: 1; $a + $a)` see bellow)
 x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
 x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
 not x<br>no x | Boolean `not`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
@@ -230,9 +233,9 @@ x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bo
 x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
 x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
 
-### Block, scope and variables
+### Block & definitions
 
-A block contains of a definition list (should comes first) and an expression. Both are optional. When an expression is empty a current value (i.e. `$`) returns.
+Some constructions suppose to use a block, which may consists of a definition list (should comes first) and an expression. Both are optional. When an expression is empty, a current value (i.e. `$`) returns.
 
 The syntax of definition (white spaces between any part are optional):
 
@@ -244,20 +247,22 @@ $ SYMBOL : expression ;
 For example:
 
 ```
-$foo:123;          // Define `$foo` variable
+$foo:123;          // Define `$foo`
 $bar;              // The same as `$bar:$.bar;` or `$a:bar;`
-$baz: $foo + $bar; // Variables can be used inside an expression after its definition 
+$baz: $foo + $bar; // Definitions may be used in following expressions
 ```
 
-A block creates a new scope. Variables can't be redefined in the same and nested scopes, otherwise it cause to error.
+In terms of JavaScript, a block creates a new scope. Variables can't be redefined or change a value in the same or nested scopes, otherwise it cause to error.
 
-### Special variables
+### Special references
 
 Jora | Description
 --- | ---
-@ | The root data object
-$ | The current data object, depends on scope
-\# | The context
+$ | A scope input data (current value). On top level scope it's the same as `@`. In most cases it may be omitted. Used implicitly an input for subquery when no other subjects is defined (e.g. `foo()` and `.foo()` are equivalent for `$.foo()`).
+@ | A query input data
+\# | A query context
+
+Since Jora's query performs as `query(data, context)`, in terms of Jora it looks like `query(@, #)`.
 
 ### Path chaining
 
@@ -268,7 +273,7 @@ SYMBOL | The same as `$.SYMBOL`
 ..SYMBOL<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
-.method() | Invoke a method to current data, or each element of current data if it is an array
+.method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 
 ### Build-in methods
@@ -282,11 +287,13 @@ entries() | The same as `Object.entries()` in JS
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
 pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(\<fn>) | Sort an array by a value fetched with getter
+sort(\<fn>) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. Following queries are equivalents:<br>`sort(<foo.bar>)` and `sort(foo.bar asc)`<br>`sort(<foo>).reverse()` and `sort(foo desc)`<br>`sort(<[a, b]>)` and `sort(a asc, b asc)`
 reverse() | Reverse order of items
 group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
 filter(\<fn>) | The same as `Array#filter()` in JS
 map(\<fn>) | The same as `Array#map()` in JS
+split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
+join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
 
 ## License
 

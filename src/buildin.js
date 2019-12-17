@@ -87,6 +87,9 @@ module.exports = Object.freeze({
 
         return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
     },
+    cmp: function(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
+    },
     match: function(value, tester) {
         if (typeof tester === 'function') {
             return this.filter(value, tester);

@@ -179,7 +179,7 @@ describe('suggest', () => {
     });
 
     describe('method context', () => {
-        ['', '.', '$.'].forEach(prefix => {
+        ['', '.', '..', '$.', '$..'].forEach(prefix => {
             describe(`${prefix}method(...)`, () => {
                 it('no arguments', () => {
                     assert.deepEqual(
@@ -304,17 +304,17 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             'and', 'or', 'in', 'not in', 'has', 'has no'
         ].forEach(operator => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
-            (operator === 'in' ? it.skip : it)(operator, () => {
+            (it)(operator, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
-                    [
-                        suggestion('', ['foo', 'bar'], 1)
-                        // .concat(
-                        //     operator === 'in'
-                        //         ? suggestion('', ['5:value'], 1, 1)
-                        //         : []
-                        // )
-                    ]
+                    operator === 'in'
+                        ? [[
+                            ...suggestion('.', ['5:value'], 0, 1),
+                            ...suggestion('', ['foo', 'bar'], 1)
+                        ]]
+                        : [
+                            suggestion('', ['foo', 'bar'], 1)
+                        ]
                 );
             });
         });
@@ -406,11 +406,14 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
     });
 
     describe('keyword operators', () => {
+        const prefixOps = new Set(['no', 'not']);
+        const postfixOps = new Set(['asc', 'desc']);
         const keywords = [
             'and', 'or',  // add 1 before `and` to force right expression evaluation
             'in', 'not in',
             'has', 'has no',
-            'no', 'not'
+            ...prefixOps,
+            ...postfixOps
         ];
         const ensureRightExprEvaluate = keywords.map(keyword =>
             // add 1 before `and` to force right expression evaluation
@@ -437,15 +440,18 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             keywords.forEach(operator => {
                 const queryString = '| |' + operator;
 
-                it(queryString, () => {
+                (operator === 'asc' || operator === 'desc' ? it.skip : it)(queryString, () => {
                     assert.deepEqual(
                         suggestQuery(queryString, data),
-                        [
-                            operator === 'no' || operator === 'not'
-                                ? null
-                                : suggestion('', ['foo', 'bar'], 0),
-                            null
-                        ]
+                        prefixOps.has(operator)
+                            ? [
+                                null,
+                                null
+                            ]
+                            : [
+                                suggestion('', ['foo', 'bar'], 0),
+                                null
+                            ]
                     );
                 });
             })
@@ -455,23 +461,30 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             keywords.forEach(operator => {
                 const queryString = '|\n|' + operator;
 
-                it(queryString, () => {
+                (operator === 'asc' || operator === 'desc' ? it.skip : it)(queryString, () => {
                     assert.deepEqual(
                         suggestQuery(queryString, data),
-                        [
-                            operator === 'no' || operator === 'not'
-                                ? null
-                                : suggestion('', ['foo', 'bar'], 0),
-                            null
-                        ]
+                        prefixOps.has(operator)
+                            ? [
+                                null,
+                                null
+                            ]
+                            : [
+                                suggestion('', ['foo', 'bar'], 0),
+                                null
+                            ]
                     );
                 });
             })
         );
 
         describe('array before keyword', () =>
-            keywords.filter(operator => !/^not?$/.test(operator)).forEach(operator => {
+            keywords.forEach(operator => {
                 const queryString = '|[|]|' + operator;
+
+                if (/^not?/.test(operator) || operator === 'asc' || operator === 'desc') {
+                    return;
+                }
 
                 it(queryString, () => {
                     assert.deepEqual(
@@ -490,22 +503,24 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             keywords.forEach(operator => {
                 const queryString = '|\n|//test|\n|\n|' + operator;
 
-                it(JSON.stringify(queryString).slice(1, -1), () => {
+                (operator === 'asc' || operator === 'desc' ? it.skip : it)(JSON.stringify(queryString).slice(1, -1), () => {
                     assert.deepEqual(
                         suggestQuery(queryString, data),
-                        [
-                            operator === 'no' || operator === 'not'
-                                ? null
-                                : suggestion('', ['foo', 'bar'], 0),
-                            operator === 'no' || operator === 'not'
-                                ? null
-                                : suggestion('', ['foo', 'bar'], 1),
-                            null,
-                            operator === 'no' || operator === 'not'
-                                ? null
-                                : suggestion('', ['foo', 'bar'], 8),
-                            null
-                        ]
+                        prefixOps.has(operator)
+                            ? [
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                            ]
+                            : [
+                                suggestion('', ['foo', 'bar'], 0),
+                                suggestion('', ['foo', 'bar'], 1),
+                                null,
+                                suggestion('', ['foo', 'bar'], 8),
+                                null
+                            ]
                     );
                 });
             })
@@ -518,10 +533,15 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
                 it(queryString, () => {
                     assert.deepEqual(
                         suggestQuery(queryString, data),
-                        [
-                            null,
-                            suggestion('', ['foo', 'bar'], operator.length + 1)
-                        ]
+                        postfixOps.has(operator)
+                            ? [
+                                null,
+                                null
+                            ]
+                            : [
+                                null,
+                                suggestion('', ['foo', 'bar'], operator.length + 1)
+                            ]
                     );
                 });
             })
@@ -534,10 +554,15 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
                 it(queryString, () => {
                     assert.deepEqual(
                         suggestQuery(queryString, data),
-                        [
-                            null,
-                            suggestion('', ['foo', 'bar'], operator.length + 1)
-                        ]
+                        postfixOps.has(operator)
+                            ? [
+                                null,
+                                null
+                            ]
+                            : [
+                                null,
+                                suggestion('', ['foo', 'bar'], operator.length + 1)
+                            ]
                     );
                 });
             })
@@ -545,6 +570,10 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
 
         describe('array after keyword', () =>
             ensureRightExprEvaluate.forEach(queryString => {
+                if (postfixOps.has(queryString)) {
+                    return;
+                }
+
                 it(queryString + '|[|]', () => {
                     assert.deepEqual(
                         suggestQuery(queryString + '|[|]', data),
@@ -563,8 +592,8 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
             assert.deepEqual(
                 suggestQuery('|a| |i|n| ["a", "b", 3]', data),
                 [
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 0, 1),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
                     null,
                     null,
                     null
@@ -580,8 +609,8 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
                     null,
                     null,
                     null,
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19),
-                    suggestion('a', ['foo', 'bar', '"a":value', '"b":value', '3:value'], 18, 19)
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
+                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
                 ]
             );
         });

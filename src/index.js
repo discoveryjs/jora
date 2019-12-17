@@ -1,10 +1,13 @@
+const { version } = require('../package.json');
 const buildin = require('./buildin');
 const methods = require('./methods');
 const {
     strict: strictParser,
     tolerant: tolerantParser
 } = require('./parser');
-const { addToSet, isPlainObject} = require('./utils');
+const stringify = require('./stringify');
+const compile = require('./compile');
+const { addToSet, isPlainObject } = require('./utils');
 
 const cacheStrict = new Map();
 const cacheStrictStat = new Map();
@@ -17,19 +20,6 @@ const contextToType = {
     'in-value': 'value',
     'var': 'variable'
 };
-
-function isWhiteSpace(str, offset) {
-    const code = str.charCodeAt(offset);
-    return code === 9 || code === 10 || code === 13 || code === 32;
-}
-
-function suggestProhitedChar(str, offset) {
-    return (
-        offset >= 0 &&
-        offset < str.length &&
-        /[a-zA-Z_$0-9]/.test(str[offset])
-    );
-}
 
 function valuesToSuggestions(context, values) {
     const suggestions = new Set();
@@ -134,185 +124,51 @@ function findSourcePosPoints(source, pos, points, includeEmpty) {
 }
 
 function compileFunction(source, statMode, tolerantMode, debug) {
-    function getSuggestRanges(from, to) {
-        const ranges = [];
-
-        for (let i = 0; i < commentRanges.length; i++) {
-            const [commentFrom, commentTo] = commentRanges[i];
-
-            if (commentFrom > to) {
-                break;
-            }
-
-            if (commentFrom < from) {
-                continue;
-            }
-
-            if (commentFrom === from) {
-                ranges.push(from, from);
-            } else {
-                ranges.push(from, commentFrom);
-            }
-
-            from = commentTo;
-        }
-
-        if (from !== source.length || !noSuggestOnEofPos) {
-            ranges.push(from, to);
-        }
-
-        return ranges;
-    }
-
-    function astToCode(node, scopeVars) {
-        if (Array.isArray(node)) {
-            const first = node[0];
-            let varName = false;
-            let i = 0;
-
-            if (first === '/*scope*/') {
-                // create new scope
-                scopeVars = scopeVars.slice();
-                i++;
-            } else if (typeof first === 'string' && first.startsWith('/*define:')) {
-                let [from, to] = first.substring(9, first.length - 2).split(',');
-                varName = source.substring(from, to);
-
-                if (scopeVars.includes(`"${varName}"`)) {
-                    throw new Error(`Identifier '$${varName}' has already been declared`);
-                }
-
-                i++;
-            }
-
-            for (; i < node.length; i++) {
-                astToCode(node[i], scopeVars);
-            }
-
-            if (varName) {
-                scopeVars.push(`"${varName}"`);
-            }
-        } else if (statMode && node.startsWith('/*')) {
-            if (node.startsWith('/*var:')) {
-                let [from, to] = node.substring(6, node.length - 2).split(',');
-
-                if (from === to) {
-                    // when starts on keyword/number/var end
-                    if (suggestProhitedChar(source, from - 1)) {
-                        return;
-                    }
-
-                    // extend a range by white spaces
-                    while (to < source.length - 1 && isWhiteSpace(source, to)) {
-                        to++;
-                    }
-
-                    // when ends on keyword/number/var start
-                    if (suggestProhitedChar(source, to)) {
-                        if (from === to) {
-                            return;
-                        }
-                        to--;
-                    }
-                }
-
-                suggestPoints.push(`[[${scopeVars}], [${getSuggestRanges(from, to)}], "var"]`);
-            } else if (node.startsWith('/*sp:')) {
-                const pointId = suggestSets.push('sp' + suggestSets.length + ' = new Set()') - 1;
-                const items = node.substring(5, node.length - 2).split(',');
-
-                // FIXME: position correction should be in parser
-                for (let i = 0; i < items.length; i += 3) {
-                    let from = Number(items[i]);
-                    let to = Number(items[i + 1]);
-                    let context = items[i + 2];
-                    const frag = source.substring(from, to);
-
-                    if (frag === '.[' || frag === '.(' || frag === '..(' ||
-                        frag === '{' || frag === '[' || frag === '(' || frag === '<' ||
-                        frag === '...' ||
-                        from === to) {
-                        from = to;
-
-                        // when starts on keyword/number/var end
-                        if (suggestProhitedChar(source, from - 1)) {
-                            continue;
-                        }
-
-                        // extend a range by white spaces
-                        while (to < source.length - 1 && isWhiteSpace(source, to)) {
-                            to++;
-                        }
-
-                        // when ends on keyword/number/var start
-                        if (suggestProhitedChar(source, to)) {
-                            if (from === to) {
-                                continue;
-                            }
-                            to--;
-                        }
-                    }
-
-                    suggestPoints.push(`[sp${pointId}, [${getSuggestRanges(from, to)}], "${context || 'path'}"]`);
-                }
-                code.push(`suggestPoint(sp${pointId}, `);
-            } else if (node === '/**/') {
-                code.push(')');
-            }
-        } else {
-            code.push(node);
-        }
-    }
-
     if (debug) {
-        console.log('\n== compile ======');
-        console.log('source:', source);
+        console.log('\n== compile query ======');
+        console.log('[Source]');
+        console.log(source);
+        console.log();
     }
 
     const parser = tolerantMode ? tolerantParser : strictParser;
-    const { ast, commentRanges } = parser.parse(source);
-    const code = [];
-    const suggestPoints = [];
-    const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
-        commentRanges.length &&
-        commentRanges[commentRanges.length - 1][1] === source.length &&
-        !/[\r\n]$/.test(source);
-    let suggestSets = [];
-    let body = [];
-
-    // if (debug) {
-    //     console.log('ast:', JSON.stringify(ast, null, 4));
-    // }
-
-    astToCode(ast, []);
-
-    if (suggestSets.length) {
-        body.push(
-            'const ' + suggestSets.join(', ') + ';',
-            'const suggestPoint = (set, value) => (set.add(value), value);'
-        );
-    }
-
-    body.push(
-        // preserved variables
-        'const $data = undefined, $context = undefined, $ctx = undefined, $array = undefined, $idx = undefined, $index = undefined;',
-        'let current = data;',
-        'let tmp;',
-        code.join('')
-    );
-
-    if (statMode) {
-        body.push(`,[${suggestPoints}]`);
-    }
+    const parseResult = parser.parse(source);
 
     if (debug) {
-        console.log('== body =========\n' + body.join('\n') + '\n=================\n');
+        const esc = s => JSON.stringify(s).slice(1, -1);
+        console.log('[AST]');
+        console.dir(parseResult.ast, { depth: null });
+        console.log();
+
+        console.log('[Restored source]');
+        console.log(stringify(parseResult.ast));
+        console.log();
+
+        console.log('[Suggest ranges]');
+        // console.dir(parseResult.suggestRanges, { depth: null });
+        parseResult.suggestRanges.sort((a, b) => a[0] - b[0]).forEach(r => {
+            console.log(esc(source));
+            const pre = esc(source.slice(0, r[0])).length;
+            const long = esc(source.substring(r[0], r[1])).length;
+            console.log(' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3]);
+        });
+        console.log();
     }
 
-    return new Function('fn', 'method', 'data', 'context', 'self', body.join('\n'));
+    const fn = statMode
+        ? compile(parseResult.ast, parseResult.suggestRanges, statMode)
+        : compile(parseResult.ast);
+
+    if (debug) {
+        console.log('[Function]');
+        console.log(fn.toString());
+        console.log();
+    }
+
+    return fn;
 }
 
-module.exports = function createQuery(source, options) {
+function createQuery(source, options) {
     options = options || {};
 
     const debug = Boolean(options.debug);
@@ -333,13 +189,9 @@ module.exports = function createQuery(source, options) {
         cache.set(source, fn);
     }
 
-    if (debug) {
-        console.log('fn', fn.toString());
-    }
-
     if (statMode) {
-        return function query(data, context) {
-            const points = fn(buildin, localMethods, data, context, query);
+        return function(data, context) {
+            const points = fn(buildin, localMethods, data, context);
 
             return {
                 stat(pos, includeEmpty) {
@@ -381,6 +233,16 @@ module.exports = function createQuery(source, options) {
     };
 };
 
-module.exports.version = require('../package.json').version;
-module.exports.buildin = buildin;
-module.exports.methods = methods;
+module.exports = Object.assign(createQuery, {
+    version,
+    buildin,
+    methods,
+    syntax: {
+        parse(source, tolerantMode) {
+            const parser = tolerantMode ? tolerantParser : strictParser;
+            return parser.parse(source);
+        },
+        compile,
+        stringify
+    }
+});

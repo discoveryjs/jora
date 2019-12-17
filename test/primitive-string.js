@@ -3,8 +3,10 @@ const query = require('../src');
 const values = [
     '"string"',
     '"str\\"ing"',
+    '"\\u0020"',
     "'string'",
-    "'str\\'ing'"
+    "'str\\'ing'",
+    "'\\u0020'"
 ];
 
 describe('primitive: string', () => {
