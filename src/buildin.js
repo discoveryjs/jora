@@ -121,7 +121,7 @@ module.exports = Object.freeze({
 
         return value !== undefined ? fn(value) : value;
     },
-    slice: function(value, from, to, step) {
+    slice: function(value, from = 0, to = value && value.length, step = 1) {
         if (!isArrayLike(value)) {
             return value;
         }

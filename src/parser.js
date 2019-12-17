@@ -254,6 +254,14 @@ function GetProperty(value, property) {
     };
 }
 
+function SliceNotation(value, arguments) {
+    return {
+        type: 'SliceNotation',
+        value,
+        arguments
+    };
+}
+
 function createCommaList(name, element) {
     return [
         [`${element}`, '$$=[$1]'],
@@ -475,6 +483,7 @@ const grammar = {
             ['REGEXP', $$(Literal($1))],
             ['object', asis],
             ['array', asis],
+            ['[ sliceNotation ]', $$(SliceNotation(Current(), $2))],
             ['ident', $$(GetProperty(Current(), $1), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
             ['ident ( )', $$(MethodCall(Current(), $1, []), SuggestMethod($1), Suggestion($3, $2, ['var', 'path'], 'current'))],
             ['ident ( arguments )', $$(MethodCall(Current(), $1, $3), SuggestMethod($1))],
@@ -493,6 +502,7 @@ const grammar = {
 
         relativePath: [
             ['query [ e ]', $$(GetProperty($1, $3))],
+            ['query [ sliceNotation ]', $$(SliceNotation($1, $3))],
             ['query . ident', $$(GetProperty($1, $3), SuggestIdent($3, $1))],
             ['query . ident ( )', $$(MethodCall($1, $3, []), SuggestIdent($3, $1), SuggestMethod($3), Suggestion($5, $4, ['var', 'path'], 'current'))],
             ['query . ident ( arguments )', $$(MethodCall($1, $3, $5), SuggestIdent($3, $1), SuggestMethod($3))],
@@ -545,6 +555,18 @@ const grammar = {
         sortingCompare: [
             ['query ASC', $$(Compare($1, false))],
             ['query DESC', $$(Compare($1, true))]
+        ],
+
+        sliceNotation: [
+            ['sliceNotationComponent', '$$=[null, $1]'],
+            ['sliceNotationComponent sliceNotationComponent', '$$=[null, $1, $2]'],
+            ['e sliceNotationComponent', '$$=[$1, $2]'],
+            ['e sliceNotationComponent sliceNotationComponent', '$$=[$1, $2, $3]']
+        ],
+
+        sliceNotationComponent: [
+            [':', '$$=null'],
+            [': e', '$$=$2']
         ]
     }
 };

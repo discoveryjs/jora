@@ -188,89 +188,58 @@ describe('[from:to:step]', () => {
 });
 
 describe('spec examples', () => {
-    it('default', () => {
+    it('apply to string', () => {
         assert.deepEqual(
             query('[6:]')('hello world'),
             'world'
         );
+    });
 
+    it('apply to an object with length property', () => {
         assert.deepEqual(
             query('[1:3]')({ 0: 'a', 1: 'b', 2: 'c', 3: 'd', length: 4 }),
             ['b', 'c']
         );
-
-        assert.deepEqual(
-            query('[:3:1]')(['a', 'b', 'c', 'd']),
-            ['a', 'b', 'c']
-        );
-
-        assert.deepEqual(
-            query('[1::1]')(['a', 'b', 'c', 'd']),
-            ['b', 'c', 'd']
-        );
-
-        assert.deepEqual(
-            query('[1:]')(['a', 'b', 'c', 'd']),
-            ['b', 'c', 'd']
-        );
-
-        assert.deepEqual(
-            query('[:3]')(['a', 'b', 'c', 'd']),
-            ['a', 'b', 'c']
-        );
-
-        assert.deepEqual(
-            query('[1::2]')(['a', 'b', 'c', 'd']),
-            ['b', 'd']
-        );
-
-        assert.deepEqual(
-            query('[:3:2]')(['a', 'b', 'c', 'd']),
-            ['a', 'c']
-        );
-
-        assert.deepEqual(
-            query('[:]')(['a', 'b', 'c', 'd']),
-            ['a', 'b', 'c', 'd']
-        );
     });
 
-    it('negative indices', () => {
-        assert.deepEqual(
-            query('[-2:]')(['a', 'b', 'c', 'd']),
-            ['c', 'd']
-        );
+    const data = ['a', 'b', 'c', 'd'];
+    const tests = {
+        'default': {
+            '[1:]': ['b', 'c', 'd'],
+            '[1:3]': ['b', 'c'],
+            '[:3:1]': ['a', 'b', 'c'],
+            '[1::1]': ['b', 'c', 'd'],
+            '[1:]': ['b', 'c', 'd'],
+            '[:3]': ['a', 'b', 'c'],
+            '[1::2]': ['b', 'd'],
+            '[:3:2]': ['a', 'c'],
+            '[:]': ['a', 'b', 'c', 'd']
+        },
+        'negative indices': {
+            '[-2:]': ['c', 'd'],
+            '[-10:]': ['a', 'b', 'c', 'd'],
+            '[:-2]': ['a', 'b'],
+            '[:-10]': [],
+            '[::-1]': ['d', 'c', 'b', 'a']
+        },
+        'out of bounds indices': {
+            '[100:]': [],
+            '[:100]': ['a', 'b', 'c', 'd']
+        }
+    };
 
-        assert.deepEqual(
-            query('[-10:]')(['a', 'b', 'c', 'd']),
-            ['a', 'b', 'c', 'd']
-        );
+    for (const section in tests) {
+        describe(section, () => {
+            for (const testcase in tests[section]) {
+                const expected = tests[section][testcase];
 
-        assert.deepEqual(
-            query('[:-2]')(['a', 'b', 'c', 'd']),
-            ['a', 'b']
-        );
-
-        assert.deepEqual(
-            query('[:-10]')(['a', 'b', 'c', 'd']),
-            []
-        );
-
-        assert.deepEqual(
-            query('[::-1]')(['a', 'b', 'c', 'd']),
-            ['d', 'c', 'b', 'a']
-        );
-    });
-
-    it('out of bounds indices', () => {
-        assert.deepEqual(
-            query('[100:]')(['a', 'b', 'c', 'd']),
-            []
-        );
-
-        assert.deepEqual(
-            query('[:100]')(['a', 'b', 'c', 'd']),
-            ['a', 'b', 'c', 'd']
-        );
-    });
+                it(testcase, () => {
+                    assert.deepEqual(
+                        query(testcase)(data),
+                        expected
+                    );
+                });
+            }
+        });
+    }
 });
