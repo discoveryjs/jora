@@ -1,3 +1,7 @@
+## next
+
+- Included build prerequsite files (`dist/parser.js` & `dist/version.json`) in package
+
 ## 1.0.0-alpha.11 (December 17, 2019)
 
 - Reworked parsing to produce AST, other parts reworked to consume AST as well
@@ -12,7 +16,7 @@
 - Added a function definition via `=>`, i.e. `=> body`
 - Added sorting function definition with `asc` and `desc` keywords, e.g. `sort(foo asc)`, `$sorting: foo desc; sort($sorting)` or `sort(foo desc, bar asc)`
 - Changed `sort()` method to use a two argument function as a regular comparator
-- Removed `::self` syntax, recusion with a function defined by a variable should be used instead
+- Removed `::self` syntax, recursion with a function defined by a variable should be used instead
 
 ## 1.0.0-alpha.10 (March 7, 2019)
 

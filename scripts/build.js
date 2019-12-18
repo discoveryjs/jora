@@ -10,4 +10,4 @@ fs.writeFileSync(path.join(__dirname, '../dist/parser.js'), [
     'module.exports = patchParsers(strictParser);'
 ].join('\n'), 'utf8');
 
-fs.writeFileSync(path.join(__dirname, '../dist/package.json'), JSON.stringify({ version }), 'utf8');
+fs.writeFileSync(path.join(__dirname, '../dist/version.json'), JSON.stringify({ version }), 'utf8');

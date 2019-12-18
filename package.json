@@ -18,7 +18,7 @@
   "jsdelivr": "dist/jora.min.js",
   "browser": {
     "./src/parser.js": "./dist/parser.js",
-    "./package.json": "./dist/package.json"
+    "./package.json": "./dist/version.json"
   },
   "scripts": {
     "lint": "eslint src test",
