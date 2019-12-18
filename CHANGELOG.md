@@ -1,4 +1,4 @@
-## next
+## 1.0.0-alpha.12 (December 18, 2019)
 
 - Included build prerequsite files (`dist/parser.js` & `dist/version.json`) in package
 
