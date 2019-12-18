@@ -3,6 +3,9 @@
 [![NPM version](https://img.shields.io/npm/v/jora.svg)](https://www.npmjs.com/package/jora)
 [![Build Status](https://travis-ci.org/discoveryjs/jora.svg?branch=master)](https://travis-ci.org/discoveryjs/jora)
 [![Coverage Status](https://coveralls.io/repos/github/discoveryjs/jora/badge.svg?branch=master)](https://coveralls.io/github/discoveryjs/jora?branch=master)
+![Minified size](https://badgen.net/bundlephobia/min/jora)
+![Minified + gzip size](https://badgen.net/bundlephobia/minzip/jora)
+[![Twitter](https://badgen.net/badge/follow/@js_discovery?icon=twitter)](https://twitter.com/js_discovery)
 
 JavaScript object query engine
 
@@ -14,9 +17,8 @@ Features:
 - Compact syntax for common tasks
 - Aggregate values across arrays and eliminate duplicates by default
 - Stat collecting mode (powers suggestions)
-- Tolerant parsing mode (useful to provide suggestions on a query editing in an editor)
-- Extensible DSL by providing a additional method list on query build
-ntl
+- Tolerant parsing mode (useful to provide suggestions for query in an editor)
+- Extensible DSL on query build by custom method list
 
 Related projects:
 
@@ -284,7 +286,7 @@ jora | Description
 bool() | The same as `Boolean()` in JS, with exception that *empty arrays* and *objects with no keys* treats as falsy
 keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
-entries() | The same as `Object.entries()` in JS
+entries() | Similar to `Object.entries()` in JS. The deffirence with JS, that jora returns `{ key, value }` object for every entry instead of array
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
 pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
@@ -296,7 +298,7 @@ map(\<fn>) | The same as `Array#map()` in JS
 split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
 join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
 slice(from, to) | The same as `Array#slice()` or `String#slice()` in JS
-match(pattern, matchAll) | The same as `String#match()`. Since regexp'es in jora doesn't support for `g` flag, use `matchAll` argument to get all matches, i.e. `'abcabc'.match(/ab/, true)` (jora) instead of `'abcabc'.match(/ab/g)` (JS)
+match(pattern, matchAll) | Similar to `String#match()`. Since regexp'es in jora doesn't support for `g` flag, use `matchAll` argument to get all matches, i.e. `'abcabc'.match(/ab/, true)` (jora) instead of `'abcabc'.match(/ab/g)` (JS)
 
 ## License
 
