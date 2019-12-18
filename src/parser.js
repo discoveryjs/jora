@@ -1,5 +1,6 @@
 const { Parser } = require('jison');
 const patchParsers = require('./parser-patch');
+const { isPlainObject } = require('./utils');
 
 const isArray = [].constructor.isArray;
 const keys = {}.constructor.keys;
@@ -25,7 +26,7 @@ function stringify(value) {
 
         case 'object':
             if (value === null) {
-                return value;
+                return String(value);
             }
 
             if (refs.has(value)) {
@@ -45,10 +46,14 @@ function stringify(value) {
 }
 
 function $$(node, ...suggestions) {
-    node.range = $r0;
+    if (isPlainObject(node)) {
+        node.range = $r0;
+    }
+
     suggestions = suggestions.length
         ? '; yy.suggestRanges.push(' + suggestions.filter(Boolean) + ')'
         : '';
+
     return '$$ = ' + stringify(node) + suggestions;
 }
 
@@ -264,7 +269,7 @@ function SliceNotation(value, arguments) {
 
 function createCommaList(name, element) {
     return [
-        [`${element}`, '$$=[$1]'],
+        [`${element}`, $$([$1])],
         [`${name} , ${element}`, '$1.push($3)']
     ];
 }
@@ -413,7 +418,7 @@ const grammar = {
         ],
 
         definitions: [
-            ['def', '$$=[$1]'],
+            ['def', $$([$1])],
             ['definitions def', '$1.push($2)']
         ],
 
@@ -425,7 +430,6 @@ const grammar = {
 
         e: [
             ['query', asis],
-
             ['keyword', asis],
             ['function', asis],
             ['sortingFunction', asis],
@@ -558,15 +562,15 @@ const grammar = {
         ],
 
         sliceNotation: [
-            ['sliceNotationComponent', '$$=[null, $1]'],
-            ['sliceNotationComponent sliceNotationComponent', '$$=[null, $1, $2]'],
-            ['e sliceNotationComponent', '$$=[$1, $2]'],
-            ['e sliceNotationComponent sliceNotationComponent', '$$=[$1, $2, $3]']
+            ['sliceNotationComponent', $$([null, $1])],
+            ['sliceNotationComponent sliceNotationComponent', $$([null, $1, $2])],
+            ['e sliceNotationComponent', $$([$1, $2])],
+            ['e sliceNotationComponent sliceNotationComponent', $$([$1,$2,$3])]
         ],
 
         sliceNotationComponent: [
-            [':', '$$=null'],
-            [': e', '$$=$2']
+            [':', $$(null)],
+            [': e', $$($2)]
         ]
     }
 };
