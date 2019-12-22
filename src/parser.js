@@ -2,10 +2,6 @@ const fs = require('fs');
 const { Parser } = require('jison');
 const grammar = require('./grammar');
 
-function bake() {
-    return fs.writeFileSync(__filename, this.generateModule());
-}
-
 function patchParsers(strictParser) {
     function patch(subject, patches) {
         Object.entries(patches).forEach(([key, patch]) =>
@@ -134,9 +130,6 @@ function patchParsers(strictParser) {
 
     // patch generateModule
     patch(strictParser, {
-        bake: () => function() {
-            bake.call(this);
-        },
         generateModule: origGenerateModule => function() {
             return origGenerateModule
                 .call(this, { moduleName: 'module.exports' })
@@ -313,3 +306,6 @@ function patchParsers(strictParser) {
 };
 
 module.exports = patchParsers(new Parser(grammar));
+module.exports.bake = function() {
+    return fs.writeFileSync(__filename, module.exports.generateModule());
+};
