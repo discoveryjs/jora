@@ -30,13 +30,12 @@
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
     "coverage": "nyc npm test",
-    "travis": "nyc npm run lint-and-test && npm run build-and-test && npm run coveralls",
+    "travis": "nyc npm run lint-and-test && npm run build-and-test && npm run parser:bake && npm test && npm run coveralls",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
-  "dependencies": {
-    "jison": "^0.4.18"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "jison": "^0.4.18",
     "coveralls": "^3.0.7",
     "eslint": "^6.5.1",
     "mocha": "^5.2.0",
