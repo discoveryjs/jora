@@ -16,9 +16,6 @@
   "main": "src/index",
   "unpkg": "dist/jora.min.js",
   "jsdelivr": "dist/jora.min.js",
-  "browser": {
-    "./src/parser/index.js": "./dist/parser.js"
-  },
   "scripts": {
     "lint": "eslint src test",
     "lint-and-test": "npm run lint && npm test",

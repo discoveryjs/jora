@@ -18,10 +18,10 @@ module.exports = {
             name: 'file-content-replacement',
             load(id) {
                 switch (id) {
-                    // case path.resolve('src/parser/index.js'):
-                    //     return require('./src/parser/index.js').generateModule({
-                    //         moduleName: 'module.exports'
-                    //     });
+                    case path.resolve('src/parser.js'):
+                        return require('./src/parser/index.js').generateModule({
+                            moduleName: 'module.exports'
+                        });
                     case path.resolve('package.json'):
                         return `{ "version": "${
                             require('./package.json').version

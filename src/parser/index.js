@@ -1,5 +1,5 @@
 const { Parser } = require('jison');
-const grammar = require('./grammar');
+const grammar = require('../grammar');
 
 function patchParsers(strictParser) {
     function patch(subject, patches) {

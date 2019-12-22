@@ -1,4 +1,4 @@
-const { isPlainObject } = require('../utils');
+const { isPlainObject } = require('./utils');
 const isArray = [].constructor.isArray;
 const keys = {}.constructor.keys;
 const $0 = { name: '$0' };
