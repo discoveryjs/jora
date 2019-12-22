@@ -1,5 +1,7 @@
-// temporary file with parser extension
-module.exports = function patchParsers(strictParser) {
+const { Parser } = require('jison');
+const grammar = require('./grammar');
+
+function patchParsers(strictParser) {
     function patch(subject, patches) {
         Object.entries(patches).forEach(([key, patch]) =>
             subject[key] = patch(subject[key])
@@ -124,6 +126,15 @@ module.exports = function patchParsers(strictParser) {
 
         return result;
     }
+
+    // patch generateModule
+    patch(strictParser, {
+        generateModule: origGenerateModule => function(...args) {
+            return origGenerateModule
+                .apply(this, args)
+                .replace('new Parser', '(' + patchParsers + ')(new Parser)');
+        }
+    });
 
     // add new helpers to lexer
     Object.assign(strictParser.lexer, {
@@ -292,3 +303,5 @@ module.exports = function patchParsers(strictParser) {
 
     return strictParser;
 };
+
+module.exports = patchParsers(new Parser(grammar));

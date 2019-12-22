@@ -17,21 +17,21 @@
   "unpkg": "dist/jora.min.js",
   "jsdelivr": "dist/jora.min.js",
   "browser": {
-    "./src/parser.js": "./dist/parser.js",
-    "./package.json": "./dist/version.json"
+    "./src/parser/index.js": "./dist/parser.js"
   },
   "scripts": {
     "lint": "eslint src test",
     "lint-and-test": "npm run lint && npm test",
     "test": "mocha --reporter progress",
-    "build": "npm run build:prerequisites && rollup --config && terser dist/jora.js --compress --mangle -o dist/jora.min.js",
-    "build:prerequisites": "node scripts/build",
     "test:all": "npm run test:src && npm run test:dist",
     "test:src": "npm test",
     "test:dist": "MODE=dist npm test && MODE=dist-min npm test",
+    "build": "npm run build:parser && rollup --config && terser dist/jora.js --compress --mangle -o dist/jora.min.js",
+    "build:parser": "node scripts/build",
+    "build-and-test": "npm run build && npm run test:dist",
     "prepublishOnly": "npm run build",
     "coverage": "nyc npm test",
-    "travis": "nyc npm run lint-and-test && npm run coveralls",
+    "travis": "nyc npm run lint-and-test && npm run build-and-test && npm run coveralls",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "dependencies": {

@@ -1,7 +1,4 @@
-const { Parser } = require('jison');
-const patchParsers = require('./parser-patch');
-const { isPlainObject } = require('./utils');
-
+const { isPlainObject } = require('../utils');
 const isArray = [].constructor.isArray;
 const keys = {}.constructor.keys;
 const $0 = { name: '$0' };
@@ -277,7 +274,8 @@ function createCommaList(name, element) {
 const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
 const openScope = 'this.fnOpenedStack.push(this.fnOpened); this.fnOpened = 0; ';
 const closeScope = 'this.fnOpened = this.fnOpenedStack.pop() || 0; ';
-const grammar = {
+
+module.exports = {
     // Lexical tokens
     lex: {
         options: {
@@ -381,6 +379,7 @@ const grammar = {
             ['$', 'return "EOF";']
         ]
     },
+
     // Binary precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
@@ -399,6 +398,7 @@ const grammar = {
         ['left', '.', '..', '...'],
         ['left', '.(', '.[', '..(']
     ],
+
     // Grammar
     start: 'root',
     bnf: {
@@ -574,5 +574,3 @@ const grammar = {
         ]
     }
 };
-
-module.exports = patchParsers(new Parser(grammar));
