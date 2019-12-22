@@ -4,8 +4,12 @@ const libPaths = {
     'dist': 'dist/jora.js',
     'dist-min': 'dist/jora.min.js'
 };
-const libPath = libPaths[process.env.MODE] || libPaths.src;
+const mode = libPaths.hasOwnProperty(process.env.MODE) ? process.env.MODE : 'src';
+const libPath = libPaths[mode];
+const postfix = mode === 'src'
+    ? (require('../../src/parser').bake ? ' [RAW]' : ' [BAKED]')
+    : '';
 
-console.info('Test lib entry:', chalk.yellow(libPath));
+console.info('Test lib entry:', chalk.yellow(libPath + postfix));
 
 module.exports = require('../../' + libPath);
