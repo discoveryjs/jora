@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const { Parser } = require('jison');
 const grammar = require('./grammar');
 
@@ -307,6 +305,3 @@ function patchParsers(strictParser) {
 };
 
 module.exports = patchParsers(new Parser(grammar));
-module.exports.bake = function() {
-    return fs.writeFileSync(path.join(__dirname, 'parser.js'), module.exports.generateModule());
-};
