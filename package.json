@@ -51,6 +51,7 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "!src/parser-raw.js"
   ]
 }
