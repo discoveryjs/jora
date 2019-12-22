@@ -1,5 +1,5 @@
 const assert = require('assert');
-const query = require('../src');
+const query = require('./helpers/lib');
 const data = {
     foo: [
         { a: 1, b: 2},

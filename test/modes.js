@@ -1,5 +1,5 @@
 const assert = require('assert');
-const jora = require('../src');
+const jora = require('./helpers/lib');
 
 describe('modes', () => {
     describe('strict (default)', () => {

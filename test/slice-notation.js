@@ -1,5 +1,5 @@
 const assert = require('assert');
-const query = require('../src');
+const query = require('./helpers/lib');
 
 function generateTests(data, tests) {
     for (const section in tests) {

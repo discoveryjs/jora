@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { syntax: { parse, stringify } } = require('../src');
+const { syntax: { parse, stringify } } = require('./helpers/lib');
 
 describe('stringify', () => {
     it('basic test', () => {

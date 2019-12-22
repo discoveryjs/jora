@@ -1,5 +1,5 @@
 const assert = require('assert');
-const query = require('../src');
+const query = require('./helpers/lib');
 
 describe('complex tests (mix)', () => {
     it('get a property pairs with different values', () => {

@@ -1,6 +1,6 @@
 const assert = require('assert');
 const data = require('./fixture/simple');
-const query = require('../src');
+const query = require('./helpers/lib');
 
 function addUnique(arr, items) {
     for (let i = 0; i < items.length; i++) {

@@ -1,6 +1,6 @@
 const assert = require('assert');
 const data = require('./fixture/simple');
-const query = require('../src');
+const query = require('./helpers/lib');
 
 describe('parentheses', () => {
     it('basic', () => {

@@ -1,5 +1,5 @@
 const assert = require('assert');
-const query = require('../src');
+const query = require('./helpers/lib');
 
 describe('pick()', () => {
     it('should return undefined for falsy values', () => {
