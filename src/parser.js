@@ -1,5 +1,10 @@
+const fs = require('fs');
 const { Parser } = require('jison');
 const grammar = require('./grammar');
+
+function bake() {
+    return fs.writeFileSync(__filename, this.generateModule());
+}
 
 function patchParsers(strictParser) {
     function patch(subject, patches) {
@@ -129,9 +134,12 @@ function patchParsers(strictParser) {
 
     // patch generateModule
     patch(strictParser, {
-        generateModule: origGenerateModule => function(...args) {
+        bake: () => function() {
+            bake.call(this);
+        },
+        generateModule: origGenerateModule => function() {
             return origGenerateModule
-                .apply(this, args)
+                .call(this, { moduleName: 'module.exports' })
                 .replace('new Parser', '(' + patchParsers + ')(new Parser)');
         }
     });
