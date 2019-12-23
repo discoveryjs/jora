@@ -250,7 +250,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Compare':
-                if (node.reverse) {
+                if (node.order === 'desc') {
                     put('-');
                 }
                 createScope(

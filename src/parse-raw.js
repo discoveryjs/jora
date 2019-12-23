@@ -138,6 +138,13 @@ function patchParsers(strictParser) {
 
     // add new helpers to lexer
     Object.assign(strictParser.lexer, {
+        toLiteral: value =>
+            /* eslint-disable operator-linebreak, indent */
+            value === 'null' ? null :
+            value === 'false' ? false :
+            value === 'true' ? true :
+            undefined,
+            /* eslint-enable */
         toStringLiteral: value => JSON.parse(
             value[0] === '\''
                 ? value.replace(/\\?"/g, '\\"')
@@ -192,7 +199,7 @@ function patchParsers(strictParser) {
     const keywords = [
         'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO'
     ];
-    const words = [...keywords, 'NOT', 'ASC', 'DESC'];
+    const words = [...keywords, 'NOT', 'ORDER'];
     const operators = [
         '+', '-', '*', '/', '%',
         '=', '!=', '~=', '>=', '<=', '<', '>'
@@ -208,7 +215,7 @@ function patchParsers(strictParser) {
         ']', ')', '}',
         ...operators,
         ...keywords,
-        'ASC', 'DESC'
+        'ORDER'
     ]);
     const tokenPair = new Map(prev.map(token => [token, defaultNext]));
     // special cases

@@ -72,7 +72,7 @@ function SuggestIdent(ref, from) {
 }
 
 function SuggestMethod() {
-    return undefined ; // Suggestion(ref, ref, 'method', null);
+    // Suggestion(ref, ref, 'method', null);
 }
 
 function Data() {
@@ -163,11 +163,11 @@ function Function(arguments, body) {
     };
 }
 
-function Compare(query, reverse) {
+function Compare(query, order) {
     return {
         type: 'Compare',
         query,
-        reverse
+        order
     };
 }
 
@@ -313,10 +313,7 @@ module.exports = {
             ['\\}', closeScope + switchToPreventPrimitiveState + 'return "}";'],
 
             // keywords (should goes before ident)
-            ['true{wb}', 'return "TRUE";'],
-            ['false{wb}', 'return "FALSE";'],
-            ['null{wb}', 'return "NULL";'],
-            ['undefined{wb}', 'return "UNDEFINED";'],
+            ['(true|false|null|undefined){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
 
             // keyword operators (should goes before SYMBOL)
             ['and{wb}', 'return "AND";'],
@@ -326,8 +323,7 @@ module.exports = {
             ['in{wb}', 'return "IN";'],
             ['not{ws}in{wb}', 'return "NOTIN";'],
             ['not?{wb}', 'return "NOT";'],
-            ['asc{wb}', 'return "ASC";'],
-            ['desc{wb}', 'return "DESC";'],
+            ['(asc|desc){wb}', 'return "ORDER";'],
 
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],
@@ -335,11 +331,11 @@ module.exports = {
             ['\\$', switchToPreventPrimitiveState + 'return "$";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
+            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "LITERAL";'],  // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
+            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "LITERAL";'], // /foo/i
             ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
-            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
 
             // functions
             ['=>', 'return "FUNCTION";'],
@@ -407,14 +403,10 @@ module.exports = {
         ],
 
         block: [
-            ['nonEmptyBlock', asis],
-            ['definitions', $$(Block($1, Current()))],
-            ['', $$(Block([], Current()), Suggestion($0, null, ['var', 'path'], 'current'))]
-        ],
-
-        nonEmptyBlock: [
             ['definitions e', $$(Block($1, $2))],
-            ['e', $$(Block([], $1))]
+            ['definitions', $$(Block($1, Current()))],
+            ['e', $$(Block([], $1))],
+            ['', $$(Block([], Current()), Suggestion($0, null, ['var', 'path'], 'current'))]
         ],
 
         definitions: [
@@ -430,16 +422,14 @@ module.exports = {
 
         e: [
             ['query', asis],
-            ['keyword', asis],
             ['function', asis],
-            ['sortingFunction', asis],
             ['op', asis]
         ],
 
         op: [
-            ['NOT e', $$(Unary('not', $2))],
-            ['- e', $$(Unary('-', $2))],
-            ['+ e', $$(Unary('+', $2))],
+            ['NOT e', $$(Unary($1, $2))],
+            ['- e', $$(Unary($1, $2))],
+            ['+ e', $$(Unary($1, $2))],
             ['e IN e', $$(Binary($2, $1, $3), Suggestion($1, $1, 'in-value', $3))],
             ['e HAS e', $$(Binary($2, $1, $3), Suggestion($3, $3, 'in-value', $1))],
             ['e NOTIN e', $$(Binary($2, $1, $3))],
@@ -465,13 +455,6 @@ module.exports = {
             ['SYMBOL', $$(Identifier($1))]
         ],
 
-        keyword: [
-            ['TRUE', $$(Literal(true))],
-            ['FALSE', $$(Literal(false))],
-            ['NULL', $$(Literal(null))],
-            ['UNDEFINED', $$(Literal(undefined))]
-        ],
-
         query: [
             ['queryRoot', asis],
             ['relativePath', asis]
@@ -483,8 +466,7 @@ module.exports = {
             ['$', $$(Current(), Suggestion($1, $1, 'var', 'current'))],
             ['$ ident', $$(Reference($2), Suggestion($1, $2, 'var', 'current'))],
             ['STRING', $$(Literal($1))],
-            ['NUMBER', $$(Literal($1))],
-            ['REGEXP', $$(Literal($1))],
+            ['LITERAL', $$(Literal($1))],
             ['object', asis],
             ['array', asis],
             ['[ sliceNotation ]', $$(SliceNotation(Current(), $2))],
@@ -526,7 +508,6 @@ module.exports = {
         ],
 
         properties: createCommaList('properties', 'property'),
-
         property: [
             ['ident', $$(Property($1, GetProperty(Current(), $1)), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
             ['$', $$(Property(null, Current()), Suggestion($1, $1, 'var', 'current'))],  // do nothing, but collect stat (suggestions)
@@ -538,27 +519,21 @@ module.exports = {
             ['... query', $$(Spread($2))]
         ],
 
+        arrayItems: createCommaList('arrayItems', 'e'),
         array: [
             ['[ ]', $$(Array([]), Suggestion($2, $1, ['var', 'path'], 'current'))],
             ['[ arrayItems ]', $$(Array($2))]
         ],
 
-        arrayItems: createCommaList('arrayItems', 'e'),
-
         function: [
             ['FUNCTION_START block FUNCTION_END', $$(Function([], $2))],
-            ['FUNCTION e', $$(Function([], $2))] // TODO: e -> nonEmptyBlock
-        ],
-
-        sortingFunction: [
+            ['FUNCTION e', $$(Function([], $2))],
             ['sortingCompareList', $$(SortingFunction($1))]
         ],
 
         sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),
-
         sortingCompare: [
-            ['query ASC', $$(Compare($1, false))],
-            ['query DESC', $$(Compare($1, true))]
+            ['query ORDER', $$(Compare($1, $2))]
         ],
 
         sliceNotation: [

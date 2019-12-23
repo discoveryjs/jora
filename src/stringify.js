@@ -144,7 +144,8 @@ module.exports = function stringify(ast) {
 
             case 'Compare':
                 walk(node.query);
-                put(node.reverse ? ' desc' : ' asc');
+                put(' ');
+                put(node.order);
                 break;
 
             case 'SortingFunction':
