@@ -123,12 +123,20 @@ function findSourcePosPoints(source, pos, points, includeEmpty) {
     return result;
 }
 
+function defaultDebugHandler(sectionName, value) {
+    console.log(`[${sectionName}]`);
+    if (typeof value === 'string') {
+        console.log(value);
+    } else if (value !== undefined) {
+        console.dir(value, { depth: null });
+    }
+    console.log();
+}
+
 function compileFunction(source, statMode, tolerantMode, debug) {
     if (debug) {
-        console.log('\n== compile query ======');
-        console.log('[Source]');
-        console.log(source);
-        console.log();
+        debug('=========================');
+        debug('Compile query from source', source);
     }
 
     const parser = tolerantMode ? tolerantParser : strictParser;
@@ -136,23 +144,16 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
     if (debug) {
         const esc = s => JSON.stringify(s).slice(1, -1);
-        console.log('[AST]');
-        console.dir(parseResult.ast, { depth: null });
-        console.log();
-
-        console.log('[Restored source]');
-        console.log(stringify(parseResult.ast));
-        console.log();
-
-        console.log('[Suggest ranges]');
-        // console.dir(parseResult.suggestRanges, { depth: null });
-        parseResult.suggestRanges.sort((a, b) => a[0] - b[0]).forEach(r => {
-            console.log(esc(source));
+        debug('AST', parseResult.ast);
+        debug('Restored source', stringify(parseResult.ast));
+        debug('Suggest ranges', parseResult.suggestRanges.sort((a, b) => a[0] - b[0]).map(r => {
             const pre = esc(source.slice(0, r[0])).length;
             const long = esc(source.substring(r[0], r[1])).length;
-            console.log(' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3]);
-        });
-        console.log();
+            return (
+                esc(source) + '\n' +
+                (' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3])
+            );
+        }).join('\n'));
     }
 
     const fn = statMode
@@ -160,9 +161,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         : compile(parseResult.ast);
 
     if (debug) {
-        console.log('[Function]');
-        console.log(fn.toString());
-        console.log();
+        debug('Function', fn.toString());
     }
 
     return fn;
@@ -171,7 +170,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 function createQuery(source, options) {
     options = options || {};
 
-    const debug = Boolean(options.debug);
+    const debug = typeof options.debug === 'function' ? options.debug : Boolean(options.debug) ? defaultDebugHandler : false;
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
     const localMethods = options.methods ? Object.assign({}, methods, options.methods) : methods;
