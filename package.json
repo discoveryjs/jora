@@ -19,7 +19,7 @@
   "scripts": {
     "lint": "eslint src test",
     "lint-and-test": "npm run lint && npm test",
-    "test": "mocha --reporter progress",
+    "test": "mocha --reporter ${REPORTER:-progress}",
     "test:all": "npm run test:src && npm run test:dist",
     "test:src": "npm test",
     "test:dist": "MODE=dist npm test && MODE=dist-min npm test",
