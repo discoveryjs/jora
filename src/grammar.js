@@ -286,6 +286,7 @@ module.exports = {
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+',   // required whitespaces
             comment: '//.*?(\\r|\\n|$)',
+            ident: '[a-zA-Z_][a-zA-Z_$0-9]*',
             rx: '/(?:\\\\.|[^/])+/i?'
         },
         startConditions: {
@@ -325,17 +326,18 @@ module.exports = {
             ['not?{wb}', 'return "NOT";'],
             ['(asc|desc){wb}', 'return "ORDER";'],
 
-            // special vars
-            ['@', switchToPreventPrimitiveState + 'return "@";'],
-            ['#', switchToPreventPrimitiveState + 'return "#";'],
-            ['\\$', switchToPreventPrimitiveState + 'return "$";'],
-
             // primitives
             ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "LITERAL";'],  // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "LITERAL";'], // /foo/i
-            ['[a-zA-Z_][a-zA-Z_$0-9]*', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
+            ['{ident}', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
+            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = yytext.slice(1); return "$SYMBOL";'], // $foo123
+
+            // special vars
+            ['@', switchToPreventPrimitiveState + 'return "@";'],
+            ['#', switchToPreventPrimitiveState + 'return "#";'],
+            ['\\$', switchToPreventPrimitiveState + 'return "$";'],
 
             // functions
             ['=>', 'return "FUNCTION";'],
@@ -416,8 +418,16 @@ module.exports = {
 
         def: [
             ['$ ;', $$(Definition(null, Current()), Suggestion($1, $1, 'path', 'current'))], // do nothing, but collect stat (suggestions)
-            ['$ ident ;', $$(Definition($2, GetProperty(Current(), $2)), SuggestIdent($2, 'current'))],
-            ['$ ident : e ;', $$(Definition($2, $4))]
+            ['$ident ;', $$(Definition($1, GetProperty(Current(), $1)), SuggestIdent($1, 'current'))],
+            ['$ident : e ;', $$(Definition($1, $3))]
+        ],
+
+        ident: [
+            ['SYMBOL', $$(Identifier($1))]
+        ],
+
+        $ident: [
+            ['$SYMBOL', $$(Identifier($1))]
         ],
 
         e: [
@@ -451,10 +461,6 @@ module.exports = {
             ['e ? e : e', $$(Conditional($1, $3, $5))]
         ],
 
-        ident: [
-            ['SYMBOL', $$(Identifier($1))]
-        ],
-
         query: [
             ['queryRoot', asis],
             ['relativePath', asis]
@@ -464,7 +470,7 @@ module.exports = {
             ['@', $$(Data())],
             ['#', $$(Context())],
             ['$', $$(Current(), Suggestion($1, $1, 'var', 'current'))],
-            ['$ ident', $$(Reference($2), Suggestion($1, $2, 'var', 'current'))],
+            ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current'))],
             ['STRING', $$(Literal($1))],
             ['LITERAL', $$(Literal($1))],
             ['object', asis],
@@ -511,7 +517,7 @@ module.exports = {
         property: [
             ['ident', $$(Property($1, GetProperty(Current(), $1)), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
             ['$', $$(Property(null, Current()), Suggestion($1, $1, 'var', 'current'))],  // do nothing, but collect stat (suggestions)
-            ['$ ident', $$(Property($2, Reference($2)), Suggestion($1, $2, 'var', 'current'))],
+            ['$ident', $$(Property($1, Reference($1)), Suggestion($1, $1, 'var', 'current'))],
             ['ident : e', $$(Property($1, $3))],
             ['STRING : e', $$(Property(Literal($1), $3))], // TODO: make the same for NUMBER
             ['[ e ] : e', $$(Property($2, $5))],

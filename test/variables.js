@@ -91,6 +91,29 @@ describe('definitions', () => {
         );
     });
 
+    describe('should be parse error when a whitespace between $ and indent', () => {
+        it('in definition', () => {
+            assert.throws(
+                () => query('$ a : 1;')(),
+                /Parse error/
+            );
+        });
+
+        it('in reference', () => {
+            assert.throws(
+                () => query('$a:1; $ a')(),
+                /Parse error/
+            );
+        });
+
+        it('in object literal', () => {
+            assert.throws(
+                () => query('{ $ a : 1 }')(),
+                /Parse error/
+            );
+        });
+    });
+
     describe('should throw when reserved name is used for a definition', () => {
         const preserved = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
 

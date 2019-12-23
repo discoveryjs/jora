@@ -1,6 +1,7 @@
 ## next
 
 - Added support a function for `debug` option, i.e. `query('...', { debug: (name, value) => /* ... */ })`
+- Disallowed whitespace between `$` and identifier, now it throws a parse error
 - Reworked build:
     - Added baking `src/parser.js` before publishing, i.e. replace runtime parser compilation with a compiled version
     - Moved `jison` to dev dependencies, package has no dependencies now (dev only)

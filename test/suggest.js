@@ -229,16 +229,18 @@ describe('suggest', () => {
     });
 
     describeCases('variables', {
-        '$|f|;|': [
-            suggestion('f', ['foo', 'bar'], 1, 2),
-            suggestion('f', ['foo', 'bar'], 1, 2),
+        '|$|f|;|': [
+            suggestion('$f', ['foo', 'bar'], 0, 2),
+            suggestion('$f', ['foo', 'bar'], 0, 2),
+            suggestion('$f', ['foo', 'bar'], 0, 2),
             suggestion('', ['$f:variable', 'foo', 'bar'], 3)
         ],
-        '$|f|o|o|;| |': [
-            suggestion('foo', ['foo', 'bar'], 1, 4),
-            suggestion('foo', ['foo', 'bar'], 1, 4),
-            suggestion('foo', ['foo', 'bar'], 1, 4),
-            suggestion('foo', ['foo', 'bar'], 1, 4),
+        '|$|f|o|o|;| |': [
+            suggestion('$foo', ['foo', 'bar'], 0, 4),
+            suggestion('$foo', ['foo', 'bar'], 0, 4),
+            suggestion('$foo', ['foo', 'bar'], 0, 4),
+            suggestion('$foo', ['foo', 'bar'], 0, 4),
+            suggestion('$foo', ['foo', 'bar'], 0, 4),
             suggestion('', ['$foo:variable', 'foo', 'bar'], 5),
             suggestion('', ['$foo:variable', 'foo', 'bar'], 6)
         ],
