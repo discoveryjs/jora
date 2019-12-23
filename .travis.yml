@@ -5,4 +5,4 @@ node_js:
   - "8"
   - "node"
 env:
-  - REPORTER=dot
+  - REPORTER=min
