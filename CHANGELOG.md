@@ -1,6 +1,10 @@
 ## next
 
 - Added support a function for `debug` option, i.e. `query('...', { debug: (name, value) => /* ... */ })`
+- Reworked build:
+    - Added baking `src/parser.js` before publishing, i.e. replace runtime parser compilation with a compiled version
+    - Moved `jison` to dev dependencies, package has no dependencies now (dev only)
+    - Removed `dist/parser.js` & `dist/version.json` from package
 
 ## 1.0.0-alpha.12 (December 18, 2019)
 

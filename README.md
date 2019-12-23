@@ -37,9 +37,9 @@ TODO:
 - [ ] Method namespaces, e.g. semver, path, math etc
 - [ ] Syntax highlighting
 - [ ] Prettifier
-- [ ] Move jison to dev dependencies
+- [x] Move jison to dev dependencies
 - [ ] Debugging (step by step evaluation)
-- [ ] Prediction a shape of data suitable for a query (touching pathes)
+- [ ] Input data shape prediction suitable for a query (based on touching paths)
 
 Table of content:
 
@@ -68,13 +68,29 @@ Table of content:
 npm install jora
 ```
 
+In node.js
+
+```js
+const jora = require('jora');
+```
+
+For a browser unminified (`dist/jora.js`) and minified (`dist/jora.min.js`) builds are available:
+
+```html
+<script src="node_modules/jora/dist/jora.js"></script>
+<script src="node_modules/jora/dist/jora.min.js"></script>
+<!-- or use one of CDN -->
+<script src="https://unpkg.com/jora/dist/jora.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
+```
+
 ## API
 
 ```js
 const jora = require('jora');
 
 // create a query
-const query = jora('foo.bar') ;
+const query = jora('foo.bar');
 // or with custom methods
 const queryWithCustomMethods = jora('foo.myMethod()', {
     methods: {
@@ -97,10 +113,10 @@ Options:
 
 - debug
 
-  Type: `Boolean`  
+  Type: `Boolean` or `function(name, value)`  
   Default: `false`
 
-  Enables debug output.
+  Enables debug output. When set a function, this function will recieve a section name and its value.
 
 - tolerant
 
