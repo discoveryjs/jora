@@ -100,7 +100,7 @@ describe('suggest', () => {
                         );
                     });
 
-                    const wsQuery = `${prefix}${sbegin} | | |${send}`;
+                    const wsQuery = `${prefix}${sbegin} | |${send}`;
                     it('ws: ' + wsQuery, () => {
                         assert.deepEqual(
                             suggestQuery(wsQuery, data),
@@ -109,7 +109,6 @@ describe('suggest', () => {
                                 suggestion('', list, prefix.length + begin.length + 0),
                                 suggestion('', list, prefix.length + begin.length + 1),
                                 suggestion('', list, prefix.length + begin.length + 2),
-                                suggestion('', list, prefix.length + begin.length + 3),
                                 ...Array(end.length).fill(null)
                             ]
                         );
@@ -588,30 +587,57 @@ describe('suggest in tolerant parsing mode (autocorrection)', () => {
     });
 
     describe('value suggestion', () => {
-        it('in', () => {
-            assert.deepEqual(
-                suggestQuery('|a| |i|n| ["a", "b", 3]', data),
-                [
-                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
-                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+        describe('in', () => {
+            Object.entries({
+                '|_| |i|n| ["a", "b", 3]': [
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                    null,
+                    null,
+                    null
+                ],
+                '|_| |i|n| { "a": 1, "b": 2 }': [
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
                     null,
                     null,
                     null
                 ]
+            }).forEach(([queryString, expected]) =>
+                it(queryString, () =>
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        expected
+                    )
+                )
             );
         });
 
-        it('has', () => {
-            assert.deepEqual(
-                suggestQuery('["a", "b", 3] |h|a|s| |a|', data),
-                [
+        describe('has', () => {
+            Object.entries({
+                '["a", "b", 3] |h|a|s| |_|': [
                     null,
                     null,
                     null,
                     null,
-                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
-                    suggestion('a', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
+                ],
+                '{ "a": 1, "b": 2 } |h|a|s| |_|': [
+                    null,
+                    null,
+                    null,
+                    null,
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24),
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24)
                 ]
+            }).forEach(([queryString, expected]) =>
+                it(queryString, () =>
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        expected
+                    )
+                )
             );
         });
 

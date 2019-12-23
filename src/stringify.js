@@ -1,16 +1,4 @@
-function isSameIdentifierAndReference(ident, reference) {
-    if (ident.type !== 'Identifier') {
-        return false;
-    }
-
-    if (reference.type !== 'Reference' || reference.name.type !== 'Identifier') {
-        return false;
-    }
-
-    return ident.name === reference.name.name;
-}
-
-function isGetProperty(node, property) {
+function isSimpleGetPropertyQuery(node) {
     if (node.type !== 'GetProperty') {
         return false;
     }
@@ -23,7 +11,39 @@ function isGetProperty(node, property) {
         return false;
     }
 
-    return node.property.name === property;
+    return true;
+}
+
+function isSimpleMethodCallQuery(node) {
+    if (node.type !== 'MethodCall') {
+        return false;
+    }
+
+    if (node.value.type !== 'Current') {
+        return false;
+    }
+
+    return true;
+}
+
+function isSameIdentifierAndReference(reference, ident) {
+    if (ident.type !== 'Identifier') {
+        return false;
+    }
+
+    if (reference.type !== 'Reference' || reference.name.type !== 'Identifier') {
+        return false;
+    }
+
+    return ident.name === reference.name.name;
+}
+
+function isGetProperty(query, property) {
+    if (!isSimpleGetPropertyQuery(query)) {
+        return false;
+    }
+
+    return query.property.name === property;
 }
 
 module.exports = function stringify(ast) {
@@ -86,7 +106,7 @@ module.exports = function stringify(ast) {
             case 'Property':
                 // $ -> $
                 // foo: $foo -> $foo
-                if (!node.key || isSameIdentifierAndReference(node.key, node.value)) {
+                if (!node.key || isSameIdentifierAndReference(node.value, node.key)) {
                     walk(node.value);
                     break;
                 }
@@ -185,9 +205,14 @@ module.exports = function stringify(ast) {
 
             case 'Recursive':
                 walkIfNotCurrent(node.value);
-                put('..(');
-                walk(node.query);
-                put(')');
+                put('..');
+                if (isSimpleGetPropertyQuery(node.query) || isSimpleMethodCallQuery(node.query)) {
+                    walk(node.query);
+                } else {
+                    put('(');
+                    walk(node.query);
+                    put(')');
+                }
                 break;
 
             case 'GetProperty':

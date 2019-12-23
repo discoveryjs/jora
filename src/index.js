@@ -50,14 +50,6 @@ function valuesToSuggestions(context, values) {
             });
             break;
 
-        case 'key':
-            values.forEach(value => {
-                if (isPlainObject(value)) {
-                    addToSet(suggestions, Object.keys(value));
-                }
-            });
-            break;
-
         case 'value':
             values.forEach(value => {
                 if (Array.isArray(value)) {

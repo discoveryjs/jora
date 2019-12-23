@@ -45,6 +45,25 @@ describe('sort()', () => {
         );
     });
 
+    it('should sort by arrays with different length', () => {
+        assert.deepEqual(
+            query('sort(=>field)')([
+                { field: ['a', 'b', 'c'] },
+                { field: ['x'] },
+                { field: ['b', 'c'] },
+                { field: ['a', 'c'] },
+                { field: ['a'] }
+            ]),
+            [
+                { field: ['a'] },
+                { field: ['x'] },
+                { field: ['a', 'c'] },
+                { field: ['b', 'c'] },
+                { field: ['a', 'b', 'c'] }
+            ]
+        );
+    });
+
     it('should not mutate original data', () => {
         const data = [3, 2, 1];
         const actual = query('sort()')(data);

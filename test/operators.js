@@ -212,8 +212,22 @@ describe('operators', () => {
 
         it('should be positive when tester is `undefined`', () => {
             assert.deepEqual(
-                query('.[$ ~= udefined]')(data),
+                query('.[$ ~= undefined]')(data),
                 data
+            );
+        });
+
+        it('should be negative when pattern is a string', () => {
+            assert.deepEqual(
+                query('$ ~= "123"')('41234'),
+                false
+            );
+        });
+
+        it('should be negative when pattern is a number', () => {
+            assert.deepEqual(
+                query('$ ~= 123')('41234'),
+                false
             );
         });
     });
