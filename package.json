@@ -25,8 +25,8 @@
     "test:dist": "MODE=dist npm test && MODE=dist-min npm test",
     "build": "rollup --config && terser dist/jora.js --compress --mangle -o dist/jora.min.js",
     "build-and-test": "npm run build && npm run test:dist",
-    "parser:bake": "node -e \"require('./src/parser').bake()\"",
-    "parser:rollback": "git checkout -- src/parser.js",
+    "parser:bake": "node -e \"require('./src/parse').bake()\"",
+    "parser:rollback": "git checkout -- src/parse.js",
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
     "coverage": "nyc npm test",
@@ -52,6 +52,6 @@
   "files": [
     "dist",
     "src",
-    "!src/parser-raw.js"
+    "!src/parse-raw.js"
   ]
 }

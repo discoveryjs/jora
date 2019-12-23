@@ -4,7 +4,7 @@ const methods = require('./methods');
 const {
     strict: strictParser,
     tolerant: tolerantParser
-} = require('./parser');
+} = require('./parse');
 const stringify = require('./stringify');
 const compile = require('./compile');
 const { addToSet, isPlainObject } = require('./utils');

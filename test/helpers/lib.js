@@ -7,7 +7,7 @@ const libPaths = {
 const mode = libPaths.hasOwnProperty(process.env.MODE) ? process.env.MODE : 'src';
 const libPath = libPaths[mode];
 const postfix = mode === 'src'
-    ? (require('../../src/parser').bake ? ' [RAW]' : ' [BAKED]')
+    ? (require('../../src/parse').bake ? ' [RAW]' : ' [BAKED]')
     : '';
 
 console.info('Test lib entry:', chalk.yellow(libPath + postfix));
