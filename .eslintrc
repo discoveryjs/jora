@@ -4,6 +4,9 @@
         "mocha": true,
         "es6": true
     },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
     "rules": {
         "no-duplicate-case": 2,
         "no-undef": 2,

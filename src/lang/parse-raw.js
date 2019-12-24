@@ -127,15 +127,6 @@ function patchParsers(strictParser) {
         return result;
     }
 
-    // patch generateModule
-    patch(strictParser, {
-        generateModule: origGenerateModule => function() {
-            return origGenerateModule
-                .call(this, { moduleName: 'module.exports' })
-                .replace('new Parser', '(' + patchParsers + ')(new Parser)');
-        }
-    });
-
     // add new helpers to lexer
     Object.assign(strictParser.lexer, {
         toLiteral: value =>
@@ -193,7 +184,9 @@ function patchParsers(strictParser) {
     // tolerant parser
     //
     const tolerantParser = new strictParser.Parser();
-    tolerantParser.lexer = Object.assign({}, strictParser.lexer);
+    tolerantParser.lexer = {
+        ...strictParser.lexer
+    };
 
     // patch tolerant parser lexer
     const keywords = [
@@ -278,18 +271,20 @@ function patchParsers(strictParser) {
                 switch (this._input[0]) {
                     case ' ':
                     case '\t':
-                        this.prevYylloc = Object.assign({}, this.prevYylloc, {
+                        this.prevYylloc = {
+                            ...this.prevYylloc,
                             last_column: this.prevYylloc.last_column + 1,
                             range: [this.prevYylloc.range[0], this.prevYylloc.range[1] + 1]
-                        });
+                        };
                         break;
 
                     case '\n':
-                        this.prevYylloc = Object.assign({}, this.prevYylloc, {
+                        this.prevYylloc = {
+                            ...this.prevYylloc,
                             last_line: this.prevYylloc.last_line + 1,
                             last_column: 0,
                             range: [this.prevYylloc.range[0], this.prevYylloc.range[1] + 1]
-                        });
+                        };
                         break;
                 }
             }
@@ -305,10 +300,17 @@ function patchParsers(strictParser) {
     // }
     // process.exit();
 
-    strictParser.strict = strictParser;
-    strictParser.tolerant = tolerantParser;
-
-    return strictParser;
+    return Object.assign(function parse(source, tolerantMode) {
+        return tolerantMode
+            ? tolerantParser.parse(source)
+            : strictParser.parse(source);
+    }, {
+        generateModule() {
+            return strictParser
+                .generateModule({ moduleName: 'module.exports' })
+                .replace('new Parser', '(' + patchParsers + ')(new Parser)');
+        }
+    });
 };
 
 module.exports = patchParsers(new Parser(grammar));

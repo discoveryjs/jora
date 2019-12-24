@@ -1,119 +1,15 @@
 const { version } = require('../package.json');
-const buildin = require('./lang/compile-buildin');
-const methods = require('./methods');
-const {
-    strict: strictParser,
-    tolerant: tolerantParser
-} = require('./lang/parse');
+const parse = require('./lang/parse');
 const stringify = require('./lang/stringify');
 const compile = require('./lang/compile');
-const { addToSet, isPlainObject } = require('./utils');
+const buildin = require('./lang/compile-buildin');
+const methods = require('./methods');
+const createStatApi = require('./stat');
 
 const cacheStrict = new Map();
 const cacheStrictStat = new Map();
 const cacheTollerant = new Map();
 const cacheTollerantStat = new Map();
-const contextToType = {
-    'path': 'property',
-    'key': 'property',
-    'value': 'value',
-    'in-value': 'value',
-    'var': 'variable'
-};
-
-function valuesToSuggestions(context, values) {
-    const suggestions = new Set();
-    const addValue = value => {
-        switch (typeof value) {
-            case 'string':
-                suggestions.add(JSON.stringify(value));
-                break;
-            case 'number':
-                suggestions.add(String(value));
-                break;
-        }
-    };
-
-    switch (context) {
-        case '':
-        case 'path':
-            values.forEach(value => {
-                if (Array.isArray(value)) {
-                    value.forEach(item => {
-                        if (isPlainObject(item)) {
-                            addToSet(suggestions, Object.keys(item));
-                        }
-                    });
-                } else if (isPlainObject(value)) {
-                    addToSet(suggestions, Object.keys(value));
-                }
-            });
-            break;
-
-        case 'value':
-            values.forEach(value => {
-                if (Array.isArray(value)) {
-                    value.forEach(addValue);
-                } else {
-                    addValue(value);
-                }
-            });
-            break;
-
-        case 'in-value':
-            values.forEach(value => {
-                if (Array.isArray(value)) {
-                    value.forEach(addValue);
-                } else if (isPlainObject(value)) {
-                    Object.keys(value).forEach(addValue);
-                } else {
-                    addValue(value);
-                }
-            });
-            break;
-
-        case 'var':
-            values.forEach(value => {
-                suggestions.add('$' + value);
-            });
-            break;
-    }
-
-    return [...suggestions];
-}
-
-function findSourcePosPoints(source, pos, points, includeEmpty) {
-    const result = [];
-
-    for (let i = 0; i < points.length; i++) {
-        const [values, ranges, context] = points[i];
-
-        for (let j = 0; j < ranges.length; j += 2) {
-            let from = ranges[j];
-            let to = ranges[j + 1];
-
-            if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
-                let current = source.substring(from, to);
-
-                if (!/\S/.test(current)) {
-                    current = '';
-                    from = to = pos;
-                }
-
-                result.push({
-                    context,
-                    current,
-                    from,
-                    to,
-                    values
-                });
-            }
-
-        }
-    }
-
-    return result;
-}
 
 function defaultDebugHandler(sectionName, value) {
     console.log(`[${sectionName}]`);
@@ -125,12 +21,9 @@ function defaultDebugHandler(sectionName, value) {
     console.log();
 }
 
-function parse(source, tolerantMode) {
-    const parser = tolerantMode ? tolerantParser : strictParser;
-    return parser.parse(source);
-}
-
 function compileFunction(source, statMode, tolerantMode, debug) {
+    debug = typeof debug === 'function' ? debug : Boolean(debug) ? defaultDebugHandler : false;
+
     if (debug) {
         debug('=========================');
         debug('Compile query from source', source);
@@ -166,10 +59,9 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 function createQuery(source, options) {
     options = options || {};
 
-    const debug = typeof options.debug === 'function' ? options.debug : Boolean(options.debug) ? defaultDebugHandler : false;
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
-    const localMethods = options.methods ? Object.assign({}, methods, options.methods) : methods;
+    const localMethods = options.methods ? { ...methods, ...options.methods } : methods;
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
@@ -180,52 +72,13 @@ function createQuery(source, options) {
     if (cache.has(source)) {
         fn = cache.get(source);
     } else {
-        fn = compileFunction(source, statMode, tolerantMode, debug);
+        fn = compileFunction(source, statMode, tolerantMode, options.debug);
         cache.set(source, fn);
     }
 
-    if (statMode) {
-        return function(data, context) {
-            const points = fn(buildin, localMethods, data, context);
-
-            return {
-                stat(pos, includeEmpty) {
-                    const ranges = findSourcePosPoints(source, pos, points, includeEmpty);
-
-                    ranges.forEach(range => {
-                        range.values = [...range.values];
-                    });
-
-                    return ranges.length ? ranges : null;
-                },
-                suggestion(pos, includeEmpty) {
-                    const suggestions = [];
-
-                    findSourcePosPoints(source, pos, points, includeEmpty).forEach(entry => {
-                        const { context, current, from, to, values } = entry;
-
-                        // console.log({current, variants:[...suggestions.get(range)], suggestions })
-                        suggestions.push(
-                            ...valuesToSuggestions(context, values)
-                                .map(value => ({
-                                    current,
-                                    type: contextToType[context],
-                                    value,
-                                    from,
-                                    to
-                                }))
-                        );
-                    });
-
-                    return suggestions.length ? suggestions : null;
-                }
-            };
-        };
-    }
-
-    return function query(data, context) {
-        return fn(buildin, localMethods, data, context, query);
-    };
+    return statMode
+        ? (data, context) => createStatApi(source, fn(buildin, localMethods, data, context))
+        : (data, context) => fn(buildin, localMethods, data, context);
 };
 
 module.exports = Object.assign(createQuery, {
@@ -234,7 +87,7 @@ module.exports = Object.assign(createQuery, {
     methods,
     syntax: {
         parse,
-        compile,
-        stringify
+        stringify,
+        compile
     }
 });

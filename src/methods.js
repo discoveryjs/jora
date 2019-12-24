@@ -93,7 +93,7 @@ module.exports = Object.freeze({
                 result.push(
                     valueProperty
                         ? { [keyProperty]: key, [valueProperty]: current[key] }
-                        : Object.assign({ [keyProperty]: key }, current[key])
+                        : { [keyProperty]: key, ...current[key] }
                 );
             }
         }
