@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('operators', () => {
+describe('lang/operators', () => {
     describe('=', () => {
         it('basic test', () => {
             assert.deepEqual(

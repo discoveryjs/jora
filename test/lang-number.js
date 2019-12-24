@@ -21,7 +21,7 @@ const values = [
     '-5E-1'
 ];
 
-describe('primitive: number', () => {
+describe('lang/number', () => {
     values.forEach(value =>
         it(value, () =>
             assert.strictEqual(

@@ -10,7 +10,7 @@ const values = [
     '[[]]'
 ];
 
-describe('primitive: array', () => {
+describe('lang/array', () => {
     values.forEach(value =>
         it(value, () =>
             assert.deepEqual(

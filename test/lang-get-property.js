@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('path', () => {
+describe('lang/get-property', () => {
     it('should return all values', () => {
         assert.deepEqual(
             query('filename')(data),

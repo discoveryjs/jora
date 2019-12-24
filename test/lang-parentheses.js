@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('parentheses', () => {
+describe('lang/parentheses', () => {
     it('basic', () => {
         assert.deepEqual(
             query('.[not (errors and type="js")]')(data),

@@ -13,7 +13,7 @@ function addUnique(arr, items) {
     return arr;
 }
 
-describe('recursive path', () => {
+describe('lang/recursive', () => {
     it('should collect a subtree', () => {
         const context = data[5];
         const expected = addUnique([], context.deps);

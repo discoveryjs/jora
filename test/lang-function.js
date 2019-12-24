@@ -1,7 +1,7 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
 
-describe('primitive: function `<body>`', () => {
+describe('lang/function `<body>`', () => {
     it('empty function', () => {
         assert.strictEqual(
             typeof query('<>')(),
@@ -137,7 +137,7 @@ describe('primitive: function `<body>`', () => {
     });
 });
 
-describe('primitive: function `=>body`', () => {
+describe('lang/function `=>body`', () => {
     it('empty function', () => {
         assert.strictEqual(
             typeof query('=>$')(),

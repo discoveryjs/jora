@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('query roots', () => {
+describe('lang/data roots', () => {
     it('should return <data> when query is empty', () => {
         assert.deepEqual(
             query('')(data),

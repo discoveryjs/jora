@@ -9,7 +9,7 @@ const values = [
     "'\\u0020'"
 ];
 
-describe('primitive: string', () => {
+describe('lang/string', () => {
     values.forEach(value =>
         it(value, () =>
             assert.strictEqual(

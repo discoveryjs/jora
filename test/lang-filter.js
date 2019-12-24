@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('filter | .[]', () => {
+describe('lang/filter `.[]`', () => {
     it('should filter a current array', () => {
         assert.deepEqual(
             query('.[type="js"]')(data),

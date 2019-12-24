@@ -1,7 +1,7 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
 
-describe('sorting function', () => {
+describe('lang/sorting function', () => {
     const data = [1, 2, 3, 2, 1, 4].map((value, idx) => ({ idx, foo: value }));
 
     it('basic asc', () => {

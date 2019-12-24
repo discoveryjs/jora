@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('map | .()', () => {
+describe('lang/map `.()`', () => {
     it('should be a data root', () => {
         assert.deepEqual(
             query('.(deps + dependants).filename')(data).sort(),

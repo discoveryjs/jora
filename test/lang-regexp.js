@@ -6,7 +6,7 @@ const values = [
     '/fo\\/o/'
 ];
 
-describe('primitive: regexp', () => {
+describe('lang/regexp', () => {
     values.forEach(value =>
         it(value, () =>
             assert.deepEqual(

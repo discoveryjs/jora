@@ -18,7 +18,7 @@ function generateTests(data, tests) {
     }
 }
 
-describe('slice notation', () => {
+describe('lang/slice notation', () => {
     // special cases
     it('apply to string', () => {
         assert.deepEqual(

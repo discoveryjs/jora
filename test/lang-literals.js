@@ -7,7 +7,7 @@ const keywords = [
     undefined
 ];
 
-describe('primitive: keywords', () => {
+describe('lang/literals', () => {
     keywords.forEach(keyword => {
         describe(String(keyword), () => {
             it('basic', () =>

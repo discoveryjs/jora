@@ -2,7 +2,7 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('method', () => {
+describe('query/method extensions', () => {
     function createExtraFn() {
         const calls = [];
         return {

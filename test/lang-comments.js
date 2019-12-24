@@ -2,21 +2,15 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
-describe('misc', () => {
-    it('can be used with template literals', () => {
-        assert.deepEqual(
-            query`filename`(data),
-            data
-                .map(item => item.filename)
-        );
-    });
-
-    it('comments', () => {
+describe('lang/comments', () => {
+    it('basic', () => {
         assert.deepEqual(
             query('// empty query')(data),
             data
         );
+    });
 
+    it('multiple #1', () => {
         assert.deepEqual(
             query(`
                 errors
@@ -29,7 +23,9 @@ describe('misc', () => {
             `)(data),
             ['css']
         );
+    });
 
+    it('multiple #2', () => {
         assert.deepEqual(
             query(`
                 (errors)
@@ -45,7 +41,9 @@ describe('misc', () => {
             `)(data),
             ['css']
         );
+    });
 
+    it('with parentheses', () => {
         assert.deepEqual(
             query('(1)\n//\n///\n')(data),
             1

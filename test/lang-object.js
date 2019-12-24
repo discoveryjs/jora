@@ -1,7 +1,7 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
 
-describe('primitive: object', () => {
+describe('lang/object', () => {
     it('empty object', () => {
         assert.deepEqual(
             query('{}')(),

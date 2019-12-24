@@ -1,7 +1,7 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
 
-describe('complex tests (mix)', () => {
+describe('lang/complex cases (mixed)', () => {
     it('get a property pairs with different values', () => {
         const a = { foo: 1, bar: 2, baz: 3 };
         const b = { a: 4, foo: 1, baz: 5, c: 6 };
