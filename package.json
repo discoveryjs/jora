@@ -23,7 +23,7 @@
     "test:all": "npm run test:src && npm run test:dist",
     "test:src": "npm test",
     "test:dist": "MODE=dist npm test && MODE=dist-min npm test",
-    "build": "rollup --config && terser dist/jora.js --compress --mangle -o dist/jora.min.js",
+    "build": "rollup --config",
     "build-and-test": "npm run build && npm run test:dist",
     "parser:bake": "node -e \"require('./src/parse').bake()\"",
     "parser:rollback": "git checkout -- src/parse.js",
@@ -35,16 +35,16 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "jison": "^0.4.18",
     "coveralls": "^3.0.7",
     "eslint": "^6.5.1",
+    "jison": "^0.4.18",
     "mocha": "^5.2.0",
     "nyc": "^14.1.0",
     "rollup": "^1.23.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "terser": "^4.3.8"
+    "rollup-plugin-terser": "^5.1.3"
   },
   "engines": {
     "node": ">=8.0.0"
