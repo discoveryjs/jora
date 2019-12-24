@@ -219,13 +219,28 @@ Following keywords can be used with the same meaning as in JavaScript:
 
 ### Operators
 
-Jora | Description
---- | ---
-x + y | Add<br>In case one of the operands is an array it produces new array with elements from `x` and `y` excluding duplicates
-x - y | Subtract<br>In case one of the operands is an array with elements from `x` excluding elements from `y`
-x * y | Multiply
-x / y | Divide
-x % y | Modulo
+<table>
+<tr>
+    <th>Jora
+    <th>Description
+</tr>
+<tr>
+    <td nowrap valign="top">x + y
+    <td>Add<br>In case one of the operands is an array it produces new array with elements from `x` and `y` excluding duplicates
+</tr><tr>
+    <td nowrap valign="top">x - y
+    <td>Subtract<br>In case one of the operands is an array with elements from `x` excluding elements from `y`
+</tr><tr>
+    <td nowrap>x * y
+    <td>Multiply
+</tr><tr>
+    <td nowrap>x / y
+    <td>Divide
+</tr><tr>
+    <td nowrap>x % y
+    <td>Modulo
+</tr>
+</table>
 
 ### Comparisons
 
@@ -253,7 +268,7 @@ x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and 
 
 ### Block & definitions
 
-Some constructions suppose to use a block, which may consists of a definition list (should comes first) and an expression. Both are optional. When an expression is empty, a current value (i.e. `$`) returns.
+Some constructions suppose to use a block, which may consists of a variable definition list (should comes first) and an expression. Both are optional. When an expression is empty, a current value (i.e. `$`) returns.
 
 The syntax of definition (white spaces between any part are optional):
 
@@ -265,7 +280,7 @@ $ident : expression ;
 For example:
 
 ```
-$foo:123;          // Define `$foo`
+$foo:123;          // Define `$foo` variable
 $bar;              // The same as `$bar:$.bar;` or `$a: bar;`
 $baz: $foo + $bar; // Definitions may be used in following expressions
 ```
