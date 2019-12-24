@@ -49,6 +49,19 @@ module.exports = Object.freeze({
 
         return entries;
     },
+    fromEntries: function(current) {
+        const result = {};
+
+        if (Array.isArray(current)) {
+            current.forEach(entry => {
+                if (entry) {
+                    result[entry.key] = entry.value;
+                }
+            });
+        }
+
+        return result;
+    },
     pick: function(current, ref) {
         if (!current) {
             return undefined;

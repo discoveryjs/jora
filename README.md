@@ -210,7 +210,7 @@ query asc<br>query desc<br>query asc, query desc, ... | A sorting function that 
 
 ### Keywords
 
-Following keywords can be used as in JavaScript:
+Following keywords can be used with the same meaning as in JavaScript:
 
 - `true`
 - `false`
@@ -286,14 +286,14 @@ Since Jora's query performs as `query(data, context)`, in terms of Jora it looks
 
 jora | Description
 --- | ---
-SYMBOL | The same as `$.SYMBOL`
-.SYMBOL | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
-..SYMBOL<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
+ident | The same as `$.ident`
+.ident | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
+..ident<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
 .method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
-[from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`)
+[from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
 
 ### Build-in methods
 
@@ -302,7 +302,8 @@ jora | Description
 bool() | The same as `Boolean()` in JS, with exception that *empty arrays* and *objects with no keys* treats as falsy
 keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
-entries() | Similar to `Object.entries()` in JS. The deffirence with JS, that jora returns `{ key, value }` object for every entry instead of array
+entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value }` objects is using for entries instead of array tuples
+fromEntries() | Similar to `Object.fromEntries()` in JS with difference: `{ key, value }` objects are expecting as entries instead of array tuples
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
 pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
