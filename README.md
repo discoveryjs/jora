@@ -258,19 +258,19 @@ Some constructions suppose to use a block, which may consists of a definition li
 The syntax of definition (white spaces between any part are optional):
 
 ```
-$ SYMBOL ;
-$ SYMBOL : expression ;
+$ident ;
+$ident : expression ;
 ```
 
 For example:
 
 ```
 $foo:123;          // Define `$foo`
-$bar;              // The same as `$bar:$.bar;` or `$a:bar;`
+$bar;              // The same as `$bar:$.bar;` or `$a: bar;`
 $baz: $foo + $bar; // Definitions may be used in following expressions
 ```
 
-In terms of JavaScript, a block creates a new scope. Variables can't be redefined or change a value in the same or nested scopes, otherwise it cause to error.
+In terms of JavaScript, a block creates a new scope. Once a variable is defined, its value never change. Variables can be redefined in nested scopes, but can't be duplicated in the same scope - it causes to error.
 
 ### Special references
 

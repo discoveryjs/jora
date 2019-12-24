@@ -57,6 +57,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
         const scopeStart = buffer.length;
 
         scope = scope.slice();
+        scope.own = [];
         scope.firstCurrent = null;
         scope.captureCurrent = [];
 
@@ -288,7 +289,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                     break;
                 }
 
-                if (scope.includes(node.name.name)) {
+                if (scope.own.includes(node.name.name)) {
                     throw new Error(`Identifier '$${node.name.name}' has already been declared`);
                 }
 
@@ -302,6 +303,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 walk(node.value);
                 put(';');
                 scope.push(node.name.name);
+                scope.own.push(node.name.name);
                 break;
 
             case 'Parentheses':

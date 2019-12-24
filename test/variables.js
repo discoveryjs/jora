@@ -29,13 +29,6 @@ describe('definitions', () => {
         );
     });
 
-    it('should throw when duplicate name', () => {
-        assert.throws(
-            () => query('$a:42;$a:43;')(data),
-            /Identifier '\$a' has already been declared/
-        );
-    });
-
     it('whitespaces should be optional', () => {
         assert.deepEqual(
             query('$a ; $b : 2 ; $a * $b')({ a: 21 }),
@@ -54,6 +47,13 @@ describe('definitions', () => {
         assert.deepEqual(
             query('$a:$b;$a')(),
             undefined
+        );
+    });
+
+    it('should overlap a variable defined in parent scope', () => {
+        assert.deepEqual(
+            query('$a:2;.($a:20;$a * 2) + $a')(0),
+            42
         );
     });
 
@@ -81,13 +81,6 @@ describe('definitions', () => {
     it('should not throw when variables with the same name defined in another scope', () => {
         assert.doesNotThrow(
             () => query('$a;.($b;) + .($b;)')()
-        );
-    });
-
-    it('should throw when redefine a variable defined in parent scope', () => {
-        assert.throws(
-            () => query('$a;.($a;)')(),
-            /Identifier '\$a' has already been declared/
         );
     });
 
