@@ -1,6 +1,6 @@
 const assert = require('assert');
-const data = require('./fixture/simple');
 const query = require('./helpers/lib');
+const data = require('./helpers/fixture');
 
 describe('query roots', () => {
     it('should return <data> when query is empty', () => {
