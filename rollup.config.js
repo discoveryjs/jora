@@ -25,7 +25,7 @@ module.exports = {
     plugins: [
         resolve({ browser: true }),
         replaceContent({
-            'src/parse.js': id => require(id).generateModule(),
+            'src/lang/parse.js': id => require(id).generateModule(),
             'package.json': id => `{ "version": "${require(id).version}" }`
         }),
         commonjs(),

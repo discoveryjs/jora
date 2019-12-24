@@ -1,12 +1,12 @@
 const { version } = require('../package.json');
-const buildin = require('./buildin');
+const buildin = require('./lang/compile-buildin');
 const methods = require('./methods');
 const {
     strict: strictParser,
     tolerant: tolerantParser
-} = require('./parse');
-const stringify = require('./stringify');
-const compile = require('./compile');
+} = require('./lang/parse');
+const stringify = require('./lang/stringify');
+const compile = require('./lang/compile');
 const { addToSet, isPlainObject } = require('./utils');
 
 const cacheStrict = new Map();
@@ -125,14 +125,18 @@ function defaultDebugHandler(sectionName, value) {
     console.log();
 }
 
+function parse(source, tolerantMode) {
+    const parser = tolerantMode ? tolerantParser : strictParser;
+    return parser.parse(source);
+}
+
 function compileFunction(source, statMode, tolerantMode, debug) {
     if (debug) {
         debug('=========================');
         debug('Compile query from source', source);
     }
 
-    const parser = tolerantMode ? tolerantParser : strictParser;
-    const parseResult = parser.parse(source);
+    const parseResult = parse(source, tolerantMode);
 
     if (debug) {
         const esc = s => JSON.stringify(s).slice(1, -1);
@@ -229,10 +233,7 @@ module.exports = Object.assign(createQuery, {
     buildin,
     methods,
     syntax: {
-        parse(source, tolerantMode) {
-            const parser = tolerantMode ? tolerantParser : strictParser;
-            return parser.parse(source);
-        },
+        parse,
         compile,
         stringify
     }

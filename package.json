@@ -25,8 +25,8 @@
     "test:dist": "MODE=dist npm test && MODE=dist-min npm test",
     "build": "rollup --config",
     "build-and-test": "npm run build && npm run test:dist",
-    "parser:bake": "node -e \"require('./src/parse').bake()\"",
-    "parser:rollback": "git checkout -- src/parse.js",
+    "parser:bake": "node -e \"require('./src/lang/parse').bake()\"",
+    "parser:rollback": "git checkout -- src/lang/parse.js",
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
     "coverage": "nyc npm test",
@@ -52,6 +52,6 @@
   "files": [
     "dist",
     "src",
-    "!src/parse-raw.js"
+    "!src/lang/parse-raw.js"
   ]
 }

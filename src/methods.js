@@ -1,4 +1,4 @@
-const buildin = require('./buildin');
+const buildin = require('./lang/compile-buildin');
 const {
     addToSet,
     isPlainObject

@@ -4,7 +4,7 @@ const {
     isPlainObject,
     isRegExp,
     isArrayLike
-} = require('./utils');
+} = require('../utils');
 
 module.exports = Object.freeze({
     bool: function(value) {
