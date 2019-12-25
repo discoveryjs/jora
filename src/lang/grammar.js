@@ -264,6 +264,14 @@ function SliceNotation(value, arguments) {
     };
 }
 
+function Pipeline(left, right) {
+    return {
+        type: 'Pipeline',
+        left,
+        right
+    };
+}
+
 function createCommaList(name, element) {
     return [
         [`${element}`, $$([$1])],
@@ -372,6 +380,7 @@ module.exports = {
             ['\\*', 'return "*";'],
             ['\\/', 'return "/";'],
             ['\\%', 'return "%";'],
+            ['\\|', 'return "|";'],
 
             // eof
             ['$', 'return "EOF";']
@@ -381,9 +390,12 @@ module.exports = {
     // Binary precedence - lowest precedence first.
     // See http://www.gnu.org/software/bison/manual/html_node/Precedence.html
     operators: [
+        ['left', '|'],
+        ['left', 'def'],
+        ['left', ';'],
         ['left', 'FUNCTION'],
-        ['right', '?', ':'],
         ['left', 'sortingCompareList', 'sortingCompare'],
+        ['right', '?', ':'],
         ['left', ','],
         ['left', 'OR'],
         ['left', 'AND'],
@@ -433,7 +445,10 @@ module.exports = {
         e: [
             ['query', asis],
             ['function', asis],
-            ['op', asis]
+            ['op', asis],
+            // pipeline
+            ['e | e', $$(Pipeline($1, $3))],
+            ['e | definitions e', $$(Pipeline($1, Block($3, $4)))]
         ],
 
         op: [
@@ -469,8 +484,8 @@ module.exports = {
         queryRoot: [
             ['@', $$(Data())],
             ['#', $$(Context())],
-            ['$', $$(Current(), Suggestion($1, $1, 'var', 'current'))],
-            ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current'))],
+            ['$', $$(Current(), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
+            ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
             ['STRING', $$(Literal($1))],
             ['LITERAL', $$(Literal($1))],
             ['object', asis],

@@ -309,6 +309,7 @@ ident | The same as `$.ident`
 .method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
 path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
 [from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
+e \| [definitions] e \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`
 
 ### Build-in methods
 

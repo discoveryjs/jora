@@ -248,6 +248,12 @@ module.exports = function stringify(ast) {
                 break;
             }
 
+            case 'Pipeline':
+                walk(node.left);
+                put('|');
+                walk(node.right);
+                break;
+
             default:
                 throw new Error('Unknown node type `' + node.type + '`');
         }

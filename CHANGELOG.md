@@ -4,6 +4,7 @@
 - Disallowed whitespace between `$` and identifier, now it throws a parse error
 - Allowed parent's scope variables overlapping, i.e. `$a;.($a; ...)` doesn't throw an error now
 - Added `fromEntries()` method
+- Added pipeline operator, i.e. `foo | bar | ...`
 - Reworked build:
     - Added baking `src/parser.js` before publishing, i.e. replace runtime parser compilation with a compiled version
     - Moved `jison` to dev dependencies, package has no dependencies now (dev only)

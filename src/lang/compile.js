@@ -417,6 +417,14 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 });
                 put(')');
                 break;
+
+            case 'Pipeline':
+                put('(current=>(');
+                walk(node.right);
+                put('))(');
+                walk(node.left);
+                put(')');
+                break;
         }
 
         if (collectStat) {
@@ -483,5 +491,10 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
         put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
-    return new Function('f', 'm', 'data', 'context', buffer.join(''));
+    try {
+        return new Function('f', 'm', 'data', 'context', buffer.join(''));
+    } catch (e) {
+        console.error('Query compile error:', buffer.join(''));
+        throw e;
+    }
 };
