@@ -41,6 +41,8 @@ TODO:
 - [ ] Debugging (step by step evaluation)
 - [ ] Input data shape prediction suitable for a query (based on touching paths)
 
+> More ideas and thoughts: [Jora todo gist](https://gist.github.com/lahmatiy/d5af7a987e9548e80eae5f46e6edc931), [Jora ToDo on Discovery.js projects state overview](https://docs.google.com/document/d/1z89UAY6Z8CP6VHX11-0yc1irD7WhAOM4F8X9RR1h1QQ/edit#heading=h.cm1jq2rux492)
+
 Table of content:
 
 <!-- TOC depthFrom:2 -->
