@@ -422,12 +422,10 @@ module.exports = {
             ['e', $$(Block([], $1))],
             ['', $$(Block([], Current()), Suggestion($0, null, ['var', 'path'], 'current'))]
         ],
-
         definitions: [
             ['def', $$([$1])],
             ['definitions def', '$1.push($2)']
         ],
-
         def: [
             ['$ ;', $$(Definition(null, Current()), Suggestion($1, $1, 'path', 'current'))], // do nothing, but collect stat (suggestions)
             ['$ident ;', $$(Definition($1, GetProperty(Current(), $1)), SuggestIdent($1, 'current'))],
@@ -437,24 +435,28 @@ module.exports = {
         ident: [
             ['SYMBOL', $$(Identifier($1))]
         ],
-
         $ident: [
             ['$SYMBOL', $$(Identifier($1))]
         ],
 
         e: [
             ['query', asis],
-            ['function', asis],
-            ['op', asis],
+
+            // functions
+            ['FUNCTION_START block FUNCTION_END', $$(Function([], $2))],
+            ['FUNCTION e', $$(Function([], $2))],
+            ['sortingCompareList', $$(SortingFunction($1))],
+
             // pipeline
             ['e | e', $$(Pipeline($1, $3))],
-            ['e | definitions e', $$(Pipeline($1, Block($3, $4)))]
-        ],
+            ['e | definitions e', $$(Pipeline($1, Block($3, $4)))],
 
-        op: [
+            // unary operators
             ['NOT e', $$(Unary($1, $2))],
             ['- e', $$(Unary($1, $2))],
             ['+ e', $$(Unary($1, $2))],
+
+            // binary operators
             ['e IN e', $$(Binary($2, $1, $3), Suggestion($1, $1, 'in-value', $3))],
             ['e HAS e', $$(Binary($2, $1, $3), Suggestion($3, $3, 'in-value', $1))],
             ['e NOTIN e', $$(Binary($2, $1, $3))],
@@ -473,6 +475,8 @@ module.exports = {
             ['e > e', $$(Binary($2, $1, $3))],
             ['e >= e', $$(Binary($2, $1, $3))],
             ['e ~= e', $$(Binary($2, $1, $3))],
+
+            // conditional
             ['e ? e : e', $$(Conditional($1, $3, $5))]
         ],
 
@@ -480,7 +484,6 @@ module.exports = {
             ['queryRoot', asis],
             ['relativePath', asis]
         ],
-
         queryRoot: [
             ['@', $$(Data())],
             ['#', $$(Context())],
@@ -506,7 +509,6 @@ module.exports = {
             ['.. ident ( arguments )', $$(Recursive(Current(), MethodCall(Current(), $2, $4)), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
             ['..( block )', $$(Recursive(Current(), $2), SuggestQueryRoot())]
         ],
-
         relativePath: [
             ['query [ e ]', $$(GetProperty($1, $3))],
             ['query [ sliceNotation ]', $$(SliceNotation($1, $3))],
@@ -527,7 +529,6 @@ module.exports = {
             ['{ }', $$(Object([]), Suggestion($2, $1, ['var', 'path'], 'current'))],
             ['{ properties }', $$(Object($2))]
         ],
-
         properties: createCommaList('properties', 'property'),
         property: [
             ['ident', $$(Property($1, GetProperty(Current(), $1)), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
@@ -546,12 +547,6 @@ module.exports = {
             ['[ arrayItems ]', $$(Array($2))]
         ],
 
-        function: [
-            ['FUNCTION_START block FUNCTION_END', $$(Function([], $2))],
-            ['FUNCTION e', $$(Function([], $2))],
-            ['sortingCompareList', $$(SortingFunction($1))]
-        ],
-
         sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),
         sortingCompare: [
             ['query ORDER', $$(Compare($1, $2))]
@@ -563,7 +558,6 @@ module.exports = {
             ['e sliceNotationComponent', $$([$1, $2])],
             ['e sliceNotationComponent sliceNotationComponent', $$([$1,$2,$3])]
         ],
-
         sliceNotationComponent: [
             [':', $$(null)],
             [': e', $$($2)]
