@@ -1,13 +1,13 @@
-## next
+## 1.0.0-alpha.13 (January 6, 2020)
 
-- Added support a function for `debug` option, i.e. `query('...', { debug: (name, value) => /* ... */ })`
-- Disallowed whitespace between `$` and identifier, now it throws a parse error
-- Allowed parent's scope variables overlapping, i.e. `$a;.($a; ...)` doesn't throw an error now
-- Added `fromEntries()` method
 - Added pipeline operator, i.e. `foo | bar | ...`
-- Reworked build:
-    - Added baking `src/parser.js` before publishing, i.e. replace runtime parser compilation with a compiled version
-    - Moved `jison` to dev dependencies, package has no dependencies now (dev only)
+- Added `fromEntries()` method
+- Allowed parent's scope variables overlapping, i.e. `$a;.($a; ...)` doesn't throw with an error now
+- Added support for a function as `debug` option value, i.e. `query('...', { debug: (name, value) => /* ... */ })`
+- Disallowed whitespace between `$` and identifier, previously `$foo` can be used as `$ foo`, now it throws with a parse error
+- Reworked build setup:
+    - Added baking of `src/parser.js` before publishing, i.e. replace a runtime parser compilation with a pre-compiled version
+    - Moved `jison` to dev dependencies, and package has no dependencies anymore (dev only)
     - Removed `dist/parser.js` & `dist/version.json` from package
 
 ## 1.0.0-alpha.12 (December 18, 2019)
