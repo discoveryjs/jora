@@ -381,7 +381,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 break;
 
             case 'Recursive':
-                put('f.recursive(');
+                put('f.mapRecursive(');
                 walk(node.value);
                 createScope(
                     () => {

@@ -115,6 +115,24 @@ module.exports = Object.freeze({
 
         return value !== undefined ? fn(value) : value;
     },
+    mapRecursive: function(value, getter) {
+        const result = new Set();
+
+        addToSet(result, this.map(value, getter));
+
+        result.forEach(current =>
+            addToSet(result, this.map(current, getter))
+        );
+
+        return [...result];
+    },
+    filter: function(value, fn) {
+        if (Array.isArray(value)) {
+            return value.filter(current => this.bool(fn(current)));
+        }
+
+        return this.bool(fn(value)) ? value : undefined;
+    },
     slice: function(value, from = 0, to = value && value.length, step = 1) {
         if (!isArrayLike(value)) {
             return [];
@@ -146,23 +164,5 @@ module.exports = Object.freeze({
         }
 
         return Array.prototype.slice.call(value, from, to);
-    },
-    recursive: function(value, getter) {
-        const result = new Set();
-
-        addToSet(result, this.map(value, getter));
-
-        result.forEach(current =>
-            addToSet(result, this.map(current, getter))
-        );
-
-        return [...result];
-    },
-    filter: function(value, fn) {
-        if (Array.isArray(value)) {
-            return value.filter(current => this.bool(fn(current)));
-        }
-
-        return this.bool(fn(value)) ? value : undefined;
     }
 });
