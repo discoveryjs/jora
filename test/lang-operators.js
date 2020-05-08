@@ -215,44 +215,48 @@ describe('lang/operators', () => {
         it('basic test', () => {
             assert.strictEqual(
                 query('$~=/\\.js$/')('1.js'),
-                '1.js'
+                true
             );
             assert.strictEqual(
                 query('$~=/\\.js$/')('1.css'),
-                undefined
+                false
             );
         });
 
         it('should support for `i` flag', () => {
             assert.strictEqual(
                 query('$~=/\\.js$/i')('1.js'),
-                '1.js'
+                true
             );
             assert.strictEqual(
                 query('$~=/\\.JS$/i')('1.js'),
-                '1.js'
+                true
             );
             assert.strictEqual(
                 query('$~=/\\.js$/i')('1.JS'),
-                '1.JS'
+                true
             );
             assert.strictEqual(
                 query('$~=/\\.js$/i')('1.css'),
-                undefined
+                false
             );
         });
 
-        it('should apply as a filter for array', () => {
-            assert.deepEqual(
+        it('should apply as some() for array', () => {
+            assert.strictEqual(
                 query('foo~=/\\.js$/')([{ foo: '1.js' }, { foo: '2.css' }, { foo: '3.js' }]),
-                ['1.js', '3.js']
+                true
+            );
+            assert.strictEqual(
+                query('foo~=/\\.svg$/')([{ foo: '1.js' }, { foo: '2.css' }, { foo: '3.js' }]),
+                false
             );
         });
 
         it('regexp from context', () => {
             assert.strictEqual(
                 query('$~=#.rx')('1.js', { rx: /\.js$/ }),
-                '1.js'
+                true
             );
         });
 
@@ -266,11 +270,11 @@ describe('lang/operators', () => {
         it('should take a function as tester', () => {
             assert.strictEqual(
                 query('$ ~= =>$=123')(123),
-                123
+                true
             );
             assert.strictEqual(
                 query('$ ~= =>$=123')(234),
-                undefined
+                false
             );
         });
 

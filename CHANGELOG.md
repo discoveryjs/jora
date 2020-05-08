@@ -1,3 +1,7 @@
+## next
+
+- Fixed `~=` to produce a boolean result only
+
 ## 1.0.0-alpha.13 (January 6, 2020)
 
 - Added pipeline operator, i.e. `foo | bar | ...`

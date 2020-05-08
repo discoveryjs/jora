@@ -86,11 +86,11 @@ module.exports = Object.freeze({
     },
     match: function(value, pattern) {
         if (typeof pattern === 'function') {
-            return this.filter(value, pattern);
+            return this.some(value, pattern);
         }
 
         if (isRegExp(pattern)) {
-            return this.filter(value, pattern.test.bind(pattern));
+            return this.some(value, pattern.test.bind(pattern));
         }
 
         if (pattern === null || pattern === undefined) {
@@ -125,6 +125,11 @@ module.exports = Object.freeze({
         );
 
         return [...result];
+    },
+    some(value, fn) {
+        return Array.isArray(value)
+            ? value.some(current => this.bool(fn(current)))
+            : this.bool(fn(value));
     },
     filter: function(value, fn) {
         if (Array.isArray(value)) {
