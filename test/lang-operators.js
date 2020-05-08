@@ -5,114 +5,126 @@ const data = require('./helpers/fixture');
 describe('lang/operators', () => {
     describe('=', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename="2.js"]')(data),
-                data
-                    .filter(item => item.filename === '2.js')
+            assert.strictEqual(
+                query('$="2.js"')('2.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$="2.js"')('4.js'),
+                false
             );
         });
 
         it('should compare scalars as JavaScript\'s === operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber=456]')(data),
-                data
-                    .filter(item => item.uniqueNumber === 456)
+            assert.strictEqual(
+                query('$=456')(456),
+                true
             );
 
-            assert.deepEqual(
-                query('.[uniqueNumber="456"]')(data),
-                data
-                    .filter(item => item.uniqueNumber === '456')
+            assert.strictEqual(
+                query('$="456"')(456),
+                false
             );
         });
     });
 
     describe('!=', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename!="2.js"]')(data),
-                data
-                    .filter(item => item.filename !== '2.js')
+            assert.strictEqual(
+                query('$!="4.js"')('2.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$!="4.js"')('4.js'),
+                false
             );
         });
 
         it('should compare scalars as JavaScript\'s !== operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber!=456]')(data),
-                data
-                    .filter(item => item.uniqueNumber !== 456)
+            assert.strictEqual(
+                query('$!=456')(456),
+                false
             );
 
-            assert.deepEqual(
-                query('.[uniqueNumber!="456"]')(data),
-                data
-                    .filter(item => item.uniqueNumber !== '456')
+            assert.strictEqual(
+                query('$!="456"')(456),
+                true
             );
         });
     });
 
     describe('<', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename<"4.js"]')(data),
-                data
-                    .filter(item => item.filename < '4.js')
+            assert.strictEqual(
+                query('$<"4.js"')('3.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$<"4.js"')('4.js'),
+                false
+            );
+            assert.strictEqual(
+                query('$<"4.js"')('5.js'),
+                false
             );
         });
 
         it('should compare scalars as JavaScript\'s < operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber<500]')(data),
-                data
-                    .filter(item => item.uniqueNumber < 500)
+            assert.strictEqual(
+                query('$<500')('456'),
+                '456' < 500
+            );
+            assert.strictEqual(
+                query('$<500')('500'),
+                '500' < 500
+            );
+            assert.strictEqual(
+                query('$<500')('567'),
+                '567' < 500
             );
         });
 
         it('should has greater precedence than a logical operators', () => {
-            assert.deepEqual(
+            assert.strictEqual(
                 query('a < 5 or b < 10')({ a: 12, b: 4 }),
                 true
             );
         });
     });
 
-    describe('<=', () => {
-        it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename<="4.js"]')(data),
-                data
-                    .filter(item => item.filename <= '4.js')
-            );
-        });
-
-        it('should compare scalars as JavaScript\'s <= operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber<=456]')(data),
-                data
-                    .filter(item => item.uniqueNumber <= 456)
-            );
-        });
-    });
-
     describe('>', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename>"4.js"]')(data),
-                data
-                    .filter(item => item.filename > '4.js')
+            assert.strictEqual(
+                query('$>"4.js"')('3.js'),
+                false
+            );
+            assert.strictEqual(
+                query('$>"4.js"')('4.js'),
+                false
+            );
+            assert.strictEqual(
+                query('$>"4.js"')('5.js'),
+                true
             );
         });
 
         it('should compare scalars as JavaScript\'s > operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber>400]')(data),
-                data
-                    .filter(item => item.uniqueNumber > 400)
+            assert.strictEqual(
+                query('$>500')('456'),
+                '456' > 500
+            );
+            assert.strictEqual(
+                query('$>500')('500'),
+                '500' > 500
+            );
+            assert.strictEqual(
+                query('$>500')('567'),
+                '567' > 500
             );
         });
 
         it('should has greater precedence than a logical operators', () => {
-            assert.equal(
+            assert.strictEqual(
                 query('a > 5 or b > 10')({ a: 4, b: 12 }),
                 true
             );
@@ -135,97 +147,164 @@ describe('lang/operators', () => {
         });
     });
 
+    describe('<=', () => {
+        it('basic test', () => {
+            assert.strictEqual(
+                query('$<="4.js"')('3.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$<="4.js"')('4.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$<="4.js"')('5.js'),
+                false
+            );
+        });
+
+        it('should compare scalars as JavaScript\'s <= operator', () => {
+            assert.strictEqual(
+                query('$<=500')('456'),
+                '456' <= 500
+            );
+            assert.strictEqual(
+                query('$<=500')('500'),
+                '500' <= 500
+            );
+            assert.strictEqual(
+                query('$<=500')('567'),
+                '567' <= 500
+            );
+        });
+    });
+
     describe('>=', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename>="4.js"]')(data),
-                data
-                    .filter(item => item.filename >= '4.js')
+            assert.strictEqual(
+                query('$>="4.js"')('3.js'),
+                false
+            );
+            assert.strictEqual(
+                query('$>="4.js"')('4.js'),
+                true
+            );
+            assert.strictEqual(
+                query('$>="4.js"')('5.js'),
+                true
             );
         });
 
         it('should compare scalars as JavaScript\'s >= operator', () => {
-            assert.deepEqual(
-                query('.[uniqueNumber>=456]')(data),
-                data
-                    .filter(item => item.uniqueNumber >= 456)
+            assert.strictEqual(
+                query('$>=500')('456'),
+                '456' >= 500
+            );
+            assert.strictEqual(
+                query('$>=500')('500'),
+                '500' >= 500
+            );
+            assert.strictEqual(
+                query('$>=500')('567'),
+                '567' >= 500
             );
         });
     });
 
     describe('~=', () => {
         it('basic test', () => {
-            assert.deepEqual(
-                query('.[filename~=/\\.js$/]')(data),
-                data
-                    .filter(item => /\.js$/.test(item.filename))
+            assert.strictEqual(
+                query('$~=/\\.js$/')('1.js'),
+                '1.js'
+            );
+            assert.strictEqual(
+                query('$~=/\\.js$/')('1.css'),
+                undefined
             );
         });
 
         it('should support for `i` flag', () => {
-            assert.deepEqual(
-                query('.[filename~=/\\.JS$/i]')(data),
-                data
-                    .filter(item => /\.JS$/i.test(item.filename))
+            assert.strictEqual(
+                query('$~=/\\.js$/i')('1.js'),
+                '1.js'
+            );
+            assert.strictEqual(
+                query('$~=/\\.JS$/i')('1.js'),
+                '1.js'
+            );
+            assert.strictEqual(
+                query('$~=/\\.js$/i')('1.JS'),
+                '1.JS'
+            );
+            assert.strictEqual(
+                query('$~=/\\.js$/i')('1.css'),
+                undefined
             );
         });
 
         it('should apply as a filter for array', () => {
             assert.deepEqual(
-                query('filename~=/\\.js$/')(data),
-                data
-                    .map(item => item.filename)
-                    .filter(item => /\.js$/.test(item))
+                query('foo~=/\\.js$/')([{ foo: '1.js' }, { foo: '2.css' }, { foo: '3.js' }]),
+                ['1.js', '3.js']
             );
         });
 
-        it('regexp can be fetched by get request', () => {
-            assert.deepEqual(
-                query('filename~=#.rx')(data, { rx: /\.js$/ }),
-                data
-                    .map(item => item.filename)
-                    .filter(item => /\.js$/.test(item))
+        it('regexp from context', () => {
+            assert.strictEqual(
+                query('$~=#.rx')('1.js', { rx: /\.js$/ }),
+                '1.js'
             );
         });
 
         it('issue #2 - regexp shouldn\'t be hungry', () => {
-            assert.deepEqual(
-                query('.[filename~=/./ and "a/b" in refs]')(data),
-                []
+            assert.strictEqual(
+                query('foo~=/./ and "a/b" in bar')({ foo: 'abc', bar: 'aaa/bbb' }),
+                true
             );
         });
 
         it('should take a function as tester', () => {
-            assert.deepEqual(
-                query('.[$ ~= <refs>]')(data),
-                data
-                    .filter(item => item.refs && item.refs.length)
+            assert.strictEqual(
+                query('$ ~= =>$=123')(123),
+                123
+            );
+            assert.strictEqual(
+                query('$ ~= =>$=123')(234),
+                undefined
             );
         });
 
         it('should be positive when tester is `null`', () => {
-            assert.deepEqual(
-                query('.[$ ~= null]')(data),
-                data
+            assert.strictEqual(
+                query('$ ~= null')('foo'),
+                true
+            );
+            assert.strictEqual(
+                query('$ ~= null')(false),
+                true
             );
         });
 
         it('should be positive when tester is `undefined`', () => {
-            assert.deepEqual(
-                query('.[$ ~= undefined]')(data),
-                data
+            assert.strictEqual(
+                query('$ ~= undefined')('foo'),
+                true
+            );
+            assert.strictEqual(
+                query('$ ~= undefined')(false),
+                true
             );
         });
 
         it('should be negative when pattern is a string', () => {
-            assert.deepEqual(
+            assert.strictEqual(
                 query('$ ~= "123"')('41234'),
                 false
             );
         });
 
         it('should be negative when pattern is a number', () => {
-            assert.deepEqual(
+            assert.strictEqual(
                 query('$ ~= 123')('41234'),
                 false
             );
@@ -503,24 +582,16 @@ describe('lang/operators', () => {
 
     describe('+', () => {
         it('basic', () => {
-            const expected = data.filter(item => item.uniqueNumber === 456);
-
-            assert.equal(expected.length, 1);
             assert.deepEqual(
-                query('.[uniqueNumber=455+1]')(data),
-                expected
+                query('.[$=457+1]')([455, 456, 457, 458]),
+                [458]
             );
         });
 
         it('should concat arrays', () => {
             assert.deepEqual(
-                query('.[type="js"]+.[type="css"]')(data),
-                data
-                    .filter(item => item.type === 'js')
-                    .concat(
-                        data
-                            .filter(item => item.type === 'css')
-                    )
+                query('a+b')({ a: [1, 2], b: [3, 4] }),
+                [1, 2, 3, 4]
             );
         });
 
@@ -540,61 +611,70 @@ describe('lang/operators', () => {
 
         it('should add an object to array', () => {
             assert.deepEqual(
-                query('.[type="js"]+#')(data, data[0]),
-                data
-                    .filter(item => item.type === 'js')
-                    .concat(data[0])
+                query('a+b')({ a: [{ a: 1 }, { b: 2 }], b: { c: 3 } }),
+                [{ a: 1 }, { b: 2 }, { c: 3 }]
             );
         });
 
         it('should add a scalar to array', () => {
             assert.deepEqual(
-                query('type+#')(data, 'foo'),
+                query('a+b')({ a: ['css', 'js', 'svg'], b: 'foo' }),
                 ['css', 'js', 'svg', 'foo']
             );
         });
 
         it('should not mutate original arrays', () => {
-            const len = data.length;
+            const data = [1, 2, 3];
 
             assert.deepEqual(
-                query('@+#')(data, 'bar'),
+                query('a+b')({ a: data, b: 'bar' }),
                 data.concat('bar')
             );
-            assert.equal(data.length, len);
+            assert.equal(data.length, 3);
         });
     });
 
     describe('-', () => {
         it('basic', () => {
-            const expected = data.filter(item => item.uniqueNumber === 456);
-
-            assert.equal(expected.length, 1);
             assert.deepEqual(
-                query('.[uniqueNumber=457-1]')(data),
-                expected
+                query('.[$=457-1]')([455, 456, 457, 458]),
+                [456]
             );
         });
 
         it('should filter an array', () => {
+            const a = [1, 2, 3, 4];
+            const b = [2, 4];
             assert.deepEqual(
-                query('.[type="js"]-.[errors]')(data),
-                query('.[type="js" and no errors]')(data)
+                query('a-b')({ a, b }),
+                [1, 3]
             );
         });
 
         it('should filter an object', () => {
+            const data = [{ a: 1 }, { b: 2 }, { c: 3 }];
             assert.deepEqual(
-                query('.[type="css"]-#')(data, data[0]),
-                data
-                    .filter(item => item.type === 'css' && item !== data[0])
+                query('a-b')({ a: data, b: data[0] }),
+                data.slice(1)
             );
         });
 
         it('should filter a scalar', () => {
             assert.deepEqual(
-                query('type-"js"')(data),
-                query('type.[$!="js"]')(data)
+                query('a-b')({ a: ['css', 'js', 'svg'], b: 'js' }),
+                ['css', 'svg']
+            );
+        });
+
+        it('should dedup', () => {
+            const a = [1, 2, 1, 3, 1];
+            assert.deepEqual(
+                query('a-b')({ a, b: [2, 3] }),
+                [1]
+            );
+            assert.deepEqual(
+                query('a-b')({ a, b: 2 }),
+                [1, 3]
             );
         });
     });
@@ -602,12 +682,12 @@ describe('lang/operators', () => {
     describe('*', () => {
         it('basic', () => {
             assert.equal(
-                query('6*8')(data),
+                query('6*8')(),
                 48
             );
 
             assert.equal(
-                query('6 * 8')(data),
+                query('6 * 8')(),
                 48
             );
         });
@@ -616,12 +696,12 @@ describe('lang/operators', () => {
     describe('/', () => {
         it('basic', () => {
             assert.equal(
-                query('48/8')(data),
+                query('48/8')(),
                 6
             );
 
             assert.equal(
-                query('48 / 8')(data),
+                query('48 / 8')(),
                 6
             );
         });
@@ -648,12 +728,12 @@ describe('lang/operators', () => {
     describe('%', () => {
         it('basic', () => {
             assert.equal(
-                query('42%10')(data),
+                query('42%10')(),
                 2
             );
 
             assert.equal(
-                query('42 % 10')(data),
+                query('42 % 10')(),
                 2
             );
         });

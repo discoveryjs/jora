@@ -15,4 +15,11 @@ describe('lang/regexp', () => {
             )
         )
     );
+
+    it('issue #2 - regexp shouldn\'t be hungry', () => {
+        assert.deepEqual(
+            query('/./ and "a/b"')(),
+            'a/b'
+        );
+    });
 });
