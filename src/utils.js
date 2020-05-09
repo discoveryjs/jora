@@ -1,3 +1,4 @@
+const hasOwnProperty = Object.hasOwnProperty;
 const toString = Object.prototype.toString;
 
 function addToSet(set, value) {
@@ -17,7 +18,7 @@ function getPropertyValue(value, property) {
 }
 
 function isPlainObject(value) {
-    return value && typeof value === 'object' && value.constructor === Object;
+    return value !== null && typeof value === 'object' && value.constructor === Object;
 }
 
 function isRegExp(value) {
