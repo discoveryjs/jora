@@ -9,7 +9,8 @@ describe('stringify', () => {
             'x?1 in xx():2,sort((($x;$x+b)*7) asc,b desc)).(a.[foo]).x($[a+"asd"],$[foo])',
             '..foo..bar()..baz(1,2,3)..(foo+bar)..(foo.bar())',
             '.(foo[1:2][::2][1:][:][1::-2]).([:2])',
-            '.({foo:a|b,bar:a|$x;y})'
+            '.({foo:a|b,bar:a|$x;y})',
+            '.map(=>$)'
         ].join('');
         const actual = stringify(parse(source).ast);
 

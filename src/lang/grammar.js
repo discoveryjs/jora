@@ -155,11 +155,12 @@ function Array(elements) {
     };
 }
 
-function Function(arguments, body) {
+function Function(arguments, body, legacy) {
     return {
         type: 'Function',
         arguments,
-        body
+        body,
+        legacy: Boolean(legacy)
     };
 }
 
@@ -443,7 +444,7 @@ module.exports = {
             ['query', asis],
 
             // functions
-            ['FUNCTION_START block FUNCTION_END', $$(Function([], $2))],
+            ['FUNCTION_START block FUNCTION_END', $$(Function([], $2, true))],
             ['FUNCTION e', $$(Function([], $2))],
             ['sortingCompareList', $$(SortingFunction($1))],
 

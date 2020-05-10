@@ -137,9 +137,14 @@ module.exports = function stringify(ast) {
                 break;
 
             case 'Function':
-                put('<');
-                walk(node.body);
-                put('>');
+                if (node.legacy) {
+                    put('<');
+                    walk(node.body);
+                    put('>');
+                } else {
+                    put('=>');
+                    walk(node.body);
+                }
                 break;
 
             case 'Compare':
