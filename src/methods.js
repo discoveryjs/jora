@@ -214,5 +214,14 @@ module.exports = Object.freeze({
 
         const match = String(current).match(pattern);
         return match && matchEntry(match);
+    },
+    reduce: function(current, fn, initValue = undefined) {
+        if (Array.isArray(current)) {
+            return initValue !== undefined
+                ? current.reduce((res, current) => fn(current, res), initValue)
+                : current.reduce((res, current) => fn(current, res));
+        }
+
+        return fn(current, initValue);
     }
 });
