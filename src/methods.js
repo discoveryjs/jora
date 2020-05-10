@@ -24,10 +24,10 @@ module.exports = Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
     map: buildin.map,
-    keys: function(current) {
+    keys(current) {
         return Object.keys(current || {});
     },
-    values: function(current) {
+    values(current) {
         const values = new Set();
 
         for (const key in current) {
@@ -38,7 +38,7 @@ module.exports = Object.freeze({
 
         return [...values];
     },
-    entries: function(current) {
+    entries(current) {
         const entries = [];
 
         for (const key in current) {
@@ -49,7 +49,7 @@ module.exports = Object.freeze({
 
         return entries;
     },
-    fromEntries: function(current) {
+    fromEntries(current) {
         const result = {};
 
         if (Array.isArray(current)) {
@@ -62,7 +62,7 @@ module.exports = Object.freeze({
 
         return result;
     },
-    pick: function(current, ref) {
+    pick(current, ref) {
         if (!current) {
             return undefined;
         }
@@ -85,7 +85,7 @@ module.exports = Object.freeze({
 
         return Array.isArray(current) ? current[ref || 0] : current[ref];
     },
-    mapToArray: function(current, keyProperty = 'key', valueProperty) {
+    mapToArray(current, keyProperty = 'key', valueProperty) {
         const result = [];
 
         for (const key in current) {
@@ -100,14 +100,14 @@ module.exports = Object.freeze({
 
         return result;
     },
-    size: function(current) {
+    size(current) {
         if (isPlainObject(current)) {
             return Object.keys(current).length;
         }
 
         return (current && current.length) || 0;
     },
-    sort: function(current, fn) {
+    sort(current, fn) {
         let sorter;
 
         if (!Array.isArray(current)) {
@@ -141,17 +141,17 @@ module.exports = Object.freeze({
 
         return current.slice().sort(sorter);
     },
-    reverse: function(current) {
+    reverse(current) {
         if (!Array.isArray(current)) {
             return current;
         }
 
         return current.slice().reverse();
     },
-    slice: function(current, from, to) {
+    slice(current, from, to) {
         return buildin.slice(current, from, to);
     },
-    group: function(current, keyGetter, valueGetter) {
+    group(current, keyGetter, valueGetter) {
         if (typeof keyGetter !== 'function') {
             keyGetter = noop;
         }
@@ -189,15 +189,15 @@ module.exports = Object.freeze({
 
         return result;
     },
-    split: function(current, pattern) {
+    split(current, pattern) {
         return String(current).split(pattern);
     },
-    join: function(current, separator) {
+    join(current, separator) {
         return Array.isArray(current)
             ? current.join(separator)
             : String(current);
     },
-    match: function(current, pattern, matchAll) {
+    match(current, pattern, matchAll) {
         const input = String(current);
 
         if (matchAll) {
@@ -215,7 +215,7 @@ module.exports = Object.freeze({
         const match = String(current).match(pattern);
         return match && matchEntry(match);
     },
-    reduce: function(current, fn, initValue = undefined) {
+    reduce(current, fn, initValue = undefined) {
         if (Array.isArray(current)) {
             return initValue !== undefined
                 ? current.reduce((res, current) => fn(current, res), initValue)

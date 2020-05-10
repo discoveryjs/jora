@@ -7,7 +7,7 @@ const {
 } = require('../utils');
 
 module.exports = Object.freeze({
-    bool: function(value) {
+    bool(value) {
         if (Array.isArray(value)) {
             return value.length > 0;
         }
@@ -24,14 +24,14 @@ module.exports = Object.freeze({
 
         return Boolean(value);
     },
-    add: function(a, b) {
+    add(a, b) {
         if (Array.isArray(a) || Array.isArray(b)) {
             return [...new Set([].concat(a, b))];
         }
 
         return a + b;
     },
-    sub: function(a, b) {
+    sub(a, b) {
         if (Array.isArray(a)) {
             const result = new Set(a);
 
@@ -47,44 +47,44 @@ module.exports = Object.freeze({
 
         return a - b;
     },
-    mul: function(a, b) {
+    mul(a, b) {
         return a * b;
     },
-    div: function(a, b) {
+    div(a, b) {
         return a / b;
     },
-    mod: function(a, b) {
+    mod(a, b) {
         return a % b;
     },
-    eq: function(a, b) {
+    eq(a, b) {
         return a === b;
     },
-    ne: function(a, b) {
+    ne(a, b) {
         return a !== b;
     },
-    lt: function(a, b) {
+    lt(a, b) {
         return a < b;
     },
-    lte: function(a, b) {
+    lte(a, b) {
         return a <= b;
     },
-    gt: function(a, b) {
+    gt(a, b) {
         return a > b;
     },
-    gte: function(a, b) {
+    gte(a, b) {
         return a >= b;
     },
-    in: function(a, b) {
+    in(a, b) {
         if (isPlainObject(b)) {
             return hasOwnProperty.call(b, a);
         }
 
         return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
     },
-    cmp: function(a, b) {
+    cmp(a, b) {
         return a > b ? 1 : a < b ? -1 : 0;
     },
-    match: function(value, pattern) {
+    match(value, pattern) {
         if (typeof pattern === 'function') {
             return this.some(value, pattern);
         }
@@ -99,7 +99,7 @@ module.exports = Object.freeze({
 
         return false;
     },
-    map: function(value, getter) {
+    map(value, getter) {
         const fn = typeof getter === 'function'
             ? getter
             : current => getPropertyValue(current, getter);
@@ -115,7 +115,7 @@ module.exports = Object.freeze({
 
         return value !== undefined ? fn(value) : value;
     },
-    mapRecursive: function(value, getter) {
+    mapRecursive(value, getter) {
         const result = new Set();
 
         addToSet(result, this.map(value, getter));
@@ -131,14 +131,14 @@ module.exports = Object.freeze({
             ? value.some(current => this.bool(fn(current)))
             : this.bool(fn(value));
     },
-    filter: function(value, fn) {
+    filter(value, fn) {
         if (Array.isArray(value)) {
             return value.filter(current => this.bool(fn(current)));
         }
 
         return this.bool(fn(value)) ? value : undefined;
     },
-    slice: function(value, from = 0, to = value && value.length, step = 1) {
+    slice(value, from = 0, to = value && value.length, step = 1) {
         if (!isArrayLike(value)) {
             return [];
         }
