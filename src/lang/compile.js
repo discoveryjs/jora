@@ -240,6 +240,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                     }
 
                     if (element.type === 'Spread') {
+                        needTmp = true;
                         put('...Array.isArray(tmp=');
                         walk(element.query);
                         put(')?tmp:[tmp]');
