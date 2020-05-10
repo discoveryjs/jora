@@ -233,7 +233,21 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
 
             case 'Array':
                 put('[');
-                walkList(node.elements, ',');
+
+                node.elements.forEach((element, index) => {
+                    if (index > 0) {
+                        put(',');
+                    }
+
+                    if (element.type === 'Spread') {
+                        put('...Array.isArray(tmp=');
+                        walk(element.query);
+                        put(')?tmp:[tmp]');
+                    } else {
+                        walk(element);
+                    }
+                });
+
                 put(']');
                 break;
 

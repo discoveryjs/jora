@@ -64,7 +64,7 @@ describe('lang/object', () => {
     it('... is an alias for ...$', () => {
         assert.deepEqual(
             query('{ foo: 1, ...,  baz: 3 }')({ foo: 2, bar: 2 }),
-            query('{ foo: 1, ...$, baz: 3 }')({ foo: 2, bar: 2 })
+            { foo: 1, foo: 2, bar: 2, baz: 3 }
         );
 
         assert.deepEqual(

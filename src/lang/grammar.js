@@ -541,10 +541,15 @@ module.exports = {
             ['... query', $$(Spread($2))]
         ],
 
-        arrayItems: createCommaList('arrayItems', 'e'),
+        arrayElements: createCommaList('arrayElements', 'arrayElement'),
+        arrayElement: [
+            ['e', asis],
+            ['...', $$(Spread(Current()), Suggestion($1, null, ['var', 'path'], 'current'))],
+            ['... e', $$(Spread($2))]
+        ],
         array: [
             ['[ ]', $$(Array([]), Suggestion($2, $1, ['var', 'path'], 'current'))],
-            ['[ arrayItems ]', $$(Array($2))]
+            ['[ arrayElements ]', $$(Array($2))]
         ],
 
         sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),

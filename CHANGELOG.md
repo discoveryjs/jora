@@ -1,6 +1,7 @@
 ## next
 
-- Fixed `~=` to produce a boolean result only
+- Fixed `~=` operator to produce a boolean result only
+- Added `[...expr]` syntax
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

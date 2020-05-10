@@ -45,7 +45,7 @@ TODO:
 
 Table of content:
 
-<!-- TOC depthFrom:2 -->
+<!-- TOC depthfrom:2 -->
 
 - [Install](#install)
 - [API](#api)
@@ -205,8 +205,8 @@ Jora | Description
 42<br>-123<br>4.22<br>1e3<br>1e-2 | Numbers
 "string"<br>'string' | Strings
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
-{ } | Object initializer/literal syntax. You can use spread operator `...`, e.g. `{ a: 1, ..., ...foo, ...bar }` (`...` with no expression on right side the same as `...$`)
-[ ] | Array initializer/literal syntax
+{ } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)
+[ ] | Array initializer/literal syntax. Spread operator (`...`) can be used, e.g. `[1, ..., ...foo]` (`...` with no expression on right side the same as `...$`). Unlike JavaScript, spread operator in jora inlines arrays only and left as is any other values, i.e. `[...[1, 2], ...3, ..."45", { "6": 7 }]` -> `[1, 2, 3, "45", { "6": 7 }]`
 < block ><br>=> e | A function<br>NOTE: Syntax will be changed
 query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
 
