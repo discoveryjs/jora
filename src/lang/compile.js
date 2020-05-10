@@ -60,6 +60,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
         scope.own = [];
         scope.firstCurrent = null;
         scope.captureCurrent = [];
+        scope.arg1 = prevScope.arg1 || false;
 
         fn();
 
@@ -117,6 +118,10 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                     scope.firstCurrent = buffer.length;
                 }
                 put('current');
+                break;
+
+            case 'Arg1':
+                put(scope.arg1 ? 'arguments[1]' : 'undefined');
                 break;
 
             case 'Literal':
@@ -255,9 +260,10 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
             case 'Function':
                 createScope(
                     () => {
-                        put('current=>(');
+                        scope.arg1 = true;
+                        put('function(current){return ');
                         walk(node.body);
-                        put(')');
+                        put('}');
                     },
                     (scopeStart, sp) => {
                         return scopeStart + sp + ',';

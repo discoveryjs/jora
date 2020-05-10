@@ -93,6 +93,12 @@ function Current() {
     };
 }
 
+function Arg1() {
+    return {
+        type: 'Arg1'
+    };
+}
+
 function Literal(value) {
     return {
         type: 'Literal',
@@ -346,6 +352,7 @@ module.exports = {
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],
             ['#', switchToPreventPrimitiveState + 'return "#";'],
+            ['\\${2}', switchToPreventPrimitiveState + 'return "$$";'],
             ['\\$', switchToPreventPrimitiveState + 'return "$";'],
 
             // functions
@@ -489,6 +496,7 @@ module.exports = {
             ['@', $$(Data())],
             ['#', $$(Context())],
             ['$', $$(Current(), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
+            ['$$', $$(Arg1())],
             ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
             ['STRING', $$(Literal($1))],
             ['NUMBER', $$(Literal($1))],

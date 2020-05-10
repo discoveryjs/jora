@@ -61,6 +61,10 @@ module.exports = function stringify(ast) {
                 put('$');
                 break;
 
+            case 'Arg1':
+                put('$$');
+                break;
+
             case 'Literal':
                 put(typeof node.value === 'string' ? JSON.stringify(node.value) : String(node.value));
                 break;
