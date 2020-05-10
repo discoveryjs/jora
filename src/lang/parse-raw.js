@@ -200,6 +200,7 @@ function patchParsers(strictParser) {
     const prev = [
         null, ':', ';',
         ',', '.', '..',
+        'FUNCTION',
         ...operators,
         ...keywords, 'NOT'
     ];

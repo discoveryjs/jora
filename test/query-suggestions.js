@@ -166,13 +166,24 @@ describe('query/suggestions', () => {
         );
     });
 
-    it('function context', () => {
+    it('function context old syntax <...>', () => {
         assert.deepEqual(
             suggestQuery('map(|<|>|)', data),
             [
                 null,
                 suggestion('', ['foo', 'bar'], 5, 5),
                 null
+            ]
+        );
+    });
+
+    it('function context', () => {
+        assert.deepEqual(
+            suggestQuery('map(|=|>|)', data),
+            [
+                null,
+                null,
+                suggestion('', ['foo', 'bar'], 6, 6)
             ]
         );
     });
