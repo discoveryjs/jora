@@ -1,19 +1,18 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
 
 describe('size()', () => {
-    it('basic', () => {
+    it('array', () => {
         assert.equal(
-            query('size()')(data),
-            data.length
+            query('size()')([1, 2, 3]),
+            3
         );
     });
 
     it('in subquery', () => {
         assert.deepEqual(
-            query('.(deps.size())')(data).sort(),
-            [0, 1, 2]
+            query('.(size())')([[1], [], [2, 3]]),
+            [1, 0, 2]
         );
     });
 

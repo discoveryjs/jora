@@ -1,27 +1,24 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
 
 describe('reverse()', () => {
     it('basic', () => {
         assert.deepEqual(
-            query('filename.reverse()')(data),
-            data
-                .map(item => item.filename)
-                .reverse()
+            query('reverse()')([1, 2, 3, 2, 5]),
+            [5, 2, 3, 2, 1]
         );
     });
 
     it('should be applicable for non-array values (have no effect)', () => {
         assert.deepEqual(
-            query('.reverse()')(data[0]),
-            data[0]
+            query('reverse()')({ a: 1, b: 2 }),
+            { a: 1, b: 2 }
         );
     });
 
     it('should not mutate original data', () => {
         const data = [1, 2, 3];
-        const actual = query('.reverse()')(data);
+        const actual = query('reverse()')(data);
 
         assert.deepEqual(
             data,

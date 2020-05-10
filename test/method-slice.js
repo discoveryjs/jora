@@ -1,26 +1,27 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
 
 describe('slice()', () => {
     describe('array', () => {
+        const data = ['1.css', '2.js', '3.svg', '4.js', '5.js', '6.css', '7.css'];
+
         it('with no arguments', () =>
             assert.deepEqual(
-                query('filename.slice()')(data),
+                query('slice()')(data),
                 ['1.css', '2.js', '3.svg', '4.js', '5.js', '6.css', '7.css']
             )
         );
 
         it('with offset only', () =>
             assert.deepEqual(
-                query('filename.slice(1)')(data),
+                query('slice(1)')(data),
                 ['2.js', '3.svg', '4.js', '5.js', '6.css', '7.css']
             )
         );
 
         it('with offset and length', () =>
             assert.deepEqual(
-                query('filename.slice(1, 3)')(data),
+                query('slice(1, 3)')(data),
                 ['2.js', '3.svg']
             )
         );
