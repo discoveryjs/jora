@@ -335,7 +335,7 @@ module.exports = {
             ['(asc|desc){wb}', 'return "ORDER";'],
 
             // primitives
-            ['\\d+(?:\\.\\d+)?([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "LITERAL";'],  // 212.321
+            ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "LITERAL";'],  // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "LITERAL";'], // /foo/i
