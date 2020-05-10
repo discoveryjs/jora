@@ -3,6 +3,7 @@
 - Fixed `~=` operator to produce a boolean result only
 - Added `[...expr]` syntax
 - Allowed numbers without integer part, i.e. `.123` or `.5e-4`
+- Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

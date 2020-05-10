@@ -32,6 +32,20 @@ describe('lang/object', () => {
         );
     });
 
+    it('a number as property name', () => {
+        assert.deepEqual(
+            query('{ 1: 2, 0.3: 4, .5: 6, 7.5: 8 }')(),
+            { 1: 2, 0.3: 4, .5: 6, 7.5: 8 }
+        );
+    });
+
+    it('a literal as property name', () => {
+        assert.deepEqual(
+            query('{ true: 1, false: 2, null: 3, undefined: 4 }')(),
+            { true: 1, false: 2, null: 3, undefined: 4 }
+        );
+    });
+
     it('computed properties', () => {
         assert.deepEqual(
             query('{ [foo]: "foo" }')({ foo: 'bar' }),

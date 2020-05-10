@@ -261,7 +261,7 @@ function patchParsers(strictParser) {
                     }
                 }
 
-                return this.prevToken = 'SYMBOL';
+                return this.prevToken = 'IDENT';
             }
 
             this.prevYylloc = this.yylloc;

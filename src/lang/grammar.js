@@ -324,7 +324,7 @@ module.exports = {
             // keywords (should goes before ident)
             ['(true|false|null|undefined){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
 
-            // keyword operators (should goes before SYMBOL)
+            // keyword operators (should goes before IDENT)
             ['and{wb}', 'return "AND";'],
             ['or{wb}' , 'return "OR";'],
             ['has{ws}no{wb}', 'return "HASNO";'],
@@ -335,12 +335,12 @@ module.exports = {
             ['(asc|desc){wb}', 'return "ORDER";'],
 
             // primitives
-            ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "LITERAL";'],  // 212.321
+            ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
-            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "LITERAL";'], // /foo/i
-            ['{ident}', switchToPreventPrimitiveState + 'return "SYMBOL";'], // foo123
-            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = yytext.slice(1); return "$SYMBOL";'], // $foo123
+            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
+            ['{ident}', switchToPreventPrimitiveState + 'return "IDENT";'], // foo123
+            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = yytext.slice(1); return "$IDENT";'], // $foo123
 
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],
@@ -433,10 +433,10 @@ module.exports = {
         ],
 
         ident: [
-            ['SYMBOL', $$(Identifier($1))]
+            ['IDENT', $$(Identifier($1))]
         ],
         $ident: [
-            ['$SYMBOL', $$(Identifier($1))]
+            ['$IDENT', $$(Identifier($1))]
         ],
 
         e: [
@@ -490,6 +490,8 @@ module.exports = {
             ['$', $$(Current(), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
             ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
             ['STRING', $$(Literal($1))],
+            ['NUMBER', $$(Literal($1))],
+            ['REGEXP', $$(Literal($1))],
             ['LITERAL', $$(Literal($1))],
             ['object', asis],
             ['array', asis],
@@ -535,7 +537,9 @@ module.exports = {
             ['$', $$(Property(null, Current()), Suggestion($1, $1, 'var', 'current'))],  // do nothing, but collect stat (suggestions)
             ['$ident', $$(Property($1, Reference($1)), Suggestion($1, $1, 'var', 'current'))],
             ['ident : e', $$(Property($1, $3))],
-            ['STRING : e', $$(Property(Literal($1), $3))], // TODO: make the same for NUMBER
+            ['STRING : e', $$(Property(Literal($1), $3))],
+            ['NUMBER : e', $$(Property(Literal($1), $3))],
+            ['LITERAL : e', $$(Property(Literal($1), $3))],
             ['[ e ] : e', $$(Property($2, $5))],
             ['...', $$(Spread(Current()), Suggestion($1, null, ['var', 'path'], 'current'))],
             ['... query', $$(Spread($2))]
