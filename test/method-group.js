@@ -5,7 +5,7 @@ const data = require('./helpers/fixture');
 describe('group()', () => {
     it('basic', () => {
         assert.deepEqual(
-            query('.group(<type>)')(data),
+            query('.group(=>type)')(data),
             ['css', 'js', 'svg']
                 .map(type => ({
                     key: type,
@@ -16,7 +16,7 @@ describe('group()', () => {
 
     it('should take second argument as map function for values', () => {
         assert.deepEqual(
-            query('.group(<type>, <filename>)')(data),
+            query('.group(=>type, =>filename)')(data),
             ['css', 'js', 'svg']
                 .map(type => ({
                     key: type,
@@ -29,7 +29,7 @@ describe('group()', () => {
 
     it('should be applicable for non-array values', () => {
         assert.deepEqual(
-            query('.group(<type>)')(data[0]),
+            query('.group(=>type)')(data[0]),
             [{ key: 'css', value: [data[0]] }]
         );
     });
@@ -43,7 +43,7 @@ describe('group()', () => {
 
     it('should group by an element when key value is an array', () => {
         assert.deepEqual(
-            query('.group(<refs.type>)')(data),
+            query('.group(=>refs.type)')(data),
             ['svg', 'css', 'js']
                 .map(type => ({
                     key: type,

@@ -40,37 +40,37 @@ describe('pick()', () => {
     describe('a function as a reference', () => {
         it('should works as Array#find() for an array', () => {
             assert.deepEqual(
-                query('pick(< $ < 30 >)')([33, 22, 11]),
+                query('pick(=> $ < 30)')([33, 22, 11]),
                 22
             );
         });
 
         it('should return an entry for anything else', () => {
             assert.deepEqual(
-                query('pick(<$ = 2>)')({ foo: 1, bar: 2, baz: 3 }),
+                query('pick(=> $ = 2)')({ foo: 1, bar: 2, baz: 3 }),
                 { key: 'bar', value: 2 }
             );
 
             assert.deepEqual(
-                query('pick(<$ = "a">)')('foobar'),
+                query('pick(=> $ = "a")')('foobar'),
                 { key: 4, value: 'a' }
             );
         });
 
         it('should return undefined when nothing found', () => {
             assert.deepEqual(
-                query('pick(< $ < 10 >)')([44, 22, 33]),
+                query('pick(=> $ < 10)')([44, 22, 33]),
                 undefined
             );
             assert.deepEqual(
-                query('pick(<$ = 42>)')({ foo: 1, bar: 2, baz: 3 }),
+                query('pick(=> $ = 42)')({ foo: 1, bar: 2, baz: 3 }),
                 undefined
             );
         });
 
         it('should works fine for falsy values', () => {
             assert.deepEqual(
-                query('pick(< $ < 20 >)')(),
+                query('pick(=> $ < 20)')(),
                 undefined
             );
         });

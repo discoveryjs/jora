@@ -23,7 +23,7 @@ describe('sort()', () => {
 
     it('custom sorter', () => {
         assert.deepEqual(
-            query('sort(<refs.size()>).filename')(data),
+            query('sort(=>refs.size()).filename')(data),
             data
                 .slice()
                 .sort((a, b) => a.refs.length - b.refs.length)
@@ -33,7 +33,7 @@ describe('sort()', () => {
 
     it('should sort by several values', () => {
         assert.deepEqual(
-            query('sort(<[dependants.size(), deps.size()]>).({filename, deps: deps.size(), dependants: dependants.size()})')(data),
+            query('sort(=>[dependants.size(), deps.size()]).({filename, deps: deps.size(), dependants: dependants.size()})')(data),
             data
                 .slice()
                 .sort((a, b) => ((a.dependants.length - b.dependants.length) || (a.deps.length - b.deps.length)))
