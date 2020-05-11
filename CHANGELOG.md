@@ -5,7 +5,16 @@
 - Allowed numbers without integer part, i.e. `.123` or `.5e-4`
 - Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
 - Fixed suggestion in empty function body for new syntax, i.e. `group(=>)` will suggest between `=>` and `)`
+- Added `$$` root reference (`arg1`), which refers to second parameter of closest function or `undefined` when no such
 - Added `reduce()` method
+- Changed `pick()` method:
+    - Return first entry value when no argument gived
+    - String values are treat as an array
+    - Added support for negative indicies for array and strings
+    - Return a value for object and function as reference, instead of entry
+    - Pass index or key to function reference as second parameter (can be accessed by `$$`)
+    - When no arguments given or reference is `undefined` for object, return first entry value instead of value with key `undefined`
+- Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

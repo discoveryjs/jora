@@ -10,7 +10,7 @@ describe('stringify', () => {
             '..foo..bar()..baz(1,2,3)..(foo+bar)..(foo.bar())',
             '.(foo[1:2][::2][1:][:][1::-2]).([:2])',
             '.({foo:a|b,bar:a|$x;y})',
-            '.map(=>$)',
+            '.map(=>$["abc"] or $[abc] or $[])',
             '.reduce(=>$$+$)'
         ].join('');
         const actual = stringify(parse(source).ast);

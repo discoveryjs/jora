@@ -207,7 +207,7 @@ Jora | Description
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax. Spread operator (`...`) can be used, e.g. `[1, ..., ...foo]` (`...` with no expression on right side the same as `...$`). Unlike JavaScript, spread operator in jora inlines arrays only and left as is any other values, i.e. `[...[1, 2], ...3, ..."45", { "6": 7 }]` -> `[1, 2, 3, "45", { "6": 7 }]`
-< block ><br>=> e | A function<br>NOTE: Syntax will be changed
+=> e<br>< block > (deprecated) | A function<br>NOTE: Syntax `< block >` is deprecated, avoid to use it
 query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
 
 ### Keywords
@@ -294,6 +294,7 @@ In terms of JavaScript, a block creates a new scope. Once a variable is defined,
 Jora | Description
 --- | ---
 $ | A scope input data (current value). On top level scope it's the same as `@`. In most cases it may be omitted. Used implicitly an input for subquery when no other subjects is defined (e.g. `foo()` and `.foo()` are equivalent for `$.foo()`).
+$$ | A reference to the second parameter of closest function or undefined when no such
 @ | A query input data
 \# | A query context
 
@@ -308,10 +309,10 @@ ident | The same as `$.ident`
 ..ident<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
-.method()<br> ..method() | Invoke a method to current data, or each element of current data if it is an array
-path[e] | Array-like notation to access properties. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array.
+.method()<br> ..method() | Invoke a method to current value. See [build-in methods below](#build-in-methods)
+path[expr] | Array-like notation to access properties. Behaves like `pick()` method. In case you need to fetch a value to each element of array use `.($[expr])` or `map(=>$[expr])`
 [from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
-e \| [definitions] e \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`
+expr \| [definitions] expr \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`
 
 ### Build-in methods
 
@@ -323,7 +324,7 @@ values() | The same as `Object.values()` in JS
 entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value }` objects is using for entries instead of array tuples
 fromEntries() | Similar to `Object.fromEntries()` in JS with difference: `{ key, value }` objects are expecting as entries instead of array tuples
 mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
-pick("key")<br>pick(fn) | Get a value by a key, an index or a function. Useful for arrays, e.g. since `array[5]` applies `[5]` for each element in an array (equivalent to `array.map(e => e[5])`), `array.pick(5)` should be used instead.
+pick("key")<br>pick(index)<br>pick(fn) | Get a value by a key, an index or a function. It returns an element with `e` index for arrays, a char with `e` index for strings, and a value with `e` key (must be own key) for enything else. Negative indecies are supported for arrays and strings. Current value is element for an array, a char for a string or an entry value for object. Arg1 (i.e. `$$`) is an index for arrays and strings, and a key for objects.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
 sort(\<fn>) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. Following queries are equivalents:<br>`sort(<foo.bar>)` and `sort(foo.bar asc)`<br>`sort(<foo>).reverse()` and `sort(foo desc)`<br>`sort(<[a, b]>)` and `sort(a asc, b asc)`
 reverse() | Reverse order of items

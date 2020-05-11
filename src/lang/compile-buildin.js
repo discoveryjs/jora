@@ -99,6 +99,39 @@ module.exports = Object.freeze({
 
         return false;
     },
+    pick(current, ref = () => true) {
+        if (!current) {
+            return undefined;
+        }
+
+        if (typeof ref === 'function') {
+            if (Array.isArray(current) || typeof current === 'string') {
+                for (let i = 0; i < current.length; i++) {
+                    if (ref(current[i], i)) {
+                        return current[i];
+                    }
+                }
+            }
+
+            for (const key in current) {
+                if (hasOwnProperty.call(current, key)) {
+                    if (ref(current[key], key)) {
+                        return current[key];
+                    }
+                }
+            }
+
+            return undefined;
+        }
+
+        if (Array.isArray(current) || typeof current === 'string') {
+            return isFinite(ref)
+                ? current[ref < 0 ? current.length + Number(ref) : ref || 0]
+                : undefined;
+        }
+
+        return hasOwnProperty.call(current, ref) ? current[ref] : undefined;
+    },
     map(value, getter) {
         const fn = typeof getter === 'function'
             ? getter

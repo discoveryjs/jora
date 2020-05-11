@@ -417,6 +417,16 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
                 put(')');
                 break;
 
+            case 'Pick':
+                put('f.pick(');
+                walk(node.value);
+                if (node.getter) {
+                    put(',');
+                    walk(node.getter);
+                }
+                put(')');
+                break;
+
             case 'GetProperty':
                 put('f.map(');
                 walk(node.value);

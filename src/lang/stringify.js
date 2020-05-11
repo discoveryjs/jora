@@ -237,6 +237,15 @@ module.exports = function stringify(ast) {
                 }
                 break;
 
+            case 'Pick':
+                walk(node.value);
+                put('[');
+                if (node.getter !== null) {
+                    walk(node.getter);
+                }
+                put(']');
+                break;
+
             case 'SliceNotation': {
                 const [a, b, c] = node.arguments;
 

@@ -1,105 +1,71 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
 
 describe('lang/get-property', () => {
     it('should return all values', () => {
         assert.deepEqual(
-            query('filename')(data),
-            data
-                .map(item => item.filename)
+            query('prop')([
+                { prop: 1 },
+                { prop: 2 },
+                { prop: 3 }
+            ]),
+            [1, 2, 3]
         );
     });
 
     it('should not fails when object have no property and should excludes undefines', () => {
         assert.deepEqual(
-            query('unique')(data),
-            data
-                .map(item => item.unique)
-                .filter(item => item !== undefined)
+            query('prop')([
+                { },
+                { prop: 42 }
+            ]),
+            [42]
         );
     });
 
-    it('should return an array of unique values', () => {
+    it('should dedup values', () => {
         assert.deepEqual(
-            query('type')(data),
+            query('prop')([
+                { prop: 'css' },
+                { prop: 'js'},
+                { prop: 'css' },
+                { prop: 'svg' }
+            ]),
             ['css', 'js', 'svg']
         );
     });
 
     it('should return concated arrays', () => {
         assert.deepEqual(
-            query('errors')(data),
-            data
-                .reduce((res, item) => res.concat(item.errors || []), [])
+            query('prop')([
+                { prop: ['foo', 'bar'] },
+                { },
+                { prop: undefined },
+                { prop: ['baz'] }
+            ]),
+            ['foo', 'bar', 'baz']
         );
     });
 
     it('should return an array for chained paths', () => {
         assert.deepEqual(
-            query('refs.broken')(data),
+            query('prop.test')([
+                { prop: null },
+                { prop: { test: true} },
+                { prop: true },
+                { prop: { test: [true] }}
+            ]),
             [true]
         );
     });
 
     it('should not fails on unexisted paths', () => {
         assert.deepEqual(
-            query('something.does.non.exists')(data),
+            query('something.does.non.exists')([
+                { something: {} },
+                {}
+            ]),
             []
-        );
-    });
-
-    it('should allow escaped symbols in paths', () => {
-        assert.deepEqual(
-            query('something.does["not"].exists')(data),
-            []
-        );
-
-        assert.deepEqual(
-            query('$[\'\\\'"\']')(data),
-            ['a key with special chars']
-        );
-
-        assert.deepEqual(
-            query('$["\'\\""]')(data),
-            ['a key with special chars']
-        );
-    });
-
-    it('array like notation to access properties and array elements', () => {
-        assert.deepEqual(
-            query('$["foo"]')({ foo: 42 }),
-            42
-        );
-
-        assert.deepEqual(
-            query('$["foo"]["bar"]')({ foo: { bar: 42 } }),
-            42
-        );
-
-        assert.deepEqual(
-            query('$[keys().pick(1)]')({ foo: 'asd', bar: 42 }),
-            42
-        );
-
-        assert.deepEqual(
-            query('$["foo"].bar["baz"]')({ foo: { bar: { baz: 42 } } }),
-            42
-        );
-
-        assert.deepEqual(
-            query('$[foo]')({ foo: 'bar', bar: 2 }),
-            2
-        );
-
-        assert.deepEqual(
-            query('$[1]')([1, 2, 3]),
-            []
-        );
-
-        assert.deepEqual(
-            query('"hello"[1]')(),
-            'e'
         );
     });
 });

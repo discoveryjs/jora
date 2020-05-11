@@ -63,8 +63,8 @@ function Suggestion(start, end, types, context) {
     ].concat(context === 'current' ? '$$' : [])}]`;
 }
 
-function SuggestQueryRoot() {
-    return Suggestion(null, $0, ['var', 'path'], 'current');
+function SuggestQueryRoot(start = null, end = $0) {
+    return Suggestion(start, end, ['var', 'path'], 'current');
 }
 
 function SuggestIdent(ref, from) {
@@ -255,6 +255,14 @@ function Recursive(value, query) {
     };
 }
 
+function Pick(value, getter) {
+    return {
+        type: 'Pick',
+        value,
+        getter
+    };
+}
+
 function GetProperty(value, property) {
     return {
         type: 'GetProperty',
@@ -428,7 +436,7 @@ module.exports = {
             ['definitions e', $$(Block($1, $2))],
             ['definitions', $$(Block($1, Current()))],
             ['e', $$(Block([], $1))],
-            ['', $$(Block([], Current()), Suggestion($0, null, ['var', 'path'], 'current'))]
+            ['', $$(Block([], Current()), SuggestQueryRoot($0, null))]
         ],
         definitions: [
             ['def', $$([$1])],
@@ -506,30 +514,31 @@ module.exports = {
             ['array', asis],
             ['[ sliceNotation ]', $$(SliceNotation(Current(), $2))],
             ['ident', $$(GetProperty(Current(), $1), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
-            ['ident ( )', $$(MethodCall(Current(), $1, []), SuggestMethod($1), Suggestion($3, $2, ['var', 'path'], 'current'))],
+            ['ident ( )', $$(MethodCall(Current(), $1, []), SuggestMethod($1), SuggestQueryRoot($3, $2))],
             ['ident ( arguments )', $$(MethodCall(Current(), $1, $3), SuggestMethod($1))],
             ['( e )', $$(Parentheses($2))], // NOTE: using e instead of block for preventing a callback creation
             ['( definitions e )', $$(Parentheses(Block($2, $3)))],
             ['. ident', $$(GetProperty(Current(), $2), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
-            ['. ident ( )', $$(MethodCall(Current(), $2, []), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestMethod($2), Suggestion($4, $3, ['var', 'path'], 'current'))],
+            ['. ident ( )', $$(MethodCall(Current(), $2, []), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestMethod($2), SuggestQueryRoot($4, $3))],
             ['. ident ( arguments )', $$(MethodCall(Current(), $2, $4), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestMethod($2))],
             ['.( block )', $$(Map(Current(), $2), SuggestQueryRoot())],
             ['.[ block ]', $$(Filter(Current(), $2), SuggestQueryRoot())],
             ['.. ident', $$(Recursive(Current(), GetProperty(Current(), $2)), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
-            ['.. ident ( )', $$(Recursive(Current(), MethodCall(Current(), $2, [])), SuggestQueryRoot(), SuggestIdent($2, 'current'), Suggestion($4, $3, ['var', 'path'], 'current'))],
+            ['.. ident ( )', $$(Recursive(Current(), MethodCall(Current(), $2, [])), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestQueryRoot($4, $3))],
             ['.. ident ( arguments )', $$(Recursive(Current(), MethodCall(Current(), $2, $4)), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
             ['..( block )', $$(Recursive(Current(), $2), SuggestQueryRoot())]
         ],
         relativePath: [
-            ['query [ e ]', $$(GetProperty($1, $3))],
+            ['query [ ]', $$(Pick($1, null), SuggestQueryRoot($3, $2))],
+            ['query [ e ]', $$(Pick($1, $3))],
             ['query [ sliceNotation ]', $$(SliceNotation($1, $3))],
             ['query . ident', $$(GetProperty($1, $3), SuggestIdent($3, $1))],
-            ['query . ident ( )', $$(MethodCall($1, $3, []), SuggestIdent($3, $1), SuggestMethod($3), Suggestion($5, $4, ['var', 'path'], 'current'))],
+            ['query . ident ( )', $$(MethodCall($1, $3, []), SuggestIdent($3, $1), SuggestMethod($3), SuggestQueryRoot($5, $4))],
             ['query . ident ( arguments )', $$(MethodCall($1, $3, $5), SuggestIdent($3, $1), SuggestMethod($3))],
             ['query .( block )', $$(Map($1, $3))],
             ['query .[ block ]', $$(Filter($1, $3))],
             ['query .. ident', $$(Recursive($1, GetProperty(Current(), $3)), SuggestIdent($3, $1))],
-            ['query .. ident ( )', $$(Recursive($1, MethodCall(Current(), $3, [])), SuggestIdent($3, $1), SuggestMethod($3), Suggestion($5, $4, ['var', 'path'], 'current'))],
+            ['query .. ident ( )', $$(Recursive($1, MethodCall(Current(), $3, [])), SuggestIdent($3, $1), SuggestMethod($3), SuggestQueryRoot($5, $4))],
             ['query .. ident ( arguments )', $$(Recursive($1, MethodCall(Current(), $3, $5)), SuggestIdent($3, $1), SuggestMethod($3))],
             ['query ..( block )', $$(Recursive($1, $3))]
         ],
@@ -550,18 +559,18 @@ module.exports = {
             ['NUMBER : e', $$(Property(Literal($1), $3))],
             ['LITERAL : e', $$(Property(Literal($1), $3))],
             ['[ e ] : e', $$(Property($2, $5))],
-            ['...', $$(Spread(Current()), Suggestion($1, null, ['var', 'path'], 'current'))],
+            ['...', $$(Spread(Current()), SuggestQueryRoot($1, null))],
             ['... query', $$(Spread($2))]
         ],
 
         arrayElements: createCommaList('arrayElements', 'arrayElement'),
         arrayElement: [
             ['e', asis],
-            ['...', $$(Spread(Current()), Suggestion($1, null, ['var', 'path'], 'current'))],
+            ['...', $$(Spread(Current()), SuggestQueryRoot($1, null))],
             ['... e', $$(Spread($2))]
         ],
         array: [
-            ['[ ]', $$(Array([]), Suggestion($2, $1, ['var', 'path'], 'current'))],
+            ['[ ]', $$(Array([]), SuggestQueryRoot($2, $1))],
             ['[ arrayElements ]', $$(Array($2))]
         ],
 
@@ -574,7 +583,7 @@ module.exports = {
             ['sliceNotationComponent', $$([null, $1])],
             ['sliceNotationComponent sliceNotationComponent', $$([null, $1, $2])],
             ['e sliceNotationComponent', $$([$1, $2])],
-            ['e sliceNotationComponent sliceNotationComponent', $$([$1,$2,$3])]
+            ['e sliceNotationComponent sliceNotationComponent', $$([$1, $2, $3])]
         ],
         sliceNotationComponent: [
             [':', $$(null)],

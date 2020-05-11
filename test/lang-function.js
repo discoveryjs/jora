@@ -122,7 +122,9 @@ describe('lang/function `<body>`', () => {
             typeof query('<$ < 10 or ($ > 20)>')(),
             'function'
         );
+    });
 
+    it('body is an expression with `<` and `>` operators with map()', () => {
         assert.deepEqual(
             [5, 15, 25].map(value => query('map(<$ < 10 or ($ > 20)>)')(value)),
             [true, false, true]

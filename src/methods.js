@@ -24,6 +24,7 @@ module.exports = Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
     map: buildin.map,
+    pick: buildin.pick,
     keys(current) {
         return Object.keys(current || {});
     },
@@ -61,29 +62,6 @@ module.exports = Object.freeze({
         }
 
         return result;
-    },
-    pick(current, ref) {
-        if (!current) {
-            return undefined;
-        }
-
-        if (typeof ref === 'function') {
-            if (Array.isArray(current)) {
-                return current.find(item => ref(item));
-            }
-
-            for (const key in current) {
-                if (hasOwnProperty.call(current, key)) {
-                    if (ref(current[key])) {
-                        return { key, value: current[key] };
-                    }
-                }
-            }
-
-            return;
-        }
-
-        return Array.isArray(current) ? current[ref || 0] : current[ref];
     },
     mapToArray(current, keyProperty = 'key', valueProperty) {
         const result = [];
