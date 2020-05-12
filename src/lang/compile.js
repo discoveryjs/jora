@@ -1,523 +1,138 @@
-const unary = {
-    '-': '-',
-    '+': '+',
-    'no': '!',
-    'not': '!'
-};
+const nodes = require('./nodes').compile;
 
-const binary = {
-    'in': 'in',
-    'not in': 'in',
-    'has': '-',
-    'has no': '-',
-    'and': 'and',
-    'or': 'or',
-    '+': 'add',
-    '-': 'sub',
-    '*': 'mul',
-    '/': 'div',
-    '%': 'mod',
-    '=': 'eq',
-    '!=': 'ne',
-    '<': 'lt',
-    '<=': 'lte',
-    '>': 'gt',
-    '>=': 'gte',
-    '~=': 'match'
-};
-
-module.exports = function compile(ast, suggestRanges = [], statMode = false) {
-    function addSuggestPoint(spName, range, type) {
+module.exports = function compile(ast, statMode) {
+    function addSuggestPoint(spName, start, end, type) {
         let from;
 
         if (type === 'var') {
-            from = JSON.stringify(scope);
+            from = JSON.stringify(ctx.scope);
         } else {
             if (!spName) {
-                spName = 'v' + (suggestAcc++);
+                spNames.push(spName = 's' + spNames.length);
             }
             from = spName;
         }
 
         if (from !== '[]') {
-            normalizedSuggestRanges.push([from, JSON.stringify([range[0], range[1]]), JSON.stringify(type)].join(','));
+            normalizedSuggestRanges.push([from, JSON.stringify([start, end]), JSON.stringify(type)].join(','));
         }
 
         return spName;
     }
 
-    function addSuggestPointsFromRanges(ranges) {
-        return ranges.reduce((spName, range) => {
-            return addSuggestPoint(spName, range, range[2]) || spName;
-        }, undefined);
-    }
-
     function createScope(fn, defCurrent) {
-        const prevScope = scope;
+        const prevScope = ctx.scope;
         const scopeStart = buffer.length;
 
-        scope = scope.slice();
-        scope.own = [];
-        scope.firstCurrent = null;
-        scope.captureCurrent = [];
-        scope.arg1 = prevScope.arg1 || false;
+        ctx.scope = ctx.scope.slice();
+        ctx.scope.own = [];
+        ctx.scope.firstCurrent = null;
+        ctx.scope.captureCurrent = [];
+        ctx.scope.arg1 = prevScope.arg1 || false;
 
         fn();
 
-        if (scope.captureCurrent.length) {
-            const spName = addSuggestPointsFromRanges(scope.captureCurrent);
+        if (ctx.scope.captureCurrent.length) {
+            const spName = ctx.scope.captureCurrent.reduce(
+                (spName, range) => addSuggestPoint(spName, ...range),
+                undefined
+            );
+            const stat = 'stat(' + spName + ',current)';
 
-            if (spName) {
-                const stat = 'stat(' + spName + ',current)';
-                if (scope.firstCurrent) {
-                    buffer[scope.firstCurrent] = stat;
-                } else {
-                    buffer[scopeStart] = defCurrent(buffer[scopeStart], stat);
-                }
+            if (ctx.scope.firstCurrent) {
+                buffer[ctx.scope.firstCurrent] = stat;
+            } else {
+                buffer[scopeStart] = defCurrent(buffer[scopeStart], stat);
             }
         }
 
-        scope = prevScope;
+        ctx.scope = prevScope;
     }
 
     function walk(node) {
-        const collectStat = statMode && suggestNodes.has(node);
+        let spName = false;
 
-        if (collectStat) {
-            const ranges = suggestNodes.get(node);
-            const spName = addSuggestPointsFromRanges(ranges);
+        if (statMode && Array.isArray(node.suggestions)) {
+            for (const [start, end, type, current] of node.suggestions) {
+                if (type === 'var') {
+                    addSuggestPoint(null, start, end, type);
+                } else if (current) {
+                    ctx.scope.captureCurrent.push([start, end, type]);
+                } else {
+                    const newSpName = addSuggestPoint(spName, start, end, type);
 
-            if (spName) {
-                put('stat(' + spName + ',');
+                    if (!spName) {
+                        spName = newSpName;
+                        put('stat(' + spName + ',');
+                    }
+                }
             }
-
-            suggestNodes.delete();
         }
 
-        if (statMode && captureCurrent.has(node)) {
-            scope.captureCurrent.push(...captureCurrent.get(node).filter(range => {
-                if (range[2] === 'var') {
-                    addSuggestPoint(null, range, range[2]);
-                } else {
-                    return true;
-                }
-            }));
+        if (nodes.has(node.type)) {
+            nodes.get(node.type)(node, ctx);
+        } else {
+            throw new Error('Unknown node type `' + node.type + '`');
         }
 
-        switch (node.type) {
-            case 'Data':
-                put('data');
-                break;
-
-            case 'Context':
-                put('context');
-                break;
-
-            case 'Current':
-                if (scope.firstCurrent === null && !scope.captureCurrent.disabled) {
-                    scope.firstCurrent = buffer.length;
-                }
-                put('current');
-                break;
-
-            case 'Arg1':
-                put(scope.arg1 ? 'arguments[1]' : 'undefined');
-                break;
-
-            case 'Literal':
-                put(typeof node.value === 'string' ? JSON.stringify(node.value) : String(node.value));
-                break;
-
-            case 'Identifier':
-                put(node.name);
-                break;
-
-            case 'Unary':
-                if (node.operator in unary === false) {
-                    throw new Error('Unknown operator `' + node.operator + '`');
-                }
-
-                if (node.operator === 'not' || node.operator === 'no') {
-                    put('!f.bool(');
-                    walk(node.argument);
-                    put(')');
-                } else {
-                    put(unary[node.operator]);
-                    walk(node.argument);
-                }
-                break;
-
-            case 'Binary':
-                if (node.operator in binary === false) {
-                    throw new Error('Unknown operator `' + node.operator + '`');
-                }
-
-                if (node.operator === 'not in' || node.operator === 'has no') {
-                    put('!');
-                }
-
-                switch (node.operator) {
-                    case 'has':
-                    case 'has no':
-                        put('f.in(');
-                        walk(node.right);
-                        put(',');
-                        walk(node.left);
-                        put(')');
-                        break;
-
-                    case 'or':
-                        needTmp = true;
-                        put('f.bool(tmp=');
-                        walk(node.left);
-                        put(')?tmp:');
-                        scope.captureCurrent.disabled = true;
-                        walk(node.right);
-                        scope.captureCurrent.disabled = false;
-                        break;
-
-                    case 'and':
-                        needTmp = true;
-                        put('f.bool(tmp=');
-                        walk(node.left);
-                        put(')?');
-                        scope.captureCurrent.disabled = true;
-                        walk(node.right);
-                        scope.captureCurrent.disabled = false;
-                        put(':tmp');
-                        break;
-
-                    default:
-                        put('f.');
-                        put(binary[node.operator]);
-                        put('(');
-                        walk(node.left);
-                        put(',');
-                        walk(node.right);
-                        put(')');
-                }
-                break;
-
-            case 'Conditional':
-                put('f.bool(');
-                walk(node.test);
-                scope.captureCurrent.disabled = true;
-                put(')?');
-                walk(node.consequent);
-                put(':');
-                walk(node.alternate);
-                scope.captureCurrent.disabled = false;
-                break;
-
-            case 'Object':
-                put('{');
-                walkList(node.properties, ',');
-                put('}');
-                break;
-
-            case 'Property':
-                if (!node.key) {
-                    break;
-                }
-
-                if (node.key.type === 'Literal' || node.key.type === 'Identifier') {
-                    walk(node.key);
-                } else {
-                    put('[');
-                    walk(node.key);
-                    put(']');
-                }
-                put(':');
-                walk(node.value);
-                break;
-
-            case 'Spread':
-                put('...');
-                walk(node.query);
-                break;
-
-            case 'Array':
-                put('[');
-
-                node.elements.forEach((element, index) => {
-                    if (index > 0) {
-                        put(',');
-                    }
-
-                    if (element.type === 'Spread') {
-                        needTmp = true;
-                        put('...Array.isArray(tmp=');
-                        walk(element.query);
-                        put(')?tmp:[tmp]');
-                    } else {
-                        walk(element);
-                    }
-                });
-
-                put(']');
-                break;
-
-            case 'Function':
-                createScope(
-                    () => {
-                        scope.arg1 = true;
-                        put('function(current){return ');
-                        walk(node.body);
-                        put('}');
-                    },
-                    (scopeStart, sp) => {
-                        return scopeStart + sp + ',';
-                    }
-                );
-                break;
-
-            case 'Compare':
-                if (node.order === 'desc') {
-                    put('-');
-                }
-                createScope(
-                    () => {
-                        put('f.cmp((_q=current=>(');
-                        walk(node.query);
-                        put('))(a),_q(b))');
-                    },
-                    (scopeStart, sp) => {
-                        return scopeStart + sp + ',';
-                    }
-                );
-                break;
-
-            case 'SortingFunction':
-                put('(a, b)=>{let _q;return ');
-                walkList(node.compares, '||');
-                put('||0}');
-                break;
-
-            case 'MethodCall':
-                put('m.');
-                walk(node.method);
-                put('(');
-                walk(node.value);
-                if (node.arguments.length) {
-                    put(',');
-                    walkList(node.arguments, ',');
-                }
-                put(')');
-                break;
-
-            case 'Definition':
-                if (!node.name) {
-                    break;
-                }
-
-                if (scope.own.includes(node.name.name)) {
-                    throw new Error(`Identifier '$${node.name.name}' has already been declared`);
-                }
-
-                if (reservedVars.includes(node.name.name)) {
-                    throw new Error(`Identifier '$${node.name.name}' is reserved for future use`);
-                }
-
-                put('const $');
-                walk(node.name);
-                put('=');
-                walk(node.value);
-                put(';');
-                scope.push(node.name.name);
-                scope.own.push(node.name.name);
-                break;
-
-            case 'Parentheses':
-                put('(');
-                walk(node.body);
-                put(')');
-                break;
-
-            case 'Block':
-                if (node.definitions.length) {
-                    createScope(
-                        () => {
-                            put('(()=>{');
-                            walkList(node.definitions);
-                            put('return ');
-                            walk(node.body);
-                            put('})()');
-                        },
-                        (scopeStart, sp) => {
-                            return scopeStart + sp + ';';
-                        }
-                    );
-                } else if (node.body.type === 'Object') {
-                    put('(');
-                    walk(node.body);
-                    put(')');
-                } else {
-                    walk(node.body);
-                }
-                break;
-
-            case 'Reference':
-                if (scope.includes(node.name.name)) {
-                    put('$');
-                    walk(node.name);
-                } else {
-                    put('typeof $');
-                    walk(node.name);
-                    put('!=="undefined"?$');
-                    walk(node.name);
-                    put(':undefined');
-                }
-                break;
-
-            case 'Map':
-                put('f.map(');
-                walk(node.value);
-                createScope(
-                    () => {
-                        put(',current=>');
-                        walk(node.query);
-                    },
-                    (scopeStart, sp) => {
-                        put(')');
-                        return scopeStart + '(' + sp + ',';
-                    }
-                );
-                put(')');
-                break;
-
-            case 'Filter':
-                put('f.filter(');
-                walk(node.value);
-                createScope(
-                    () => {
-                        put(',current=>');
-                        walk(node.query);
-                    },
-                    (scopeStart, sp) => {
-                        put(')');
-                        return scopeStart + '(' + sp + ',';
-                    }
-                );
-                put(')');
-                break;
-
-            case 'Recursive':
-                put('f.mapRecursive(');
-                walk(node.value);
-                createScope(
-                    () => {
-                        put(',current=>');
-                        walk(node.query);
-                    },
-                    (scopeStart, sp) => {
-                        put(')');
-                        return scopeStart + '(' + sp + ',';
-                    }
-                );
-                put(')');
-                break;
-
-            case 'Pick':
-                put('f.pick(');
-                walk(node.value);
-                if (node.getter) {
-                    put(',');
-                    walk(node.getter);
-                }
-                put(')');
-                break;
-
-            case 'GetProperty':
-                put('f.map(');
-                walk(node.value);
-                put(',');
-                if (node.property.type === 'Identifier') {
-                    put(JSON.stringify(node.property.name));
-                } else {
-                    walk(node.property);
-                }
-                put(')');
-                break;
-
-            case 'SliceNotation':
-                put('f.slice(');
-                walk(node.value);
-                node.arguments.slice(0, 3).forEach(item => {
-                    put(',');
-                    item ? walk(item) : put('undefined');
-                });
-                put(')');
-                break;
-
-            case 'Pipeline':
-                put('(current=>(');
-                walk(node.right);
-                put('))(');
-                walk(node.left);
-                put(')');
-                break;
-        }
-
-        if (collectStat) {
+        if (spName) {
             put(')');
         }
     }
 
-    const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
-    let scope = [];
-    let needTmp = false;
     const buffer = [
         'const current=data;',
         'return '
     ];
     const put = chunk => buffer.push(chunk);
-    const walkList = (list, sep) => {
-        list.forEach((element, idx) => {
-            if (idx > 0) {
-                put(sep);
-            }
-            walk(element);
-        });
-    };
-    const captureCurrent = suggestRanges.reduce((map, range) => {
-        if (range[3] === 'current') {
-            if (map.has(range[4])) {
-                map.get(range[4]).push(range);
-            } else {
-                map.set(range[4], [range]);
-            }
-        }
-        return map;
-    }, new Map());
-    const suggestNodes = suggestRanges.reduce((map, range) => {
-        if (range[3] && range[3] !== 'current') {
-            if (map.has(range[3])) {
-                map.get(range[3]).push(range);
-            } else {
-                map.set(range[3], [range]);
-            }
-        }
-        return map;
-    }, new Map());
-    let suggestAcc = 0;
     const normalizedSuggestRanges = [];
+    const spNames = [];
+
+    const ctx = {
+        scope: [],
+        createScope,
+        buffer,  // FIXME: remove from ctx
+        needTmp: false,
+        put,
+        node: walk,
+        nodeOrNothing(node) {
+            if (node) {
+                walk(node);
+            }
+        },
+        nodeOrCurrent(node, range) {
+            if (node) {
+                walk(node);
+            } else {
+                walk({ type: 'Current', range });
+            }
+        },
+        list(list, sep) {
+            list.forEach((element, idx) => {
+                if (idx > 0) {
+                    put(sep);
+                }
+                walk(element);
+            });
+        }
+    };
 
     createScope(
         () => walk(ast),
         (scopeStart, sp) => {
             put(')');
-            return scopeStart + '(' + sp + ',';
+            return '(' + sp + ',' + scopeStart;
         }
     );
 
-    if (needTmp) {
+    if (ctx.needTmp) {
         buffer.unshift('let tmp;');
     }
 
     if (statMode) {
-        if (suggestAcc > 0) {
-            buffer.unshift('const ' + Array.from(Array(suggestAcc), (_, i) => 'v' + i + '=new Set()') + ';\n');
-            buffer.unshift('const stat=(values,v)=>(values.add(v),v);\n');
+        if (spNames.length > 0) {
+            buffer.unshift('const ' + spNames.map(name => name + '=new Set()') + ';\n');
+            buffer.unshift('const stat=(s,v)=>(s.add(v),v);\n');
         }
         put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
@@ -525,7 +140,7 @@ module.exports = function compile(ast, suggestRanges = [], statMode = false) {
     try {
         return new Function('f', 'm', 'data', 'context', buffer.join(''));
     } catch (e) {
-        console.error('Query compile error:', buffer.join(''));
+        console.error('Jora query compilation error:', buffer.join(''));
         throw e;
     }
 };

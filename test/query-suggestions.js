@@ -76,8 +76,9 @@ describe('query/suggestions', () => {
         map: ['.(', ')'],
         recursiveMap: ['..(', ')'],
         object: ['.({', '})'],
+        objectSpread: ['.({...', '})'],
         array: ['.([', '])'],
-        x: ['.({...', '})']
+        arraySpread: ['.([...', '])']
     }).forEach(([name, [begin, end]]) => {
         const sbegin = begin.replace(/./g, '$&|');
         const send = end.replace(/./g, '$&|');
@@ -277,24 +278,28 @@ describe('query/suggestions', () => {
             null
         ],
         '.entries|(|).sort|(|)': [
-            suggestion('entries', ['foo', 'bar'], 1, 8),
+            null, // suggestion('entries', ['foo', 'bar'], 1, 8),
             suggestion('', ['foo', 'bar'], 9, 9),
-            suggestion('sort', ['key', 'value'], 11, 15),
+            null, // suggestion('sort', ['key', 'value'], 11, 15),
             suggestion('', ['foo', 'bar'], 16, 16)
         ],
         '.entries|(|a|,| |b|).sort|(|a|,| |b|)': [
-            suggestion('entries', ['foo', 'bar'], 1, 8),
+            null, // suggestion('entries', ['foo', 'bar'], 1, 8),
             suggestion('a', ['foo', 'bar'], 9, 10),
             suggestion('a', ['foo', 'bar'], 9, 10),
             null,
             suggestion('b', ['foo', 'bar'], 12, 13),
             suggestion('b', ['foo', 'bar'], 12, 13),
-            suggestion('sort', ['key', 'value'], 15, 19),
+            null, // suggestion('sort', ['key', 'value'], 15, 19),
             suggestion('a', ['foo', 'bar'], 20, 21),
             suggestion('a', ['foo', 'bar'], 20, 21),
             null,
             suggestion('b', ['foo', 'bar'], 23, 24),
             suggestion('b', ['foo', 'bar'], 23, 24)
+        ],
+        '{foo:[{},{bar:5}]}.foo.(|b|)': [
+            suggestion('b', ['bar'], 24, 25),
+            suggestion('b', ['bar'], 24, 25)
         ]
     });
 });

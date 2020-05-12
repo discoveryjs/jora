@@ -1,5 +1,7 @@
 const { version } = require('../package.json');
 const parse = require('./lang/parse');
+const suggest = require('./lang/suggest');
+const walk = require('./lang/walk');
 const stringify = require('./lang/stringify');
 const compile = require('./lang/compile');
 const buildin = require('./lang/compile-buildin');
@@ -32,25 +34,44 @@ function compileFunction(source, statMode, tolerantMode, debug) {
     const parseResult = parse(source, tolerantMode);
 
     if (debug) {
-        const esc = s => JSON.stringify(s).slice(1, -1);
         debug('AST', parseResult.ast);
         debug('Restored source', stringify(parseResult.ast));
-        debug('Suggest ranges', parseResult.suggestRanges.sort((a, b) => a[0] - b[0]).map(r => {
-            const pre = esc(source.slice(0, r[0])).length;
-            const long = esc(source.substring(r[0], r[1])).length;
+    }
+
+    const suggestRanges = statMode
+        ? suggest(parseResult.ast, source, parseResult.commentRanges)
+        : null;
+
+    if (debug && suggestRanges) {
+        const esc = s => JSON.stringify(s).slice(1, -1);
+        let prevRange = [];
+        let prevPrefix = null;
+        debug('Suggest ranges', suggestRanges.sort((a, b) => a[0] - b[0]).map(range => {
+            let prelude;
+
+            if (range[0] === prevRange[0] && range[1] === prevRange[1]) {
+                prelude = ' '.repeat(prevPrefix.length);
+            } else {
+                const pre = esc(source.slice(0, range[0])).length;
+                const long = esc(source.substring(range[0], range[1])).length;
+
+                prevRange = range;
+                prevPrefix =
+                    ' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) +
+                    ' ' + range[0] + ':' + range[1];
+                prelude = esc(source) + '\n' + prevPrefix;
+            }
+
             return (
-                esc(source) + '\n' +
-                (' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) + ' ' + r[0] + ':' + r[1] + ' [' + r[2] + '] from ' + r[3])
+                prelude + ' [' + range[2] + '] from ' + (range[3] && range[3].type || range[3])
             );
         }).join('\n'));
     }
 
-    const fn = statMode
-        ? compile(parseResult.ast, parseResult.suggestRanges, statMode)
-        : compile(parseResult.ast);
+    const fn = compile(parseResult.ast, statMode);
 
     if (debug) {
-        debug('Function', fn.toString());
+        debug('Compiled code', fn.toString());
     }
 
     return fn;
@@ -69,7 +90,7 @@ function createQuery(source, options) {
 
     source = String(source);
 
-    if (cache.has(source)) {
+    if (cache.has(source) && !options.debug) {
         fn = cache.get(source);
     } else {
         fn = compileFunction(source, statMode, tolerantMode, options.debug);
@@ -87,6 +108,7 @@ module.exports = Object.assign(createQuery, {
     methods,
     syntax: {
         parse,
+        walk,
         stringify,
         compile
     }

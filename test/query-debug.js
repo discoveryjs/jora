@@ -16,8 +16,30 @@ describe('query/debug', () => {
         console.dir = dir;
     });
 
-    it('should log', () => {
+    it('should not log by default', () => {
+        jora('xyzDebug')({ a: 1, b: 2 });
+
+        assert.deepEqual(buffer, []);
+    });
+
+    it('default debug log', () => {
         jora('xyzDebug', { debug: true })({ a: 1, b: 2 });
+
+        assert.deepEqual(buffer.map((item, idx) => idx % 2 ? item.value : item.type), [
+            'log',
+            '[Compile query from source]',
+            'log',
+            '[AST]',
+            'dir',
+            '[Restored source]',
+            'log',
+            '[Compiled code]',
+            'log'
+        ]);
+    });
+
+    it('stat mode debug log', () => {
+        jora('xyzDebug', { debug: true, stat: true })({ a: 1, b: 2 });
 
         assert.deepEqual(buffer.map((item, idx) => idx % 2 ? item.value : item.type), [
             'log',
@@ -29,12 +51,12 @@ describe('query/debug', () => {
             'log',
             '[Suggest ranges]',
             'log',
-            '[Function]',
+            '[Compiled code]',
             'log'
         ]);
     });
 
-    it('should log', () => {
+    it('custom debug handler', () => {
         const buffer = [];
         jora('xyzDebugCustom', {
             debug: (name, value) => buffer.push({ name, value })
@@ -45,8 +67,7 @@ describe('query/debug', () => {
             'Compile query from source',
             'AST',
             'Restored source',
-            'Suggest ranges',
-            'Function'
+            'Compiled code'
         ]);
     });
 });

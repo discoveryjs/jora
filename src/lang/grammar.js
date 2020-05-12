@@ -1,14 +1,48 @@
 const { isPlainObject } = require('../utils');
+const {
+    Arg1,
+    Array,
+    Binary,
+    Block,
+    Compare,
+    Conditional,
+    Context,
+    Current,
+    Data,
+    // Declarator,
+    Definition,
+    Filter,
+    Function,
+    GetProperty,
+    Identifier,
+    Literal,
+    Map,
+    Method,
+    MethodCall,
+    Object,
+    Parentheses,
+    Pick,
+    Pipeline,
+    Property,
+    Recursive,
+    Reference,
+    SliceNotation,
+    SortingFunction,
+    Spread,
+    Unary
+} = require('./nodes').build;
 const isArray = [].constructor.isArray;
 const keys = {}.constructor.keys;
 const $0 = { name: '$0' };
 const $1 = { name: '$1' };
+const $1name = { name: '$1.name' };
 const $2 = { name: '$2' };
 const $3 = { name: '$3' };
 const $4 = { name: '$4' };
 const $5 = { name: '$5' };
 const $r0 = { name: '@0.range' };
-const refs = new Set([$0, $1, $2, $3, $4, $5, $r0]);
+const $r1 = { name: '@1.range' };
+const refs = new Set([$0, $1, $1name, $2, $3, $4, $5, $r0, $r1]);
 const asis = '';
 
 function stringify(value) {
@@ -42,248 +76,21 @@ function stringify(value) {
     }
 }
 
-function $$(node, ...suggestions) {
+function $$(node) {
     if (isPlainObject(node)) {
         node.range = $r0;
     }
 
-    suggestions = suggestions.length
-        ? '; yy.suggestRanges.push(' + suggestions.filter(Boolean) + ')'
-        : '';
-
-    return '$$ = ' + stringify(node) + suggestions;
+    return '$$ = ' + stringify(node);
 }
 
-function Suggestion(start, end, types, context) {
-    return `[${[
-        start ? start.name.replace(/\$/, '@') : 'null',
-        end ? end.name.replace(/\$/, '@') : 'null',
-        stringify(types),
-        stringify(context) || null
-    ].concat(context === 'current' ? '$$' : [])}]`;
-}
-
-function SuggestQueryRoot(start = null, end = $0) {
-    return Suggestion(start, end, ['var', 'path'], 'current');
-}
-
-function SuggestIdent(ref, from) {
-    return Suggestion(ref, ref, 'path', from);
-}
-
-function SuggestMethod() {
-    // Suggestion(ref, ref, 'method', null);
-}
-
-function Data() {
+// FIXME: temporary solution, because of `declarator` conflict
+// with `queryRule` when declarator specified aside
+function Declarator_(name) {
     return {
-        type: 'Data'
-    };
-}
-
-function Context() {
-    return {
-        type: 'Context'
-    };
-}
-
-function Current() {
-    return {
-        type: 'Current'
-    };
-}
-
-function Arg1() {
-    return {
-        type: 'Arg1'
-    };
-}
-
-function Literal(value) {
-    return {
-        type: 'Literal',
-        value
-    };
-}
-
-function Unary(operator, argument) {
-    return {
-        type: 'Unary',
-        operator,
-        argument
-    };
-}
-
-function Binary(operator, left, right) {
-    return {
-        type: 'Binary',
-        operator,
-        left,
-        right
-    };
-}
-
-function Conditional(test, consequent, alternate) {
-    return {
-        type: 'Conditional',
-        test,
-        consequent,
-        alternate
-    };
-}
-
-function Object(properties) {
-    return {
-        type: 'Object',
-        properties
-    };
-}
-
-function Property(key, value) {
-    return {
-        type: 'Property',
-        key,
-        value
-    };
-}
-
-function Spread(query) {
-    return {
-        type: 'Spread',
-        query
-    };
-}
-
-function Array(elements) {
-    return {
-        type: 'Array',
-        elements
-    };
-}
-
-function Function(arguments, body, legacy) {
-    return {
-        type: 'Function',
-        arguments,
-        body,
-        legacy: Boolean(legacy)
-    };
-}
-
-function Compare(query, order) {
-    return {
-        type: 'Compare',
-        query,
-        order
-    };
-}
-
-function SortingFunction(compares) {
-    return {
-        type: 'SortingFunction',
-        compares
-    };
-}
-
-function MethodCall(value, method, arguments) {
-    return {
-        type: 'MethodCall',
-        value,
-        method,
-        arguments
-    };
-}
-
-function Definition(name, value) {
-    return {
-        type: 'Definition',
+        type: 'Declarator',
         name,
-        value
-    };
-}
-
-function Block(definitions, body) {
-    return {
-        type: 'Block',
-        definitions,
-        body
-    };
-}
-
-function Parentheses(body) {
-    return {
-        type: 'Parentheses',
-        body
-    };
-}
-
-function Reference(name) {
-    return {
-        type: 'Reference',
-        name
-    };
-}
-
-function Identifier(name) {
-    return {
-        type: 'Identifier',
-        name
-    };
-}
-
-function Map(value, query) {
-    return {
-        type: 'Map',
-        value,
-        query
-    };
-}
-
-function Filter(value, query) {
-    return {
-        type: 'Filter',
-        value,
-        query
-    };
-}
-
-function Recursive(value, query) {
-    return {
-        type: 'Recursive',
-        value,
-        query
-    };
-}
-
-function Pick(value, getter) {
-    return {
-        type: 'Pick',
-        value,
-        getter
-    };
-}
-
-function GetProperty(value, property) {
-    return {
-        type: 'GetProperty',
-        value,
-        property
-    };
-}
-
-function SliceNotation(value, arguments) {
-    return {
-        type: 'SliceNotation',
-        value,
-        arguments
-    };
-}
-
-function Pipeline(left, right) {
-    return {
-        type: 'Pipeline',
-        left,
-        right
+        range: $r1
     };
 }
 
@@ -434,19 +241,26 @@ module.exports = {
 
         block: [
             ['definitions e', $$(Block($1, $2))],
-            ['definitions', $$(Block($1, Current()))],
+            ['definitions', $$(Block($1, null))],
             ['e', $$(Block([], $1))],
-            ['', $$(Block([], Current()), SuggestQueryRoot($0, null))]
+            ['', $$(Block([], null))]
         ],
         definitions: [
             ['def', $$([$1])],
             ['definitions def', '$1.push($2)']
         ],
         def: [
-            ['$ ;', $$(Definition(null, Current()), Suggestion($1, $1, 'path', 'current'))], // do nothing, but collect stat (suggestions)
-            ['$ident ;', $$(Definition($1, GetProperty(Current(), $1)), SuggestIdent($1, 'current'))],
-            ['$ident : e ;', $$(Definition($1, $3))]
+            ['$ ;', $$(Definition(Declarator_(null), null))],     // declare nothing, but avoid failure and capture stat (suggestions)
+            ['$ : e ;', $$(Definition(Declarator_(null), $3))],   // declare nothing, but avoid failure and capture stat (suggestions)
+            ['$ident ;', $$(Definition(Declarator_($1name), null))],
+            ['$ident : e ;', $$(Definition(Declarator_($1name), $3))]
         ],
+        // FIXME: temporary solution, because of `declarator` conflict
+        // with `queryRule` when declarator specified aside
+        // declarator: [
+        //     ['$', $$(Declarator(null))], // declare nothing, but avoid failure and capture stat (suggestions)
+        //     ['$ident', $$(Declarator($1))]
+        // ],
 
         ident: [
             ['IDENT', $$(Identifier($1))]
@@ -473,8 +287,8 @@ module.exports = {
             ['+ e', $$(Unary($1, $2))],
 
             // binary operators
-            ['e IN e', $$(Binary($2, $1, $3), Suggestion($1, $1, 'in-value', $3))],
-            ['e HAS e', $$(Binary($2, $1, $3), Suggestion($3, $3, 'in-value', $1))],
+            ['e IN e', $$(Binary($2, $1, $3))],
+            ['e HAS e', $$(Binary($2, $1, $3))],
             ['e NOTIN e', $$(Binary($2, $1, $3))],
             ['e HASNO e', $$(Binary($2, $1, $3))],
             ['e AND e', $$(Binary($2, $1, $3))],
@@ -484,8 +298,8 @@ module.exports = {
             ['e * e', $$(Binary($2, $1, $3))],
             ['e / e', $$(Binary($2, $1, $3))],
             ['e % e', $$(Binary($2, $1, $3))],
-            ['e = e', $$(Binary($2, $1, $3), Suggestion($3, $3, 'value', $1))],
-            ['e != e', $$(Binary($2, $1, $3), Suggestion($3, $3, 'value', $1))],
+            ['e = e', $$(Binary($2, $1, $3))],
+            ['e != e', $$(Binary($2, $1, $3))],
             ['e < e', $$(Binary($2, $1, $3))],
             ['e <= e', $$(Binary($2, $1, $3))],
             ['e > e', $$(Binary($2, $1, $3))],
@@ -503,74 +317,73 @@ module.exports = {
         queryRoot: [
             ['@', $$(Data())],
             ['#', $$(Context())],
-            ['$', $$(Current(), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
+            ['$', $$(Current()), { prec: 'def' }],
             ['$$', $$(Arg1())],
-            ['$ident', $$(Reference($1), Suggestion($1, $1, 'var', 'current')), { prec: 'def' }],
+            ['$ident', $$(Reference($1)), { prec: 'def' }],
             ['STRING', $$(Literal($1))],
             ['NUMBER', $$(Literal($1))],
             ['REGEXP', $$(Literal($1))],
             ['LITERAL', $$(Literal($1))],
             ['object', asis],
             ['array', asis],
-            ['[ sliceNotation ]', $$(SliceNotation(Current(), $2))],
-            ['ident', $$(GetProperty(Current(), $1), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
-            ['ident ( )', $$(MethodCall(Current(), $1, []), SuggestMethod($1), SuggestQueryRoot($3, $2))],
-            ['ident ( arguments )', $$(MethodCall(Current(), $1, $3), SuggestMethod($1))],
+            ['[ sliceNotation ]', $$(SliceNotation(null, $2))],
+            ['ident', $$(GetProperty(null, $1))],
+            ['method()', $$(MethodCall(null, $1))],
             ['( e )', $$(Parentheses($2))], // NOTE: using e instead of block for preventing a callback creation
             ['( definitions e )', $$(Parentheses(Block($2, $3)))],
-            ['. ident', $$(GetProperty(Current(), $2), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
-            ['. ident ( )', $$(MethodCall(Current(), $2, []), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestMethod($2), SuggestQueryRoot($4, $3))],
-            ['. ident ( arguments )', $$(MethodCall(Current(), $2, $4), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestMethod($2))],
-            ['.( block )', $$(Map(Current(), $2), SuggestQueryRoot())],
-            ['.[ block ]', $$(Filter(Current(), $2), SuggestQueryRoot())],
-            ['.. ident', $$(Recursive(Current(), GetProperty(Current(), $2)), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
-            ['.. ident ( )', $$(Recursive(Current(), MethodCall(Current(), $2, [])), SuggestQueryRoot(), SuggestIdent($2, 'current'), SuggestQueryRoot($4, $3))],
-            ['.. ident ( arguments )', $$(Recursive(Current(), MethodCall(Current(), $2, $4)), SuggestQueryRoot(), SuggestIdent($2, 'current'))],
-            ['..( block )', $$(Recursive(Current(), $2), SuggestQueryRoot())]
+            ['. ident', $$(GetProperty(null, $2))],
+            ['. method()', $$(MethodCall(null, $2))],
+            ['.( block )', $$(Map(null, $2))],
+            ['.[ block ]', $$(Filter(null, $2))],
+            ['.. ident', $$(Recursive(null, GetProperty(null, $2)))],
+            ['.. method()', $$(Recursive(null, MethodCall(null, $2)))],
+            ['..( block )', $$(Recursive(null, $2))]
         ],
         relativePath: [
-            ['query [ ]', $$(Pick($1, null), SuggestQueryRoot($3, $2))],
+            ['query [ ]', $$(Pick($1, null))],
             ['query [ e ]', $$(Pick($1, $3))],
             ['query [ sliceNotation ]', $$(SliceNotation($1, $3))],
-            ['query . ident', $$(GetProperty($1, $3), SuggestIdent($3, $1))],
-            ['query . ident ( )', $$(MethodCall($1, $3, []), SuggestIdent($3, $1), SuggestMethod($3), SuggestQueryRoot($5, $4))],
-            ['query . ident ( arguments )', $$(MethodCall($1, $3, $5), SuggestIdent($3, $1), SuggestMethod($3))],
+            ['query . ident', $$(GetProperty($1, $3))],
+            ['query . method()', $$(MethodCall($1, $3))],
             ['query .( block )', $$(Map($1, $3))],
             ['query .[ block ]', $$(Filter($1, $3))],
-            ['query .. ident', $$(Recursive($1, GetProperty(Current(), $3)), SuggestIdent($3, $1))],
-            ['query .. ident ( )', $$(Recursive($1, MethodCall(Current(), $3, [])), SuggestIdent($3, $1), SuggestMethod($3), SuggestQueryRoot($5, $4))],
-            ['query .. ident ( arguments )', $$(Recursive($1, MethodCall(Current(), $3, $5)), SuggestIdent($3, $1), SuggestMethod($3))],
+            ['query .. ident', $$(Recursive($1, GetProperty(null, $3)))],
+            ['query .. method()', $$(Recursive($1, MethodCall(null, $3)))],
             ['query ..( block )', $$(Recursive($1, $3))]
         ],
 
+        'method()': [
+            ['ident ( )', $$(Method($1, []))],
+            ['ident ( arguments )', $$(Method($1, $3))]
+        ],
         arguments: createCommaList('arguments', 'e'),
 
         object: [
-            ['{ }', $$(Object([]), Suggestion($2, $1, ['var', 'path'], 'current'))],
+            ['{ }', $$(Object([]))],
             ['{ properties }', $$(Object($2))]
         ],
         properties: createCommaList('properties', 'property'),
         property: [
-            ['ident', $$(Property($1, GetProperty(Current(), $1)), Suggestion($1, $1, 'var', 'current'), SuggestIdent($1, 'current'))],
-            ['$', $$(Property(null, Current()), Suggestion($1, $1, 'var', 'current'))],  // do nothing, but collect stat (suggestions)
-            ['$ident', $$(Property($1, Reference($1)), Suggestion($1, $1, 'var', 'current'))],
+            ['ident', $$(Property($1, null))],
+            ['$', $$(Property(Current(), null))],  // do nothing, but collect stat (suggestions)
+            ['$ident', $$(Property(Reference($1), null))],
             ['ident : e', $$(Property($1, $3))],
             ['STRING : e', $$(Property(Literal($1), $3))],
             ['NUMBER : e', $$(Property(Literal($1), $3))],
             ['LITERAL : e', $$(Property(Literal($1), $3))],
             ['[ e ] : e', $$(Property($2, $5))],
-            ['...', $$(Spread(Current()), SuggestQueryRoot($1, null))],
+            ['...', $$(Spread(null))],
             ['... query', $$(Spread($2))]
         ],
 
         arrayElements: createCommaList('arrayElements', 'arrayElement'),
         arrayElement: [
             ['e', asis],
-            ['...', $$(Spread(Current()), SuggestQueryRoot($1, null))],
-            ['... e', $$(Spread($2))]
+            ['...', $$(Spread(null, true))],
+            ['... e', $$(Spread($2, true))]
         ],
         array: [
-            ['[ ]', $$(Array([]), SuggestQueryRoot($2, $1))],
+            ['[ ]', $$(Array([]))],
             ['[ arrayElements ]', $$(Array($2))]
         ],
 

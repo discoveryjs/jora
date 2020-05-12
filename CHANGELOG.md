@@ -15,6 +15,11 @@
     - Pass index or key to function reference as second parameter (can be accessed by `$$`)
     - When no arguments given or reference is `undefined` for object, return first entry value instead of value with key `undefined`
 - Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
+- Grand internal refactoring around AST processing:
+    - Added `walk()` method
+    - Parser generates less virtual nodes, so parse->stringify is much closer to original code (white spaces and comments mostly lost)
+    - Suggestion subsystem is moved from parser to separate module which is using in stat mode only
+    - Various fixes and improvements in suggestions
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 
