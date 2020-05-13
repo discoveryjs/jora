@@ -26,6 +26,7 @@
 - Added support for methods as a reference to definition's value, i.e. `$method: => 123; $method() or path.$method()`
 - Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
 - Improved tolerant mode to not fail on methods that doesn't exists, such invocations silently returns `undefined`
+- Removed `mapToArray()` method, use `entries().({ nameProp: key, ...value })` instead
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

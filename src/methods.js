@@ -63,21 +63,6 @@ module.exports = Object.freeze({
 
         return result;
     },
-    mapToArray(current, keyProperty = 'key', valueProperty) {
-        const result = [];
-
-        for (const key in current) {
-            if (hasOwnProperty.call(current, key)) {
-                result.push(
-                    valueProperty
-                        ? { [keyProperty]: key, [valueProperty]: current[key] }
-                        : { [keyProperty]: key, ...current[key] }
-                );
-            }
-        }
-
-        return result;
-    },
     size(current) {
         if (isPlainObject(current)) {
             return Object.keys(current).length;

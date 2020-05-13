@@ -324,7 +324,6 @@ keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value }` objects is using for entries instead of array tuples
 fromEntries() | Similar to `Object.fromEntries()` in JS with difference: `{ key, value }` objects are expecting as entries instead of array tuples
-mapToArray("key"[, "value"]) | Converts an object to an array, and store object key as "key"
 pick("key")<br>pick(index)<br>pick(fn) | Get a value by a key, an index or a function. It returns an element with `e` index for arrays, a char with `e` index for strings, and a value with `e` key (must be own key) for enything else. Negative indecies are supported for arrays and strings. Current value is element for an array, a char for a string or an entry value for object. Arg1 (i.e. `$$`) is an index for arrays and strings, and a key for objects.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
 sort(\<fn>) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. Following queries are equivalents:<br>`sort(<foo.bar>)` and `sort(foo.bar asc)`<br>`sort(<foo>).reverse()` and `sort(foo desc)`<br>`sort(<[a, b]>)` and `sort(a asc, b asc)`
