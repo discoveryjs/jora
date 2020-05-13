@@ -7,10 +7,10 @@ module.exports = {
         };
     },
     suggest(node, ctx) {
-        ctx.range(node.property.range, 'path', !node.value, node.value || undefined);
+        ctx.range(node.property.range, 'path', node.value || undefined, !node.value);
 
         if (node.value === null) {
-            ctx.range(node.property.range, 'var', true);
+            ctx.range(node.property.range, 'var');
         }
 
         if (node.range &&

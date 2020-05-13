@@ -5,7 +5,7 @@ const data = {
         { a: 1, b: 2},
         { b: 3, c: 4},
         {},
-        { d: 5 }
+        { d: 'a' }
     ],
     bar: 32
 };
@@ -634,6 +634,64 @@ describe('query/suggestions (tolerant mode)', () => {
                     null,
                     null,
                     null
+                ],
+                'keys().[$ in [|]]': [
+                    suggestion('', ['"foo":value', '"bar":value'], 14)
+                ],
+                // FIXME: split in several test cases
+                '["a", "b", "c", "d", 1, 2].[$a:"a"; $ in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
+                    null,
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 43, 46),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 43, 46),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 43, 46),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 43, 46),
+                    null,
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
+                    null,
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 51, 52),
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 51, 52),
+                    null,
+                    suggestion('$a', ['$a:variable'], 54, 56),
+                    suggestion('$a', ['$a:variable'], 54, 56),
+                    suggestion('$a', ['$a:variable'], 54, 56),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 57),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 58)
+                ]
+            }).forEach(([queryString, expected]) =>
+                it(queryString, () =>
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        expected
+                    )
+                )
+            );
+        });
+
+        describe('not in', () => {
+            Object.entries({
+                'keys().[$ not in [|]]': [
+                    suggestion('', ['"foo":value', '"bar":value'], 18)
+                ],
+                // FIXME: split in several test cases
+                '["a", "b", "c", "d", 1, 2].[$a:"a"; $ not in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
+                    null,
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 47, 50),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 47, 50),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 47, 50),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 47, 50),
+                    null,
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
+                    null,
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 55, 56),
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 55, 56),
+                    null,
+                    suggestion('$a', ['$a:variable'], 58, 60),
+                    suggestion('$a', ['$a:variable'], 58, 60),
+                    suggestion('$a', ['$a:variable'], 58, 60),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 61),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 62)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>
@@ -662,6 +720,64 @@ describe('query/suggestions (tolerant mode)', () => {
                     null,
                     suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24),
                     suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24)
+                ],
+                'keys().[[|] has $]': [
+                    suggestion('', ['"foo":value', '"bar":value'], 9)
+                ],
+                // FIXME: split in several test cases
+                '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has $]': [
+                    null,
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    null,
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    null,
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 45, 46),
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 45, 46),
+                    null,
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 51),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 52)
+                ]
+            }).forEach(([queryString, expected]) =>
+                it(queryString, () =>
+                    assert.deepEqual(
+                        suggestQuery(queryString, data),
+                        expected
+                    )
+                )
+            );
+        });
+
+        describe('has no', () => {
+            Object.entries({
+                'keys().[[|] has no $]': [
+                    suggestion('', ['"foo":value', '"bar":value'], 9)
+                ],
+                // FIXME: split in several test cases
+                '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has no $]': [
+                    null,
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    suggestion('"b"', ['"c":value', '"d":value', '2:value'], 37, 40),
+                    null,
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    suggestion('d', ['"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    null,
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 45, 46),
+                    suggestion('1', ['"c":value', '"d":value', '2:value'], 45, 46),
+                    null,
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('$a', ['$a:variable'], 48, 50),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 51),
+                    suggestion('', ['"c":value', '"d":value', '2:value', '$a:variable'], 52)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>

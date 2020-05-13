@@ -2,21 +2,42 @@ const createError = require('./error');
 const nodes = require('./nodes').compile;
 
 module.exports = function compile(ast, suggestions = null) {
-    function addSuggestPoint(spName, start, end, type) {
-        let from;
+    function getNodeSpName(node) {
+        let spName;
+
+        if (!nodeSpName.has(node)) {
+            spNames.push(spName = 's' + spNames.length);
+            nodeSpName.set(node, spName);
+        } else {
+            spName = nodeSpName.get(node);
+        }
+
+        return spName;
+    }
+
+    function addSuggestPoint(start, end, type, spName, related) {
+        let range = [start, end, JSON.stringify(type)];
 
         if (type === 'var') {
-            from = JSON.stringify(ctx.scope);
+            if (!ctx.scope.length) {
+                return;
+            }
+
+            range.push(JSON.stringify(ctx.scope));
         } else {
             if (!spName) {
                 spNames.push(spName = 's' + spNames.length);
             }
-            from = spName;
+
+            range.push(spName);
+
+            if (related) {
+                range.push(related);
+            }
         }
 
-        if (from !== '[]') {
-            normalizedSuggestRanges.push([from, JSON.stringify([start, end]), JSON.stringify(type)].join(','));
-        }
+
+        normalizedSuggestRanges.push(range);
 
         return spName;
     }
@@ -35,7 +56,7 @@ module.exports = function compile(ast, suggestions = null) {
 
         if (ctx.scope.captureCurrent.length) {
             const spName = ctx.scope.captureCurrent.reduce(
-                (spName, range) => addSuggestPoint(spName, ...range),
+                (spName, range) => addSuggestPoint(...range, spName),
                 undefined
             );
             const stat = 'stat(' + spName + ',current)';
@@ -55,17 +76,19 @@ module.exports = function compile(ast, suggestions = null) {
 
         if (suggestions !== null) {
             if (suggestions.has(node)) {
-                for (const [start, end, type, current] of suggestions.get(node)) {
+                for (const [start, end, type, related] of suggestions.get(node)) {
                     if (type === 'var') {
-                        addSuggestPoint(null, start, end, type);
-                    } else if (current) {
+                        addSuggestPoint(start, end, type);
+                    } else if (related === true) {
                         ctx.scope.captureCurrent.push([start, end, type]);
                     } else {
-                        const newSpName = addSuggestPoint(spName, start, end, type);
-
                         if (!spName) {
-                            spName = newSpName;
+                            spName = getNodeSpName(node);
                             put('stat(' + spName + ',');
+                        }
+
+                        if (type) {
+                            addSuggestPoint(start, end, type, spName, related && getNodeSpName(related));
                         }
                     }
                 }
@@ -96,6 +119,7 @@ module.exports = function compile(ast, suggestions = null) {
     const put = chunk => buffer.push(chunk);
     const normalizedSuggestRanges = [];
     const spNames = [];
+    const nodeSpName = new WeakMap();
 
     const ctx = {
         scope: [],

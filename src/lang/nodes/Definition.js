@@ -12,7 +12,7 @@ module.exports = {
     },
     suggest(node, ctx) {
         if (node.value === null) {
-            ctx.range(node.declarator.range, 'path', true);
+            ctx.range(node.declarator.range, 'path');
         }
     },
     compile(node, ctx) {

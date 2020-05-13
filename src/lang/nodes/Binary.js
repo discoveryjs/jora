@@ -19,6 +19,20 @@ const binary = {
     '~=': 'match'
 };
 
+function valueSubset(ctx, values, extra) {
+    if (extra.type === 'Array') {
+        if (extra.elements.length === 0) {
+            ctx.range([extra.range[0] + 1, extra.range[1] - 1], 'value-subset', values, extra);
+        }
+
+        for (const { type, range, value } of extra.elements) {
+            if (range && (type === 'Literal' || type === 'Identifier' || (type === 'GetProperty' && value === null))) {
+                ctx.range(range, 'value-subset', values, extra);
+            }
+        }
+    }
+}
+
 module.exports = {
     build(operator, left, right) {
         return {
@@ -31,16 +45,26 @@ module.exports = {
     suggest(node, ctx) {
         switch (node.operator) {
             case 'in':
-                ctx.range(node.left.range, 'in-value', false, node.right);
+                ctx.range(node.left.range, 'in-value', node.right, null);
+                valueSubset(ctx, node.left, node.right);
+                break;
+
+            case 'not in':
+                valueSubset(ctx, node.left, node.right);
                 break;
 
             case 'has':
-                ctx.range(node.right.range, 'in-value', false, node.left);
+                ctx.range(node.right.range, 'in-value', node.left, null);
+                valueSubset(ctx, node.right, node.left);
+                break;
+
+            case 'has no':
+                valueSubset(ctx, node.right, node.left);
                 break;
 
             case '=':
             case '!=':
-                ctx.range(node.right.range, 'value', false, node.left);
+                ctx.range(node.right.range, 'value', node.left, null);
                 break;
         }
     },

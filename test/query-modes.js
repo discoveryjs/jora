@@ -82,6 +82,7 @@ describe('query/modes', () => {
                 current: 'foo',
                 from: 0,
                 to: 3,
+                related: null,
                 values: [{
                     foo: {
                         bar: 42
@@ -99,6 +100,7 @@ describe('query/modes', () => {
                 current: '',
                 from: 4,
                 to: 4,
+                related: null,
                 values: [{
                     bar: 42
                 }]

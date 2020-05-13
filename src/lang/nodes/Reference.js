@@ -7,7 +7,7 @@ module.exports = {
     },
     suggest(node, ctx) {
         if (node.range) {
-            ctx.range(node.range, 'var', true);
+            ctx.range(node.range, 'var');
         }
     },
     compile(node, ctx) {

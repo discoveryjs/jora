@@ -19,13 +19,13 @@ module.exports = {
         if (node.value === null) {
             switch (node.key.type) {
                 case 'Identifier':
-                    ctx.range(node.range, 'path', true);
-                    ctx.range(node.range, 'var', true);
+                    ctx.range(node.range, 'path');
+                    ctx.range(node.range, 'var');
                     break;
 
                 case 'Current':
                 case 'Reference':
-                    ctx.range(node.range, 'var', true);
+                    ctx.range(node.range, 'var');
                     break;
             }
         }

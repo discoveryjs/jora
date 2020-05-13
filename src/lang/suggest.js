@@ -58,7 +58,7 @@ function processSuggestRanges(suggestRanges, source, commentRanges, noSuggestOnE
     const result = [];
 
     for (let i = 0; i < suggestRanges.length; i++) {
-        let [start, end, type, current] = suggestRanges[i];
+        let [start, end, type, related] = suggestRanges[i];
 
         if (onlyWsInRange(source, start, end)) {
             while (start >= 0 && isWhiteSpace(source, start - 1)) {
@@ -88,7 +88,7 @@ function processSuggestRanges(suggestRanges, source, commentRanges, noSuggestOnE
 
         const ranges = getSuggestRanges(start, end, source, commentRanges, noSuggestOnEofPos);
         for (let j = 0; j < ranges.length; j += 2) {
-            result.push([ranges[j], ranges[j + 1], type, current]);
+            result.push([ranges[j], ranges[j + 1], type, related]);
         }
     }
 
@@ -106,8 +106,11 @@ function collectNodeSuggestions(ast) {
         }
     };
     const ctx = {
-        range(range, type, current, node = currentNode) {
-            add(node, [...range, type, Boolean(current)]);
+        range(range, type, node = currentNode, related = true) {
+            add(node, [...range, type, related]);
+            if (related && related !== true) {
+                add(related, []);
+            }
         },
         queryRoot(start, end = start) {
             add(currentNode, [start, end, 'var', true]);

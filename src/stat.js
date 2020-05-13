@@ -3,11 +3,12 @@ const contextToType = {
     'path': 'property',
     'value': 'value',
     'in-value': 'value',
+    'value-subset': 'value',
     'var': 'variable'
 };
 
 
-function valuesToSuggestions(context, values) {
+function valuesToSuggestions(context, values, related) {
     const suggestions = new Set();
     const addValue = value => {
         switch (typeof value) {
@@ -63,6 +64,25 @@ function valuesToSuggestions(context, values) {
                 suggestions.add('$' + value);
             });
             break;
+
+        case 'value-subset':
+            values.forEach(value => {
+                if (Array.isArray(value)) {
+                    value.forEach(addValue);
+                } else {
+                    addValue(value);
+                }
+            });
+
+            // delete used
+            related.forEach(arr => {
+                arr.forEach(value => {
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        suggestions.delete(JSON.stringify(value));
+                    }
+                });
+            });
+            break;
     }
 
     return [...suggestions];
@@ -71,29 +91,23 @@ function valuesToSuggestions(context, values) {
 function findSourcePosRanges(source, pos, points, includeEmpty) {
     const result = [];
 
-    for (let i = 0; i < points.length; i++) {
-        const [values, ranges, context] = points[i];
+    for (let [from, to, context, values, related = null] of points) {
+        if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
+            let current = source.substring(from, to);
 
-        for (let j = 0; j < ranges.length; j += 2) {
-            let from = ranges[j];
-            let to = ranges[j + 1];
-
-            if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
-                let current = source.substring(from, to);
-
-                if (!/\S/.test(current)) {
-                    current = '';
-                    from = to = pos;
-                }
-
-                result.push({
-                    context,
-                    current,
-                    from,
-                    to,
-                    values
-                });
+            if (!/\S/.test(current)) {
+                current = '';
+                from = to = pos;
             }
+
+            result.push({
+                context,
+                current,
+                from,
+                to,
+                values,
+                related
+            });
         }
     }
 
@@ -115,11 +129,11 @@ module.exports = (source, points) => ({
         const suggestions = [];
 
         ranges.forEach(range => {
-            const { context, current, from, to, values } = range;
+            const { context, current, from, to, values, related } = range;
 
             // console.log({current, variants:[...suggestions.get(range)], suggestions })
             suggestions.push(
-                ...valuesToSuggestions(context, values)
+                ...valuesToSuggestions(context, values, related)
                     .map(value => ({
                         current,
                         type: contextToType[context],

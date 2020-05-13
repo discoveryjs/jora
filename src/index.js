@@ -51,23 +51,29 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         let prevPrefix = null;
 
         debug('Suggest ranges', ranges.sort((a, b) => a[1] - b[1]).map(([node, ...range]) => {
+            const [start, end, type, extra] = range;
             let prelude;
 
-            if (range[0] === prevRange[0] && range[1] === prevRange[1]) {
+            if (!type) {
+                return;
+            }
+
+            if (start === prevRange[0] && end === prevRange[1]) {
                 prelude = ' '.repeat(prevPrefix.length);
             } else {
-                const pre = esc(source.slice(0, range[0])).length;
-                const long = esc(source.substring(range[0], range[1])).length;
+                const pre = esc(source.slice(0, start)).length;
+                const long = esc(source.substring(start, end)).length;
 
                 prevRange = range;
                 prevPrefix =
                     ' '.repeat(pre) + (!long ? '\\' : '~'.repeat(long)) +
-                    ' ' + range[0] + ':' + range[1];
+                    ' ' + start + ':' + end;
                 prelude = esc(source) + '\n' + prevPrefix;
             }
 
             return (
-                prelude + ' [' + range[2] + '] on ' + node.type + (range[3] ? ' (current)' : '')
+                prelude + ' [' + type + '] on ' + node.type +
+                (extra === true ? ' (current)' : extra ? ' & ' + extra.type : '')
             );
         }).join('\n'));
     }
