@@ -23,6 +23,9 @@
     - Various fixes and improvements in suggestions
     - The new approach allows to implement more complex suggestion scenarios like suggestions in array values for operators `in`, `not in`, `has` and `has no` which was added (e.g. in query `["a", "b", 1, 2][$ in ["b", 2]]` jora will suggest only `"a"` and `1` values in array after `in` operator)
 - Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
+- Added support for methods as a reference to definition's value, i.e. `$method: => 123; $method() or path.$method()`
+- Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
+- Improved tolerant mode to not fail on methods that doesn't exists, such invocations silently returns `undefined`
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

@@ -306,10 +306,11 @@ jora | Description
 --- | ---
 ident | The same as `$.ident`
 .ident | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
-..ident<br> ..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
+..ident<br>..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
 .( block ) | Map a current data. Equivalent to a `.map(<block>)`
-.method()<br> ..method() | Invoke a method to current value. See [build-in methods below](#build-in-methods)
+method()<br>.method()<br>..$method() | Invoke a method to current value, where `$method` is a reference to definition value (i.e. `$example: => $ * 10; 2.$plural(["example", "examples"])`). Can take arguments (i.e. `$method(one, 2)`).
+$method()<br>.$method()<br>..method() | Invoke a method to current value. See [build-in methods below](#build-in-methods)
 path[expr] | Array-like notation to access properties. Behaves like `pick()` method. In case you need to fetch a value to each element of array use `.($[expr])` or `map(=>$[expr])`
 [from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
 expr \| [definitions] expr \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`

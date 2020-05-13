@@ -1,7 +1,7 @@
 const createError = require('./error');
 const nodes = require('./nodes').compile;
 
-module.exports = function compile(ast, suggestions = null) {
+module.exports = function compile(ast, tolerant = false, suggestions = null) {
     function getNodeSpName(node) {
         let spName;
 
@@ -97,7 +97,7 @@ module.exports = function compile(ast, suggestions = null) {
             if (node.type === 'Current' &&
                 ctx.scope.firstCurrent === null &&
                 ctx.scope.captureCurrent.disabled !== true) {
-                ctx.scope.firstCurrent = ctx.buffer.length;
+                ctx.scope.firstCurrent = buffer.length;
             }
         }
 
@@ -122,9 +122,9 @@ module.exports = function compile(ast, suggestions = null) {
     const nodeSpName = new WeakMap();
 
     const ctx = {
+        tolerant,
         scope: [],
         createScope,
-        buffer,  // FIXME: remove from ctx
         needTmp: false,
         put,
         node: walk,

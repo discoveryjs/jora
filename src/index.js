@@ -78,7 +78,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         }).join('\n'));
     }
 
-    const fn = compile(parseResult.ast, suggestions);
+    const fn = compile(parseResult.ast, tolerantMode, suggestions);
 
     if (debug) {
         debug('Compiled code', fn.toString());

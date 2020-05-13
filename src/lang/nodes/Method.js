@@ -12,14 +12,40 @@ module.exports = {
         }
     },
     compile(node, ctx) {
-        ctx.put('m.');
+        //  default mode: method(tmp, ...args...)
+        // tolerant mode: (typeof method === 'function' ? method(tmp, ...args...) : undefined)
+        if (ctx.tolerant) {
+            ctx.put('(typeof ');
+        }
+
+        if (node.reference.type === 'Identifier') {
+            ctx.put('m.');
+        }
+
         ctx.node(node.reference);
+
+        if (ctx.tolerant) {
+            ctx.put('==="function"?');
+
+            if (node.reference.type === 'Identifier') {
+                ctx.put('m.');
+            }
+
+            ctx.node(node.reference);
+        }
+
         ctx.put('(tmp');
+
         if (node.arguments.length) {
             ctx.put(',');
             ctx.list(node.arguments, ',');
         }
+
         ctx.put(')');
+
+        if (ctx.tolerant) {
+            ctx.put(':undefined)');
+        }
     },
     walk(node, ctx) {
         ctx.node(node.reference);

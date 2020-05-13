@@ -43,9 +43,16 @@ describe('lang/variables', () => {
         );
     });
 
-    it('should return undefined when refer to never defined variable', () => {
+    it('should raise an exception when refer to undefined variable', () => {
+        assert.throws(
+            () => query('$a:$b;$a')(),
+            /\$b is not defined/
+        );
+    });
+
+    it('should return undefined when refer to undefined variable in tolerant mode', () => {
         assert.deepEqual(
-            query('$a:$b;$a')(),
+            query('$a:$b;$a', { tolerant: true })(),
             undefined
         );
     });

@@ -11,16 +11,17 @@ module.exports = {
         }
     },
     compile(node, ctx) {
-        if (ctx.scope.includes(node.name.name)) {
-            ctx.put('$');
-            ctx.node(node.name);
-        } else {
-            ctx.put('typeof $');
+        if (!ctx.scope.includes(node.name.name) && ctx.tolerant) {
+            ctx.put('(typeof $');
             ctx.node(node.name);
             ctx.put('!=="undefined"?$');
             ctx.node(node.name);
-            ctx.put(':undefined');
+            ctx.put(':undefined)');
+            return;
         }
+
+        ctx.put('$');
+        ctx.node(node.name);
     },
     walk(node, ctx) {
         ctx.node(node.name);

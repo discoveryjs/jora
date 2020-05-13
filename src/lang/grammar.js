@@ -354,7 +354,9 @@ module.exports = {
 
         'method()': [
             ['ident ( )', $$(Method($1, []))],
-            ['ident ( arguments )', $$(Method($1, $3))]
+            ['ident ( arguments )', $$(Method($1, $3))],
+            ['$ident ( )', $$(Method(Reference($1), []))],
+            ['$ident ( arguments )', $$(Method(Reference($1), $3))]
         ],
         arguments: createCommaList('arguments', 'e'),
 
