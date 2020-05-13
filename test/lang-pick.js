@@ -55,6 +55,50 @@ describe('lang/pick', () => {
         });
     });
 
+    describe('boolean as argument', () => {
+        it('should return first element when false for an array', () => {
+            assert.strictEqual(
+                query('$[false]')([42, 11, 22, 33]),
+                42
+            );
+        });
+
+        it('should return second element when true for an array', () => {
+            assert.strictEqual(
+                query('$[true]')([42, 11, 22, 33]),
+                11
+            );
+        });
+
+        it('should return first char when false for a string', () => {
+            assert.strictEqual(
+                query('$[false]')('hello'),
+                'h'
+            );
+        });
+
+        it('should return second char when true for a string', () => {
+            assert.strictEqual(
+                query('$[true]')('hello'),
+                'e'
+            );
+        });
+
+        it('should return entry value with the same name for an object', () => {
+            assert.strictEqual(
+                query('$[false]')({ true: 42, false: 45 }),
+                45
+            );
+        });
+
+        it('should return entry value with the same name for an object', () => {
+            assert.strictEqual(
+                query('$[true]')({ true: 42, false: 45 }),
+                42
+            );
+        });
+    });
+
     describe('a scalar value as argument', () => {
         it('should return an element by index for array', () => {
             assert.strictEqual(

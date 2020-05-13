@@ -14,6 +14,7 @@
     - Return a value for object and function as reference, instead of entry
     - Pass index or key to function reference as second parameter (can be accessed by `$$`)
     - When no arguments given or reference is `undefined` for object, return first entry value instead of value with key `undefined`
+    - Cast boolean values to a number index when access to an array or string, i.e. `false` -> `0` and `true` -> `1`
 - Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
 - Grand internal refactoring around AST processing:
     - Added `walk()` method

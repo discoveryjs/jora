@@ -126,7 +126,7 @@ module.exports = Object.freeze({
 
         if (Array.isArray(current) || typeof current === 'string') {
             return isFinite(ref)
-                ? current[ref < 0 ? current.length + Number(ref) : ref || 0]
+                ? current[ref < 0 ? current.length + Number(ref) : Number(ref) || 0]
                 : undefined;
         }
 
