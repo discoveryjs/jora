@@ -7,7 +7,7 @@ module.exports = {
         };
     },
     suggest(node, ctx) {
-        if (!node.body) {
+        if (node.body === null) {
             ctx.queryRoot(node.range[1]);
         }
     },
@@ -30,7 +30,6 @@ module.exports = {
             ctx.nodeOrCurrent(node.body);
             ctx.put(')');
         } else {
-            ctx.put('/*?*/');
             ctx.nodeOrCurrent(node.body);
         }
     },

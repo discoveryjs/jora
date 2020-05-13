@@ -8,12 +8,13 @@ module.exports = {
     },
     suggest(node, ctx) {
         ctx.range(node.property.range, 'path', !node.value, node.value || undefined);
-        if (!node.value) {
+
+        if (node.value === null) {
             ctx.range(node.property.range, 'var', true);
         }
+
         if (node.range &&
             node.value === null &&
-            node.property.range &&
             node.property.range[0] !== node.range[0]) {
             ctx.queryRoot(node.range[0]);
         }

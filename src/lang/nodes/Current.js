@@ -10,9 +10,6 @@ module.exports = {
         }
     },
     compile(node, ctx) {
-        if (ctx.scope.firstCurrent === null && !ctx.scope.captureCurrent.disabled) {
-            ctx.scope.firstCurrent = ctx.buffer.length;
-        }
         ctx.put('current');
     },
     walk() {},

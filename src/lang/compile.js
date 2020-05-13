@@ -1,6 +1,7 @@
+const createError = require('./error');
 const nodes = require('./nodes').compile;
 
-module.exports = function compile(ast, statMode) {
+module.exports = function compile(ast, suggestions = null) {
     function addSuggestPoint(spName, start, end, type) {
         let from;
 
@@ -52,20 +53,28 @@ module.exports = function compile(ast, statMode) {
     function walk(node) {
         let spName = false;
 
-        if (statMode && Array.isArray(node.suggestions)) {
-            for (const [start, end, type, current] of node.suggestions) {
-                if (type === 'var') {
-                    addSuggestPoint(null, start, end, type);
-                } else if (current) {
-                    ctx.scope.captureCurrent.push([start, end, type]);
-                } else {
-                    const newSpName = addSuggestPoint(spName, start, end, type);
+        if (suggestions !== null) {
+            if (suggestions.has(node)) {
+                for (const [start, end, type, current] of suggestions.get(node)) {
+                    if (type === 'var') {
+                        addSuggestPoint(null, start, end, type);
+                    } else if (current) {
+                        ctx.scope.captureCurrent.push([start, end, type]);
+                    } else {
+                        const newSpName = addSuggestPoint(spName, start, end, type);
 
-                    if (!spName) {
-                        spName = newSpName;
-                        put('stat(' + spName + ',');
+                        if (!spName) {
+                            spName = newSpName;
+                            put('stat(' + spName + ',');
+                        }
                     }
                 }
+            }
+
+            if (node.type === 'Current' &&
+                ctx.scope.firstCurrent === null &&
+                ctx.scope.captureCurrent.disabled !== true) {
+                ctx.scope.firstCurrent = ctx.buffer.length;
             }
         }
 
@@ -129,7 +138,7 @@ module.exports = function compile(ast, statMode) {
         buffer.unshift('let tmp;');
     }
 
-    if (statMode) {
+    if (suggestions !== null) {
         if (spNames.length > 0) {
             buffer.unshift('const ' + spNames.map(name => name + '=new Set()') + ';\n');
             buffer.unshift('const stat=(s,v)=>(s.add(v),v);\n');
@@ -140,7 +149,11 @@ module.exports = function compile(ast, statMode) {
     try {
         return new Function('f', 'm', 'data', 'context', buffer.join(''));
     } catch (e) {
-        console.error('Jora query compilation error:', buffer.join(''));
-        throw e;
+        const compiledSource = buffer.join('');
+        const error = createError('SyntaxError', 'Jora query compilation error');
+
+        error.compiledSource = compiledSource;
+
+        throw error;
     }
 };

@@ -278,19 +278,19 @@ describe('query/suggestions', () => {
             null
         ],
         '.entries|(|).sort|(|)': [
-            null, // suggestion('entries', ['foo', 'bar'], 1, 8),
+            null,
             suggestion('', ['foo', 'bar'], 9, 9),
-            null, // suggestion('sort', ['key', 'value'], 11, 15),
+            null,
             suggestion('', ['foo', 'bar'], 16, 16)
         ],
         '.entries|(|a|,| |b|).sort|(|a|,| |b|)': [
-            null, // suggestion('entries', ['foo', 'bar'], 1, 8),
+            null,
             suggestion('a', ['foo', 'bar'], 9, 10),
             suggestion('a', ['foo', 'bar'], 9, 10),
             null,
             suggestion('b', ['foo', 'bar'], 12, 13),
             suggestion('b', ['foo', 'bar'], 12, 13),
-            null, // suggestion('sort', ['key', 'value'], 15, 19),
+            null,
             suggestion('a', ['foo', 'bar'], 20, 21),
             suggestion('a', ['foo', 'bar'], 20, 21),
             null,
@@ -369,17 +369,31 @@ describe('query/suggestions (tolerant mode)', () => {
     });
 
     describeCases('trailing full stop with trailing comment', {
-        '.|//': [
-            suggestion('', ['foo', 'bar'], 1)
+        '.|/|/|': [
+            suggestion('', ['foo', 'bar'], 1),
+            null,
+            null
         ],
-        '.|  //': [
-            suggestion('', ['foo', 'bar'], 1)
+        '.|/|/|\n|': [
+            suggestion('', ['foo', 'bar'], 1),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 4)
         ],
-        '.|  //1\n  //2\n//3\n  ': [
-            suggestion('', ['foo', 'bar'], 1)
+        '.|  //|': [
+            suggestion('', ['foo', 'bar'], 1),
+            null
         ],
-        '.foo.|//': [
-            suggestion('', ['a', 'b', 'c', 'd'], 5)
+        '.|  //1\n|  |//2\n//3\n|  |': [
+            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar'], 7),
+            suggestion('', ['foo', 'bar'], 9),
+            suggestion('', ['foo', 'bar'], 17),
+            suggestion('', ['foo', 'bar'], 19)
+        ],
+        '.foo.|//|': [
+            suggestion('', ['a', 'b', 'c', 'd'], 5),
+            null
         ]
     });
 

@@ -1,5 +1,11 @@
 const GetProperty = require('./GetProperty').build;
 const Identifier = require('./Identifier').build;
+const noBracketKeyType = new Set([
+    'Literal',
+    'Identifier',
+    'Reference',
+    'Current'
+]);
 
 module.exports = {
     build(key, value) {
@@ -10,7 +16,7 @@ module.exports = {
         };
     },
     suggest(node, ctx) {
-        if (!node.value) {
+        if (node.value === null) {
             switch (node.key.type) {
                 case 'Identifier':
                     ctx.range(node.range, 'path', true);
@@ -59,12 +65,10 @@ module.exports = {
         ctx.nodeOrNothing(node.value);
     },
     stringify(node, ctx) {
-        if (node.key.type === 'Literal' ||
-            node.key.type === 'Identifier' ||
-            node.key.type === 'Reference' ||
-            node.key.type === 'Current') {
+        if (noBracketKeyType.has(node.key.type)) {
             ctx.node(node.key);
-            if (!node.value) {
+
+            if (node.value === null) {
                 return;
             }
         } else {

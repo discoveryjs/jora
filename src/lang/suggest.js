@@ -54,15 +54,11 @@ function getSuggestRanges(from, to, input, commentRanges, noSuggestOnEofPos) {
     return ranges;
 }
 
-function processSuggestRanges(suggestRanges, source, commentRanges) {
+function processSuggestRanges(suggestRanges, source, commentRanges, noSuggestOnEofPos) {
     const result = [];
-    const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
-        commentRanges.length &&
-        commentRanges[commentRanges.length - 1][1] === source.length &&
-        !/[\r\n]$/.test(source);
 
     for (let i = 0; i < suggestRanges.length; i++) {
-        let [start, end, types, current] = suggestRanges[i];
+        let [start, end, type, current] = suggestRanges[i];
 
         if (onlyWsInRange(source, start, end)) {
             while (start >= 0 && isWhiteSpace(source, start - 1)) {
@@ -90,22 +86,16 @@ function processSuggestRanges(suggestRanges, source, commentRanges) {
             }
         }
 
-        if (!Array.isArray(types)) {
-            types = [types];
-        }
-
         const ranges = getSuggestRanges(start, end, source, commentRanges, noSuggestOnEofPos);
         for (let j = 0; j < ranges.length; j += 2) {
-            types.forEach(type =>
-                result.push([ranges[j], ranges[j + 1], type, current])
-            );
+            result.push([ranges[j], ranges[j + 1], type, current]);
         }
     }
 
     return result;
 }
 
-function collectRanges(ast) {
+function collectNodeSuggestions(ast) {
     let currentNode = null;
     const suggestions = new Map();
     const add = (node, range) => {
@@ -140,13 +130,15 @@ function collectRanges(ast) {
 }
 
 module.exports = function suggest(ast, source, commentRanges) {
-    const nodes = collectRanges(ast);
-    const ranges = [];
+    const suggestions = collectNodeSuggestions(ast);
+    const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
+        commentRanges.length &&
+        commentRanges[commentRanges.length - 1][1] === source.length &&
+        !/[\r\n]$/.test(source);
 
-    for (const [node, rawRanges] of nodes) {
-        node.suggestions = processSuggestRanges(rawRanges, source, commentRanges);
-        ranges.push(...node.suggestions);
+    for (const [node, rawRanges] of suggestions) {
+        suggestions.set(node, processSuggestRanges(rawRanges, source, commentRanges, noSuggestOnEofPos));
     }
 
-    return ranges;
+    return suggestions;
 };

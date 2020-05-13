@@ -38,15 +38,19 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         debug('Restored source', stringify(parseResult.ast));
     }
 
-    const suggestRanges = statMode
+    const suggestions = statMode
         ? suggest(parseResult.ast, source, parseResult.commentRanges)
         : null;
 
-    if (debug && suggestRanges) {
+    if (debug && suggestions) {
         const esc = s => JSON.stringify(s).slice(1, -1);
+        const ranges = [].concat(...[...suggestions.entries()]
+            .map(([node, ranges]) => ranges.map(range => [node, ...range]))
+        );
         let prevRange = [];
         let prevPrefix = null;
-        debug('Suggest ranges', suggestRanges.sort((a, b) => a[0] - b[0]).map(range => {
+
+        debug('Suggest ranges', ranges.sort((a, b) => a[1] - b[1]).map(([node, ...range]) => {
             let prelude;
 
             if (range[0] === prevRange[0] && range[1] === prevRange[1]) {
@@ -63,12 +67,12 @@ function compileFunction(source, statMode, tolerantMode, debug) {
             }
 
             return (
-                prelude + ' [' + range[2] + '] from ' + (range[3] && range[3].type || range[3])
+                prelude + ' [' + range[2] + '] on ' + node.type + (range[3] ? ' (current)' : '')
             );
         }).join('\n'));
     }
 
-    const fn = compile(parseResult.ast, statMode);
+    const fn = compile(parseResult.ast, suggestions);
 
     if (debug) {
         debug('Compiled code', fn.toString());
