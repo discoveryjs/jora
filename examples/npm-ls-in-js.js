@@ -1,7 +1,7 @@
 // Plain JavaScript version of npm-ls.js
 
 function printTree(pkg, level = '') {
-    console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [other versions: ${pkg.otherVersions.join(', ')}]` : ''));
+    console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [more versions: ${pkg.otherVersions.join(', ')}]` : ''));
     level = level.replace('└─ ', '   ').replace('├─ ', '│  ');
     pkg.dependencies.forEach((dep, idx, arr) => printTree(dep, level + (idx === arr.length - 1 ? '└─ ' : '├─ ')));
 }

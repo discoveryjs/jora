@@ -153,23 +153,23 @@ require('child_process').exec('npm ls --json', (error, stdout) => {
     const npmTree = JSON.parse(stdout);
     const tree = JSON.parse(stdout);
     const depsPathsToMultipleVersionPackages = jora(`
+        $normalizedDeps: => dependencies.entries().({ name: key, ...value });
         $multiVersionPackages:
-            ..(dependencies.mapToArray("name"))
-            .group(<name>, <version>)
+            ..$normalizedDeps()
+            .group(=>name, =>version)
             .({ name: key, versions: value.sort() })
             .[versions.size() > 1];
 
         $pathToMultiVersionPackages: => .($name; {
             name,
             version,
-            otherVersions: $multiVersionPackages.pick(<name=$name>).versions - version,
-            dependencies: dependencies
-                .mapToArray("name")
-                .map($pathToMultiVersionPackages)
+            otherVersions: $multiVersionPackages[=>name=$name].versions - version,
+            dependencies: $normalizedDeps()
+                .$pathToMultiVersionPackages()
                 .[name in $multiVersionPackages.name or dependencies]
         });
 
-        map($pathToMultiVersionPackages)
+        $pathToMultiVersionPackages()
     `)(tree);
 
     printTree(depsPathsToMultipleVersionPackages);

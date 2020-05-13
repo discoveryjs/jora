@@ -3,7 +3,7 @@
 const jora = require('../src');
 
 function printTree(pkg, level = '') {
-    console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [other versions: ${pkg.otherVersions.join(', ')}]` : ''));
+    console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [more versions: ${pkg.otherVersions.join(', ')}]` : ''));
     level = level.replace('└─ ', '   ').replace('├─ ', '│  ');
     pkg.dependencies.forEach((dep, idx, arr) => printTree(dep, level + (idx === arr.length - 1 ? '└─ ' : '├─ ')));
 }
@@ -17,23 +17,23 @@ require('child_process')
         try {
             const tree = JSON.parse(stdout);
             const depsPathsToMultipleVersionPackages = jora(`
+                $normalizedDeps: => dependencies.entries().({ name: key, ...value });
                 $multiVersionPackages:
-                    ..(dependencies.mapToArray("name"))
-                    .group(<name>, <version>)
+                    ..$normalizedDeps()
+                    .group(=>name, =>version)
                     .({ name: key, versions: value.sort() })
                     .[versions.size() > 1];
 
                 $pathToMultiVersionPackages: => .($name; {
                     name,
                     version,
-                    otherVersions: $multiVersionPackages.pick(<name=$name>).versions - version,
-                    dependencies: dependencies
-                        .mapToArray("name")
-                        .map($pathToMultiVersionPackages)
+                    otherVersions: $multiVersionPackages[=>name=$name].versions - version,
+                    dependencies: $normalizedDeps()
+                        .$pathToMultiVersionPackages()
                         .[name in $multiVersionPackages.name or dependencies]
                 });
 
-                map($pathToMultiVersionPackages)
+                $pathToMultiVersionPackages()
             `)(tree);
 
             printTree(depsPathsToMultipleVersionPackages);
