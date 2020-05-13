@@ -20,6 +20,7 @@
     - Parser generates less virtual nodes, so parse->stringify is much closer to original code (white spaces and comments mostly lost)
     - Suggestion subsystem is moved from parser to separate module which is using in stat mode only
     - Various fixes and improvements in suggestions
+- Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

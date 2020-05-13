@@ -17,13 +17,18 @@ describe('lang/operators', () => {
 
         it('should compare scalars as JavaScript\'s === operator', () => {
             assert.strictEqual(
-                query('$=456')(456),
+                query('456=456')(),
                 true
             );
 
             assert.strictEqual(
-                query('$="456"')(456),
+                query('456="456"')(),
                 false
+            );
+
+            assert.strictEqual(
+                query('({}/1)=({}/1)')(),
+                true
             );
         });
     });
@@ -40,15 +45,20 @@ describe('lang/operators', () => {
             );
         });
 
-        it('should compare scalars as JavaScript\'s !== operator', () => {
+        it('should compare scalars as JavaScript\'s Object.is()', () => {
             assert.strictEqual(
-                query('$!=456')(456),
+                query('456!=456')(456),
                 false
             );
 
             assert.strictEqual(
-                query('$!="456"')(456),
+                query('456!="456"')(),
                 true
+            );
+
+            assert.strictEqual(
+                query('({}/1)!=({}/1)')(),
+                false
             );
         });
     });

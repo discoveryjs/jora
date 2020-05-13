@@ -57,10 +57,10 @@ module.exports = Object.freeze({
         return a % b;
     },
     eq(a, b) {
-        return a === b;
+        return Object.is(a, b);
     },
     ne(a, b) {
-        return a !== b;
+        return !Object.is(a, b);
     },
     lt(a, b) {
         return a < b;
