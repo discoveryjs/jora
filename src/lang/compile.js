@@ -71,7 +71,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         ctx.scope = prevScope;
     }
 
-    function walk(node) {
+    function walk(node, relatedNode) {
         let spName = false;
 
         if (suggestions !== null) {
@@ -84,7 +84,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
                     } else {
                         if (!spName) {
                             spName = getNodeSpName(node);
-                            put('stat(' + spName + ',');
+                            buffer.push('stat(' + spName + ',');
                         }
 
                         if (type) {
@@ -102,50 +102,76 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         }
 
         if (nodes.has(node.type)) {
-            nodes.get(node.type)(node, ctx);
+            nodes.get(node.type)(node, ctx, relatedNode);
         } else {
             throw new Error('Unknown node type `' + node.type + '`');
         }
 
         if (spName) {
-            put(')');
+            buffer.push(')');
         }
     }
 
-    const buffer = [
-        'const current=data;',
-        'return '
-    ];
-    const put = chunk => buffer.push(chunk);
-    const normalizedSuggestRanges = [];
     const spNames = [];
     const nodeSpName = new WeakMap();
+    const allocatedVars = [];
+    const normalizedSuggestRanges = [];
+    const buffer = [
+        'const current=data;',
+        { toString() {
+            return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
+        } },
+        { toString() {
+            return spNames.length === 0
+                ? ''
+                : [
+                    'const stat=(s,v)=>(s.add(v),v);\n',
+                    'const ' + spNames.map(name => name + '=new Set()') + ';\n'
+                ].join('');
+        } },
+        'return '
+    ];
 
     const ctx = {
         tolerant,
         scope: [],
         createScope,
-        needTmp: false,
-        put,
+        error: (message, node) => {
+            const error = new SyntaxError(message);
+
+            if (node && node.range) {
+                error.details = {
+                    loc: {
+                        range: node.range
+                    }
+                };
+            }
+
+            if (!tolerant) {
+                throw error;
+            }
+        },
+        allocateVar() {
+            const name = 'tmp' + allocatedVars.length;
+            allocatedVars.push(name);
+            return name;
+        },
+        put: chunk => buffer.push(chunk),
         node: walk,
-        nodeOrNothing(node) {
+        nodeOrNothing(node, relatedNode) {
             if (node) {
-                walk(node);
+                walk(node, relatedNode);
             }
         },
-        nodeOrCurrent(node, range) {
-            if (node) {
-                walk(node);
-            } else {
-                walk({ type: 'Current', range });
-            }
+        nodeOrCurrent(node, relatedNode) {
+            walk(node || { type: 'Current' }, relatedNode);
         },
-        list(list, sep) {
-            list.forEach((element, idx) => {
+        list(list, sep, relatedNode) {
+            list.forEach((node, idx) => {
                 if (idx > 0) {
-                    put(sep);
+                    buffer.push(sep);
                 }
-                walk(element);
+                walk(node, relatedNode);
             });
         }
     };
@@ -153,21 +179,13 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
     createScope(
         () => walk(ast),
         (scopeStart, sp) => {
-            put(')');
+            buffer.push(')');
             return '(' + sp + ',' + scopeStart;
         }
     );
 
-    if (ctx.needTmp) {
-        buffer.unshift('let tmp;');
-    }
-
     if (suggestions !== null) {
-        if (spNames.length > 0) {
-            buffer.unshift('const ' + spNames.map(name => name + '=new Set()') + ';\n');
-            buffer.unshift('const stat=(s,v)=>(s.add(v),v);\n');
-        }
-        put('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
+        buffer.push('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
     try {

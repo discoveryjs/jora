@@ -13,9 +13,9 @@ module.exports = {
     },
     compile(node, ctx) {
         if (node.array) {
-            ctx.put('...Array.isArray(tmp=');
+            ctx.put('...f.ensureArray(');
             ctx.nodeOrCurrent(node.query);
-            ctx.put(')?tmp:[tmp]');
+            ctx.put(')');
             return;
         }
 

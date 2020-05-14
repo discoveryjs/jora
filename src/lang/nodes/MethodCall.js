@@ -7,11 +7,7 @@ module.exports = {
         };
     },
     compile(node, ctx) {
-        ctx.put('(tmp=');
-        ctx.nodeOrCurrent(node.value);
-        ctx.put(',');
-        ctx.node(node.method);
-        ctx.put(')');
+        ctx.node(node.method, node.value);
     },
     walk(node, ctx) {
         ctx.nodeOrNothing(node.value);

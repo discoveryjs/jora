@@ -12,6 +12,7 @@ module.exports = {
     },
     compile(node, ctx) {
         if (!ctx.scope.includes(node.name.name) && ctx.tolerant) {
+            // FIXME: use ctx.error() here
             ctx.put('(typeof $');
             ctx.node(node.name);
             ctx.put('!=="undefined"?$');

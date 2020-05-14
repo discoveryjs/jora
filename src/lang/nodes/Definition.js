@@ -24,11 +24,13 @@ module.exports = {
         }
 
         if (ctx.scope.own.includes(node.declarator.name)) {
-            throw new Error(`Identifier '$${node.declarator.name}' has already been declared`);
+            ctx.error(`Identifier "$${node.declarator.name}" has already been declared`, node.declarator);
+            return;
         }
 
         if (reservedVars.includes(node.declarator.name)) {
-            throw new Error(`Identifier '$${node.declarator.name}' is reserved for future use`);
+            ctx.error(`Identifier "$${node.declarator.name}" is reserved for future use`, node.declarator);
+            return;
         }
 
         ctx.put('const ');

@@ -21,8 +21,9 @@ module.exports = {
                 ctx.node(node.argument);
                 break;
 
-            default:
-                throw new Error('Unknown operator `' + node.operator + '`');
+            default: {
+                ctx.error('Unknown operator "' + node.operator + '"', node);
+            }
         }
     },
     walk(node, ctx) {

@@ -27,6 +27,7 @@
 - Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
 - Improved tolerant mode to not fail on methods that doesn't exists, such invocations silently returns `undefined`
 - Removed `mapToArray()` method, use `entries().({ nameProp: key, ...value })` instead
+- Improved parse and some compile errors
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

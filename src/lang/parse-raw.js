@@ -1,12 +1,75 @@
 const { Parser } = require('jison');
 const grammar = require('./grammar');
 
+// INPORTANT: This function must not have external dependencies,
+// since its source uses as is when parser is generating
 function patchParsers(strictParser) {
     function patch(subject, patches) {
         Object.entries(patches).forEach(([key, patch]) =>
             subject[key] = patch(subject[key])
         );
     }
+
+    // better error details
+    const humanTokens = new Map([
+        ['EOF', ['<end of input>']],
+        ['IDENT', ['ident']],
+        ['$IDENT', ['$ident']],
+        ['FUNCTION_START', ["'<'"]],
+        ['FUNCTION_END', ["'>'"]],
+        ['FUNCTION', ["'=>'"]],
+        ['NOT', ["'not'"]],
+        ['IN', ["'in'"]],
+        ['HAS', ["'has'"]],
+        ['NOTIN', ["'not in'"]],
+        ['HASNO', ["'has no'"]],
+        ['AND', ["'and'"]],
+        ['OR', ["'or'"]],
+        ['STRING', ['string']],
+        ['NUMBER', ['number']],
+        ['REGEXP', ['regexp']],
+        ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'"]],
+        ['ORDER', ["'asc'", "'desc'"]]
+    ]);
+    const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
+    const parseError = function(message, details, yy) {
+        if (details.recoverable) {
+            this.trace(message);
+        } else {
+            const yylloc = yy.lexer.yylloc;
+            const expected = [].concat(
+                ...details.expected.map(token => tokenForHumans(token.slice(1, -1)))
+            );
+            const error = new SyntaxError([
+                'Parse error on line ' + (yylloc.first_line + 1) + ':',
+                '',
+                yy.lexer.showPosition(),
+                '',
+                'Expecting ' + expected.join(', ') + ' got ' + tokenForHumans(details.token)
+            ].join('\n'));
+
+            error.details = {
+                text: details.text,
+                token: details.token,
+                expected: expected,
+                loc: {
+                    range: yylloc.range,
+                    start: {
+                        line: yylloc.first_line,
+                        column: yylloc.first_column,
+                        offset: yylloc.range[0]
+                    },
+                    end: {
+                        line: yylloc.last_line,
+                        column: yylloc.last_column,
+                        offset: yylloc.range[1]
+                    }
+                }
+            };
+
+            throw error;
+        }
+    };
 
     // add new helpers to lexer
     Object.assign(strictParser.lexer, {
@@ -40,6 +103,10 @@ function patchParsers(strictParser) {
                 ast,
                 commentRanges
             });
+            yy.parseError = function(...args) {
+                // parser doesn't expose sharedState and it's unavailable in parseError
+                return parseError.call(this, ...args, yy);
+            };
 
             this.fnOpened = 0;
             this.fnOpenedStack = [];
@@ -60,9 +127,8 @@ function patchParsers(strictParser) {
     // tolerant parser
     //
     const tolerantParser = new strictParser.Parser();
-    tolerantParser.lexer = {
-        ...strictParser.lexer
-    };
+    tolerantParser.lexer = { ...strictParser.lexer };
+    tolerantParser.yy = { ...strictParser.yy };
 
     // patch tolerant parser lexer
     const keywords = [

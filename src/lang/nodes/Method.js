@@ -11,9 +11,9 @@ module.exports = {
             ctx.queryRoot(node.range[1] - 1);
         }
     },
-    compile(node, ctx) {
-        //  default mode: method(tmp, ...args...)
-        // tolerant mode: (typeof method === 'function' ? method(tmp, ...args...) : undefined)
+    compile(node, ctx, relatedNode) {
+        //  default mode: method(relatedNode, ...args...)
+        // tolerant mode: (typeof method === 'function' ? method(relatedNode, ...args...) : undefined)
         if (ctx.tolerant) {
             ctx.put('(typeof ');
         }
@@ -34,7 +34,8 @@ module.exports = {
             ctx.node(node.reference);
         }
 
-        ctx.put('(tmp');
+        ctx.put('(');
+        ctx.nodeOrCurrent(relatedNode);
 
         if (node.arguments.length) {
             ctx.put(',');

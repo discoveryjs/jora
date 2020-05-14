@@ -67,7 +67,7 @@ describe('lang/variables', () => {
     it('should throw when access before initialization', () => {
         assert.throws(
             () => query('$a:$a;')(),
-            /\$a is not defined|Cannot access '\$a' before initialization/
+            /Identifier "\$a" is not defined|Cannot access '\$a' before initialization/
         );
     });
 
@@ -78,10 +78,17 @@ describe('lang/variables', () => {
         );
     });
 
+    it('should return a value when access after initialization #2', () => {
+        assert.deepEqual(
+            query('$a:=>$b;$b:42;0.map($a)')(),
+            42
+        );
+    });
+
     it('should throw when redefine a variable defined in the same scope', () => {
         assert.throws(
             () => query('$a;$a;')(),
-            /Identifier '\$a' has already been declared/
+            /Identifier "\$a" has already been declared/
         );
     });
 
@@ -122,7 +129,7 @@ describe('lang/variables', () => {
                 it(name, () => {
                     assert.throws(
                         () => query(name + ':1;')(),
-                        new RegExp('Identifier \'\\' + name + '\' is reserved for future use')
+                        new RegExp(`Identifier "\\${name}" is reserved for future use`)
                     );
                 })
             )
@@ -133,7 +140,7 @@ describe('lang/variables', () => {
                 it(name, () => {
                     assert.throws(
                         () => query('.(' + name + ':1;)')(),
-                        new RegExp('Identifier \'\\' + name + '\' is reserved for future use')
+                        new RegExp(`Identifier "\\${name}" is reserved for future use`)
                     );
                 })
             )

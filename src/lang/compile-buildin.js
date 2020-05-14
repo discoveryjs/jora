@@ -7,6 +7,9 @@ const {
 } = require('../utils');
 
 module.exports = Object.freeze({
+    ensureArray(value) {
+        return Array.isArray(value) ? value : [value];
+    },
     bool(value) {
         if (Array.isArray(value)) {
             return value.length > 0;

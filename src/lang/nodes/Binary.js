@@ -70,7 +70,8 @@ module.exports = {
     },
     compile(node, ctx) {
         if (node.operator in binary === false) {
-            throw new Error('Unknown operator `' + node.operator + '`');
+            ctx.error('Unknown operator "' + node.operator + '"', node);
+            return;
         }
 
         if (node.operator === 'and' ||
@@ -81,15 +82,17 @@ module.exports = {
 
         switch (node.operator) {
             case 'or':
-            case 'and':
-                ctx.needTmp = true;
-                ctx.put('f.bool(tmp=');
+            case 'and': {
+                const tmpVar = ctx.allocateVar();
+
+                ctx.put(`f.bool(${tmpVar}=`);
                 ctx.node(node.left);
-                ctx.put(')?tmp:');
+                ctx.put(`)?${tmpVar}:`);
                 ctx.scope.captureCurrent.disabled = true;
                 ctx.node(node.right);
                 ctx.scope.captureCurrent.disabled = false;
                 break;
+            }
 
             case 'has':
             case 'has no':
