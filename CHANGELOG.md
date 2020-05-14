@@ -1,13 +1,16 @@
-## next
+## 1.0.0-beta.1 (May 14, 2020)
 
-- Fixed `~=` operator to produce a boolean result only
 - Added `[...expr]` syntax
-- Allowed numbers without integer part, i.e. `.123` or `.5e-4`
-- Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
-- Fixed suggestion in empty function body for new syntax, i.e. `group(=>)` will suggest between `=>` and `)`
 - Added `$$` root reference (`arg1`), which refers to second parameter of closest function or `undefined` when no such
 - Added `reduce()` method
-- Changed `pick()` method:
+- Added support for methods as a reference to definition's value, i.e. `$method: => 123; $method() or path.$method()`
+- Added `walk()` method to traverse AST
+- Allowed numbers without integer part, i.e. `.123` or `.5e-4`
+- Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
+- Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
+- Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
+- Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
+- Reworked `pick()` method:
     - Return first entry value when no argument gived
     - String values are treat as an array
     - Added support for negative indicies for array and strings
@@ -15,19 +18,16 @@
     - Pass index or key to function reference as second parameter (can be accessed by `$$`)
     - When no arguments given or reference is `undefined` for object, return first entry value instead of value with key `undefined`
     - Cast boolean values to a number index when access to an array or string, i.e. `false` -> `0` and `true` -> `1`
-- Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
+- Improved tolerant mode to not fail on methods that doesn't exists, such invocations silently returns `undefined`
+- Improved parse and some compile errors
+- Fixed suggestion in empty function body for new syntax, i.e. `group(=>)` will suggest between `=>` and `)`
+- Fixed `~=` operator to produce a boolean result only
+- Removed `mapToArray()` method, use `entries().({ nameProp: key, ...value })` instead
 - Grand internal refactoring around AST processing:
-    - Added `walk()` method
     - Parser generates less virtual nodes, so parse->stringify is much closer to original code (white spaces and comments mostly lost)
-    - Suggestion subsystem is moved from parser to separate module which is using in stat mode only
+    - Suggestion subsystem moved aside from parser to a separate module which uses in stat mode only
     - Various fixes and improvements in suggestions
     - The new approach allows to implement more complex suggestion scenarios like suggestions in array values for operators `in`, `not in`, `has` and `has no` which was added (e.g. in query `["a", "b", 1, 2][$ in ["b", 2]]` jora will suggest only `"a"` and `1` values in array after `in` operator)
-- Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
-- Added support for methods as a reference to definition's value, i.e. `$method: => 123; $method() or path.$method()`
-- Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
-- Improved tolerant mode to not fail on methods that doesn't exists, such invocations silently returns `undefined`
-- Removed `mapToArray()` method, use `entries().({ nameProp: key, ...value })` instead
-- Improved parse and some compile errors
 
 ## 1.0.0-alpha.13 (January 6, 2020)
 

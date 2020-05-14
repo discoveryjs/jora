@@ -9,7 +9,7 @@
 
 JavaScript object query engine
 
-> STATUS: A proof of concept. Syntax may change in next releases.
+> STATUS: Jora is still very much work in progress. Syntax may change in next releases.
 
 Features:
 
@@ -24,8 +24,8 @@ Related projects:
 
 - [jora-cli](https://github.com/discoveryjs/jora-cli) – Command line interface for Jora
 - [Jora sandbox](https://discoveryjs.github.io/jora-sandbox/) – A Web interface where you can play with jora syntax or transform some JSON with zero setup
-- [Discovery](https://github.com/discoveryjs/discovery) – Hackable JSON discovery tool. Uses jora to query a data for views
-- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – a browser’s extension for viewing JSON built on Discovery, available for [Chrome](https://chrome.google.com/webstore/detail/jsondiscovery/pamhglogfolfbmlpnenhpeholpnlcclo) and [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/jsondiscovery/) (read more in the article [Changing a way we’re viewing JSON in a browser](https://medium.com/@rdvornov/changing-a-way-were-viewing-json-in-a-browser-51eda9103fa2))
+- [Discovery](https://github.com/discoveryjs/discovery) – Uses jora to query a data for views
+- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – a browser’s extension for viewing JSON based on Discovery, available for [Chrome](https://chrome.google.com/webstore/detail/jsondiscovery/pamhglogfolfbmlpnenhpeholpnlcclo) and [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/jsondiscovery/) (read more in the article [Changing a way we’re viewing JSON in a browser](https://medium.com/@rdvornov/changing-a-way-were-viewing-json-in-a-browser-51eda9103fa2))
 
 TODO:
 
