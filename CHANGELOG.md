@@ -1,3 +1,7 @@
+## 1.0.0-beta.2 (May 17, 2020)
+
+- Fixed parse error handling
+
 ## 1.0.0-beta.1 (May 14, 2020)
 
 - Added `[...expr]` syntax
