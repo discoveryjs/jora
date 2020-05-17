@@ -32,26 +32,34 @@ function patchParsers(strictParser) {
         ['ORDER', ["'asc'", "'desc'"]]
     ]);
     const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
-    const parseError = function(message, details, yy) {
+    const parseError = function(rawMessage, details, yy) {
         if (details.recoverable) {
-            this.trace(message);
+            this.trace(rawMessage);
         } else {
             const yylloc = yy.lexer.yylloc;
-            const expected = [].concat(
+            const message = [
+                rawMessage.split(/\n/)[0],
+                '',
+                yy.lexer.showPosition()
+            ];
+            const expected = !Array.isArray(details.expected) ? null : [].concat(
                 ...details.expected.map(token => tokenForHumans(token.slice(1, -1)))
             );
-            const error = new SyntaxError([
-                'Parse error on line ' + (yylloc.first_line + 1) + ':',
-                '',
-                yy.lexer.showPosition(),
-                '',
-                'Expecting ' + expected.join(', ') + ' got ' + tokenForHumans(details.token)
-            ].join('\n'));
+
+            if (expected) {
+                message.push(
+                    '',
+                    'Expecting ' + expected.join(', ') + ' got ' + tokenForHumans(details.token)
+                );
+            }
+
+            const error = new SyntaxError(message.join('\n'));
 
             error.details = {
+                rawMessage: rawMessage,
                 text: details.text,
                 token: details.token,
-                expected: expected,
+                expected,
                 loc: {
                     range: yylloc.range,
                     start: {
