@@ -17,6 +17,7 @@ const {
     Identifier,
     Literal,
     Map,
+    MapRecursive,
     Method,
     MethodCall,
     Object,
@@ -24,7 +25,6 @@ const {
     Pick,
     Pipeline,
     Property,
-    Recursive,
     Reference,
     SliceNotation,
     SortingFunction,
@@ -335,9 +335,9 @@ module.exports = {
             ['. method()', $$(MethodCall(null, $2))],
             ['.( block )', $$(Map(null, $2))],
             ['.[ block ]', $$(Filter(null, $2))],
-            ['.. ident', $$(Recursive(null, GetProperty(null, $2)))],
-            ['.. method()', $$(Recursive(null, MethodCall(null, $2)))],
-            ['..( block )', $$(Recursive(null, $2))]
+            ['.. ident', $$(MapRecursive(null, GetProperty(null, $2)))],
+            ['.. method()', $$(MapRecursive(null, MethodCall(null, $2)))],
+            ['..( block )', $$(MapRecursive(null, $2))]
         ],
         relativePath: [
             ['query [ ]', $$(Pick($1, null))],
@@ -347,9 +347,9 @@ module.exports = {
             ['query . method()', $$(MethodCall($1, $3))],
             ['query .( block )', $$(Map($1, $3))],
             ['query .[ block ]', $$(Filter($1, $3))],
-            ['query .. ident', $$(Recursive($1, GetProperty(null, $3)))],
-            ['query .. method()', $$(Recursive($1, MethodCall(null, $3)))],
-            ['query ..( block )', $$(Recursive($1, $3))]
+            ['query .. ident', $$(MapRecursive($1, GetProperty(null, $3)))],
+            ['query .. method()', $$(MapRecursive($1, MethodCall(null, $3)))],
+            ['query ..( block )', $$(MapRecursive($1, $3))]
         ],
 
         'method()': [

@@ -1,7 +1,7 @@
 module.exports = {
     build(value, query) {
         return {
-            type: 'Recursive',
+            type: 'MapRecursive',
             value,
             query
         };
