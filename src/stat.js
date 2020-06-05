@@ -1,6 +1,7 @@
 const { addToSet, isPlainObject } = require('./utils');
 const contextToType = {
     'path': 'property',
+    'key': 'value',
     'value': 'value',
     'in-value': 'value',
     'value-subset': 'value',
@@ -33,6 +34,14 @@ function valuesToSuggestions(context, values, related) {
                     });
                 } else if (isPlainObject(value)) {
                     addToSet(suggestions, Object.keys(value));
+                }
+            });
+            break;
+
+        case 'key':
+            values.forEach(value => {
+                if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+                    Object.keys(value).forEach(addValue);
                 }
             });
             break;

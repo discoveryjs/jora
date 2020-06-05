@@ -8,7 +8,11 @@ module.exports = {
     },
     suggest(node, ctx) {
         if (node.getter === null) {
-            ctx.queryRoot(node.range[1] - 1);
+            const pos = node.range[1] - 1;
+            ctx.range([pos, pos], 'key', node.value, false);
+            ctx.queryRoot(pos);
+        } else {
+            ctx.range(node.getter.range, 'key', node.value, false);
         }
     },
     compile(node, ctx) {

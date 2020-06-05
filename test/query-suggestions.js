@@ -290,7 +290,10 @@ describe('query/suggestions', () => {
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             null
-        ],
+        ]
+    });
+
+    describeCases('mixed', {
         '.entries|(|).sort|(|)': [
             null,
             suggestion('', ['foo', 'bar'], 9, 9),
@@ -314,6 +317,17 @@ describe('query/suggestions', () => {
         '{foo:[{},{bar:5}]}.foo.(|b|)': [
             suggestion('b', ['bar'], 24, 25),
             suggestion('b', ['bar'], 24, 25)
+        ],
+        '$[| | |]': [
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 2),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 3),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 4)
+        ],
+        '$[| |a| |]': [
+            null,
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            null
         ]
     });
 });
