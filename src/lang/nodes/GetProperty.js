@@ -37,14 +37,7 @@ module.exports = {
         ctx.node(node.property);
     },
     stringify(node, ctx) {
-        if (node.property.type === 'Identifier') {
-            ctx.nodeOrNothing(node.value) && ctx.put('.');
-            ctx.node(node.property);
-        } else {
-            ctx.node(node.value);
-            ctx.put('[');
-            ctx.node(node.property);
-            ctx.put(']');
-        }
+        ctx.nodeOrNothing(node.value) && ctx.put('.');
+        ctx.node(node.property);
     }
 };
