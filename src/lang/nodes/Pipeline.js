@@ -7,9 +7,18 @@ module.exports = {
         };
     },
     compile(node, ctx) {
-        ctx.put('(current=>(');
-        ctx.node(node.right);
-        ctx.put('))(');
+        ctx.createScope(
+            () => {
+                ctx.put('(current=>(');
+                ctx.node(node.right);
+                ctx.put('))');
+            },
+            (scopeStart, sp) => {
+                return scopeStart + sp + ';';
+            }
+        );
+
+        ctx.put('(');
         ctx.node(node.left);
         ctx.put(')');
     },

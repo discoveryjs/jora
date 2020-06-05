@@ -144,7 +144,7 @@ function patchParsers(strictParser) {
     ];
     const words = [...keywords, 'NOT', 'ORDER'];
     const operators = [
-        '+', '-', '*', '/', '%',
+        '+', '-', '*', '/', '%', '|',
         '=', '!=', '~=', '>=', '<=', '<', '>'
     ];
     const prev = [

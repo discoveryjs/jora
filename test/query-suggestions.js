@@ -11,11 +11,25 @@ const data = {
 };
 
 function suggestQuery(str, data, context) {
+    let offset = 0;
     const suggestPoints = [];
-    const clearedStr = str.replace(/\|/g, (m, idx) => {
-        suggestPoints.push(idx - suggestPoints.length);
-        return '';
-    });
+    const clearedStr = str
+        .split(/(\||<pipeline-op>)/)
+        .map((part, idx) => {
+            if (idx % 2 === 0) {
+                offset += part.length;
+                return part;
+            }
+
+            if (part !== '|') {
+                offset++;
+                return '|';
+            }
+
+            suggestPoints.push(offset);
+            return '';
+        })
+        .join('');
     const stat = query(clearedStr, { tolerant: true, stat: true })(data, context);
 
     return suggestPoints.map(idx => stat.suggestion(idx));
@@ -317,7 +331,7 @@ describe('query/suggestions (tolerant mode)', () => {
     describe('trailing full stop before operators', () => {
         [
             '=', '!=', '~=', '>=', '<=', '<', '>',
-            '*', '/', '+', '-', '%',
+            '*', '/', '+', '-', '%', /* | */ '<pipeline-op>',
             'and', 'or', 'in', 'not in', 'has', 'has no'
         ].forEach(operator => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
@@ -424,13 +438,34 @@ describe('query/suggestions (tolerant mode)', () => {
             });
         });
 
-        // make a separate test sice `<` may to be beginning of function
+        // a separate test for `<` since it may to be the beginning of function
         it('foo <| |', () => {
             assert.deepEqual(
                 suggestQuery('foo <| |', data),
                 [
                     suggestion('', ['foo', 'bar'], 5),
                     suggestion('', ['foo', 'bar'], 6)
+                ]
+            );
+        });
+    });
+
+    describe('pipeline operator', () => {
+        it('| |<pipeline-op>', () => {
+            assert.deepEqual(
+                suggestQuery('| |<pipeline-op>', data),
+                [
+                    suggestion('', ['foo', 'bar'], 0),
+                    suggestion('', ['foo', 'bar'], 1)
+                ]
+            );
+        });
+        it('$ <pipeline-op>| |', () => {
+            assert.deepEqual(
+                suggestQuery('$ <pipeline-op>| |', data),
+                [
+                    suggestion('', ['foo', 'bar'], 3),
+                    suggestion('', ['foo', 'bar'], 4)
                 ]
             );
         });
