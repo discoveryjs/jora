@@ -10,5 +10,4 @@ describe('query/misc', () => {
                 .map(item => item.filename)
         );
     });
-
 });

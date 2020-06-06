@@ -28,26 +28,6 @@ function isSimpleMethodCallQuery(node) {
     return true;
 }
 
-function isSameIdentifierAndReference(reference, ident) {
-    if (ident.type !== 'Identifier') {
-        return false;
-    }
-
-    if (reference.type !== 'Reference' || reference.name.type !== 'Identifier') {
-        return false;
-    }
-
-    return ident.name === reference.name.name;
-}
-
-function isGetProperty(query, property) {
-    if (!isSimpleGetPropertyQuery(query)) {
-        return false;
-    }
-
-    return query.property.name === property;
-}
-
 module.exports = function stringify(ast) {
     function walk(node) {
         if (nodes.has(node.type)) {
@@ -61,8 +41,6 @@ module.exports = function stringify(ast) {
     const ctx = {
         isSimpleGetPropertyQuery,
         isSimpleMethodCallQuery,
-        isSameIdentifierAndReference,
-        isGetProperty,
         put(chunk) {
             buffer.push(chunk);
         },

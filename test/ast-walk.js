@@ -29,4 +29,26 @@ describe('walk', () => {
 
         assert.deepEqual(actual.sort(), expected.sort());
     });
+
+    it('enter', () => {
+        const { ast } = parse(allSyntax);
+        const actual = [];
+        const expected = [];
+
+        walk(ast, { enter: node => actual.push(node.type) });
+        dirtyWalk(ast, node => expected.push(node.type));
+
+        assert.deepEqual(actual.sort(), expected.sort());
+    });
+
+    it('leave', () => {
+        const { ast } = parse(allSyntax);
+        const actual = [];
+        const expected = [];
+
+        walk(ast, { leave: node => actual.push(node.type) });
+        dirtyWalk(ast, node => expected.push(node.type));
+
+        assert.deepEqual(actual.sort(), expected.sort());
+    });
 });
