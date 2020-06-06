@@ -67,7 +67,7 @@ describe('lang/variables', () => {
     it('should throw when access before initialization', () => {
         assert.throws(
             () => query('$a:$a;')(),
-            /Identifier "\$a" is not defined|Cannot access '\$a' before initialization/
+            /Identifier "\$a" is not defined|\$a is not defined|Cannot access '\$a' before initialization/
         );
     });
 
