@@ -36,10 +36,14 @@ const extract = type => new Map(
         .map(([key, value]) => [key, value[type]])
         .filter(([, value]) => typeof value === 'function')
 );
+const build = {};
+extract('build').forEach(
+    (value, key) => (build[key] = value)
+);
 
 module.exports = {
     nodes,
-    build: Object.fromEntries([...extract('build').entries()]),
+    build,
     compile: extract('compile'),
     walk: extract('walk'),
     stringify: extract('stringify'),
