@@ -138,4 +138,67 @@ describe('sort()', () => {
             );
         });
     });
+
+    describe('mixed value types', () => {
+        const escapeNaN = array => array.map(x => x !== x ? 'NaN' : x);
+        const data = [
+            true,
+            1,
+            'z',
+            -Infinity,
+            4,
+            false,
+            { c: 1 },
+            'b',
+            '2',
+            null,
+            { b: 1 },
+            undefined,
+            NaN,
+            Infinity
+        ];
+
+        it('asc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ asc)')(data)),
+                escapeNaN([
+                    false,
+                    true,
+                    NaN,
+                    -Infinity,
+                    1,
+                    4,
+                    Infinity,
+                    '2',
+                    'b',
+                    'z',
+                    null,
+                    { c: 1 },
+                    { b: 1 },
+                    undefined
+                ])
+            );
+        });
+        it('desc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ desc)')([...data])),
+                escapeNaN([
+                    { c: 1 },
+                    { b: 1 },
+                    null,
+                    'z',
+                    'b',
+                    '2',
+                    Infinity,
+                    4,
+                    1,
+                    -Infinity,
+                    NaN,
+                    true,
+                    false,
+                    undefined
+                ])
+            );
+        });
+    });
 });

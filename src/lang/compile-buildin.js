@@ -6,6 +6,21 @@ const {
     isArrayLike
 } = require('../utils');
 
+function cmpType(value) {
+    switch (typeof value) {
+        case 'boolean':
+            return 1;
+        case 'number':
+            return value !== value ? /* NaN */ 2 : 3;
+        case 'string':
+            return 4;
+        case 'object':
+            return value === null ? 5 : 6;
+        default:
+            return 7;
+    }
+}
+
 module.exports = Object.freeze({
     ensureArray(value) {
         return Array.isArray(value) ? value : [value];
@@ -85,7 +100,12 @@ module.exports = Object.freeze({
         return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
     },
     cmp(a, b) {
-        return a > b ? 1 : a < b ? -1 : 0;
+        const typeA = cmpType(a);
+        const typeB = cmpType(b);
+
+        return typeA !== typeB
+            ? (typeA < typeB ? -1 : 1)
+            : (a < b ? -1 : a > b ? 1 : 0);
     },
     match(value, pattern) {
         if (typeof pattern === 'function') {

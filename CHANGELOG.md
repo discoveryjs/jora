@@ -1,5 +1,6 @@
 ## next
 
+- Improved `sort()` to be stable for mixed types (#17)
 - Improved suggestion for pipeline operator in malformed query (tolerant mode)
 - Added suggestion for object keys in array-like notation property accessor
 
