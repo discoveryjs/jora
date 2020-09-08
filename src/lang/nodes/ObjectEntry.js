@@ -10,7 +10,7 @@ const noBracketKeyType = new Set([
 module.exports = {
     build(key, value) {
         return {
-            type: 'Property',
+            type: 'ObjectEntry',
             key,
             value
         };

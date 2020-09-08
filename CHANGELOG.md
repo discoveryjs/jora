@@ -3,6 +3,7 @@
 - Improved `sort()` to be stable for mixed types (#17)
 - Improved suggestion for pipeline operator in malformed query (tolerant mode)
 - Added suggestion for object keys in array-like notation property accessor
+- Renamed node type `Property` to `ObjectEntry`
 
 ## 1.0.0-beta.2 (May 17, 2020)
 
