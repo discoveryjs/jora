@@ -66,7 +66,7 @@ module.exports = function stringify(ast) {
         }
     };
 
-    walk(ast, ctx);
+    walk(ast);
 
     return buffer.join('');
 };

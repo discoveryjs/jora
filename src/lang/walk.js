@@ -39,5 +39,5 @@ module.exports = function walk(ast, options) {
         }
     }
 
-    walk(ast, ctx);
+    walk(ast);
 };
