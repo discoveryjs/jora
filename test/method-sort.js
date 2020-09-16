@@ -1,6 +1,7 @@
 const assert = require('assert');
 const query = require('./helpers/lib');
 const data = require('./helpers/fixture');
+const escapeNaN = array => array.map(x => x !== x ? 'NaN' : x);
 
 describe('sort()', () => {
     it('basic', () => {
@@ -140,7 +141,6 @@ describe('sort()', () => {
     });
 
     describe('mixed value types', () => {
-        const escapeNaN = array => array.map(x => x !== x ? 'NaN' : x);
         const data = [
             true,
             1,
@@ -198,6 +198,65 @@ describe('sort()', () => {
                     false,
                     undefined
                 ])
+            );
+        });
+    });
+
+    describe('natural sorting', () => {
+        const data = [
+            null,
+            false,
+            123,
+            NaN,
+            '123%',
+            '23%',
+            '10.100.50.50',
+            '10.20.50.100',
+            '10.9.100.55',
+            '5.6.7.8',
+            '10.9.50.10',
+            'string-100',
+            'string-50',
+            'string-9',
+            'string-055',
+            'xyz',
+            '  asd',
+            'abc',
+            true
+        ];
+        const expected = [
+            false,
+            true,
+            NaN,
+            '5.6.7.8',
+            '10.9.50.10',
+            '10.9.100.55',
+            '10.20.50.100',
+            '10.100.50.50',
+            '23%',
+            123,
+            '123%',
+            'abc',
+            '  asd',
+            'string-9',
+            'string-50',
+            'string-055',
+            'string-100',
+            'xyz',
+            null
+        ];
+
+        it('asc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ ascN)')([...data])),
+                escapeNaN(expected)
+            );
+        });
+
+        it('desc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ descN)')([...data])),
+                escapeNaN([...expected].reverse())
             );
         });
     });

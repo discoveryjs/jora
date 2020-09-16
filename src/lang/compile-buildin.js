@@ -5,19 +5,27 @@ const {
     isRegExp,
     isArrayLike
 } = require('../utils');
+const naturalCompare = require('./natural-compare');
+const TYPE_BOOLEAN = 1;
+const TYPE_NAN = 2;
+const TYPE_NUMBER = 3;
+const TYPE_STRING = 4;
+const TYPE_NULL = 5;
+const TYPE_OBJECT = 6;
+const TYPE_OTHER = 7;
 
 function cmpType(value) {
     switch (typeof value) {
         case 'boolean':
-            return 1;
+            return TYPE_BOOLEAN;
         case 'number':
-            return value !== value ? /* NaN */ 2 : 3;
+            return value !== value ? /* NaN */ TYPE_NAN : TYPE_NUMBER;
         case 'string':
-            return 4;
+            return TYPE_STRING;
         case 'object':
-            return value === null ? 5 : 6;
+            return value === null ? TYPE_NULL : TYPE_OBJECT;
         default:
-            return 7;
+            return TYPE_OTHER;
     }
 }
 
@@ -102,6 +110,19 @@ module.exports = Object.freeze({
     cmp(a, b) {
         const typeA = cmpType(a);
         const typeB = cmpType(b);
+
+        return typeA !== typeB
+            ? (typeA < typeB ? -1 : 1)
+            : (a < b ? -1 : a > b ? 1 : 0);
+    },
+    cmpNatural(a, b) {
+        const typeA = cmpType(a);
+        const typeB = cmpType(b);
+
+        if ((typeA === TYPE_NUMBER || typeA === TYPE_STRING) &&
+            (typeB === TYPE_NUMBER || typeB === TYPE_STRING)) {
+            return naturalCompare(a, b);
+        }
 
         return typeA !== typeB
             ? (typeA < typeB ? -1 : 1)

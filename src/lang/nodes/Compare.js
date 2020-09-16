@@ -1,3 +1,8 @@
+const comparator = {
+    '': 'cmp',
+    'N': 'cmpNatural'
+};
+
 module.exports = {
     build(query, order) {
         return {
@@ -7,13 +12,15 @@ module.exports = {
         };
     },
     compile(node, ctx) {
-        if (node.order === 'desc') {
+        if (node.order.startsWith('desc')) {
             ctx.put('-');
         }
 
         ctx.createScope(
             () => {
-                ctx.put('f.cmp((_q=current=>(');
+                const cmpFn = comparator[node.order.slice(3 + node.order.startsWith('desc'))] || comparator[''];
+
+                ctx.put('f.' + cmpFn + '((_q=current=>(');
                 ctx.node(node.query);
                 ctx.put('))(a),_q(b))');
             },

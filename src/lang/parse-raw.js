@@ -29,7 +29,7 @@ function patchParsers(strictParser) {
         ['NUMBER', ['number']],
         ['REGEXP', ['regexp']],
         ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'"]],
-        ['ORDER', ["'asc'", "'desc'"]]
+        ['ORDER', ["'asc'", "'desc'", "'ascN'", "'descN'"]]
     ]);
     const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
     const parseError = function(rawMessage, details, yy) {
