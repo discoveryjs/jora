@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.3 (September 20, 2020)
 
 - Improved `sort()` to be stable for mixed types (#17)
 - Added `ascN` and `descN` to define natural sorting functions
