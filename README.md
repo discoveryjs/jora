@@ -208,7 +208,10 @@ Jora | Description
 { } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax. Spread operator (`...`) can be used, e.g. `[1, ..., ...foo]` (`...` with no expression on right side the same as `...$`). Unlike JavaScript, spread operator in jora inlines arrays only and left as is any other values, i.e. `[...[1, 2], ...3, ..."45", { "6": 7 }]` -> `[1, 2, 3, "45", { "6": 7 }]`
 => e<br>< block > (deprecated) | A function<br>NOTE: Syntax `< block >` is deprecated, avoid to use it
-query asc<br>query desc<br>query ascN<br>query descN<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending). `N` postfix is for natural sorting.
+query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
+query ascN<br>query descN | The same as `asc`/`desc` but natural sorting
+query ascA<br>query descA | The same as `asc`/`desc` but reverse order for numbers
+query ascAN<br>query descAN | The same as `asc`/`desc` but natural sorting and reverse order for numbers
 
 ### Keywords
 

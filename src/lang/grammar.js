@@ -154,7 +154,7 @@ module.exports = {
             ['in{wb}', 'return "IN";'],
             ['not{ws}in{wb}', 'return "NOTIN";'],
             ['not?{wb}', 'return "NOT";'],
-            ['(asc|desc)N?{wb}', 'return "ORDER";'],
+            ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
             // primitives
             ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321

@@ -1,8 +1,8 @@
 const assert = require('assert');
-const natualCompare = require('../src/lang/natural-compare');
+const { naturalCompare } = require('../src/lang/natural-compare');
 
 function sort(array) {
-    return array.slice().sort(natualCompare);
+    return array.slice().sort(naturalCompare);
 }
 
 describe('natural sorting', () => {
@@ -639,8 +639,8 @@ describe('natural sorting', () => {
             fixture: ['10023', '999', '', '2', '5'],
             expected: ['', '2', '5', '999', '10023']
         }, {
-            message: 'should sort a case sensitive unsorted array',
             skip: true,
+            message: 'should sort a case sensitive unsorted array',
             fixture: ['A', 'b', 'C', 'd', 'E', 'f'],
             expected: ['A', 'C', 'E', 'b', 'd', 'f']
         }, {

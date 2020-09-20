@@ -5,7 +5,7 @@ const {
     isRegExp,
     isArrayLike
 } = require('../utils');
-const naturalCompare = require('./natural-compare');
+const { naturalCompare, naturalAnalyticalCompare } = require('./natural-compare');
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;
 const TYPE_NUMBER = 3;
@@ -115,6 +115,20 @@ module.exports = Object.freeze({
             ? (typeA < typeB ? -1 : 1)
             : (a < b ? -1 : a > b ? 1 : 0);
     },
+    cmpAnalytical(a, b) {
+        const typeA = cmpType(a);
+        const typeB = cmpType(b);
+
+        if (typeA !== typeB) {
+            return typeA < typeB ? -1 : 1;
+        }
+
+        if (typeA === TYPE_NUMBER) {
+            return b - a; // reverse order for numbers
+        }
+
+        return a < b ? -1 : a > b ? 1 : 0;
+    },
     cmpNatural(a, b) {
         const typeA = cmpType(a);
         const typeB = cmpType(b);
@@ -122,6 +136,19 @@ module.exports = Object.freeze({
         if ((typeA === TYPE_NUMBER || typeA === TYPE_STRING) &&
             (typeB === TYPE_NUMBER || typeB === TYPE_STRING)) {
             return naturalCompare(a, b);
+        }
+
+        return typeA !== typeB
+            ? (typeA < typeB ? -1 : 1)
+            : (a < b ? -1 : a > b ? 1 : 0);
+    },
+    cmpNaturalAnalytical(a, b) {
+        const typeA = cmpType(a);
+        const typeB = cmpType(b);
+
+        if ((typeA === TYPE_NUMBER || typeA === TYPE_STRING) &&
+            (typeB === TYPE_NUMBER || typeB === TYPE_STRING)) {
+            return naturalAnalyticalCompare(a, b, true);
         }
 
         return typeA !== typeB

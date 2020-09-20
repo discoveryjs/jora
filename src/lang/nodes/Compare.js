@@ -1,6 +1,9 @@
 const comparator = {
     '': 'cmp',
-    'N': 'cmpNatural'
+    'N': 'cmpNatural',
+    'A': 'cmpAnalytical',
+    'NA': 'cmpNaturalAnalytical',
+    'AN': 'cmpNaturalAnalytical'
 };
 
 module.exports = {

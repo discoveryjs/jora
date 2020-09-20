@@ -1,10 +1,12 @@
 ## next
 
 - Improved `sort()` to be stable for mixed types (#17)
+- Added `ascN` and `descN` to define natural sorting functions
+- Added `ascA` and `descA` to define sorting functions with reverse order for numbers
+- Added `ascAN` and `descAN` to define natural sorting functions with reverse order for numbers h
 - Improved suggestion for pipeline operator in malformed query (tolerant mode)
 - Added suggestion for object keys in array-like notation property accessor
 - Renamed node type `Property` to `ObjectEntry`
-- Added `ascN` and `descN` to define natural sorting functions
 
 ## 1.0.0-beta.2 (May 17, 2020)
 

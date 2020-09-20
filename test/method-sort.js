@@ -260,4 +260,138 @@ describe('sort()', () => {
             );
         });
     });
+
+    describe('analytical sorting', () => {
+        const data = [
+            null,
+            false,
+            55,
+            123,
+            1,
+            NaN,
+            '123%',
+            '23%',
+            '10.100.50.50',
+            '10.20.50.100',
+            '10.9.100.55',
+            '5.6.7.8',
+            '10.9.50.10',
+            'string-100',
+            'string-50',
+            'string-9',
+            'string-055',
+            'xyz',
+            '  asd',
+            'abc',
+            true
+        ];
+        const expected = [
+            false,
+            true,
+            NaN,
+            123,
+            55,
+            1,
+            '  asd',
+            '10.100.50.50',
+            '10.20.50.100',
+            '10.9.100.55',
+            '10.9.50.10',
+            '123%',
+            '23%',
+            '5.6.7.8',
+            'abc',
+            'string-055',
+            'string-100',
+            'string-50',
+            'string-9',
+            'xyz',
+            null
+        ];
+
+        it('asc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ ascA)')([...data])),
+                escapeNaN(expected)
+            );
+        });
+
+        it('desc', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ descA)')([...data])),
+                escapeNaN([...expected].reverse())
+            );
+        });
+    });
+
+    describe('analytical natural sorting', () => {
+        const data = [
+            null,
+            false,
+            123,
+            NaN,
+            '123%',
+            '23%',
+            '10.100.50.50',
+            '10.20.50.100',
+            '10.9.100.55',
+            '5.6.7.8',
+            '10.9.50.10',
+            'string-100',
+            'string-50',
+            'string-9',
+            'string-055',
+            'xyz',
+            '  asd',
+            'abc',
+            true
+        ];
+        const expected = [
+            false,
+            true,
+            NaN,
+            123,
+            '123%',
+            '23%',
+            '10.100.50.50',
+            '10.20.50.100',
+            '10.9.100.55',
+            '10.9.50.10',
+            '5.6.7.8',
+            'abc',
+            '  asd',
+            'string-100',
+            'string-055',
+            'string-50',
+            'string-9',
+            'xyz',
+            null
+        ];
+
+        it('asc (AN)', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ ascAN)')([...data])),
+                escapeNaN(expected)
+            );
+        });
+        it('asc (NA)', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ ascNA)')([...data])),
+                escapeNaN(expected)
+            );
+        });
+
+        it('desc (AN)', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ descAN)')([...data])),
+                escapeNaN([...expected].reverse())
+            );
+        });
+        it('desc (NA)', () => {
+            assert.deepEqual(
+                escapeNaN(query('sort($ descNA)')([...data])),
+                escapeNaN([...expected].reverse())
+            );
+        });
+    });
 });

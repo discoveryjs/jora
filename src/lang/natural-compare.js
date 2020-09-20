@@ -176,7 +176,7 @@ function getPart(source, offset, preventFloat, preventSign) {
     return TYPE_WORD | (end - offset << 3);
 }
 
-function naturalCompare(a, b) {
+function compare(a, b, analytical) {
     let offsetA = 0;
     let offsetB = 0;
     let preventFloat = false;
@@ -259,7 +259,7 @@ function naturalCompare(a, b) {
                 const numDiff = a.substr(offsetA, lenA) - b.substr(offsetB, lenB);
 
                 if (numDiff !== 0) {
-                    return numDiff;
+                    return analytical ? -numDiff : numDiff;
                 }
 
                 if (postCmpResult === 0 || typeA > postCmpResultType) {
@@ -278,6 +278,10 @@ function naturalCompare(a, b) {
                         : afc !== bfc && (afc === 0x002B /* + */ || bfc === 0x002D /* - */)
                             ? 1
                             : (lenA !== lenB ? lenA < lenB : substrDiff < 0) ? -order : order;
+
+                    if (analytical) {
+                        postCmpResult = -postCmpResult;
+                    }
                 }
             }
         } else { // typeA === TYPE_WORD
@@ -303,7 +307,7 @@ function naturalCompare(a, b) {
     } while (true);
 }
 
-module.exports = function(a, b) {
+function naturalCompare(a, b) {
     const typeA = typeof a;
     const typeB = typeof b;
     let ret = 0;
@@ -313,7 +317,7 @@ module.exports = function(a, b) {
     }
 
     if ((typeA === 'number' || typeA === 'string') && (typeB === 'number' || typeB === 'string')) {
-        ret = naturalCompare(String(a), String(b));
+        ret = compare(String(a), String(b), false);
     }
 
     if (debug) {
@@ -321,4 +325,29 @@ module.exports = function(a, b) {
     }
 
     return ret;
+};
+
+function naturalAnalyticalCompare(a, b) {
+    const typeA = typeof a;
+    const typeB = typeof b;
+    let ret = 0;
+
+    if (debug) {
+        console.log('Compare', a, b);
+    }
+
+    if ((typeA === 'number' || typeA === 'string') && (typeB === 'number' || typeB === 'string')) {
+        ret = compare(String(a), String(b), true);
+    }
+
+    if (debug) {
+        console.log('Result:', ret);
+    }
+
+    return ret;
+};
+
+module.exports = {
+    naturalCompare,
+    naturalAnalyticalCompare
 };
