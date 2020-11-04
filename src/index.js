@@ -110,7 +110,7 @@ function createQuery(source, options) {
     return statMode
         ? (data, context) => createStatApi(source, fn(buildin, localMethods, data, context))
         : (data, context) => fn(buildin, localMethods, data, context);
-};
+}
 
 module.exports = Object.assign(createQuery, {
     version,
@@ -118,6 +118,7 @@ module.exports = Object.assign(createQuery, {
     methods,
     syntax: {
         parse,
+        suggest,
         walk,
         stringify,
         compile
