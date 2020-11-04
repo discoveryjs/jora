@@ -112,10 +112,44 @@ function createQuery(source, options) {
         : (data, context) => fn(buildin, localMethods, data, context);
 }
 
+function setup(customMethods) {
+    const cacheStrict = new Map();
+    const cacheStrictStat = new Map();
+    const cacheTollerant = new Map();
+    const cacheTollerantStat = new Map();
+    const localMethods = { ...methods, ...customMethods };
+
+    return function query(source, options) {
+        options = options || {};
+
+        const statMode = Boolean(options.stat);
+        const tolerantMode = Boolean(options.tolerant);
+        const cache = statMode
+            ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
+            : (tolerantMode ? cacheTollerant : cacheStrict);
+        let fn;
+
+        source = String(source);
+
+        if (cache.has(source) && !options.debug) {
+            fn = cache.get(source);
+        } else {
+            const perform = compileFunction(source, statMode, tolerantMode, options.debug);
+            fn = statMode
+                ? (data, context) => createStatApi(source, perform(buildin, localMethods, data, context))
+                : (data, context) => perform(buildin, localMethods, data, context);
+            cache.set(source, fn);
+        }
+
+        return fn;
+    };
+}
+
 module.exports = Object.assign(createQuery, {
     version,
     buildin,
     methods,
+    setup,
     syntax: {
         tokenize,
         parse,

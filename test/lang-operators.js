@@ -473,18 +473,16 @@ describe('lang/operators', () => {
             let left = 0;
             let right = 0;
             const value = { foo: 123 };
-            const result = query('left() or right()', {
-                methods: {
-                    left() {
-                        left++;
-                        return value;
-                    },
-                    right() {
-                        right++;
-                        return true;
-                    }
+            const result = query('left or right')({
+                get left() {
+                    left++;
+                    return value;
+                },
+                get right() {
+                    right++;
+                    return true;
                 }
-            })();
+            });
 
             assert.strictEqual(result, value, 'should return truthy expression result as is');
             assert.strictEqual(left, 1, 'should evaluate left expression once');
@@ -521,18 +519,16 @@ describe('lang/operators', () => {
             let left = 0;
             let right = 0;
             const value = {};
-            const result = query('left() and right()', {
-                methods: {
-                    left() {
-                        left++;
-                        return value;
-                    },
-                    right() {
-                        right++;
-                        return true;
-                    }
+            const result = query('left and right')({
+                get left() {
+                    left++;
+                    return value;
+                },
+                get right() {
+                    right++;
+                    return true;
                 }
-            })();
+            });
 
             assert.strictEqual(result, value, 'should return falsy expression result as is');
             assert.strictEqual(left, 1, 'should evaluate left expression once');

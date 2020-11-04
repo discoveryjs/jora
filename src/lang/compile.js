@@ -191,8 +191,8 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
     try {
         return new Function('f', 'm', 'data', 'context', buffer.join(''));
     } catch (e) {
-        const compiledSource = buffer.join('');
         const error = createError('SyntaxError', 'Jora query compilation error');
+        const compiledSource = buffer.join('');
 
         error.compiledSource = compiledSource;
 

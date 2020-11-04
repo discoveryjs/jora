@@ -2,19 +2,18 @@ const assert = require('assert');
 const query = require('./helpers/lib');
 
 describe('lang/method', () => {
-    const queryWithExtraMethods = (s, opts) => query(s, {
-        ...opts,
-        methods: {
+    describe('regular method', () => {
+        let queryWithExtraMethods;
+
+        beforeEach(() => queryWithExtraMethods = query.setup({
             args(...args) {
                 return args;
             },
             hasArgsInThis() {
                 return Object.hasOwnProperty.call(this, 'args');
             }
-        }
-    });
+        }));
 
-    describe('regular method', () => {
         it('should invoke method()', () => {
             assert.deepEqual(
                 queryWithExtraMethods('args()')(42),

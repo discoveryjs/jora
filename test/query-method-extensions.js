@@ -1,5 +1,5 @@
 const assert = require('assert');
-const query = require('./helpers/lib');
+const { setup } = require('./helpers/lib');
 const data = require('./helpers/fixture');
 
 describe('query/method extensions', () => {
@@ -7,18 +7,18 @@ describe('query/method extensions', () => {
         const calls = [];
         return {
             calls,
-            methods: {
+            query: setup({
                 log() {
                     calls.push([...arguments]);
                 }
-            }
+            })
         };
     }
 
     it('should be called', () => {
         const extra = createExtraFn();
 
-        query('log()', extra)(data);
+        extra.query('log()')(data);
         assert.deepEqual(
             extra.calls,
             [[data]]
@@ -28,7 +28,7 @@ describe('query/method extensions', () => {
     it('should be called when started with dot', () => {
         const extra = createExtraFn();
 
-        query('.log()', extra)(data);
+        extra.query('.log()')(data);
         assert.deepEqual(
             extra.calls,
             [[data]]
@@ -38,7 +38,7 @@ describe('query/method extensions', () => {
     it('should be called with precending query', () => {
         const extra = createExtraFn();
 
-        query('filename.log()', extra)(data);
+        extra.query('filename.log()')(data);
         assert.deepEqual(
             extra.calls,
             [[data.map(item => item.filename)]]
@@ -48,7 +48,7 @@ describe('query/method extensions', () => {
     it('should be called for each item when using in parentheses', () => {
         const extra = createExtraFn();
 
-        query('filename.(log())', extra)(data);
+        extra.query('filename.(log())')(data);
         assert.deepEqual(
             extra.calls,
             data.map(item => [item.filename])
@@ -58,7 +58,7 @@ describe('query/method extensions', () => {
     it('should accept params', () => {
         const extra = createExtraFn();
 
-        query('.[filename="1.css"].(log(1, 2, 3))', extra)(data);
+        extra.query('.[filename="1.css"].(log(1, 2, 3))')(data);
         assert.deepEqual(
             extra.calls,
             [[data[0], 1, 2, 3]]
@@ -68,7 +68,7 @@ describe('query/method extensions', () => {
     it('should resolve params to current', () => {
         const extra = createExtraFn();
 
-        query('.log(filename)', extra)(data);
+        extra.query('.log(filename)')(data);
         assert.deepEqual(
             extra.calls,
             [[data, data.map(item => item.filename)]]
@@ -78,7 +78,7 @@ describe('query/method extensions', () => {
     it('should resolve params to current inside a parentheses', () => {
         const extra = createExtraFn();
 
-        query('.(log(filename))', extra)(data);
+        extra.query('.(log(filename))')(data);
         assert.deepEqual(
             extra.calls,
             data.map(item => [item, item.filename])
@@ -88,7 +88,7 @@ describe('query/method extensions', () => {
     it('should not call a method in map when undefined on object path', () => {
         const extra = createExtraFn();
 
-        query('dontexists.(log())', extra)({});
+        extra.query('dontexists.(log())')({});
         assert.deepEqual(
             extra.calls,
             []
@@ -99,7 +99,7 @@ describe('query/method extensions', () => {
         const extra = createExtraFn();
         const data = { foo: { bar: 42 }, baz: 43 };
 
-        query('foo.bar.log($, baz)', extra)(data);
+        extra.query('foo.bar.log($, baz)')(data);
         assert.deepEqual(
             extra.calls,
             [[42, data, 43]]
@@ -109,7 +109,7 @@ describe('query/method extensions', () => {
     it('scope for method arguments should be the same as for query root (issue #1)', () => {
         const extra = createExtraFn();
 
-        query('#.foo.log(bar)', extra)({ bar: 43 }, { foo: 42 });
+        extra.query('#.foo.log(bar)')({ bar: 43 }, { foo: 42 });
         assert.deepEqual(
             extra.calls,
             [[42, 43]]

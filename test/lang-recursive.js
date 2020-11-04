@@ -115,7 +115,6 @@ describe('lang/recursive', () => {
     });
 
     describe('should allow a method call', () => {
-        const propGetter = (current, name) => current && current[name || 'foo'];
         let a;
         let b;
         let c;
@@ -134,28 +133,28 @@ describe('lang/recursive', () => {
 
         it('top level invocation with no arguments', () => {
             assert.deepEqual(
-                query('..propGetter()', { methods: { propGetter } })(data),
-                [a, b, 'b']
+                query('..values()')(data),
+                [a, d, b, c, 'd', 'b', 'c']
             );
         });
 
         it('top level invocation with arguments', () => {
             assert.deepEqual(
-                query('..propGetter("bar")', { methods: { propGetter } })(data),
+                query('..map(=>$["bar"])')(data),
                 [d, 'd']
             );
         });
 
         it('top level invocation with no arguments', () => {
             assert.deepEqual(
-                query('foo..propGetter()', { methods: { propGetter } })(data),
-                [b, 'b']
+                query('foo..values()')(data),
+                [b, c, 'b', 'c']
             );
         });
 
         it('top level invocation with arguments', () => {
             assert.deepEqual(
-                query('foo..propGetter("bar")', { methods: { propGetter } })(data),
+                query('foo..map(=>$["bar"])')(data),
                 [c, 'c']
             );
         });
