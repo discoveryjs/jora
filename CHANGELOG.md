@@ -1,3 +1,7 @@
+## next
+
+- Allowed definitions in object's literals, i.e. `{ $a: 42; foo: $a * 2, $a }` results in `{ foo: 84, a: 42 }`
+
 ## 1.0.0-beta.3 (September 20, 2020)
 
 - Improved `sort()` to be stable for mixed types (#17)

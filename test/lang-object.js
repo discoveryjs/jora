@@ -86,4 +86,21 @@ describe('lang/object', () => {
             { foo: 2, bar: 2, baz: 3 }
         );
     });
+
+    describe('definitions in object', () => {
+        it('should define local variables', () => {
+            assert.deepEqual(
+                query('{ $a: 40; $b: 2; foo: $a + $b, $a, $b }')(),
+                { foo: 42, a: 40, b: 2 }
+            );
+        });
+
+        it('should overide upper variables in object definition', () => {
+            assert.deepEqual(
+                query('$a: 32; [{ $a }, { $a: 42; $a }, { $a }]')(),
+                [{ a: 32 }, { a: 42 }, { a: 32 }]
+            );
+        });
+    });
+
 });

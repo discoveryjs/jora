@@ -362,7 +362,9 @@ module.exports = {
 
         object: [
             ['{ }', $$(Object([]))],
-            ['{ properties }', $$(Object($2))]
+            ['{ properties }', $$(Object($2))],
+            ['{ definitions }', $$(Object([]))],
+            ['{ definitions properties }', $$(Block($2, Object($3)))]
         ],
         properties: createCommaList('properties', 'property'),
         property: [
