@@ -39,7 +39,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
     }
 
     const suggestions = statMode
-        ? suggest(parseResult.ast, source, parseResult.commentRanges)
+        ? suggest(source, parseResult)
         : null;
 
     if (debug && suggestions) {

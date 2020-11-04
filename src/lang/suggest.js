@@ -132,7 +132,7 @@ function collectNodeSuggestions(ast) {
     return suggestions;
 }
 
-module.exports = function suggest(ast, source, commentRanges) {
+module.exports = function suggest(source, { ast, commentRanges }) {
     const suggestions = collectNodeSuggestions(ast);
     const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
         commentRanges.length &&

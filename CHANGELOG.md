@@ -1,7 +1,7 @@
 ## next
 
 - Allowed definitions in object's literals, i.e. `{ $a: 42; foo: $a * 2, $a }` results in `{ foo: 84, a: 42 }`
-- Exposed `suggest()` method (as `syntax.suggest`) to get suggestion ranges based on AST and source
+- Exposed `suggest(source, parseResult)` method (as `syntax.suggest`) to get suggestion ranges based on AST and source
 - Exposed `tokenize(source, tolerantMode = false)` method (as `syntax.tokenize`)
 
 ## 1.0.0-beta.3 (September 20, 2020)
