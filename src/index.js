@@ -1,5 +1,5 @@
 const { version } = require('../package.json');
-const parse = require('./lang/parse');
+const { tokenize, parse } = require('./lang/parse');
 const suggest = require('./lang/suggest');
 const walk = require('./lang/walk');
 const stringify = require('./lang/stringify');
@@ -117,6 +117,7 @@ module.exports = Object.assign(createQuery, {
     buildin,
     methods,
     syntax: {
+        tokenize,
         parse,
         suggest,
         walk,

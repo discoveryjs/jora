@@ -2,7 +2,7 @@ const assert = require('assert');
 const { syntax: { parse } } = require('./helpers/lib');
 const allSyntax = require('./helpers/all-syntax');
 
-describe('walk', () => {
+describe('syntax/parse', () => {
     it('basic test', () => {
         const { ast } = parse(allSyntax);
 

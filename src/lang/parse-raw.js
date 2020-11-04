@@ -1,9 +1,6 @@
-const { Parser } = require('jison');
-const grammar = require('./grammar');
-
 // INPORTANT: This function must not have external dependencies,
 // since its source uses as is when parser is generating
-function patchParsers(strictParser) {
+module.exports = function buildParsers(strictParser) {
     function patch(subject, patches) {
         Object.entries(patches).forEach(([key, patch]) =>
             subject[key] = patch(subject[key])
@@ -251,17 +248,40 @@ function patchParsers(strictParser) {
     // }
     // process.exit();
 
-    return Object.assign(function parse(source, tolerantMode) {
-        return tolerantMode
-            ? tolerantParser.parse(source)
-            : strictParser.parse(source);
-    }, {
-        generateModule() {
-            return strictParser
-                .generateModule({ moduleName: 'module.exports' })
-                .replace('new Parser', '(' + patchParsers + ')(new Parser)');
-        }
-    });
-};
+    return {
+        parse(source, tolerantMode) {
+            return tolerantMode
+                ? tolerantParser.parse(source)
+                : strictParser.parse(source);
+        },
+        *tokenize(source, tolerantMode, loc) {
+            const lexer = Object.create(tolerantMode ? tolerantParser.lexer : strictParser.lexer);
 
-module.exports = patchParsers(new Parser(grammar));
+            lexer.setInput(source, {});
+
+            while (!lexer.done) {
+                const token = {
+                    type: lexer.lex(),
+                    value: lexer.match,
+                    offset: lexer.yylloc.range[0]
+                };
+
+                if (loc) {
+                    token.loc = {
+                        range: lexer.yylloc.range,
+                        start: {
+                            line: lexer.yylloc.first_line,
+                            column: lexer.yylloc.first_column
+                        },
+                        end: {
+                            line: lexer.yylloc.last_line,
+                            column: lexer.yylloc.last_column
+                        }
+                    };
+                }
+
+                yield token;
+            }
+        }
+    };
+};

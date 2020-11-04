@@ -18,7 +18,7 @@ function dirtyWalk(node, fn) {
     }
 }
 
-describe('walk', () => {
+describe('syntax/walk', () => {
     it('basic test', () => {
         const { ast } = parse(allSyntax);
         const actual = [];

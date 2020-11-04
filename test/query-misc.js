@@ -10,4 +10,14 @@ describe('query/misc', () => {
                 .map(item => item.filename)
         );
     });
+
+    it('expose tokenizer', () => {
+        assert.strictEqual(typeof query.syntax.tokenize, 'function');
+    });
+
+    if (!query.syntax.parse.bake) {
+        it('should not expose generateModule()', () => {
+            assert.strictEqual('generateModule' in query.syntax.parse, false);
+        });
+    }
 });
