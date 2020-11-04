@@ -1,9 +1,9 @@
-## next
+## 1.0.0-beta.4 (November 4, 2020)
 
+- Added `setup()` API method to create a query function with defined custom methods once
 - Allowed definitions in object's literals, i.e. `{ $a: 42; foo: $a * 2, $a }` results in `{ foo: 84, a: 42 }`
 - Exposed `suggest(source, parseResult)` method (as `syntax.suggest`) to get suggestion ranges based on AST and source
 - Exposed `tokenize(source, tolerantMode = false)` method (as `syntax.tokenize`)
-- Added `setup()` API method to create a query function with defined custom methods once
 
 ## 1.0.0-beta.3 (September 20, 2020)
 
