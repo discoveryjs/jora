@@ -100,6 +100,8 @@ module.exports = function buildParsers(strictParser) {
             value === 'null' ? null :
             value === 'false' ? false :
             value === 'true' ? true :
+            value === 'Infinity' ? Infinity :
+            value === 'NaN' ? NaN :
             undefined,
             /* eslint-enable */
 

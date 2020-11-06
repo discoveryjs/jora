@@ -144,7 +144,7 @@ module.exports = {
             ['\\}', closeScope + switchToPreventPrimitiveState + 'return "}";'],
 
             // keywords (should goes before ident)
-            ['(true|false|null|undefined){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
+            ['(true|false|null|undefined|Infinity|NaN){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
 
             // keyword operators (should goes before IDENT)
             ['and{wb}', 'return "AND";'],

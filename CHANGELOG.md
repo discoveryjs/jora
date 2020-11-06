@@ -4,10 +4,11 @@
 - Added support for hexadecimal numbers
 - Added support for hexadecimal escape sequence in strings, i.e. `'\x20'`
 - Added support for multiple lines in strings by escaping new line characters
-- Fixed strings parsing to be ECMA-262 compliant
+- Fixed string literal parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
 - Allowed a single trailing comma in object and array literals
 - Allowed unicode escape sequence in identifier name
+- Added `Infinity` and `NaN` literals
 
 ## 1.0.0-beta.4 (November 4, 2020)
 

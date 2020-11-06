@@ -230,6 +230,8 @@ Following keywords can be used with the same meaning as in JavaScript:
 - `false`
 - `null`
 - `undefined`
+- `Infinity`
+- `NaN`
 
 ### Operators
 

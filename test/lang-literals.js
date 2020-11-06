@@ -4,7 +4,9 @@ const keywords = [
     true,
     false,
     null,
-    undefined
+    undefined,
+    Infinity,
+    NaN
 ];
 
 describe('lang/literals', () => {
