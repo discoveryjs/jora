@@ -67,4 +67,38 @@ describe('lang/array', () => {
             );
         });
     });
+
+    describe('should allow a single trailing comma', () => {
+        const valid = [
+            ['[1,]', [1]],
+            ['[1 ,]', [1]],
+            ['[1, 2, ]', [1, 2]]
+        ];
+        const invalid = [
+            '[,]',
+            '[ , ]',
+            '[ , 1]',
+            '[ 1,,]',
+            '[1,,2]',
+            '[1,2,,]'
+        ];
+
+        for (const [test, expected] of valid) {
+            it(test, () =>
+                assert.deepStrictEqual(
+                    query(test)(),
+                    expected
+                )
+            );
+        }
+
+        for (const test of invalid) {
+            it(test, () =>
+                assert.throws(
+                    () => query(test),
+                    /Parse error/
+                )
+            );
+        }
+    });
 });

@@ -103,4 +103,37 @@ describe('lang/object', () => {
         });
     });
 
+    describe('should allow a single trailing comma', () => {
+        const valid = [
+            ['{a:1,}', { a: 1 }],
+            ['{ a: 1 , }', { a: 1 }],
+            ['{ a: 1, b: 2, }', { a: 1, b: 2 }]
+        ];
+        const invalid = [
+            '{,}',
+            '{ , }',
+            '{ , a: 1}',
+            '{ a: 1,,}',
+            '{a:1,,b:2}',
+            '{a:1,b:2,,}'
+        ];
+
+        for (const [test, expected] of valid) {
+            it(test, () =>
+                assert.deepStrictEqual(
+                    query(test)(),
+                    expected
+                )
+            );
+        }
+
+        for (const test of invalid) {
+            it(test, () =>
+                assert.throws(
+                    () => query(test),
+                    /Parse error/
+                )
+            );
+        }
+    });
 });

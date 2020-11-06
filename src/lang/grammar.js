@@ -364,8 +364,10 @@ module.exports = {
         object: [
             ['{ }', $$(Object([]))],
             ['{ properties }', $$(Object($2))],
+            ['{ properties , }', $$(Object($2))],
             ['{ definitions }', $$(Object([]))],
-            ['{ definitions properties }', $$(Block($2, Object($3)))]
+            ['{ definitions properties }', $$(Block($2, Object($3)))],
+            ['{ definitions properties , }', $$(Block($2, Object($3)))]
         ],
         properties: createCommaList('properties', 'property'),
         property: [
@@ -389,7 +391,8 @@ module.exports = {
         ],
         array: [
             ['[ ]', $$(Array([]))],
-            ['[ arrayElements ]', $$(Array($2))]
+            ['[ arrayElements ]', $$(Array($2))],
+            ['[ arrayElements , ]', $$(Array($2))]
         ],
 
         sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),

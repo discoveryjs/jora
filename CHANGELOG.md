@@ -6,6 +6,7 @@
 - Added support for multiple lines in strings by escaping new line characters
 - Fixed strings parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
+- Allowed a single trailing comma in object and array literals
 
 ## 1.0.0-beta.4 (November 4, 2020)
 
