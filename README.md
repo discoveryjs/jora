@@ -211,6 +211,7 @@ comment */
 Jora | Description
 --- | ---
 42<br>-123<br>4.22<br>1e3<br>1e-2 | Numbers
+0xdecaf<br>-0xC0FFEE | Hexadecimal numbers
 "string"<br>'string' | Strings
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)

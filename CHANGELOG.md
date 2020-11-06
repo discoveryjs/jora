@@ -1,6 +1,7 @@
 ## next
 
 - Added support for multi-line comments
+- Added support for hexadecimal numbers
 
 ## 1.0.0-beta.4 (November 4, 2020)
 
