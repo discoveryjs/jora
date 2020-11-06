@@ -93,6 +93,8 @@ module.exports = function buildParsers(strictParser) {
     // add new helpers to lexer
     const lineTerminator = new Set(['\n', '\r', '\u2028', '\u2029']);
     Object.assign(strictParser.lexer, {
+        ident: value => value.replace(/\\u[0-9a-fA-F]{4}/g, m => String.fromCharCode(parseInt(m.slice(2), 16))),
+
         toLiteral: value =>
             /* eslint-disable operator-linebreak, indent */
             value === 'null' ? null :

@@ -116,7 +116,7 @@ module.exports = {
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+',   // required whitespaces
             comment: '//.*?(?:\\n|\\r\\n?|\\u2028|\\u2029|$)|/\\*(?:.|\\s)*?(?:\\*/|$)',
-            ident: '[a-zA-Z_][a-zA-Z_$0-9]*',
+            ident: '(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z_$0-9]|\\\\u[0-9a-fA-F]{4})*',
             rx: '/(?:\\\\.|[^/])+/i?'
         },
         startConditions: {
@@ -162,8 +162,8 @@ module.exports = {
             ['"(?:\\\\"|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\'|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
-            ['{ident}', switchToPreventPrimitiveState + 'return "IDENT";'], // foo123
-            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = yytext.slice(1); return "$IDENT";'], // $foo123
+            ['{ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext); return "IDENT";'], // foo123
+            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext.slice(1)); return "$IDENT";'], // $foo123
 
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],

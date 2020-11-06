@@ -68,4 +68,11 @@ describe('lang/get-property', () => {
             []
         );
     });
+
+    it('should allow unicode escapes', () => {
+        assert.deepEqual(
+            query('\\u0068el\\u006co\\u0020wor\\u006Cd')({ 'hello world': 42 }),
+            42
+        );
+    });
 });

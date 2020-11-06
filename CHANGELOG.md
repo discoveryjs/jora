@@ -7,6 +7,7 @@
 - Fixed strings parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
 - Allowed a single trailing comma in object and array literals
+- Allowed unicode escape sequence in identifier name
 
 ## 1.0.0-beta.4 (November 4, 2020)
 
