@@ -2,6 +2,9 @@
 
 - Added support for multi-line comments
 - Added support for hexadecimal numbers
+- Added support for hexadecimal escape sequence in strings, i.e. `'\x20'`
+- Added support for multiple lines in strings by escaping new line characters
+- Fixed strings parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
 
 ## 1.0.0-beta.4 (November 4, 2020)

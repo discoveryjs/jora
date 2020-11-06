@@ -7,6 +7,16 @@ module.exports = function buildParsers(strictParser) {
         );
     }
 
+    function forwardLoc(lexer, offset, str) {
+        const lines = str.split(/\r\n?|\n|\u2028|\u2029/g);
+        lexer.yylineno += lines.length - 1;
+        lexer.yylloc.first_line = lexer.yylineno + 1;
+        lexer.yylloc.first_column = lexer.length > 1 ? lines[lines.length - 1].length + 1 : lexer.yylloc.first_column + lines[0].length;
+        lexer.yylloc.range[0] += offset;
+        lexer.offset += offset;
+        lexer.match = lexer.match.slice(offset);
+    }
+
     // better error details
     const humanTokens = new Map([
         ['EOF', ['<end of input>']],
@@ -33,6 +43,10 @@ module.exports = function buildParsers(strictParser) {
         if (details.recoverable) {
             this.trace(rawMessage);
         } else {
+            if (typeof details.inside === 'number') {
+                forwardLoc(yy.lexer, details.inside, yy.lexer.match.slice(0, details.inside));
+            }
+
             const yylloc = yy.lexer.yylloc;
             const message = [
                 rawMessage.split(/\n/)[0],
@@ -77,6 +91,7 @@ module.exports = function buildParsers(strictParser) {
     };
 
     // add new helpers to lexer
+    const lineTerminator = new Set(['\n', '\r', '\u2028', '\u2029']);
     Object.assign(strictParser.lexer, {
         toLiteral: value =>
             /* eslint-disable operator-linebreak, indent */
@@ -85,13 +100,73 @@ module.exports = function buildParsers(strictParser) {
             value === 'true' ? true :
             undefined,
             /* eslint-enable */
-        toStringLiteral: value => JSON.parse(
-            value[0] === '\''
-                ? value.replace(/\\?"/g, '\\"')
-                    .replace(/\\([^"uU])/g, '$1')
-                    .replace(/^\'|\'$/g, '"')
-                : value
-        ),
+
+        toStringLiteral(value) {
+            let result = '';
+            for (let i = 1; i < value.length - 1; i++) {
+                if (lineTerminator.has(value[i])) {
+                    this.parseError('Invalid line terminator', { inside: i });
+                }
+
+                if (value[i] !== '\\') {
+                    result += value[i];
+                    continue;
+                }
+
+                const next = value[++i];
+                switch (next) {
+                    case '\r':
+                        // ignore line terminator
+                        i += value[i + 1] === '\n';  // \r\n
+                        break;
+
+                    case '\n':
+                    case '\u2028':
+                    case '\u2029':
+                        // ignore line terminator
+                        break;
+
+                    case 'b': result += '\b'; break;
+                    case 'n': result += '\n'; break;
+                    case 'r': result += '\r'; break;
+                    case 'f': result += '\f'; break;
+                    case 't': result += '\t'; break;
+                    case 'v': result += '\v'; break;
+
+                    case 'u': {
+                        const hex4 = value.slice(i + 1, i + 5);
+
+                        if (/^[0-9a-f]{4}$/i.test(hex4)) {
+                            result += String.fromCharCode(parseInt(hex4, 16));
+                            i += 4;
+                            break;
+                        }
+
+                        this.parseError('Invalid Unicode escape sequence', { inside: i - 1 });
+                        break;
+                    }
+
+                    case 'x': {
+                        const hex2 = value.slice(i + 1, i + 3);
+
+                        if (/^[0-9a-f]{2}$/i.test(hex2)) {
+                            result += String.fromCharCode(parseInt(hex2, 16));
+                            i += 2;
+                            break;
+                        }
+
+                        this.parseError('Invalid hexadecimal escape sequence', { inside: i - 1 });
+                        break;
+                    }
+
+                    default:
+                        result += next;
+                }
+            }
+
+            return result;
+        },
+
         toRegExp: value => new RegExp(
             value.substr(1, value.lastIndexOf('/') - 1),
             value.substr(value.lastIndexOf('/') + 1)
