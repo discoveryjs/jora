@@ -47,6 +47,8 @@ describe('lang/number', () => {
             '0xABCDEF',
             '0x123abc',
             '0xabc123',
+            '0X123abc',
+            '0Xabc123',
             '0x123ABC',
             '0xABC123',
             '0xC0FfEe'

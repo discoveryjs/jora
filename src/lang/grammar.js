@@ -158,8 +158,8 @@ module.exports = {
 
             // primitives
             ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
-            ['0x[0-9a-fA-F]+', switchToPreventPrimitiveState + 'yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
             ['"(?:\\\\.|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
+            ['0[xX][0-9a-fA-F]+', switchToPreventPrimitiveState + 'yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
             ["'(?:\\\\.|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
             ['{ident}', switchToPreventPrimitiveState + 'return "IDENT";'], // foo123
