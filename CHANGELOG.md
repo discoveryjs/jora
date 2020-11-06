@@ -2,6 +2,7 @@
 
 - Added support for multi-line comments
 - Added support for hexadecimal numbers
+- Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
 
 ## 1.0.0-beta.4 (November 4, 2020)
 

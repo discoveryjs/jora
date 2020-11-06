@@ -115,7 +115,7 @@ module.exports = {
             wb: '\\b',
             ows: '\\s*',  // optional whitespaces
             ws: '\\s+',   // required whitespaces
-            comment: '//.*?(?:\\r|\\n|$)|/\\*(?:.|\\s)*?(?:\\*/|$)',
+            comment: '//.*?(?:\\n|\\r\\n?|\\u2028|\\u2029|$)|/\\*(?:.|\\s)*?(?:\\*/|$)',
             ident: '[a-zA-Z_][a-zA-Z_$0-9]*',
             rx: '/(?:\\\\.|[^/])+/i?'
         },
