@@ -1,3 +1,7 @@
+## next
+
+- Added support for multi-line comments
+
 ## 1.0.0-beta.4 (November 4, 2020)
 
 - Added `setup()` API method to create a query function with defined custom methods once

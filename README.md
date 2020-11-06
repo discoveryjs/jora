@@ -51,6 +51,7 @@ Table of content:
 - [API](#api)
 - [Quick demo](#quick-demo)
 - [Syntax](#syntax)
+    - [Comments](#comments)
     - [Primitives](#primitives)
     - [Keywords](#keywords)
     - [Operators](#operators)
@@ -94,14 +95,13 @@ const jora = require('jora');
 // create a query
 const query = jora('foo.bar');
 // or with custom methods
-const queryWithCustomMethods = jora('foo.myMethod()', {
-    methods: {
-        myMethod(current) { /* do something and return a new value */ }
-    }
+const queryWithCustomMethods = jora.setup({
+    myMethod(current) { /* do something and return a new value */ }
 });
 
 // perform a query
 const result = query(data, context);
+const result = queryWithCustomMethods('foo.myMethod()')(data, context);
 ```
 
 Options:
@@ -197,6 +197,14 @@ jora@1.0.0
 ```
 
 ## Syntax
+
+### Comments
+
+```
+// single-line comment
+/* multi-line
+comment */
+```
 
 ### Primitives
 

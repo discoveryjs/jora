@@ -419,8 +419,21 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('', ['foo', 'bar'], 17),
             suggestion('', ['foo', 'bar'], 19)
         ],
+        '.|  |/*1*/|\n  |/*2\n3*/\n|  |': [
+            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar'], 3),
+            suggestion('', ['foo', 'bar'], 8),
+            suggestion('', ['foo', 'bar'], 11),
+            suggestion('', ['foo', 'bar'], 19),
+            suggestion('', ['foo', 'bar'], 21)
+        ],
         '.foo.|//|': [
             suggestion('', ['a', 'b', 'c', 'd'], 5),
+            null
+        ],
+        '.foo.|/*|*/|': [
+            suggestion('', ['a', 'b', 'c', 'd'], 5),
+            null,
             null
         ]
     });
