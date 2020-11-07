@@ -36,13 +36,14 @@ const keys = {}.constructor.keys;
 const $0 = { name: '$0' };
 const $1 = { name: '$1' };
 const $1name = { name: '$1.name' };
+const $$1name = { name: '"$" + $1.name' };
 const $2 = { name: '$2' };
 const $3 = { name: '$3' };
 const $4 = { name: '$4' };
 const $5 = { name: '$5' };
 const $r0 = { name: '@0.range' };
 const $r1 = { name: '@1.range' };
-const refs = new Set([$0, $1, $1name, $2, $3, $4, $5, $r0, $r1]);
+const refs = new Set([$0, $1, $1name, $$1name, $2, $3, $4, $5, $r0, $r1]);
 const asis = '';
 
 function stringify(value) {
@@ -378,7 +379,7 @@ module.exports = {
             ['STRING : e', $$(ObjectEntry(Literal($1), $3))],
             ['NUMBER : e', $$(ObjectEntry(Literal($1), $3))],
             ['LITERAL : e', $$(ObjectEntry(Literal($1), $3))],
-            ['$ident : e', $$(ObjectEntry($1, $3))],
+            ['$ident : e', $$(ObjectEntry(Identifier($$1name), $3))],
             ['[ e ] : e', $$(ObjectEntry($2, $5))],
             ['...', $$(Spread(null))],
             ['... query', $$(Spread($2))]

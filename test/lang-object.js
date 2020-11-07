@@ -49,7 +49,7 @@ describe('lang/object', () => {
     it('a property name starting with $', () => {
         assert.deepEqual(
             query('{ $foo: 1 }')(),
-            { foo: 1 }
+            { $foo: 1 }
         );
     });
 
