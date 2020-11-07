@@ -28,6 +28,7 @@ const nodes = {
     SliceNotation: require('./SliceNotation'),
     SortingFunction: require('./SortingFunction'),
     Spread: require('./Spread'),
+    Template: require('./Template'),
     Unary: require('./Unary')
 };
 

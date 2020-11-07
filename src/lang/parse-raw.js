@@ -33,13 +33,15 @@ module.exports = function buildParsers(strictParser) {
         ['AND', ["'and'"]],
         ['OR', ["'or'"]],
         ['STRING', ['string']],
+        ['TPL_START', ['template']],
+        ['TEMPLATE', ['template']],
         ['NUMBER', ['number']],
         ['REGEXP', ['regexp']],
         ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'"]],
         ['ORDER', ["'asc'", "'desc'", "'ascN'", "'descN'"]]
     ]);
     const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
-    const parseError = function(rawMessage, details, yy) {
+    const parseError = function(rawMessage, details = {}, yy) {
         if (details.recoverable) {
             this.trace(rawMessage);
         } else {
@@ -53,9 +55,9 @@ module.exports = function buildParsers(strictParser) {
                 '',
                 yy.lexer.showPosition()
             ];
-            const expected = !Array.isArray(details.expected) ? null : [].concat(
+            const expected = !Array.isArray(details.expected) ? null : [...new Set([].concat(
                 ...details.expected.map(token => tokenForHumans(token.slice(1, -1)))
-            );
+            ))];
 
             if (expected) {
                 message.push(
@@ -105,10 +107,10 @@ module.exports = function buildParsers(strictParser) {
             undefined,
             /* eslint-enable */
 
-        toStringLiteral(value) {
+        toStringLiteral(value, multiline = false, end = 1) {
             let result = '';
-            for (let i = 1; i < value.length - 1; i++) {
-                if (lineTerminator.has(value[i])) {
+            for (let i = 1; i < value.length - end; i++) {
+                if (!multiline && lineTerminator.has(value[i])) {
                     this.parseError('Invalid line terminator', { inside: i });
                 }
 
@@ -194,6 +196,7 @@ module.exports = function buildParsers(strictParser) {
 
             this.fnOpened = 0;
             this.fnOpenedStack = [];
+            this.bracketStack = [];
             this.prevToken = null;
             this.prevYylloc = {
                 first_line: 1,
@@ -318,6 +321,56 @@ module.exports = function buildParsers(strictParser) {
 
             return this.prevToken = nextToken;
         }
+    });
+
+    // bracket balance & scope
+    const openBalance = new Map([
+        ['(', ')'],
+        ['.(', ')'],
+        ['..(', ')'],
+        ['[', ']'],
+        ['.[', ']'],
+        ['{', '}'],
+        ['TPL_START', 'TPL_END']
+    ]);
+    const closeBalance = new Set([')', ']', '}', 'TPL_END']);
+    const balanceScopeLex = origLex => function patchedLex() {
+        this.lex = origLex;
+        const token = this.lex(this);
+        this.lex = patchedLex;
+
+        if (closeBalance.has(token)) {
+            const expected = this.bracketStack.pop();
+
+            if (expected !== token) {
+                this.parseError(`Expected "${expected}" got "${token}"`);
+            }
+
+            this.fnOpened = this.fnOpenedStack.pop() || 0;
+        }
+
+        if (openBalance.has(token)) {
+            this.bracketStack.push(openBalance.get(token));
+            this.fnOpenedStack.push(this.fnOpened);
+            this.fnOpened = 0;
+        }
+
+        return token;
+    };
+    const popState = () => function(state) {
+        const index = this.conditionStack.indexOf(state);
+
+        if (index > 0) {
+            this.conditionStack.splice(index, 1);
+        }
+    };
+    patch(strictParser.lexer, {
+        lex: balanceScopeLex,
+        popState
+    });
+    patch(tolerantParser.lexer, {
+        lex: balanceScopeLex,
+        popState
     });
 
     // tolerantParser.lexer.setInput('\n//test\n\nor', {});

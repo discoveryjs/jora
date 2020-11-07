@@ -21,14 +21,15 @@ const {
     Method,
     MethodCall,
     Object,
+    ObjectEntry,
     Parentheses,
     Pick,
     Pipeline,
-    ObjectEntry,
     Reference,
     SliceNotation,
     SortingFunction,
     Spread,
+    Template,
     Unary
 } = require('./nodes').build;
 const isArray = [].constructor.isArray;
@@ -103,8 +104,6 @@ function createCommaList(name, element) {
 }
 
 const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
-const openScope = 'this.fnOpenedStack.push(this.fnOpened); this.fnOpened = 0; ';
-const closeScope = 'this.fnOpened = this.fnOpenedStack.pop() || 0; ';
 
 module.exports = {
     // Lexical tokens
@@ -121,7 +120,8 @@ module.exports = {
             rx: '/(?:\\\\.|[^/])+/i?'
         },
         startConditions: {
-            preventPrimitive: 0
+            preventPrimitive: 0,
+            template: 1
         },
         rules: [
             // ignore comments and whitespaces
@@ -129,20 +129,25 @@ module.exports = {
             ['{ws}', '/* a whitespace */'],
 
             // hack to prevent primitive (i.e. regexp and function) consumption
-            [['preventPrimitive'], '\\/', 'this.popState(); return "/";'],
-            [['preventPrimitive'], '<(?!=)', 'this.popState(); return "<";'],
+            [['preventPrimitive'], '\\/', 'this.popState("preventPrimitive"); return "/";'],
+            [['preventPrimitive'], '<(?!=)', 'this.popState("preventPrimitive"); return "<";'],
             // FIXME: using `this.done = false;` is a hack, since `regexp-lexer` set done=true
             // when no input left and doesn't take into account current state;
             // should be fixed in `regexp-lexer`
-            [['preventPrimitive'], '', 'this.done = false; this.popState();'],
+            [['preventPrimitive'], '', 'this.done = false; this.popState("preventPrimitive");'],
+
+            // string template continue or end
+            [['template'], '}(?:\\\\[\\\\`$]|[^`])*?(?<!\\\\)\\${', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true, 2); this.popState("template"); return "TPL_CONTINUE";'],
+            [['template'], '}(?:\\\\[\\\\`]|[^`])*`', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true); this.popState("template"); return "TPL_END";'],
+            [['template'], '', 'this.parseError("!!")'],
 
             // braces
-            ['\\(', openScope + 'return "(";'],
-            ['\\)', closeScope + switchToPreventPrimitiveState + 'return ")";'],
-            ['\\[', openScope + 'return "[";'],
-            ['\\]', closeScope + switchToPreventPrimitiveState + 'return "]";'],
-            ['\\{', openScope + 'return "{";'],
-            ['\\}', closeScope + switchToPreventPrimitiveState + 'return "}";'],
+            ['\\(', 'return "(";'],
+            ['\\)', switchToPreventPrimitiveState + 'return ")";'],
+            ['\\[', 'return "[";'],
+            ['\\]', switchToPreventPrimitiveState + 'return "]";'],
+            ['\\{', 'return "{";'],
+            ['\\}', 'if (this.bracketStack[this.bracketStack.length - 1] === "TPL_END"){ this.unput("}"); this.begin("template"); return; }' + switchToPreventPrimitiveState + 'return "}";'],
 
             // keywords (should goes before ident)
             ['(true|false|null|undefined|Infinity|NaN){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
@@ -160,8 +165,10 @@ module.exports = {
             // primitives
             ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
             ['0[xX][0-9a-fA-F]+', switchToPreventPrimitiveState + 'yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
-            ['"(?:\\\\"|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\'|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
+            ['"(?:\\\\[\\\\"]|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
+            ["'(?:\\\\[\\\\']|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
+            ['`(?:\\\\[\\\\`]|[^`$])*?(?<!\\\\)\\${', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true, 2); return "TPL_START";'],
+            ['`(?:\\\\[\\\\`]|[^`])*`', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true); return "TEMPLATE";'],
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
             ['{ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext); return "IDENT";'], // foo123
             ['\\${ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext.slice(1)); return "$IDENT";'], // $foo123
@@ -190,9 +197,9 @@ module.exports = {
                 }
                 return ">";
             `],
-            ['\\.\\.\\(', openScope + 'return "..(";'],
-            ['\\.\\(', openScope + 'return ".(";'],
-            ['\\.\\[', openScope + 'return ".[";'],
+            ['\\.\\.\\(', 'return "..(";'],
+            ['\\.\\(', 'return ".(";'],
+            ['\\.\\[', 'return ".[";'],
             ['\\.\\.\\.', 'return "...";'],
             ['\\.\\.', switchToPreventPrimitiveState + 'return "..";'],
             ['\\.', switchToPreventPrimitiveState + 'return ".";'],
@@ -326,6 +333,7 @@ module.exports = {
             ['NUMBER', $$(Literal($1))],
             ['REGEXP', $$(Literal($1))],
             ['LITERAL', $$(Literal($1))],
+            ['template', $$(Template($1))],
             ['object', asis],
             ['array', asis],
             ['[ sliceNotation ]', $$(SliceNotation(null, $2))],
@@ -361,6 +369,21 @@ module.exports = {
             ['$ident ( arguments )', $$(Method(Reference($1), $3))]
         ],
         arguments: createCommaList('arguments', 'e'),
+
+        template: [
+            ['templateString', $$([$1])],
+            ['templateStart templateTail', '$$=[$1, ...$2]']
+        ],
+        templateTail: [
+            ['templateEnd', $$([null, $1])],
+            ['e templateEnd', $$([$1, $2])],
+            ['templateContinue templateTail', '$$=[null, $1, ...$2]'],
+            ['e templateContinue templateTail', '$$=[$1, $2, ...$3]']
+        ],
+        templateString: [['TEMPLATE', $$(Literal($1))]],
+        templateStart: [['TPL_START', $$(Literal($1))]],
+        templateContinue: [['TPL_CONTINUE', $$(Literal($1))]],
+        templateEnd: [['TPL_END', $$(Literal($1))]],
 
         object: [
             ['{ }', $$(Object([]))],

@@ -1,8 +1,9 @@
 ## next
 
+- Added support for template literals
 - Added support for multi-line comments
 - Added support for hexadecimal numbers
-- Added support for hexadecimal escape sequence in strings, i.e. `'\x20'`
+- Added support for hexadecimal escape sequence in strings, i.e. `'hello\x20world'`
 - Added support for multiple lines in strings by escaping new line characters
 - Fixed string literal parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)

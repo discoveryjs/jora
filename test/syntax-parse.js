@@ -43,10 +43,10 @@ describe('syntax/parse', () => {
                 () => parse('foo\n .[bar =]'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: "Parse error on line 2:\nfoo .[bar =]\n-----------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', '-', '+', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', '{', got ']'",
+                        rawMessage: "Parse error on line 2:\nfoo .[bar =]\n-----------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', '-', '+', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'TEMPLATE', 'TPL_START', '{', got ']'",
                         text: ']',
                         token: ']',
-                        expected: ["'$'", 'ident', '$ident', "'<'", "'=>'", "'not'", "'-'", "'+'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", "'{'"],
+                        expected: ["'$'", 'ident', '$ident', "'<'", "'=>'", "'not'", "'-'", "'+'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", 'template', "'{'"],
                         loc: {
                             range: [12, 13],
                             start: {

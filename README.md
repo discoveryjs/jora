@@ -213,6 +213,7 @@ Jora | Description
 42<br>-123<br>4.22<br>1e3<br>1e-2 | Numbers
 0xdecaf<br>-0xC0FFEE | Hexadecimal numbers
 "string"<br>'string' | Strings
+\`template line1<br>template line2\`<br>\`template ${hello} ${world}` | Template
 /regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
 { } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)
 [ ] | Array initializer/literal syntax. Spread operator (`...`) can be used, e.g. `[1, ..., ...foo]` (`...` with no expression on right side the same as `...$`). Unlike JavaScript, spread operator in jora inlines arrays only and left as is any other values, i.e. `[...[1, 2], ...3, ..."45", { "6": 7 }]` -> `[1, 2, 3, "45", { "6": 7 }]`
