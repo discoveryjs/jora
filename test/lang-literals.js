@@ -13,16 +13,14 @@ describe('lang/literals', () => {
     keywords.forEach(keyword => {
         describe(String(keyword), () => {
             it('basic', () =>
-                assert.strictEqual(
-                    query(String(keyword))({ [keyword]: 42 }),
-                    keyword
+                assert.ok(
+                    Object.is(query(String(keyword))({ [keyword]: 42 }), keyword)
                 )
             );
 
             it('white space surrounded', () =>
-                assert.strictEqual(
-                    query(' ' + keyword + ' ')({ [keyword]: 42 }),
-                    keyword
+                assert.ok(
+                    Object.is(query(' ' + keyword + ' ')({ [keyword]: 42 }), keyword)
                 )
             );
 
