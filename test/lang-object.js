@@ -41,8 +41,15 @@ describe('lang/object', () => {
 
     it('a literal as property name', () => {
         assert.deepEqual(
-            query('{ true: 1, false: 2, null: 3, undefined: 4 }')(),
-            { true: 1, false: 2, null: 3, undefined: 4 }
+            query('{ true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }')(),
+            { true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }
+        );
+    });
+
+    it('a property name starting with $', () => {
+        assert.deepEqual(
+            query('{ $foo: 1 }')(),
+            { foo: 1 }
         );
     });
 

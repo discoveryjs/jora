@@ -9,6 +9,7 @@
 - Allowed a single trailing comma in object and array literals
 - Allowed unicode escape sequence in identifier name
 - Added `Infinity` and `NaN` literals
+- Allowed starting with `$` for object literal property name when a value is defined
 
 ## 1.0.0-beta.4 (November 4, 2020)
 

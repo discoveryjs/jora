@@ -371,13 +371,14 @@ module.exports = {
         ],
         properties: createCommaList('properties', 'property'),
         property: [
-            ['ident', $$(ObjectEntry($1, null))],
             ['$', $$(ObjectEntry(Current(), null))],  // do nothing, but collect stat (suggestions)
             ['$ident', $$(ObjectEntry(Reference($1), null))],
+            ['ident', $$(ObjectEntry($1, null))],
             ['ident : e', $$(ObjectEntry($1, $3))],
             ['STRING : e', $$(ObjectEntry(Literal($1), $3))],
             ['NUMBER : e', $$(ObjectEntry(Literal($1), $3))],
             ['LITERAL : e', $$(ObjectEntry(Literal($1), $3))],
+            ['$ident : e', $$(ObjectEntry($1, $3))],
             ['[ e ] : e', $$(ObjectEntry($2, $5))],
             ['...', $$(Spread(null))],
             ['... query', $$(Spread($2))]
