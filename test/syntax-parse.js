@@ -15,7 +15,7 @@ describe('syntax/parse', () => {
                 () => parse('foo()\n пыщ'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: 'Lexical error on line 2. Unrecognized text.\nfoo() пыщ\n------^',
+                        rawMessage: 'Lexical error on line 2. Unrecognized text.\nfoo()\\n пыщ\n--------^',
                         text: '',
                         token: null,
                         expected: null,
@@ -34,7 +34,7 @@ describe('syntax/parse', () => {
                         }
                     });
 
-                    return /Lexical error on line 2\. Unrecognized text\.\n\nfoo\(\) пыщ\n------\^/.test(e.message);
+                    return /Lexical error on line 2\. Unrecognized text\.\n\nfoo\(\)\\n пыщ\n--------\^/.test(e.message);
                 }
             );
         });
@@ -43,7 +43,7 @@ describe('syntax/parse', () => {
                 () => parse('foo\n .[bar =]'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: "Parse error on line 2:\nfoo .[bar =]\n-----------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', '-', '+', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'TEMPLATE', 'TPL_START', '{', got ']'",
+                        rawMessage: "Parse error on line 2:\nfoo\\n .[bar =]\n-------------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', '-', '+', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'TEMPLATE', 'TPL_START', '{', got ']'",
                         text: ']',
                         token: ']',
                         expected: ["'$'", 'ident', '$ident', "'<'", "'=>'", "'not'", "'-'", "'+'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", 'template', "'{'"],
@@ -62,7 +62,7 @@ describe('syntax/parse', () => {
                         }
                     });
 
-                    return /Parse error on line 2:\n\nfoo \.\[bar =\]\n-----------\^\n\nExpecting /.test(e.message);
+                    return /Parse error on line 2:\n\nfoo\\n \.\[bar =\]\n-------------\^\n\nExpecting /.test(e.message);
                 }
             );
         });

@@ -104,6 +104,27 @@ function createCommaList(name, element) {
 }
 
 const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
+const templateToken = (input, state) => {
+    if (input[0] !== (state === 'template' ? '}' : '`')) {
+        return null;
+    }
+
+    for (let i = 1; i < input.length; i++) {
+        if (input[i] === '`') {
+            return i + 1;
+        }
+
+        if (input[i] === '$' && input[i + 1] === '{') {
+            return i + 2;
+        }
+
+        if (input[i] === '\\') {
+            i++;
+        }
+    }
+
+    return null;
+};
 
 module.exports = {
     // Lexical tokens
@@ -136,10 +157,25 @@ module.exports = {
             // should be fixed in `regexp-lexer`
             [['preventPrimitive'], '', 'this.done = false; this.popState("preventPrimitive");'],
 
-            // string template continue or end
-            [['template'], '}(?:\\\\[\\\\`$]|[^`])*?(?<!\\\\)\\${', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true, 2); this.popState("template"); return "TPL_CONTINUE";'],
-            [['template'], '}(?:\\\\[\\\\`]|[^`])*`', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true); this.popState("template"); return "TPL_END";'],
-            [['template'], '', 'this.parseError("!!")'],
+            // template
+            [templateToken, (yytext) => {
+                if (this._input) {
+                    this.begin('preventPrimitive');
+                }
+                const token = yytext[yytext.length - 1] === '`' ? 'TEMPLATE' : 'TPL_START';
+                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TEMPLATE'));
+                return token;
+            }],
+            [['template'], templateToken, (yytext) => {
+                const token = yytext[yytext.length - 1] === '`' ? 'TPL_END' : 'TPL_CONTINUE';
+                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TPL_END'));
+                this.popState('template');
+                if (this._input) {
+                    this.begin('preventPrimitive');
+                }
+                return token;
+            }],
+            [['template'], '', 'this.parseError("Unexpected end of input")'],
 
             // braces
             ['\\(', 'return "(";'],
@@ -167,8 +203,6 @@ module.exports = {
             ['0[xX][0-9a-fA-F]+', switchToPreventPrimitiveState + 'yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
             ['"(?:\\\\[\\\\"]|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
             ["'(?:\\\\[\\\\']|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
-            ['`(?:\\\\[\\\\`]|[^`$])*?(?<!\\\\)\\${', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true, 2); return "TPL_START";'],
-            ['`(?:\\\\[\\\\`]|[^`])*`', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext, true); return "TEMPLATE";'],
             ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
             ['{ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext); return "IDENT";'], // foo123
             ['\\${ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext.slice(1)); return "$IDENT";'], // $foo123
@@ -176,12 +210,15 @@ module.exports = {
             // special vars
             ['@', switchToPreventPrimitiveState + 'return "@";'],
             ['#', switchToPreventPrimitiveState + 'return "#";'],
-            ['\\${2}', switchToPreventPrimitiveState + 'return "$$";'],
+            ['\\$\\$', switchToPreventPrimitiveState + 'return "$$";'],
             ['\\$', switchToPreventPrimitiveState + 'return "$";'],
 
             // functions
             ['=>', 'return "FUNCTION";'],
-            ['<(?!=)', 'this.fnOpened++; return "FUNCTION_START"'],
+            ['<(?!=)', () => {
+                this.fnOpened++;
+                return 'FUNCTION_START';
+            }],
 
             // operators
             ['=', 'return "=";'],
@@ -190,13 +227,13 @@ module.exports = {
             ['>=', 'return ">=";'],
             ['<=', 'return "<=";'],
             ['<', 'return "<";'],
-            ['>', `
+            ['>', () => {
                 if (this.fnOpened) {
                     this.fnOpened--;
-                    return "FUNCTION_END";
+                    return 'FUNCTION_END';
                 }
-                return ">";
-            `],
+                return '>';
+            }],
             ['\\.\\.\\(', 'return "..(";'],
             ['\\.\\(', 'return ".(";'],
             ['\\.\\[', 'return ".[";'],

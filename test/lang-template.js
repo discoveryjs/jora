@@ -11,6 +11,7 @@ const valid = [
     '`\\\\\\b\\f\\n\\r\\t\\v`',
     '`escaped\\\n\\\r\\\r\n\\\u2028\\\u2029newlines`',
     '`asd\\${_}asd`',
+    '`asd$\\{_}asd`',
     '`${_}`',
     '`pre${_}`',
     '`${_}post`',

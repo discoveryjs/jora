@@ -248,10 +248,10 @@ module.exports = function buildParsers(strictParser) {
 
     patch(tolerantParser.lexer, {
         lex: origLex => function patchedLex() {
-            this.lex = origLex;
+            // this.lex = origLex;
             const prevInput = this._input;
-            const nextToken = this.lex(this);
-            this.lex = patchedLex;
+            const nextToken = origLex.call(this);
+            // this.lex = patchedLex;
 
             if (tokenPair.has(this.prevToken) && tokenPair.get(this.prevToken).has(nextToken)) {
                 const yylloc = {
@@ -335,9 +335,9 @@ module.exports = function buildParsers(strictParser) {
     ]);
     const closeBalance = new Set([')', ']', '}', 'TPL_END']);
     const balanceScopeLex = origLex => function patchedLex() {
-        this.lex = origLex;
-        const token = this.lex(this);
-        this.lex = patchedLex;
+        // this.lex = origLex;
+        const token = origLex.call(this);
+        // this.lex = patchedLex;
 
         if (closeBalance.has(token)) {
             const expected = this.bracketStack.pop();
@@ -357,28 +357,12 @@ module.exports = function buildParsers(strictParser) {
 
         return token;
     };
-    const popState = () => function(state) {
-        const index = this.conditionStack.indexOf(state);
-
-        if (index > 0) {
-            this.conditionStack.splice(index, 1);
-        }
-    };
     patch(strictParser.lexer, {
-        lex: balanceScopeLex,
-        popState
+        lex: balanceScopeLex
     });
     patch(tolerantParser.lexer, {
-        lex: balanceScopeLex,
-        popState
+        lex: balanceScopeLex
     });
-
-    // tolerantParser.lexer.setInput('\n//test\n\nor', {});
-    // while (!tolerantParser.lexer.done) {
-    //     console.log(tolerantParser.lexer.conditionStack);
-    //     console.log('>', tolerantParser.lexer.lex(), tolerantParser.lexer.yytext);
-    // }
-    // process.exit();
 
     return {
         parse(source, tolerantMode) {
@@ -389,7 +373,9 @@ module.exports = function buildParsers(strictParser) {
         *tokenize(source, tolerantMode, loc) {
             const lexer = Object.create(tolerantMode ? tolerantParser.lexer : strictParser.lexer);
 
-            lexer.setInput(source, {});
+            lexer.setInput(source, {
+                parser: strictParser
+            });
 
             while (!lexer.done) {
                 const token = {
