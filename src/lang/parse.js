@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 const fs = require('fs');
-const { Parser } = require('jison');
+const { Parser } = require('@lahmatiy/jison');
 const grammar = require('./grammar');
 const buildParsers = require('./parse-raw');
 const strictParser = new Parser(grammar);
