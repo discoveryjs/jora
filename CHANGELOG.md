@@ -1,16 +1,17 @@
-## next
+## 1.0.0-beta.5 (November 10, 2020)
 
+- Jora became a superset of JSON5 (see #23)
 - Added support for template literals
 - Added support for multi-line comments
 - Added support for hexadecimal numbers
 - Added support for hexadecimal escape sequence in strings, i.e. `'hello\x20world'`
 - Added support for multiple lines in strings by escaping new line characters
+- Added `Infinity` and `NaN` literals
 - Fixed string literal parsing to be ECMA-262 compliant
 - Changed parsing to recognize line terminators according to ECMA-262 (added `\r\n`, `\u2028` and `\u2029`)
 - Allowed a single trailing comma in object and array literals
 - Allowed unicode escape sequence in identifier name
-- Added `Infinity` and `NaN` literals
-- Allowed starting with `$` for object literal property name when a value is defined
+- Allowed object literal property names starting with `$` when a value is defined
 
 ## 1.0.0-beta.4 (November 4, 2020)
 
