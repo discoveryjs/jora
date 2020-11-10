@@ -35,7 +35,7 @@ const invalid = {
     '` \\x0x`': 'Invalid hexadecimal escape sequence'
 };
 
-describe('lang/string-template', () => {
+describe('lang/template', () => {
     it('newlines', () =>
         assert.strictEqual(
             query('`new\n\r\r\n\u2028\u2029lines`')(),
@@ -63,4 +63,20 @@ describe('lang/string-template', () => {
             )
         )
     ));
+
+    describe('with division operator/regexp', () => {
+        [
+            ['`444`/2/2', 111],
+            ['`4${4}4`/2/2', 111],
+            ['`4${/4/}4`', '4/4/4'],
+            ['`4${/2/}4${/2/}4`', '4/2/4/2/4']
+        ].forEach(([test, expected]) =>
+            it(test, () =>
+                assert.strictEqual(
+                    query(test)(),
+                    expected
+                )
+            )
+        );
+    });
 });

@@ -193,6 +193,11 @@ module.exports = function buildParsers(strictParser) {
                 // parser doesn't expose sharedState and it's unavailable in parseError
                 return parseError.call(this, ...args, yy);
             };
+            yy.pps = () => {
+                if (this._input) {
+                    this.begin('preventPrimitive');
+                }
+            };
 
             this.fnOpened = 0;
             this.fnOpenedStack = [];
@@ -248,10 +253,8 @@ module.exports = function buildParsers(strictParser) {
 
     patch(tolerantParser.lexer, {
         lex: origLex => function patchedLex() {
-            // this.lex = origLex;
             const prevInput = this._input;
             const nextToken = origLex.call(this);
-            // this.lex = patchedLex;
 
             if (tokenPair.has(this.prevToken) && tokenPair.get(this.prevToken).has(nextToken)) {
                 const yylloc = {
@@ -335,9 +338,7 @@ module.exports = function buildParsers(strictParser) {
     ]);
     const closeBalance = new Set([')', ']', '}', 'TPL_END']);
     const balanceScopeLex = origLex => function patchedLex() {
-        // this.lex = origLex;
         const token = origLex.call(this);
-        // this.lex = patchedLex;
 
         if (closeBalance.has(token)) {
             const expected = this.bracketStack.pop();

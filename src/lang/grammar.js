@@ -103,7 +103,6 @@ function createCommaList(name, element) {
     ];
 }
 
-const switchToPreventPrimitiveState = 'if (this._input) this.begin("preventPrimitive"); ';
 const templateToken = (input, state) => {
     if (input[0] !== (state === 'template' ? '}' : '`')) {
         return null;
@@ -146,47 +145,62 @@ module.exports = {
         },
         rules: [
             // ignore comments and whitespaces
-            ['{comment}', 'yy.commentRanges.push(yylloc.range); /* a comment */'],
-            ['{ws}', '/* a whitespace */'],
+            ['{comment}', 'yy.commentRanges.push(yylloc.range)'],
+            ['{ws}', ''],
 
             // hack to prevent primitive (i.e. regexp and function) consumption
-            [['preventPrimitive'], '\\/', 'this.popState("preventPrimitive"); return "/";'],
-            [['preventPrimitive'], '<(?!=)', 'this.popState("preventPrimitive"); return "<";'],
+            [['preventPrimitive'], '\\/', 'this.popState(); return "/";'],
+            [['preventPrimitive'], '<(?!=)', 'this.popState(); return "<";'],
             // FIXME: using `this.done = false;` is a hack, since `regexp-lexer` set done=true
             // when no input left and doesn't take into account current state;
             // should be fixed in `regexp-lexer`
-            [['preventPrimitive'], '', 'this.done = false; this.popState("preventPrimitive");'],
+            [['preventPrimitive'], '', () => {
+                this.done = false;
+                this.popState();
+            }],
 
             // template
-            [templateToken, (yytext) => {
-                if (this._input) {
-                    this.begin('preventPrimitive');
-                }
-                const token = yytext[yytext.length - 1] === '`' ? 'TEMPLATE' : 'TPL_START';
+            [templateToken, (yy, yytext) => {
+                const token = yytext.endsWith('`') ? 'TEMPLATE' : 'TPL_START';
                 yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TEMPLATE'));
-                return token;
-            }],
-            [['template'], templateToken, (yytext) => {
-                const token = yytext[yytext.length - 1] === '`' ? 'TPL_END' : 'TPL_CONTINUE';
-                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TPL_END'));
-                this.popState('template');
-                if (this._input) {
-                    this.begin('preventPrimitive');
+                if (token === 'TEMPLATE') {
+                    yy.pps();
                 }
                 return token;
             }],
-            [['template'], '', 'this.parseError("Unexpected end of input")'],
+            [['template'], templateToken, (yy, yytext) => {
+                const token = yytext.endsWith('`') ? 'TPL_END' : 'TPL_CONTINUE';
+                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TPL_END'));
+                this.popState();
+                if (token === 'TPL_END') {
+                    yy.pps();
+                }
+                return token;
+            }],
+            [['template'], '', () => this.parseError('Unexpected end of input')],
 
             // braces
             ['\\(', 'return "(";'],
-            ['\\)', switchToPreventPrimitiveState + 'return ")";'],
+            ['\\)', 'yy.pps(); return ")";'],
             ['\\[', 'return "[";'],
-            ['\\]', switchToPreventPrimitiveState + 'return "]";'],
+            ['\\]', 'yy.pps(); return "]";'],
             ['\\{', 'return "{";'],
-            ['\\}', 'if (this.bracketStack[this.bracketStack.length - 1] === "TPL_END"){ this.unput("}"); this.begin("template"); return; }' + switchToPreventPrimitiveState + 'return "}";'],
+            ['\\}', (yy) => {
+                if (this.bracketStack[this.bracketStack.length - 1] !== 'TPL_END') {
+                    yy.pps();
+                    return '}';
+                }
+
+                this.unput('}');
+                this.begin('template');
+            }],
 
             // keywords (should goes before ident)
-            ['(true|false|null|undefined|Infinity|NaN){wb}', 'yytext = this.toLiteral(yytext);return "LITERAL";'],
+            // eslint-disable-next-line no-unused-vars
+            ['(true|false|null|undefined|Infinity|NaN){wb}', (yytext) => {
+                yytext = this.toLiteral(yytext);
+                return 'LITERAL';
+            }],
 
             // keyword operators (should goes before IDENT)
             ['and{wb}', 'return "AND";'],
@@ -199,19 +213,19 @@ module.exports = {
             ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
             // primitives
-            ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', switchToPreventPrimitiveState + 'yytext = Number(yytext); return "NUMBER";'],  // 212.321
-            ['0[xX][0-9a-fA-F]+', switchToPreventPrimitiveState + 'yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
-            ['"(?:\\\\[\\\\"]|[^"])*"', switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // "foo" "with \" escaped"
-            ["'(?:\\\\[\\\\']|[^'])*'", switchToPreventPrimitiveState + 'yytext = this.toStringLiteral(yytext); return "STRING";'],       // 'foo' 'with \' escaped'
-            ['{rx}', switchToPreventPrimitiveState + 'yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
-            ['{ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext); return "IDENT";'], // foo123
-            ['\\${ident}', switchToPreventPrimitiveState + 'yytext = this.ident(yytext.slice(1)); return "$IDENT";'], // $foo123
+            ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = Number(yytext); return "NUMBER";'],  // 212.321
+            ['0[xX][0-9a-fA-F]+', 'yy.pps(); yytext = parseInt(yytext, 16); return "NUMBER";'],  // 0x12ab
+            ['"(?:\\\\[\\\\"]|[^"])*"', 'yy.pps(); yytext = this.toStringLiteral(yytext); return "STRING";'],   // "foo" "with \" escaped"
+            ["'(?:\\\\[\\\\']|[^'])*'", 'yy.pps(); yytext = this.toStringLiteral(yytext); return "STRING";'],   // 'foo' 'with \' escaped'
+            ['{rx}', 'yy.pps(); yytext = this.toRegExp(yytext); return "REGEXP";'], // /foo/i
+            ['{ident}', 'yy.pps(); yytext = this.ident(yytext); return "IDENT";'], // foo123
+            ['\\${ident}', 'yy.pps(); yytext = this.ident(yytext.slice(1)); return "$IDENT";'], // $foo123
 
             // special vars
-            ['@', switchToPreventPrimitiveState + 'return "@";'],
-            ['#', switchToPreventPrimitiveState + 'return "#";'],
-            ['\\$\\$', switchToPreventPrimitiveState + 'return "$$";'],
-            ['\\$', switchToPreventPrimitiveState + 'return "$";'],
+            ['@', 'yy.pps(); return "@";'],
+            ['#', 'yy.pps(); return "#";'],
+            ['\\$\\$', 'yy.pps(); return "$$";'],
+            ['\\$', 'yy.pps(); return "$";'],
 
             // functions
             ['=>', 'return "FUNCTION";'],
@@ -238,8 +252,8 @@ module.exports = {
             ['\\.\\(', 'return ".(";'],
             ['\\.\\[', 'return ".[";'],
             ['\\.\\.\\.', 'return "...";'],
-            ['\\.\\.', switchToPreventPrimitiveState + 'return "..";'],
-            ['\\.', switchToPreventPrimitiveState + 'return ".";'],
+            ['\\.\\.', 'yy.pps(); return "..";'],
+            ['\\.', 'yy.pps(); return ".";'],
             ['\\?', 'return "?";'],
             [',', 'return ",";'],
             [':', 'return ":";'],
