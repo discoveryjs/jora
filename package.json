@@ -30,7 +30,7 @@
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
     "coverage": "nyc npm test",
-    "travis": "nyc npm run lint-and-test && npm run build-and-test && npm run parser:bake && npm test && npm run coveralls",
+    "travis": "npm run lint && npm run build-and-test && npm run parser:bake && nyc npm test && npm run coveralls",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "dependencies": {},
