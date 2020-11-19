@@ -1,7 +1,7 @@
-module.exports = function createCustomError(name, message) {
+module.exports = function createCustomError(name, message, extensions) {
     // use Object.create(), because some VMs prevent setting line/column otherwise
     // (iOS Safari 10 even throws an exception)
-    const error = Object.create(SyntaxError.prototype);
+    const error = Object.assign(Object.create(SyntaxError.prototype), extensions);
     const errorStack = new Error();
 
     error.name = name;
