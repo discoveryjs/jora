@@ -1,35 +1,49 @@
 const assert = require('assert');
-const { setup } = require('./helpers/lib');
+const jora = require('./helpers/lib');
+const { setup } = jora;
 
 describe('query/setup', () => {
     it('with no args', () => {
-        const query = setup();
+        const customQuery = setup();
 
         assert.strictEqual(
-            query('size()')('foo'),
+            customQuery('size()')('foo'),
             3
         );
     });
 
     it('with custom methods', () => {
-        const query = setup({
+        const customQuery = setup({
             test: () => 42
         });
 
-        assert.deepEqual(
-            query('test()')(),
+        assert.strictEqual(
+            customQuery('test()')(),
             42
         );
     });
 
     it('should override buildin methods', () => {
-        const query = setup({
+        const customQuery = setup({
             size: () => 42
         });
 
-        assert.deepEqual(
-            query('size()')('foo'),
+        assert.strictEqual(
+            customQuery('size()')('foo'),
             42
         );
+    });
+
+    it('should not affect others', () => {
+        const customQuery1 = setup({
+            test: () => 1
+        });
+        const customQuery2 = setup({
+            test: () => 2
+        });
+
+        assert.strictEqual(customQuery1('test()')(), 1);
+        assert.strictEqual(customQuery2('test()')(), 2);
+        assert.throws(() => jora('test()')(), /test is not a function/);
     });
 });
