@@ -151,7 +151,6 @@ require('child_process').exec('npm ls --json', (error, stdout) => {
     }
 
     const npmTree = JSON.parse(stdout);
-    const tree = JSON.parse(stdout);
     const depsPathsToMultipleVersionPackages = jora(`
         $normalizedDeps: => dependencies.entries().({ name: key, ...value });
         $multiVersionPackages:
@@ -170,7 +169,7 @@ require('child_process').exec('npm ls --json', (error, stdout) => {
         });
 
         $pathToMultiVersionPackages()
-    `)(tree);
+    `)(npmTree);
 
     printTree(depsPathsToMultipleVersionPackages);
 });
