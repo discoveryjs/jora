@@ -136,7 +136,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         tolerant,
         scope: [],
         createScope,
-        error: (message, node) => {
+        error(message, node) {
             const error = new SyntaxError(message);
 
             if (node && node.range) {

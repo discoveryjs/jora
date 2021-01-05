@@ -8,6 +8,9 @@ module.exports = {
     compile(node, ctx) {
         ctx.put(node.name);
     },
+    interpret(node) {
+        return node.name;
+    },
     walk() {},
     stringify(node, ctx) {
         ctx.put(node.name);

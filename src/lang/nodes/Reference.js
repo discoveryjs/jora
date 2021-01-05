@@ -24,6 +24,9 @@ module.exports = {
         ctx.put('$');
         ctx.node(node.name);
     },
+    interpret(node, ctx) {
+        return ctx.scope.vars[ctx.interpret(node.name)];
+    },
     walk(node, ctx) {
         ctx.node(node.name);
     },

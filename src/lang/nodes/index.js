@@ -32,12 +32,12 @@ const nodes = {
     Unary: require('./Unary')
 };
 
-const extract = type => new Map(
+const extract = (type, fb) => new Map(
     Object.entries(nodes)
-        .map(([key, value]) => [key, value[type]])
+        .map(([key, value]) => [key, value[type] || fb])
         .filter(([, value]) => typeof value === 'function')
 );
-const build = {};
+const build = Object.create(null);
 extract('build').forEach(
     (value, key) => (build[key] = value)
 );
@@ -46,6 +46,7 @@ module.exports = {
     nodes,
     build,
     compile: extract('compile'),
+    interpret: extract('interpret', () => {}),
     walk: extract('walk'),
     stringify: extract('stringify'),
     suggest: extract('suggest')

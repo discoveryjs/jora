@@ -2,6 +2,18 @@ const GetProperty = require('./GetProperty').build;
 const Identifier = require('./Identifier').build;
 const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
 
+function assertDeclaratorName(declarator, ctx) {
+    if (ctx.scope.own.includes(declarator.name)) {
+        ctx.error(`Identifier "$${declarator.name}" has already been declared`, declarator);
+        return;
+    }
+
+    if (reservedVars.includes(declarator.name)) {
+        ctx.error(`Identifier "$${declarator.name}" is reserved for future use`, declarator);
+        return;
+    }
+}
+
 module.exports = {
     build(declarator, value) {
         return {
@@ -23,15 +35,7 @@ module.exports = {
             return;
         }
 
-        if (ctx.scope.own.includes(node.declarator.name)) {
-            ctx.error(`Identifier "$${node.declarator.name}" has already been declared`, node.declarator);
-            return;
-        }
-
-        if (reservedVars.includes(node.declarator.name)) {
-            ctx.error(`Identifier "$${node.declarator.name}" is reserved for future use`, node.declarator);
-            return;
-        }
+        assertDeclaratorName(node.declarator, ctx);
 
         ctx.put('const ');
         ctx.node(node.declarator);
@@ -41,6 +45,14 @@ module.exports = {
 
         ctx.scope.push(node.declarator.name);
         ctx.scope.own.push(node.declarator.name);
+    },
+    interpret(node, ctx) {
+        if (node.declarator.name !== null) {
+            assertDeclaratorName(node.declarator, ctx);
+
+            ctx.scope.own.push(node.declarator.name);
+            ctx.scope.vars[node.declarator.name] = ctx.interpret(node.value);
+        }
     },
     walk(node, ctx) {
         ctx.node(node.declarator);

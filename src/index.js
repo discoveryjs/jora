@@ -3,6 +3,7 @@ const { tokenize, parse } = require('./lang/parse');
 const suggest = require('./lang/suggest');
 const walk = require('./lang/walk');
 const stringify = require('./lang/stringify');
+const createInterpretator = require('./lang/create-interpretator');
 const compile = require('./lang/compile');
 const buildin = require('./lang/compile-buildin');
 const methods = require('./methods');
@@ -23,7 +24,7 @@ function defaultDebugHandler(sectionName, value) {
     console.log();
 }
 
-function compileFunction(source, statMode, tolerantMode, debug) {
+function compileFunction(source, statMode, tolerantMode, interpretMode, debug) {
     debug = typeof debug === 'function' ? debug : Boolean(debug) ? defaultDebugHandler : false;
 
     if (debug) {
@@ -78,9 +79,11 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         }).join('\n'));
     }
 
-    const fn = compile(parseResult.ast, tolerantMode, suggestions);
+    const fn = interpretMode
+        ? createInterpretator(parseResult.ast, tolerantMode, suggestions)
+        : compile(parseResult.ast, tolerantMode, suggestions);
 
-    if (debug) {
+    if (debug && !interpretMode) {
         debug('Compiled code', fn.toString());
     }
 
@@ -103,7 +106,7 @@ function createQuery(source, options) {
     if (cache.has(source) && !options.debug) {
         fn = cache.get(source);
     } else {
-        fn = compileFunction(source, statMode, tolerantMode, options.debug);
+        fn = compileFunction(source, statMode, tolerantMode, Boolean(options.interpret), options.debug);
         cache.set(source, fn);
     }
 
@@ -134,7 +137,7 @@ function setup(customMethods) {
         if (cache.has(source) && !options.debug) {
             fn = cache.get(source);
         } else {
-            const perform = compileFunction(source, statMode, tolerantMode, options.debug);
+            const perform = compileFunction(source, statMode, tolerantMode, Boolean(options.interpret), options.debug);
             fn = statMode
                 ? (data, context) => createStatApi(source, perform(buildin, localMethods, data, context))
                 : (data, context) => perform(buildin, localMethods, data, context);

@@ -7,6 +7,9 @@ module.exports = {
     compile(node, ctx) {
         ctx.put('data');
     },
+    interpret(node, ctx) {
+        return ctx.data;
+    },
     walk() {},
     stringify(node, ctx) {
         ctx.put('@');

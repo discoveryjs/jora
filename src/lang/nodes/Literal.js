@@ -8,6 +8,9 @@ module.exports = {
     compile(node, ctx) {
         ctx.put(typeof node.value === 'string' ? JSON.stringify(node.value) : String(node.value));
     },
+    interpret(node) {
+        return node.value;
+    },
     walk() {},
     stringify(node, ctx) {
         ctx.put(

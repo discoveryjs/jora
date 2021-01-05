@@ -7,6 +7,9 @@ module.exports = {
     compile(node, ctx) {
         ctx.put('context');
     },
+    interpret(node, ctx) {
+        return ctx.context;
+    },
     walk() {},
     stringify(node, ctx) {
         ctx.put('#');

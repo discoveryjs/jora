@@ -20,6 +20,11 @@ module.exports = {
             }
         );
     },
+    interpret(node, ctx) {
+        return function(current) {
+            return ctx.runInScope(current, () => ctx.interpret(node.body));
+        };
+    },
     walk(node, ctx) {
         ctx.node(node.body);
     },

@@ -19,4 +19,8 @@ if (!libPaths.hasOwnProperty(mode)) {
 console.info('Test lib entry:', chalk.yellow(libPath + postfix));
 console.log('Lib loaded in', Date.now() - startTime, 'ms');
 
-module.exports = require('../../' + libPath);
+const x = require('../../' + libPath);
+
+module.exports = Object.assign((query, opts) => {
+    return x(query, { ...opts, interpret: true });
+}, x);

@@ -113,6 +113,12 @@ module.exports = {
                 ctx.put(')');
         }
     },
+    interpret(node, ctx) {
+        return ctx.buildin.add(
+            ctx.interpret(node.left),
+            ctx.interpret(node.right)
+        );
+    },
     walk(node, ctx) {
         ctx.node(node.left);
         ctx.node(node.right);

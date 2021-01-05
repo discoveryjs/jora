@@ -33,6 +33,12 @@ module.exports = {
             ctx.nodeOrCurrent(node.body);
         }
     },
+    interpret(node, ctx) {
+        return ctx.runInScope(ctx.scope.current, () => {
+            node.definitions.forEach(ctx.interpret);
+            return ctx.interpret(node.body);
+        });
+    },
     walk(node, ctx) {
         ctx.list(node.definitions);
         ctx.nodeOrNothing(node.body);

@@ -48,6 +48,15 @@ module.exports = {
             ctx.put(':undefined)');
         }
     },
+    interpret(node, ctx) {
+        const methodRef = ctx.interpret(node.reference);
+        const method = typeof methodRef === 'string' ? ctx.methods[methodRef] : methodRef;
+        const args = node.arguments.map(ctx.interpret);
+
+        return function(current) {
+            return method(current, ...args);
+        };
+    },
     walk(node, ctx) {
         ctx.node(node.reference);
         ctx.list(node.arguments);

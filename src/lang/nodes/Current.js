@@ -12,6 +12,9 @@ module.exports = {
     compile(node, ctx) {
         ctx.put('current');
     },
+    interpret(node, ctx) {
+        return ctx.scope.current;
+    },
     walk() {},
     stringify(node, ctx) {
         ctx.put('$');

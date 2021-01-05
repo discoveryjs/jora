@@ -32,6 +32,12 @@ module.exports = {
 
         ctx.put(')');
     },
+    interpret(node, ctx) {
+        return ctx.buildin.map(
+            ctx.interpret(ctx.nodeOrCurrent(node.value)),
+            ctx.interpret(node.property)
+        );
+    },
     walk(node, ctx) {
         ctx.nodeOrNothing(node.value);
         ctx.node(node.property);
