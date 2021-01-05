@@ -3,6 +3,7 @@ const {
     addToSet,
     isPlainObject
 } = require('./utils');
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function noop() {}
 

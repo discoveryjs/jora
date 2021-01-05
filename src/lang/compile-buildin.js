@@ -6,6 +6,7 @@ const {
     isArrayLike
 } = require('../utils');
 const { naturalCompare, naturalAnalyticalCompare } = require('./natural-compare');
+const hasOwnProperty = Object.hasOwnProperty;
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;
 const TYPE_NUMBER = 3;
@@ -148,7 +149,7 @@ module.exports = Object.freeze({
 
         if ((typeA === TYPE_NUMBER || typeA === TYPE_STRING) &&
             (typeB === TYPE_NUMBER || typeB === TYPE_STRING)) {
-            return naturalAnalyticalCompare(a, b, true);
+            return naturalAnalyticalCompare(a, b);
         }
 
         return typeA !== typeB

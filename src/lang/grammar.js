@@ -162,7 +162,7 @@ module.exports = {
             // template
             [templateToken, (yy, yytext) => {
                 const token = yytext.endsWith('`') ? 'TEMPLATE' : 'TPL_START';
-                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TEMPLATE'));
+                yytext = this.toStringLiteral(yytext, true, 1 + Number(token !== 'TEMPLATE'));
                 if (token === 'TEMPLATE') {
                     yy.pps();
                 }
@@ -170,7 +170,7 @@ module.exports = {
             }],
             [['template'], templateToken, (yy, yytext) => {
                 const token = yytext.endsWith('`') ? 'TPL_END' : 'TPL_CONTINUE';
-                yytext = this.toStringLiteral(yytext, true, 1 + (token !== 'TPL_END'));
+                yytext = this.toStringLiteral(yytext, true, 1 + Number(token !== 'TPL_END'));
                 this.popState();
                 if (token === 'TPL_END') {
                     yy.pps();

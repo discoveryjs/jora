@@ -8,17 +8,19 @@ module.exports = {
     suggest(node, ctx) {
         for (const [idx, v] of Object.entries(node.values)) {
             if (v === null) {
-                ctx.queryRoot(node.values[idx - 1].range[1]);
+                ctx.queryRoot(node.values[Number(idx) - 1].range[1]);
             }
         }
     },
     compile(node, ctx) {
-        for (const [idx, v] of Object.entries(node.values)) {
+        for (const [k, v] of Object.entries(node.values)) {
+            const idx = Number(k);
+
             if (v === null) {
                 continue;
             }
 
-            if (idx !== '0') {
+            if (idx !== 0) {
                 ctx.put('+');
             }
 
@@ -39,11 +41,13 @@ module.exports = {
         }
     },
     stringify(node, ctx) {
-        const lastIdx = String(node.values.length - 1);
+        const lastIdx = node.values.length - 1;
 
-        for (const [idx, v] of Object.entries(node.values)) {
+        for (const [k, v] of Object.entries(node.values)) {
+            const idx = Number(k);
+
             if (idx % 2 === 0) {
-                ctx.put(idx === '0' ? '`' : '}');
+                ctx.put(idx === 0 ? '`' : '}');
                 ctx.put(encodeString(v.value, stringifyEscape));
                 ctx.put(idx === lastIdx ? '`' : '${');
             } else if (v !== null) {
