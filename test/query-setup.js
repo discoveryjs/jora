@@ -36,14 +36,17 @@ describe('query/setup', () => {
 
     it('should not affect others', () => {
         const customQuery1 = setup({
-            test: () => 1
+            test1: () => 1
         });
         const customQuery2 = setup({
-            test: () => 2
+            test2: () => 2
         });
 
-        assert.strictEqual(customQuery1('test()')(), 1);
-        assert.strictEqual(customQuery2('test()')(), 2);
-        assert.throws(() => jora('test()')(), /test is not a function/);
+        assert.strictEqual(customQuery1('test1()')(), 1);
+        assert.strictEqual(customQuery2('test2()')(), 2);
+        assert.throws(() => customQuery1('test2()')(), /Method "test2" is not defined/);
+        assert.throws(() => customQuery2('test1()')(), /Method "test1" is not defined/);
+        assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
+        assert.throws(() => jora('test2()')(), /Method "test2" is not defined/);
     });
 });

@@ -73,7 +73,7 @@ describe('lang/method', () => {
         it('should rise an exception when method is not defined', () => {
             assert.throws(
                 () => query('a()')({ foo: 42, bar: 123 }),
-                /m\.a is not a function/
+                /Method "a" is not defined/
             );
         });
 
