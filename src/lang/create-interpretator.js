@@ -16,7 +16,7 @@ module.exports = function createInterpretator(ast, tolerant = false, suggestions
                 this.scope = {
                     vars: Object.create(prevScope),
                     own: [],
-                    current: current
+                    current
                 };
 
                 try {

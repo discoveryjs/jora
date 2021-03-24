@@ -26,6 +26,11 @@ module.exports = {
 
         ctx.put(')');
     },
+    interpret(node, ctx) {
+        return node.getter
+            ? ctx.buildin.pick(ctx.interpret(node.value), ctx.interpret(node.getter))
+            : ctx.buildin.pick(ctx.interpret(node.value));
+    },
     walk(node, ctx) {
         ctx.node(node.value);
 

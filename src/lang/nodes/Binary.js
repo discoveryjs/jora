@@ -114,10 +114,53 @@ module.exports = {
         }
     },
     interpret(node, ctx) {
-        return ctx.buildin.add(
-            ctx.interpret(node.left),
-            ctx.interpret(node.right)
-        );
+        if (node.operator in binary === false) {
+            ctx.error('Unknown operator "' + node.operator + '"', node);
+            return;
+        }
+
+        switch (node.operator) {
+            case 'or':
+            case 'and': {
+                const left = ctx.interpret(node.left);
+
+                // left  | op
+                // true  | and -> right
+                // false | and -> left
+                // true  | or  -> left
+                // false | or  -> right
+
+                if (ctx.buildin.bool(left) ^ node.operator === 'or') {
+                    return ctx.interpret(node.right);
+                }
+
+                return left;
+            }
+
+            case 'has':
+                return ctx.buildin.in(
+                    ctx.interpret(node.right),
+                    ctx.interpret(node.left)
+                );
+
+            case 'has no':
+                return !ctx.buildin.in(
+                    ctx.interpret(node.right),
+                    ctx.interpret(node.left)
+                );    
+    
+            case 'not in':
+                return !ctx.buildin.in(
+                    ctx.interpret(node.left),
+                    ctx.interpret(node.right)
+                );
+        
+            default:
+                return ctx.buildin[binary[node.operator]](
+                    ctx.interpret(node.left),
+                    ctx.interpret(node.right)
+                );
+        }
     },
     walk(node, ctx) {
         ctx.node(node.left);

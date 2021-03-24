@@ -15,6 +15,12 @@ module.exports = {
         });
         ctx.put(')');
     },
+    interpret(node, ctx) {
+        return ctx.buildin.slice(
+            ctx.interpret(ctx.nodeOrCurrent(node.value)),
+            ...node.arguments.slice(0, 3).map(item => item && ctx.interpret(item))
+        );
+    },
     walk(node, ctx) {
         ctx.nodeOrNothing(node.value);
 

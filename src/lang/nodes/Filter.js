@@ -21,6 +21,12 @@ module.exports = {
         );
         ctx.put(')');
     },
+    interpret(node, ctx) {
+        return ctx.buildin.filter(
+            ctx.interpret(ctx.nodeOrCurrent(node.value)),
+            current => ctx.runInScope(current, () => ctx.interpret(node.query))
+        );
+    },
     walk(node, ctx) {
         ctx.nodeOrNothing(node.value);
         ctx.node(node.query);

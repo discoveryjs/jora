@@ -21,6 +21,22 @@ module.exports = {
                 ctx.node(node.argument);
                 break;
 
+            default:
+                ctx.error('Unknown operator "' + node.operator + '"', node);
+        }
+    },
+    interpret(node, ctx) {
+        switch (node.operator) {
+            case 'no':
+            case 'not':
+                return !ctx.buildin.bool(ctx.interpret(node.argument));
+
+            case '+':
+                return +ctx.interpret(node.argument);
+
+            case '-':
+                return -ctx.interpret(node.argument);
+
             default: {
                 ctx.error('Unknown operator "' + node.operator + '"', node);
             }

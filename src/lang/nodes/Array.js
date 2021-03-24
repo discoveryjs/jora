@@ -15,6 +15,9 @@ module.exports = {
         ctx.list(node.elements, ',');
         ctx.put(']');
     },
+    interpret(node, ctx) {
+        return node.elements.map(element => ctx.interpret(element));
+    },
     walk(node, ctx) {
         ctx.list(node.elements);
     },
