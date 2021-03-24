@@ -1,6 +1,6 @@
 const binary = {
-    'in': 'in',
-    'not in': 'in',
+    'in': 'in_',
+    'not in': 'in_',
     'has': '-',
     'has no': '-',
     'and': 'and',
@@ -96,7 +96,7 @@ module.exports = {
 
             case 'has':
             case 'has no':
-                ctx.put('f.in(');
+                ctx.put('f.in_(');
                 ctx.node(node.right);
                 ctx.put(',');
                 ctx.node(node.left);
