@@ -1,8 +1,8 @@
 const binary = {
     'in': 'in',
-    'not in': 'in',
-    'has': '-',
-    'has no': '-',
+    'not in': 'notIn',
+    'has': 'has',
+    'has no': 'hasNo',
     'and': 'and',
     'or': 'or',
     '+': 'add',
@@ -74,15 +74,13 @@ module.exports = {
             return;
         }
 
-        if (node.operator === 'and' ||
-            node.operator === 'not in' ||
-            node.operator === 'has no') {
-            ctx.put('!');
-        }
-
         switch (node.operator) {
-            case 'or':
-            case 'and': {
+            // separate branch since node.right might not to be evaluated when:
+            // - node.left is falsy for "and"
+            // - node.left is truthy for "or"
+            case 'and':
+                ctx.put('!');
+            case 'or': {
                 const tmpVar = ctx.allocateVar();
 
                 ctx.put(`f.bool(${tmpVar}=`);
@@ -94,8 +92,10 @@ module.exports = {
                 break;
             }
 
-            case 'has':
+            // separate branch since suggest should collect stat for node.right first
             case 'has no':
+                ctx.put('!');
+            case 'has':
                 ctx.put('f.in(');
                 ctx.node(node.right);
                 ctx.put(',');

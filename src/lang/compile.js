@@ -117,6 +117,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
     const allocatedVars = [];
     const normalizedSuggestRanges = [];
     const buffer = [
+        'return(data,context)=>{',
         'const current=data;',
         { toString() {
             return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
@@ -134,6 +135,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
 
     const ctx = {
         tolerant,
+        usedMethods: new Map(),
         scope: [],
         createScope,
         error: (message, node) => {
@@ -184,12 +186,16 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         }
     );
 
+    if (ctx.usedMethods.size) {
+        buffer.unshift('for(const mn of ' + JSON.stringify([...ctx.usedMethods.keys()]) + ')if(!(mn in m))throw new Error(`Method "${mn}" is not defined`);');
+    }
+
     if (suggestions !== null) {
         buffer.push('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
     }
 
     try {
-        return new Function('f', 'm', 'data', 'context', buffer.join(''));
+        return new Function('f', 'm', buffer.join('') + '}');
     } catch (e) {
         throw createError('SyntaxError', 'Jora query compilation error', {
             compiledSource: buffer.join(''),

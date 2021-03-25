@@ -107,9 +107,11 @@ function createQuery(source, options) {
         cache.set(source, fn);
     }
 
+    fn = fn(buildin, localMethods);
+
     return statMode
-        ? (data, context) => createStatApi(source, fn(buildin, localMethods, data, context))
-        : (data, context) => fn(buildin, localMethods, data, context);
+        ? (data, context) => createStatApi(source, fn(data, context))
+        : fn;
 }
 
 function setup(customMethods) {
@@ -117,7 +119,22 @@ function setup(customMethods) {
     const cacheStrictStat = new Map();
     const cacheTollerant = new Map();
     const cacheTollerantStat = new Map();
-    const localMethods = { ...methods, ...customMethods };
+    const localMethods = { ...methods };
+
+    for (const [name, fn] of Object.entries(customMethods || {})) {
+        if (typeof fn === 'string') {
+            Object.defineProperty(localMethods, name, {
+                get() {
+                    const compiledFn = compileFunction(fn)(buildin, localMethods);
+                    const value = current => compiledFn(current, null);
+                    Object.defineProperty(localMethods, name, { value });
+                    return value;
+                }
+            });
+        } else {
+            localMethods[name] = fn;
+        }
+    }
 
     return function query(source, options) {
         options = options || {};
@@ -134,10 +151,10 @@ function setup(customMethods) {
         if (cache.has(source) && !options.debug) {
             fn = cache.get(source);
         } else {
-            const perform = compileFunction(source, statMode, tolerantMode, options.debug);
+            const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods);
             fn = statMode
-                ? (data, context) => createStatApi(source, perform(buildin, localMethods, data, context))
-                : (data, context) => perform(buildin, localMethods, data, context);
+                ? (data, context) => createStatApi(source, perform(data, context))
+                : perform;
             cache.set(source, fn);
         }
 
