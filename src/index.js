@@ -1,4 +1,4 @@
-const { version } = require('../package.json');
+const { version } = require('./version');
 const { tokenize, parse } = require('./lang/parse');
 const suggest = require('./lang/suggest');
 const walk = require('./lang/walk');

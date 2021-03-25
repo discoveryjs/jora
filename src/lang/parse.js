@@ -14,5 +14,5 @@ module.exports.generateModule = function() {
         .replace('new Parser', '(' + buildParsers + ')(new Parser)');
 };
 module.exports.bake = function() {
-    return fs.writeFileSync(__filename, module.exports.generateModule());
+    fs.writeFileSync(__filename, module.exports.generateModule());
 };
