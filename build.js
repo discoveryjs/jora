@@ -1,3 +1,4 @@
+const fs = require('fs');
 const esbuild = require('esbuild');
 
 async function build() {
@@ -9,7 +10,11 @@ async function build() {
     const genModuleCache = new Map();
     const genModule = (fn) => {
         if (!genModuleCache.has(fn)) {
-            genModuleCache.set(fn, require(fn).generateModule());
+            const content = fs.readFileSync(fn, 'utf8');
+            genModuleCache.set(fn, /generateModule/.test(content)
+                ? require(fn).generateModule()
+                : content
+            );
         }
         return genModuleCache.get(fn);
     };
