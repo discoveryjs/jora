@@ -2,6 +2,7 @@
 
 - Added a check for all methods are defined on query compilation to avoid runtime exceptions
 - Improved error message when a methods is not defined, i.e. `Method "foo" is not defined` instead of `m.foo is not a function`
+- Dropped support for Node.js prior 10.12
 
 ## 1.0.0-beta.5 (November 10, 2020)
 
