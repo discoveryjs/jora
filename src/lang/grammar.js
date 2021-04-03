@@ -198,7 +198,7 @@ module.exports = {
             // keywords (should goes before ident)
             // eslint-disable-next-line no-unused-vars
             ['(true|false|null|undefined|Infinity|NaN){wb}', (yytext) => {
-                yytext = this.toLiteral(yytext);
+                yytext = this.toLiteral(yytext); // eslint-disable-line no-unused-vars
                 return 'LITERAL';
             }],
 
