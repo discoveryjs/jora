@@ -31,10 +31,14 @@
     "postpublish": "npm run parser:rollback",
     "coverage": "nyc npm test",
     "travis": "npm run lint && npm run build-and-test && npm run parser:bake && nyc npm test && npm run coveralls",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "start": "discovery"
   },
+  "discovery": "docs/index.js",
   "dependencies": {},
   "devDependencies": {
+    "@discoveryjs/cli": "^2.0.0-beta.12",
+    "@discoveryjs/discovery": "^1.0.0-beta.61",
     "@lahmatiy/jison": "^0.4.18-remastered.3",
     "coveralls": "^3.1.0",
     "esbuild": "~0.11.4",
