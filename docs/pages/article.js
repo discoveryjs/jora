@@ -7,7 +7,6 @@ discovery.page.define('article', {
             view: 'page-header',
             content: 'h1:title'
         },
-        'md:content',
-        'struct'
+        'md:content'
     ]
 });

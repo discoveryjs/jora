@@ -11,14 +11,16 @@ JavaScript object query engine
 
 > STATUS: Jora is still very much work in progress. Syntax may change in next releases.
 
-Features:
+Major features:
 
-- Tolerant to data stucture queries (e.g. just returns *nothing* for paths that not reachable)
 - Compact syntax for common tasks
 - Aggregate values across arrays and eliminate duplicates by default
+- Extensible by custom methods
+- No input data mutation or side effects<sup>*</sup>
+- Input data never causes to an exception<sup>*</sup>, i.e. returns *nothing* (or *undefined*) for paths that not reachable or not applicable for an operator or a method
+- Superset of [JSON5](https://json5.org/)
 - Stat collecting mode (powers suggestions)
-- Tolerant parsing mode (useful to provide suggestions for query in an editor)
-- Extensible DSL on query build by custom method list
+- Tolerant parsing mode (useful to provide query suggestions in an editor)
 
 Related projects:
 

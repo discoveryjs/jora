@@ -8,5 +8,5 @@ discovery.page.define('default', [
             'text:"JavaScript object query engine"'
         ]
     },
-    'md:index'
+    'md:articles[=>slug="intro"].content'
 ]);
