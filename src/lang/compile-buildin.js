@@ -1,4 +1,5 @@
 const {
+    hasOwnProperty,
     addToSet,
     getPropertyValue,
     isPlainObject,
@@ -6,7 +7,6 @@ const {
     isArrayLike
 } = require('../utils');
 const { naturalCompare, naturalAnalyticalCompare } = require('./natural-compare');
-const hasOwnProperty = Object.hasOwnProperty;
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;
 const TYPE_NUMBER = 3;

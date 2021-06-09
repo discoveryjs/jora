@@ -30,6 +30,7 @@ function isArrayLike(value) {
 }
 
 module.exports = {
+    hasOwnProperty,
     addToSet,
     getPropertyValue,
     isPlainObject,

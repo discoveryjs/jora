@@ -1,9 +1,9 @@
 const buildin = require('./lang/compile-buildin');
 const {
+    hasOwnProperty,
     addToSet,
     isPlainObject
 } = require('./utils');
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function noop() {}
 
