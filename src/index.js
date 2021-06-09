@@ -124,6 +124,7 @@ function setup(customMethods) {
     for (const [name, fn] of Object.entries(customMethods || {})) {
         if (typeof fn === 'string') {
             Object.defineProperty(localMethods, name, {
+                configurable: true,
                 get() {
                     const compiledFn = compileFunction(fn)(buildin, localMethods);
                     const value = current => compiledFn(current, null);

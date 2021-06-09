@@ -1,5 +1,6 @@
 ## next
 
+- Added support for custom methods as jora query (a string) in `jora.setup()`
 - Added a check for all methods are defined on query compilation to avoid runtime exceptions
 - Improved error message when a methods is not defined, i.e. `Method "foo" is not defined` instead of `m.foo is not a function`
 - Dropped support for Node.js prior 10.12
