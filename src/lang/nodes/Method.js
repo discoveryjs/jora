@@ -20,9 +20,9 @@ module.exports = {
 
         if (node.reference.type === 'Identifier') {
             if (ctx.usedMethods.has(node.reference.name)) {
-                ctx.usedMethods.get(node.reference.name).push(node.range);
+                ctx.usedMethods.get(node.reference.name).push(node.reference.range);
             } else {
-                ctx.usedMethods.set(node.reference.name, node.range);
+                ctx.usedMethods.set(node.reference.name, node.reference.range);
             }
 
             ctx.put('m.');

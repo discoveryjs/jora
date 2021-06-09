@@ -77,6 +77,13 @@ describe('lang/method', () => {
             );
         });
 
+        it('should not rise an exception in tolerant mode when method is not defined', () => {
+            assert.strictEqual(
+                query('a()', { tolerant: true })({ foo: 42, bar: 123 }),
+                undefined
+            );
+        });
+
         it('this should refer to methods map', () => {
             assert.deepEqual(
                 queryWithExtraMethods('hasArgsInThis()')({ foo: 1, bar: 2 }),

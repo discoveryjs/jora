@@ -1,3 +1,4 @@
+const { hasOwnProperty } = require('../utils');
 const createError = require('./error');
 const nodes = require('./nodes').compile;
 
@@ -117,7 +118,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
     const allocatedVars = [];
     const normalizedSuggestRanges = [];
     const buffer = [
-        'return(data,context)=>{',
+        '((data,context)=>{',
         'const current=data;',
         { toString() {
             return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
@@ -133,6 +134,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         'return '
     ];
 
+    const initCtx = {};
     const ctx = {
         tolerant,
         usedMethods: new Map(),
@@ -186,8 +188,22 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
         }
     );
 
-    if (ctx.usedMethods.size) {
-        buffer.unshift('for(const mn of ' + JSON.stringify([...ctx.usedMethods.keys()]) + ')if(!(mn in m))throw new Error(`Method "${mn}" is not defined`);');
+    if (!tolerant && ctx.usedMethods.size) {
+        const { usedMethods } = ctx;
+
+        buffer.unshift(' this.assertMethods(m)||');
+        initCtx.assertMethods = function(providedMethods) {
+            for (const [method, range] of usedMethods.entries()) {
+                if (!hasOwnProperty.call(providedMethods, method)) {
+                    return () => {
+                        throw Object.assign(
+                            new Error(`Method "${method}" is not defined`),
+                            { details: { loc: { range } } }
+                        );
+                    };
+                }
+            }
+        };
     }
 
     if (suggestions !== null) {
@@ -195,7 +211,7 @@ module.exports = function compile(ast, tolerant = false, suggestions = null) {
     }
 
     try {
-        return new Function('f', 'm', buffer.join('') + '}');
+        return new Function('f', 'm', 'return' + buffer.join('') + '})').bind(initCtx);
     } catch (e) {
         throw createError('SyntaxError', 'Jora query compilation error', {
             compiledSource: buffer.join(''),
