@@ -29,18 +29,15 @@
     "parser:rollback": "git checkout -- src/version.js src/lang/parse.js",
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
-    "coverage": "nyc npm test",
-    "travis": "npm run lint && npm run build-and-test && npm run parser:bake && nyc npm test && npm run coveralls",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "coverage": "npm run parser:bake && c8 --reporter=lcovonly npm test && npm run parser:rollback"
   },
-  "dependencies": {},
   "devDependencies": {
     "@lahmatiy/jison": "^0.4.18-remastered.3",
+    "c8": "^7.11.0",
     "coveralls": "^3.1.0",
     "esbuild": "~0.11.4",
     "eslint": "^7.23.0",
-    "mocha": "^8.3.2",
-    "nyc": "^14.1.0"
+    "mocha": "^8.3.2"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"

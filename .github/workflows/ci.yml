@@ -1,0 +1,88 @@
+name: Build
+
+on:
+    push:
+    pull_request:
+
+env:
+    PRIMARY_NODEJS_VERSION: 16
+    REPORTER: "min"
+
+jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup node ${{ env.PRIMARY_NODEJS_VERSION }}
+              uses: actions/setup-node@v2
+              with:
+                node-version: ${{ env.PRIMARY_NODEJS_VERSION }}
+                cache: "npm"
+            - run: npm ci
+            - run: npm run lint
+
+    coverage:
+        name: Collect coverage
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup node ${{ env.PRIMARY_NODEJS_VERSION }}
+              uses: actions/setup-node@v2
+              with:
+                node-version: ${{ env.PRIMARY_NODEJS_VERSION }}
+                cache: "npm"
+            - run: npm ci
+            - run: npm run coverage
+            - name: Coveralls Parallel
+              uses: coverallsapp/github-action@1.1.3
+              with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                flag-name: node-${{ matrix.node_version }}
+                parallel: true
+
+    send-to-coveralls:
+        name: Send coverage to Coveralls
+        needs: coverage
+        runs-on: ubuntu-latest
+        steps:
+            - name: Send coverage to Coveralls
+              uses: coverallsapp/github-action@1.1.3
+              with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                parallel-finished: true
+
+    test-bundle:
+        name: Test bundle
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup node ${{ env.PRIMARY_NODEJS_VERSION }}
+              uses: actions/setup-node@v2
+              with:
+                node-version: ${{ env.PRIMARY_NODEJS_VERSION }}
+                cache: "npm"
+            - run: npm ci
+            - run: npm run build-and-test
+
+    unit-tests:
+        name: Unit tests
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+                node_version:
+                    - 10
+                    - 12.20.0
+                    - 14.13.0
+                    - 16
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup node ${{ matrix.node_version }}
+              uses: actions/setup-node@v2
+              with:
+                node-version: ${{ matrix.node_version }}
+                cache: "npm"
+            - run: npm ci
+            - run: npm run test
