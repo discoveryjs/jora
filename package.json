@@ -34,10 +34,9 @@
   "devDependencies": {
     "@lahmatiy/jison": "^0.4.18-remastered.3",
     "c8": "^7.11.0",
-    "coveralls": "^3.1.0",
-    "esbuild": "~0.11.4",
-    "eslint": "^7.23.0",
-    "mocha": "^8.3.2"
+    "esbuild": "~0.14.25",
+    "eslint": "^8.10.0",
+    "mocha": "^9.2.1"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"
