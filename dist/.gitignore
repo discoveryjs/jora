@@ -1,3 +1,6 @@
-*
+*.js
+*.cjs
+*.map
+!test/*.js
 !.gitignore
 !.npmignore

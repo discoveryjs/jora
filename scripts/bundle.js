@@ -30,18 +30,12 @@ async function build() {
     await esbuild.build({
         entryPoints: ['src/index.js'],
         outfile: 'dist/jora.js',
-        format: 'cjs',
+        format: 'iife',
+        globalName: 'jora',
         bundle: true,
         logLevel: 'info',
-        plugins
-    });
-
-    esbuild.build({
-        entryPoints: ['dist/jora.js'],
-        outfile: 'dist/jora.min.js',
-        format: 'cjs',
-        logLevel: 'info',
         minify: true,
+        sourcemap: true,
         plugins
     });
 }

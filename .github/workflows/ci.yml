@@ -63,7 +63,7 @@ jobs:
                 node-version: ${{ env.PRIMARY_NODEJS_VERSION }}
                 cache: "npm"
             - run: npm ci
-            - run: npm run build-and-test
+            - run: npm run bundle-and-test
 
     unit-tests:
         name: Unit tests
