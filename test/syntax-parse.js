@@ -1,6 +1,8 @@
-const assert = require('assert');
-const { syntax: { parse } } = require('./helpers/lib');
-const allSyntax = require('./helpers/all-syntax');
+import assert from 'assert';
+import jora from 'jora';
+import allSyntax from './helpers/all-syntax.js';
+
+const { syntax: { parse } } = jora;
 
 describe('syntax/parse', () => {
     it('basic test', () => {

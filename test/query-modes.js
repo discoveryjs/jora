@@ -1,5 +1,5 @@
-const assert = require('assert');
-const jora = require('./helpers/lib');
+import assert from 'assert';
+import jora from 'jora';
 
 describe('query/modes', () => {
     describe('strict (default)', () => {

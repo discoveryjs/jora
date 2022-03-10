@@ -1,10 +1,10 @@
-const literals = [
+export const literals = [
     'true',
     'false',
     'null',
     'undefined'
 ];
-const keywords = [
+export const keywords = [
     'and',
     'or',
     'has',
@@ -16,8 +16,3 @@ const keywords = [
     'asc',
     'desc'
 ];
-
-module.exports = {
-    literals,
-    keywords
-};

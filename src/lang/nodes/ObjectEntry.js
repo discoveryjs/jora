@@ -1,5 +1,5 @@
-const GetProperty = require('./GetProperty').build;
-const Identifier = require('./Identifier').build;
+import { build as GetProperty } from './GetProperty.js';
+import { build as Identifier } from './Identifier.js';
 const noBracketKeyType = new Set([
     'Literal',
     'Identifier',
@@ -7,77 +7,75 @@ const noBracketKeyType = new Set([
     'Current'
 ]);
 
-module.exports = {
-    build(key, value) {
-        return {
-            type: 'ObjectEntry',
-            key,
-            value
-        };
-    },
-    suggest(node, ctx) {
-        if (node.value === null) {
-            switch (node.key.type) {
-                case 'Identifier':
-                    ctx.range(node.range, 'path');
-                    ctx.range(node.range, 'var');
-                    break;
-
-                case 'Current':
-                case 'Reference':
-                    ctx.range(node.range, 'var');
-                    break;
-            }
-        }
-    },
-    compile(node, ctx) {
-        let value = node.value;
-
+export function build(key, value) {
+    return {
+        type: 'ObjectEntry',
+        key,
+        value
+    };
+}
+export function suggest(node, ctx) {
+    if (node.value === null) {
         switch (node.key.type) {
-            case 'Current':
-                return;
-
-            case 'Literal':
-                ctx.node(node.key);
-                break;
-
             case 'Identifier':
-                ctx.node(node.key);
-                value = value || GetProperty(null, Identifier(node.key.name));
+                ctx.range(node.range, 'path');
+                ctx.range(node.range, 'var');
                 break;
 
+            case 'Current':
             case 'Reference':
-                ctx.node(node.key.name);
-                value = value || node.key;
+                ctx.range(node.range, 'var');
                 break;
-
-            default:
-                ctx.put('[');
-                ctx.node(node.key);
-                ctx.put(']');
         }
+    }
+}
+export function compile(node, ctx) {
+    let value = node.value;
 
-        ctx.put(':');
-        ctx.node(value);
-    },
-    walk(node, ctx) {
-        ctx.node(node.key);
-        ctx.nodeOrNothing(node.value);
-    },
-    stringify(node, ctx) {
-        if (noBracketKeyType.has(node.key.type)) {
+    switch (node.key.type) {
+        case 'Current':
+            return;
+
+        case 'Literal':
             ctx.node(node.key);
+            break;
 
-            if (node.value === null) {
-                return;
-            }
-        } else {
+        case 'Identifier':
+            ctx.node(node.key);
+            value = value || GetProperty(null, Identifier(node.key.name));
+            break;
+
+        case 'Reference':
+            ctx.node(node.key.name);
+            value = value || node.key;
+            break;
+
+        default:
             ctx.put('[');
             ctx.node(node.key);
             ctx.put(']');
-        }
-
-        ctx.put(':');
-        ctx.node(node.value);
     }
-};
+
+    ctx.put(':');
+    ctx.node(value);
+}
+export function walk(node, ctx) {
+    ctx.node(node.key);
+    ctx.nodeOrNothing(node.value);
+}
+export function stringify(node, ctx) {
+    if (noBracketKeyType.has(node.key.type)) {
+        ctx.node(node.key);
+
+        if (node.value === null) {
+            return;
+        }
+    } else {
+        ctx.put('[');
+        ctx.node(node.key);
+        ctx.put(']');
+    }
+
+    ctx.put(':');
+    ctx.node(node.value);
+}

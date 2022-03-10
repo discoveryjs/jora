@@ -307,7 +307,7 @@ function compare(a, b, analytical) {
     } while (true);
 }
 
-function naturalCompare(a, b) {
+export function naturalCompare(a, b) {
     const typeA = typeof a;
     const typeB = typeof b;
     let ret = 0;
@@ -325,9 +325,9 @@ function naturalCompare(a, b) {
     }
 
     return ret;
-};
+}
 
-function naturalAnalyticalCompare(a, b) {
+export function naturalAnalyticalCompare(a, b) {
     const typeA = typeof a;
     const typeB = typeof b;
     let ret = 0;
@@ -345,9 +345,4 @@ function naturalAnalyticalCompare(a, b) {
     }
 
     return ret;
-};
-
-module.exports = {
-    naturalCompare,
-    naturalAnalyticalCompare
-};
+}

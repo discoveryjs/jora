@@ -1,19 +1,17 @@
-module.exports = {
-    build() {
-        return {
-            type: 'Current'
-        };
-    },
-    suggest(node, ctx) {
-        if (node.range) {
-            ctx.range(node.range, 'var');
-        }
-    },
-    compile(node, ctx) {
-        ctx.put('current');
-    },
-    walk() {},
-    stringify(node, ctx) {
-        ctx.put('$');
+export function build() {
+    return {
+        type: 'Current'
+    };
+}
+export function suggest(node, ctx) {
+    if (node.range) {
+        ctx.range(node.range, 'var');
     }
-};
+}
+export function compile(node, ctx) {
+    ctx.put('current');
+}
+export function walk() { }
+export function stringify(node, ctx) {
+    ctx.put('$');
+}

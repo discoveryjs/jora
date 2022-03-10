@@ -1,35 +1,67 @@
-const nodes = {
-    Arg1: require('./Arg1'),
-    Array: require('./Array'),
-    Binary: require('./Binary'),
-    Block: require('./Block'),
-    Compare: require('./Compare'),
-    Conditional: require('./Conditional'),
-    Context: require('./Context'),
-    Current: require('./Current'),
-    Data: require('./Data'),
-    Declarator: require('./Declarator'),
-    Definition: require('./Definition'),
-    Filter: require('./Filter'),
-    Function: require('./Function'),
-    GetProperty: require('./GetProperty'),
-    Identifier: require('./Identifier'),
-    Literal: require('./Literal'),
-    Map: require('./Map'),
-    MapRecursive: require('./MapRecursive'),
-    Method: require('./Method'),
-    MethodCall: require('./MethodCall'),
-    Object: require('./Object'),
-    ObjectEntry: require('./ObjectEntry'),
-    Parentheses: require('./Parentheses'),
-    Pick: require('./Pick'),
-    Pipeline: require('./Pipeline'),
-    Reference: require('./Reference'),
-    SliceNotation: require('./SliceNotation'),
-    SortingFunction: require('./SortingFunction'),
-    Spread: require('./Spread'),
-    Template: require('./Template'),
-    Unary: require('./Unary')
+import * as Arg1 from './Arg1.js';
+import * as Array from './Array.js';
+import * as Binary from './Binary.js';
+import * as Block from './Block.js';
+import * as Compare from './Compare.js';
+import * as Conditional from './Conditional.js';
+import * as Context from './Context.js';
+import * as Current from './Current.js';
+import * as Data from './Data.js';
+import * as Declarator from './Declarator.js';
+import * as Definition from './Definition.js';
+import * as Filter from './Filter.js';
+import * as Function from './Function.js';
+import * as GetProperty from './GetProperty.js';
+import * as Identifier from './Identifier.js';
+import * as Literal from './Literal.js';
+import * as MapNode from './Map.js';
+import * as MapRecursive from './MapRecursive.js';
+import * as Method from './Method.js';
+import * as MethodCall from './MethodCall.js';
+import * as ObjectNode from './Object.js';
+import * as ObjectEntry from './ObjectEntry.js';
+import * as Parentheses from './Parentheses.js';
+import * as Pick from './Pick.js';
+import * as Pipeline from './Pipeline.js';
+import * as Reference from './Reference.js';
+import * as SliceNotation from './SliceNotation.js';
+import * as SortingFunction from './SortingFunction.js';
+import * as Spread from './Spread.js';
+import * as Template from './Template.js';
+import * as Unary from './Unary.js';
+
+export const nodes = {
+    Arg1,
+    Array,
+    Binary,
+    Block,
+    Compare,
+    Conditional,
+    Context,
+    Current,
+    Data,
+    Declarator,
+    Definition,
+    Filter,
+    Function,
+    GetProperty,
+    Identifier,
+    Literal,
+    Map: MapNode,
+    MapRecursive,
+    Method,
+    MethodCall,
+    Object: ObjectNode,
+    ObjectEntry,
+    Parentheses,
+    Pick,
+    Pipeline,
+    Reference,
+    SliceNotation,
+    SortingFunction,
+    Spread,
+    Template,
+    Unary
 };
 
 const extract = type => new Map(
@@ -37,16 +69,13 @@ const extract = type => new Map(
         .map(([key, value]) => [key, value[type]])
         .filter(([, value]) => typeof value === 'function')
 );
-const build = {};
+
+export const build = {};
 extract('build').forEach(
     (value, key) => (build[key] = value)
 );
 
-module.exports = {
-    nodes,
-    build,
-    compile: extract('compile'),
-    walk: extract('walk'),
-    stringify: extract('stringify'),
-    suggest: extract('suggest')
-};
+export const compile = extract('compile');
+export const walk = extract('walk');
+export const stringify = extract('stringify');
+export const suggest = extract('suggest');

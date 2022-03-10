@@ -1,13 +1,13 @@
-const assert = require('assert');
-const { setup } = require('./helpers/lib');
-const data = require('./helpers/fixture');
+import assert from 'assert';
+import jora from 'jora';
+import data from './helpers/fixture.js';
 
 describe('query/method extensions', () => {
     function createExtraFn() {
         const calls = [];
         return {
             calls,
-            query: setup({
+            query: jora.setup({
                 log() {
                     calls.push([...arguments]);
                 }

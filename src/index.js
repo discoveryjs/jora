@@ -1,12 +1,12 @@
-const { version } = require('./version');
-const { tokenize, parse } = require('./lang/parse');
-const suggest = require('./lang/suggest');
-const walk = require('./lang/walk');
-const stringify = require('./lang/stringify');
-const compile = require('./lang/compile');
-const buildin = require('./lang/compile-buildin');
-const methods = require('./methods');
-const createStatApi = require('./stat');
+import { version } from './version.js';
+import { parsers as syntax } from './lang/parse.js';
+import suggest from './lang/suggest.js';
+import walk from './lang/walk.js';
+import stringify from './lang/stringify.js';
+import compile from './lang/compile.js';
+import buildin from './lang/compile-buildin.js';
+import methods from './methods.js';
+import createStatApi from './stat.js';
 
 const cacheStrict = new Map();
 const cacheStrictStat = new Map();
@@ -31,7 +31,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         debug('Compile query from source', source);
     }
 
-    const parseResult = parse(source, tolerantMode);
+    const parseResult = syntax.parse(source, tolerantMode);
 
     if (debug) {
         debug('AST', parseResult.ast);
@@ -163,14 +163,14 @@ function setup(customMethods) {
     };
 }
 
-module.exports = Object.assign(createQuery, {
+export default Object.assign(createQuery, {
     version,
     buildin,
     methods,
     setup,
     syntax: {
-        tokenize,
-        parse,
+        tokenize: syntax.tokenize,
+        parse: syntax.parse,
         suggest,
         walk,
         stringify,

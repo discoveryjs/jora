@@ -1,5 +1,7 @@
-const assert = require('assert');
-const { syntax: { tokenize }} = require('./helpers/lib');
+import assert from 'assert';
+import jora from 'jora';
+
+const { syntax: { tokenize }} = jora;
 
 describe('syntax/tokenize', () => {
     it('tokenize', () => {

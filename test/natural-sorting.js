@@ -1,5 +1,5 @@
-const assert = require('assert');
-const { naturalCompare } = require('../src/lang/natural-compare');
+import assert from 'assert';
+import { naturalCompare } from '../src/lang/natural-compare.js';
 
 function sort(array) {
     return array.slice().sort(naturalCompare);

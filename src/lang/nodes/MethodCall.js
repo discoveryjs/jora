@@ -1,20 +1,18 @@
-module.exports = {
-    build(value, method) {
-        return {
-            type: 'MethodCall',
-            value,
-            method
-        };
-    },
-    compile(node, ctx) {
-        ctx.node(node.method, node.value);
-    },
-    walk(node, ctx) {
-        ctx.nodeOrNothing(node.value);
-        ctx.node(node.method);
-    },
-    stringify(node, ctx) {
-        ctx.nodeOrNothing(node.value) && ctx.put('.');
-        ctx.node(node.method);
-    }
-};
+export function build(value, method) {
+    return {
+        type: 'MethodCall',
+        value,
+        method
+    };
+}
+export function compile(node, ctx) {
+    ctx.node(node.method, node.value);
+}
+export function walk(node, ctx) {
+    ctx.nodeOrNothing(node.value);
+    ctx.node(node.method);
+}
+export function stringify(node, ctx) {
+    ctx.nodeOrNothing(node.value) && ctx.put('.');
+    ctx.node(node.method);
+}

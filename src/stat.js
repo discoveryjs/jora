@@ -1,4 +1,5 @@
-const { addToSet, isPlainObject } = require('./utils');
+import { addToSet, isPlainObject } from './utils.js';
+
 const contextToType = {
     'path': 'property',
     'key': 'value',
@@ -123,7 +124,7 @@ function findSourcePosRanges(source, pos, points, includeEmpty) {
     return result;
 }
 
-module.exports = (source, points) => ({
+export default (source, points) => ({
     stat(pos, includeEmpty) {
         const ranges = findSourcePosRanges(source, pos, points, includeEmpty);
 

@@ -132,4 +132,4 @@ data.forEach(final);
 // console.log(data);
 // process.exit();
 
-module.exports = data;
+export default data;

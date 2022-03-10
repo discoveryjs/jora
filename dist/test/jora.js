@@ -1,5 +1,5 @@
 /* global jora */
-const assert = require('assert');
+import assert from 'assert';
 const fs = require('fs');
 
 it('jora.js', () => {

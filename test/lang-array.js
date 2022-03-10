@@ -1,5 +1,6 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
+import assert from 'assert';
+import query from 'jora';
+
 const entries = [
     ['-1', [-1]],
     ['0', [0]],

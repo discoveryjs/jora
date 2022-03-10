@@ -1,6 +1,6 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
+import assert from 'assert';
+import query from 'jora';
+import data from './helpers/fixture.js';
 
 describe('bool()', () => {
     it('basic', () => {

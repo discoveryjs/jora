@@ -1,5 +1,6 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
+import assert from 'assert';
+import query from 'jora';
+
 const data = {
     foo: [
         { a: 1, b: 2},

@@ -1,5 +1,5 @@
-const nodes = require('./nodes').suggest;
-const walk = require('./walk');
+import { suggest as nodes } from './nodes/index.js';
+import walk from './walk.js';
 
 function isSuggestProhibitedChar(str, offset) {
     return (
@@ -132,7 +132,7 @@ function collectNodeSuggestions(ast) {
     return suggestions;
 }
 
-module.exports = function suggest(source, { ast, commentRanges }) {
+export default function suggest(source, { ast, commentRanges }) {
     const suggestions = collectNodeSuggestions(ast);
     const noSuggestOnEofPos = // edge case when source ends with a comment with no newline
         commentRanges.length &&

@@ -1,8 +1,8 @@
-const { hasOwnProperty } = require('../utils');
-const createError = require('./error');
-const nodes = require('./nodes').compile;
+import { hasOwnProperty } from '../utils.js';
+import createError from './error.js';
+import { compile as nodes } from './nodes/index.js';
 
-module.exports = function compile(ast, tolerant = false, suggestions = null) {
+export default function compile(ast, tolerant = false, suggestions = null) {
     function getNodeSpName(node) {
         let spName;
 

@@ -1,6 +1,8 @@
-const assert = require('assert');
-const { syntax: { parse, walk } } = require('./helpers/lib');
-const allSyntax = require('./helpers/all-syntax');
+import assert from 'assert';
+import jora from 'jora';
+import allSyntax from './helpers/all-syntax.js';
+
+const { syntax: { parse, walk } } = jora;
 
 function dirtyWalk(node, fn) {
     if (!node || !node.type) {

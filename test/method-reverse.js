@@ -1,5 +1,5 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
+import assert from 'assert';
+import query from 'jora';
 
 describe('reverse()', () => {
     it('basic', () => {

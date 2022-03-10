@@ -1,6 +1,7 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
+import assert from 'assert';
+import query from 'jora';
+import data from './helpers/fixture.js';
+
 const escapeNaN = array => array.map(x => x !== x ? 'NaN' : x);
 
 describe('sort()', () => {

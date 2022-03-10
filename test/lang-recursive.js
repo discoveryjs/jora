@@ -1,6 +1,6 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
+import assert from 'assert';
+import query from 'jora';
+import data from './helpers/fixture.js';
 
 function addUnique(arr, items) {
     for (let i = 0; i < items.length; i++) {

@@ -1,14 +1,12 @@
-module.exports = {
-    build() {
-        return {
-            type: 'Arg1'
-        };
-    },
-    compile(node, ctx) {
-        ctx.put(ctx.scope.arg1 ? 'arguments[1]' : 'undefined');
-    },
-    walk() {},
-    stringify(node, ctx) {
-        ctx.put('$$');
-    }
-};
+export function build() {
+    return {
+        type: 'Arg1'
+    };
+}
+export function compile(node, ctx) {
+    ctx.put(ctx.scope.arg1 ? 'arguments[1]' : 'undefined');
+}
+export function walk() { }
+export function stringify(node, ctx) {
+    ctx.put('$$');
+}

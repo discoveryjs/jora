@@ -1,12 +1,6 @@
-const {
-    hasOwnProperty,
-    addToSet,
-    getPropertyValue,
-    isPlainObject,
-    isRegExp,
-    isArrayLike
-} = require('../utils');
-const { naturalCompare, naturalAnalyticalCompare } = require('./natural-compare');
+import { hasOwnProperty, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike } from '../utils.js';
+import { naturalCompare, naturalAnalyticalCompare } from './natural-compare.js';
+
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;
 const TYPE_NUMBER = 3;
@@ -30,7 +24,7 @@ function cmpType(value) {
     }
 }
 
-module.exports = Object.freeze({
+export default Object.freeze({
     ensureArray,
     bool,
     and: (a, b) => bool(a) ? b : a,

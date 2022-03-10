@@ -1,5 +1,6 @@
-const assert = require('assert');
-const jora = require('./helpers/lib');
+import assert from 'assert';
+import jora from 'jora';
+
 const { setup } = jora;
 const malformedQuery = '42 +';
 

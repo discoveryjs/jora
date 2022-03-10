@@ -1,6 +1,6 @@
-const nodes = require('./nodes').walk;
+import { walk as nodes } from './nodes/index.js';
 
-module.exports = function walk(ast, options) {
+export default function walk(ast, options) {
     function walk(node) {
         if (nodes.has(node.type)) {
             enter(node);

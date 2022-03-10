@@ -1,4 +1,4 @@
-const nodes = require('./nodes').stringify;
+import { stringify as nodes } from './nodes/index.js';
 
 function isSimpleGetPropertyQuery(node) {
     if (node.type !== 'GetProperty') {
@@ -28,7 +28,7 @@ function isSimpleMethodCallQuery(node) {
     return true;
 }
 
-module.exports = function stringify(ast) {
+export default function stringify(ast) {
     function walk(node) {
         if (nodes.has(node.type)) {
             nodes.get(node.type)(node, ctx);

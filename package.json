@@ -13,9 +13,15 @@
     "javascript",
     "json"
   ],
+  "type": "module",
   "main": "src/index",
-  "unpkg": "dist/jora.min.js",
-  "jsdelivr": "dist/jora.min.js",
+  "unpkg": "dist/jora.js",
+  "jsdelivr": "dist/jora.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    }
+  },
   "scripts": {
     "lint": "eslint src test",
     "lint-and-test": "npm run lint && npm test",

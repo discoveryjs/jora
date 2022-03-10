@@ -1,17 +1,15 @@
-module.exports = {
-    build(name) {
-        return {
-            type: 'Declarator',
-            name
-        };
-    },
-    compile(node, ctx) {
-        if (node.name) {
-            ctx.put('$' + node.name);
-        }
-    },
-    walk() {},
-    stringify(node, ctx) {
-        ctx.put(node.name ? '$' + node.name : '$');
+export function build(name) {
+    return {
+        type: 'Declarator',
+        name
+    };
+}
+export function compile(node, ctx) {
+    if (node.name) {
+        ctx.put('$' + node.name);
     }
-};
+}
+export function walk() { }
+export function stringify(node, ctx) {
+    ctx.put(node.name ? '$' + node.name : '$');
+}

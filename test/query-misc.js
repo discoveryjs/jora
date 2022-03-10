@@ -1,6 +1,6 @@
-const assert = require('assert');
-const query = require('./helpers/lib');
-const data = require('./helpers/fixture');
+import assert from 'assert';
+import query from 'jora';
+import data from './helpers/fixture.js';
 
 describe('query/misc', () => {
     it('can be used with template literals', () => {

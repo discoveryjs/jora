@@ -1,9 +1,5 @@
-const buildin = require('./lang/compile-buildin');
-const {
-    hasOwnProperty,
-    addToSet,
-    isPlainObject
-} = require('./utils');
+import buildin from './lang/compile-buildin.js';
+import { hasOwnProperty, addToSet, isPlainObject } from './utils.js';
 
 function noop() {}
 
@@ -21,7 +17,7 @@ function matchEntry(match) {
     };
 }
 
-module.exports = Object.freeze({
+export default Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
     map: buildin.map,
