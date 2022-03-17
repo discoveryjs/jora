@@ -1,4 +1,3 @@
-import { isPlainObject } from '../../utils.js';
 import { build } from '../../lang/nodes/index.js';
 
 const {
@@ -48,6 +47,10 @@ const $r0 = { name: '@0.range' };
 const $r1 = { name: '@1.range' };
 const refs = new Set([$0, $1, $1name, $$1name, $2, $3, $4, $5, $r0, $r1]);
 const asis = '';
+
+function isPlainObject(value) {
+    return value !== null && typeof value === 'object' && value.constructor === Object;
+}
 
 function stringify(value) {
     switch (typeof value) {

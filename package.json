@@ -15,8 +15,8 @@
   ],
   "type": "module",
   "main": "src/index",
-  "unpkg": "dist/jora.js",
-  "jsdelivr": "dist/jora.js",
+  "unpkg": "dist/jora.esm.js",
+  "jsdelivr": "dist/jora.esm.js",
   "exports": {
     ".": {
       "import": "./src/index.js",
@@ -25,21 +25,20 @@
   },
   "scripts": {
     "lint": "eslint src test",
-    "lint-and-test": "npm run lint && npm test",
     "test": "mocha --reporter ${REPORTER:-progress}",
     "test:cjs": "mocha cjs-test --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",
+    "compile-modules": "node scripts/compile-modules.cjs",
+    "compile-modules-and-test": "npm run compile-modules && npm test",
     "bundle": "node scripts/bundle",
     "bundle-and-test": "npm run bundle && npm run test:dist",
     "esm-to-cjs": "node scripts/esm-to-cjs.cjs",
     "esm-to-cjs-and-test": "npm run esm-to-cjs && npm run test:cjs",
-    "build": "npm run bundle",
-    "build-and-test": "npm run bundle-and-test",
-    "parser:bake": "node --input-type=module -e \"import { bake } from './src/lang/parse.js'; bake();\"",
-    "parser:rollback": "git checkout -- src/lang/parse.js",
-    "prepublishOnly": "npm run build && npm run parser:bake",
-    "postpublish": "npm run parser:rollback",
-    "coverage": "npm run parser:bake && c8 --reporter=lcovonly npm test && npm run parser:rollback"
+    "build": "npm run compile-modules && npm run esm-to-cjs && npm run bundle",
+    "build-and-test": "npm run compile-modules && npm run esm-to-cjs-and-test && npm run bundle-and-test",
+    "prepare": "npm run compile-modules && npm run esm-to-cjs",
+    "prepack": "npm run lint && npm run test && npm run test:cjs && npm run bundle-and-test",
+    "coverage": "c8 --reporter=lcovonly npm test"
   },
   "dependencies": {
     "@discoveryjs/natural-compare": "^1.0.0"
@@ -56,8 +55,9 @@
     "node": "^10.12.0 || >=12.0.0"
   },
   "files": [
+    "cjs",
     "dist",
     "src",
-    "!src/lang/parse-raw.js"
+    "!src/compile-modules/**"
   ]
 }

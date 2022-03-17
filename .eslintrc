@@ -8,6 +8,10 @@
         "ecmaVersion": 2020,
         "sourceType": "module"
     },
+    "ignorePatterns": [
+        "dist/**",
+        "src/lang/parse.js"
+    ],
     "rules": {
         "no-duplicate-case": 2,
         "no-undef": 2,

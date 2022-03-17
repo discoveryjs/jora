@@ -5,4 +5,6 @@
 /node_modules/
 /cjs/
 /cjs-test/
+/src/lang/parse.js
+/src/version.js
 .DS_Store

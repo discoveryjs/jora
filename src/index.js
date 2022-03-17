@@ -1,5 +1,5 @@
 import { version } from './version.js';
-import { parser as syntax } from './lang/parse.js';
+import parser from './lang/parse.js';
 import suggest from './lang/suggest.js';
 import walk from './lang/walk.js';
 import stringify from './lang/stringify.js';
@@ -31,7 +31,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         debug('Compile query from source', source);
     }
 
-    const parseResult = syntax.parse(source, tolerantMode);
+    const parseResult = parser.parse(source, tolerantMode);
 
     if (debug) {
         debug('AST', parseResult.ast);
@@ -169,8 +169,8 @@ export default Object.assign(createQuery, {
     methods,
     setup,
     syntax: {
-        tokenize: syntax.tokenize,
-        parse: syntax.parse,
+        tokenize: parser.tokenize,
+        parse: parser.parse,
         suggest,
         walk,
         stringify,
