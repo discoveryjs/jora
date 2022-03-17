@@ -1,5 +1,5 @@
 import { version } from './version.js';
-import { parsers as syntax } from './lang/parse.js';
+import { parser as syntax } from './lang/parse.js';
 import suggest from './lang/suggest.js';
 import walk from './lang/walk.js';
 import stringify from './lang/stringify.js';

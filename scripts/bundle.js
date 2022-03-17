@@ -1,5 +1,5 @@
-const fs = require('fs');
-const esbuild = require('esbuild');
+import fs from 'fs';
+import esbuild from 'esbuild';
 
 async function build() {
     const genModules = [

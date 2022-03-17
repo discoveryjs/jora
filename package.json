@@ -19,32 +19,38 @@
   "jsdelivr": "dist/jora.js",
   "exports": {
     ".": {
-      "import": "./src/index.js"
+      "import": "./src/index.js",
+      "require": "./cjs/index.cjs"
     }
   },
   "scripts": {
     "lint": "eslint src test",
     "lint-and-test": "npm run lint && npm test",
     "test": "mocha --reporter ${REPORTER:-progress}",
-    "test:all": "npm run test:src && npm run test:dist",
-    "test:src": "npm test",
+    "test:cjs": "mocha cjs-test --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",
     "bundle": "node scripts/bundle",
-    "bundle-and-test": "node scripts/bundle && npm run test:dist",
+    "bundle-and-test": "npm run bundle && npm run test:dist",
+    "esm-to-cjs": "node scripts/esm-to-cjs.cjs",
+    "esm-to-cjs-and-test": "npm run esm-to-cjs && npm run test:cjs",
     "build": "npm run bundle",
     "build-and-test": "npm run bundle-and-test",
-    "parser:bake": "node -e \"require('./src/version').bake();require('./src/lang/parse').bake();\"",
-    "parser:rollback": "git checkout -- src/version.js src/lang/parse.js",
+    "parser:bake": "node --input-type=module -e \"import { bake } from './src/lang/parse.js'; bake();\"",
+    "parser:rollback": "git checkout -- src/lang/parse.js",
     "prepublishOnly": "npm run build && npm run parser:bake",
     "postpublish": "npm run parser:rollback",
     "coverage": "npm run parser:bake && c8 --reporter=lcovonly npm test && npm run parser:rollback"
+  },
+  "dependencies": {
+    "@discoveryjs/natural-compare": "^1.0.0"
   },
   "devDependencies": {
     "@lahmatiy/jison": "^0.4.18-remastered.3",
     "c8": "^7.11.0",
     "esbuild": "~0.14.25",
     "eslint": "^8.10.0",
-    "mocha": "^9.2.1"
+    "mocha": "^9.2.1",
+    "rollup": "^2.70.0"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"

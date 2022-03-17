@@ -154,13 +154,13 @@ export const lex = {
         // FIXME: using `this.done = false;` is a hack, since `regexp-lexer` set done=true
         // when no input left and doesn't take into account current state;
         // should be fixed in `regexp-lexer`
-        [['preventPrimitive'], '', () => {
+        [['preventPrimitive'], '', function() {
             this.done = false;
             this.popState();
         }],
 
         // template
-        [templateToken, (yy, yytext) => {
+        [templateToken, function(yy, yytext) {
             const token = yytext.endsWith('`') ? 'TEMPLATE' : 'TPL_START';
             yytext = this.toStringLiteral(yytext, true, 1 + Number(token !== 'TEMPLATE'));
             if (token === 'TEMPLATE') {
@@ -168,7 +168,7 @@ export const lex = {
             }
             return token;
         }],
-        [['template'], templateToken, (yy, yytext) => {
+        [['template'], templateToken, function(yy, yytext) {
             const token = yytext.endsWith('`') ? 'TPL_END' : 'TPL_CONTINUE';
             yytext = this.toStringLiteral(yytext, true, 1 + Number(token !== 'TPL_END'));
             this.popState();
@@ -177,7 +177,9 @@ export const lex = {
             }
             return token;
         }],
-        [['template'], '', () => this.parseError('Unexpected end of input')],
+        [['template'], '', function() {
+            this.parseError('Unexpected end of input');
+        }],
 
         // braces
         ['\\(', 'return "(";'],
@@ -185,7 +187,7 @@ export const lex = {
         ['\\[', 'return "[";'],
         ['\\]', 'yy.pps(); return "]";'],
         ['\\{', 'return "{";'],
-        ['\\}', (yy) => {
+        ['\\}', function(yy) {
             if (this.bracketStack[this.bracketStack.length - 1] !== 'TPL_END') {
                 yy.pps();
                 return '}';
@@ -197,7 +199,7 @@ export const lex = {
 
         // keywords (should goes before ident)
         // eslint-disable-next-line no-unused-vars
-        ['(true|false|null|undefined|Infinity|NaN){wb}', (yytext) => {
+        ['(true|false|null|undefined|Infinity|NaN){wb}', function(yytext) {
             yytext = this.toLiteral(yytext); // eslint-disable-line no-unused-vars
             return 'LITERAL';
         }],
@@ -230,7 +232,7 @@ export const lex = {
 
         // functions
         ['=>', 'return "FUNCTION";'],
-        ['<(?!=)', () => {
+        ['<(?!=)', function() {
             this.fnOpened++;
             return 'FUNCTION_START';
         }],
@@ -242,7 +244,7 @@ export const lex = {
         ['>=', 'return ">=";'],
         ['<=', 'return "<=";'],
         ['<', 'return "<";'],
-        ['>', () => {
+        ['>', function() {
             if (this.fnOpened) {
                 this.fnOpened--;
                 return 'FUNCTION_END';

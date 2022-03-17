@@ -1,5 +1,5 @@
+import { naturalCompare, naturalAnalyticalCompare } from '@discoveryjs/natural-compare';
 import { hasOwnProperty, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike } from '../utils.js';
-import { naturalCompare, naturalAnalyticalCompare } from './natural-compare.js';
 
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;

@@ -86,3 +86,4 @@ jobs:
                 cache: "npm"
             - run: npm ci
             - run: npm run test
+            - run: npm run esm-to-cjs-and-test

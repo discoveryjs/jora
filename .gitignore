@@ -3,4 +3,6 @@
 /.cache/
 /.nyc_output/
 /node_modules/
+/cjs/
+/cjs-test/
 .DS_Store

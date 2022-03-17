@@ -6,7 +6,7 @@ import buildParsers from './parse-raw.js';
 
 const strictParser = new jison.Parser(grammar);
 
-export const parsers = buildParsers(strictParser);
+export const parser = buildParsers(strictParser);
 export function generateModule() {
     return strictParser
         .generateModule('esm')
@@ -15,5 +15,5 @@ export function generateModule() {
         .replace('new Parser()', '(' + buildParsers + ')(new Parser)');
 }
 export function bake() {
-    writeFileSync(__filename, generateModule());
+    writeFileSync(import.meta.url, generateModule());
 }
