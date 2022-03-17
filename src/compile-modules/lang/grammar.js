@@ -1,5 +1,5 @@
-import { isPlainObject } from '../utils.js';
-import { build } from './nodes/index.js';
+import { isPlainObject } from '../../utils.js';
+import { build } from '../../lang/nodes/index.js';
 
 const {
     Arg1,
