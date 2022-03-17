@@ -2,7 +2,7 @@ import { build } from '../../lang/nodes/index.js';
 
 const {
     Arg1,
-    Array,
+    Array: ArrayNode,
     Binary,
     Block,
     Compare,
@@ -21,7 +21,7 @@ const {
     MapRecursive,
     Method,
     MethodCall,
-    Object,
+    Object: ObjectNode,
     ObjectEntry,
     Parentheses,
     Pick,
@@ -33,8 +33,6 @@ const {
     Template,
     Unary
 } = build;
-const isArray = [].constructor.isArray;
-const keys = {}.constructor.keys;
 const $0 = { name: '$0' };
 const $1 = { name: '$1' };
 const $1name = { name: '$1.name' };
@@ -75,11 +73,11 @@ function stringify(value) {
                 return String(value);
             }
 
-            if (isArray(value)) {
+            if (Array.isArray(value)) {
                 return '[' + value.map(stringify) + ']';
             }
 
-            return '{' + keys(value).map(k => k + ':' + stringify(value[k])).join(',') + '}';
+            return '{' + Object.keys(value).map(k => k + ':' + stringify(value[k])).join(',') + '}';
     }
 }
 
@@ -437,12 +435,12 @@ export const bnf = {
     templateEnd: [['TPL_END', $$(Literal($1))]],
 
     object: [
-        ['{ }', $$(Object([]))],
-        ['{ objectEntries }', $$(Object($2))],
-        ['{ objectEntries , }', $$(Object($2))],
-        ['{ definitions }', $$(Object([]))],
-        ['{ definitions objectEntries }', $$(Block($2, Object($3)))],
-        ['{ definitions objectEntries , }', $$(Block($2, Object($3)))]
+        ['{ }', $$(ObjectNode([]))],
+        ['{ objectEntries }', $$(ObjectNode($2))],
+        ['{ objectEntries , }', $$(ObjectNode($2))],
+        ['{ definitions }', $$(ObjectNode([]))],
+        ['{ definitions objectEntries }', $$(Block($2, ObjectNode($3)))],
+        ['{ definitions objectEntries , }', $$(Block($2, ObjectNode($3)))]
     ],
     objectEntries: createCommaList('objectEntries', 'objectEntry'),
     objectEntry: [
@@ -466,9 +464,9 @@ export const bnf = {
         ['... e', $$(Spread($2, true))]
     ],
     array: [
-        ['[ ]', $$(Array([]))],
-        ['[ arrayElements ]', $$(Array($2))],
-        ['[ arrayElements , ]', $$(Array($2))]
+        ['[ ]', $$(ArrayNode([]))],
+        ['[ arrayElements ]', $$(ArrayNode($2))],
+        ['[ arrayElements , ]', $$(ArrayNode($2))]
     ],
 
     sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),
