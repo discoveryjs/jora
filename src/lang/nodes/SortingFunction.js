@@ -1,9 +1,3 @@
-export function build(compares) {
-    return {
-        type: 'SortingFunction',
-        compares
-    };
-}
 export function compile(node, ctx) {
     ctx.put('(a, b)=>{let _q;return ');
     ctx.list(node.compares, '||');

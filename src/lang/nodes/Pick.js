@@ -1,10 +1,3 @@
-export function build(value, getter) {
-    return {
-        type: 'Pick',
-        value,
-        getter
-    };
-}
 export function suggest(node, ctx) {
     if (node.getter === null) {
         const pos = node.range[1] - 1;

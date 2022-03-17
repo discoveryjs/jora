@@ -1,8 +1,3 @@
-export function build() {
-    return {
-        type: 'Context'
-    };
-}
 export function compile(node, ctx) {
     ctx.put('context');
 }

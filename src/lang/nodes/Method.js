@@ -1,10 +1,3 @@
-export function build(reference, args) {
-    return {
-        type: 'Method',
-        reference,
-        arguments: args
-    };
-}
 export function suggest(node, ctx) {
     if (node.arguments.length === 0) {
         ctx.queryRoot(node.range[1] - 1);

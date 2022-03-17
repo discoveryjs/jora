@@ -1,10 +1,3 @@
-export function build(value, query) {
-    return {
-        type: 'Filter',
-        value,
-        query
-    };
-}
 export function compile(node, ctx) {
     ctx.put('f.filter(');
     ctx.nodeOrCurrent(node.value);

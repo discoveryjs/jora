@@ -1,9 +1,3 @@
-export function build(name) {
-    return {
-        type: 'Reference',
-        name
-    };
-}
 export function suggest(node, ctx) {
     if (node.range) {
         ctx.range(node.range, 'var');

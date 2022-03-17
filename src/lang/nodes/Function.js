@@ -1,11 +1,3 @@
-export function build(args, body, legacy) {
-    return {
-        type: 'Function',
-        arguments: args,
-        body,
-        legacy: Boolean(legacy)
-    };
-}
 export function compile(node, ctx) {
     ctx.createScope(
         () => {

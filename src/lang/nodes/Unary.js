@@ -1,10 +1,3 @@
-export function build(operator, argument) {
-    return {
-        type: 'Unary',
-        operator,
-        argument
-    };
-}
 export function compile(node, ctx) {
     switch (node.operator) {
         case 'no':

@@ -6,5 +6,6 @@
 /cjs/
 /cjs-test/
 /src/lang/parse.js
+/src/lang/build.js
 /src/version.js
 .DS_Store

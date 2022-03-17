@@ -1,9 +1,3 @@
-export function build(properties) {
-    return {
-        type: 'Object',
-        properties
-    };
-}
 export function suggest(node, ctx) {
     if (node.properties.length === 0) {
         ctx.queryRoot(node.range[0] + 1, node.range[1] - 1);

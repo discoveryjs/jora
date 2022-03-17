@@ -1,9 +1,3 @@
-export function build(name) {
-    return {
-        type: 'Declarator',
-        name
-    };
-}
 export function compile(node, ctx) {
     if (node.name) {
         ctx.put('$' + node.name);

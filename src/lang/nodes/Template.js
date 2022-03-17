@@ -1,9 +1,3 @@
-export function build(values) {
-    return {
-        type: 'Template',
-        values
-    };
-}
 export function suggest(node, ctx) {
     for (const [idx, v] of Object.entries(node.values)) {
         if (v === null) {

@@ -1,9 +1,3 @@
-export function build(body) {
-    return {
-        type: 'Parentheses',
-        body
-    };
-}
 export function compile(node, ctx) {
     ctx.put('(');
     ctx.node(node.body);

@@ -1,6 +1,6 @@
 // INPORTANT: This function must not have external dependencies,
 // since its source uses as is when parser is generating
-export default function buildParsers(strictParser) {
+module.exports = function buildParsers(strictParser) {
     function patch(subject, patches) {
         Object.entries(patches).forEach(([key, patch]) =>
             subject[key] = patch(subject[key])

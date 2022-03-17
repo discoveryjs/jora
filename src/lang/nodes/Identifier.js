@@ -1,9 +1,3 @@
-export function build(name) {
-    return {
-        type: 'Identifier',
-        name
-    };
-}
 export function compile(node, ctx) {
     ctx.put(node.name);
 }

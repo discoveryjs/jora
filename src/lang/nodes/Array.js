@@ -1,9 +1,3 @@
-export function build(elements) {
-    return {
-        type: 'Array',
-        elements
-    };
-}
 export function suggest(node, ctx) {
     if (node.elements.length === 0) {
         ctx.queryRoot(node.range[0] + 1, node.range[1] - 1);

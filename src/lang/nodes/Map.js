@@ -1,10 +1,3 @@
-export function build(value, query) {
-    return {
-        type: 'Map',
-        value,
-        query
-    };
-}
 export function compile(node, ctx) {
     ctx.put('f.map(');
     ctx.nodeOrCurrent(node.value);

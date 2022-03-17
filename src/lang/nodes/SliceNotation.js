@@ -1,10 +1,3 @@
-export function build(value, args) {
-    return {
-        type: 'SliceNotation',
-        value,
-        arguments: args
-    };
-}
 export function compile(node, ctx) {
     ctx.put('f.slice(');
     ctx.nodeOrCurrent(node.value);

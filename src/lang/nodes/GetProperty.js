@@ -1,10 +1,3 @@
-export function build(value, property) {
-    return {
-        type: 'GetProperty',
-        value,
-        property
-    };
-}
 export function suggest(node, ctx) {
     ctx.range(node.property.range, 'path', node.value || undefined, !node.value);
 

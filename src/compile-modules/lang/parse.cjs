@@ -1,11 +1,11 @@
 /* c8 ignore start */
-import jison from '@lahmatiy/jison';
-import * as grammar from './grammar.js';
-import parserPatch from './parse-patch.js';
+const jison = require('@lahmatiy/jison');
+const grammar = require('./grammar.cjs');
+const parserPatch = require('./parse-patch.cjs');
 
 const strictParser = new jison.Parser(grammar);
 
-export default function generateModule() {
+module.exports = function generateModule() {
     return strictParser
         .generateModule('esm')
         .replace(/\\r\\n\?\|\\n/g, '\\n|\\r\\n?|\\u2028|\\u2029')

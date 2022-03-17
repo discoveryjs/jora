@@ -1,5 +1,3 @@
-import { build } from '../../lang/nodes/index.js';
-
 const {
     Arg1,
     Array: ArrayNode,
@@ -32,7 +30,7 @@ const {
     Spread,
     Template,
     Unary
-} = build;
+} = require('./nodes.cjs');
 const $0 = { name: '$0' };
 const $1 = { name: '$1' };
 const $1name = { name: '$1.name' };
@@ -89,7 +87,7 @@ function $$(node) {
     return '$$ = ' + stringify(node);
 }
 
-// FIXME: temporary solution, because of `declarator` conflict
+// FIXME: temporary solution, because of `declarator` is conflicting
 // with `queryRule` when declarator specified aside
 function Declarator_(name) {
     return {
@@ -128,7 +126,7 @@ const templateToken = (input, state) => {
     return null;
 };
 
-export const lex = {
+exports.lex = {
     options: {
         ranges: true
     },
@@ -273,7 +271,7 @@ export const lex = {
         ['$', 'return "EOF";']
     ]
 };
-export const operators = [
+exports.operators = [
     ['left', '|'],
     ['left', 'def'],
     ['left', ';'],
@@ -292,8 +290,8 @@ export const operators = [
     ['left', '.', '..', '...'],
     ['left', '.(', '.[', '..(']
 ];
-export const start = 'root';
-export const bnf = {
+exports.start = 'root';
+exports.bnf = {
     root: [
         ['block EOF', 'return yy.buildResult($1)']
     ],

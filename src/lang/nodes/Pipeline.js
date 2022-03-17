@@ -1,10 +1,3 @@
-export function build(left, right) {
-    return {
-        type: 'Pipeline',
-        left,
-        right
-    };
-}
 export function compile(node, ctx) {
     ctx.createScope(
         () => {

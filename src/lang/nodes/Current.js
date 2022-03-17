@@ -1,8 +1,3 @@
-export function build() {
-    return {
-        type: 'Current'
-    };
-}
 export function suggest(node, ctx) {
     if (node.range) {
         ctx.range(node.range, 'var');

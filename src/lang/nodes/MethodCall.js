@@ -1,10 +1,3 @@
-export function build(value, method) {
-    return {
-        type: 'MethodCall',
-        value,
-        method
-    };
-}
 export function compile(node, ctx) {
     ctx.node(node.method, node.value);
 }

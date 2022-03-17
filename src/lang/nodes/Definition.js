@@ -1,15 +1,7 @@
-import { build as GetProperty } from './GetProperty.js';
-import { build as Identifier } from './Identifier.js';
+import { GetProperty, Identifier } from '../build.js';
 
 const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
 
-export function build(declarator, value) {
-    return {
-        type: 'Definition',
-        declarator,
-        value
-    };
-}
 export function suggest(node, ctx) {
     if (node.value === null) {
         ctx.range(node.declarator.range, 'path');

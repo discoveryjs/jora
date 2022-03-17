@@ -1,8 +1,3 @@
-export function build() {
-    return {
-        type: 'Data'
-    };
-}
 export function compile(node, ctx) {
     ctx.put('data');
 }

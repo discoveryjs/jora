@@ -33,14 +33,6 @@ function valueSubset(ctx, values, extra) {
     }
 }
 
-export function build(operator, left, right) {
-    return {
-        type: 'Binary',
-        operator,
-        left,
-        right
-    };
-}
 export function suggest(node, ctx) {
     switch (node.operator) {
         case 'in':

@@ -1,5 +1,5 @@
-import { build as GetProperty } from './GetProperty.js';
-import { build as Identifier } from './Identifier.js';
+import { GetProperty, Identifier } from '../build.js';
+
 const noBracketKeyType = new Set([
     'Literal',
     'Identifier',
@@ -7,13 +7,6 @@ const noBracketKeyType = new Set([
     'Current'
 ]);
 
-export function build(key, value) {
-    return {
-        type: 'ObjectEntry',
-        key,
-        value
-    };
-}
 export function suggest(node, ctx) {
     if (node.value === null) {
         switch (node.key.type) {

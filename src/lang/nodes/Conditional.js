@@ -1,11 +1,3 @@
-export function build(test, consequent, alternate) {
-    return {
-        type: 'Conditional',
-        test,
-        consequent,
-        alternate
-    };
-}
 export function compile(node, ctx) {
     ctx.put('f.bool(');
     ctx.node(node.test);

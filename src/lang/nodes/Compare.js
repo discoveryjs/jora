@@ -6,13 +6,6 @@ const comparator = {
     'AN': 'cmpNaturalAnalytical'
 };
 
-export function build(query, order) {
-    return {
-        type: 'Compare',
-        query,
-        order
-    };
-}
 export function compile(node, ctx) {
     if (node.order.startsWith('desc')) {
         ctx.put('-');

@@ -1,8 +1,3 @@
-export function build() {
-    return {
-        type: 'Arg1'
-    };
-}
 export function compile(node, ctx) {
     ctx.put(ctx.scope.arg1 ? 'arguments[1]' : 'undefined');
 }

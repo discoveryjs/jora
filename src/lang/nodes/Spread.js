@@ -1,10 +1,3 @@
-export function build(query, array = false) {
-    return {
-        type: 'Spread',
-        query,
-        array
-    };
-}
 export function suggest(node, ctx) {
     if (node.query === null) {
         ctx.queryRoot(node.range[1]);

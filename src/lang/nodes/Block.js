@@ -1,10 +1,3 @@
-export function build(definitions, body) {
-    return {
-        type: 'Block',
-        definitions,
-        body
-    };
-}
 export function suggest(node, ctx) {
     if (node.body === null) {
         ctx.queryRoot(node.range[1]);
