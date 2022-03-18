@@ -3,7 +3,6 @@ const path = require('path');
 const { rollup, watch } = require('rollup');
 
 const { name: packageName } = require('../package.json');
-const watchMode = process.argv.includes('--watch');
 const external = [
     'fs',
     'path',
@@ -75,7 +74,7 @@ function readDir(dir) {
         .map(fn => `${dir}/${fn}`);
 }
 
-async function build(outputDir, patch, ...entryPoints) {
+async function build(outputDir, { watch: watchMode = false, patch = false }, ...entryPoints) {
     const startTime = Date.now();
 
     const inputOptions = {
@@ -124,9 +123,15 @@ async function build(outputDir, patch, ...entryPoints) {
     }
 }
 
-async function buildAll() {
-    await build('./cjs', false, 'src/index.js');
-    await build('./cjs-test', true, ...readDir('test'));
+async function buildAll(watch = false) {
+    await build('./cjs', { watch, patch: false }, 'src/index.js');
+    await build('./cjs-test', { watch, patch: true }, ...readDir('test'));
 }
 
-buildAll();
+module.exports = buildAll;
+
+if (require.main === module) {
+    const watchMode = process.argv.includes('--watch');
+
+    buildAll(watchMode);
+}

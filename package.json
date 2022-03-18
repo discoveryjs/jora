@@ -37,6 +37,7 @@
     "esm-to-cjs-and-test": "npm run esm-to-cjs && npm run test:cjs",
     "build": "npm run compile-modules && npm run esm-to-cjs && npm run bundle",
     "build-and-test": "npm run compile-modules && npm run esm-to-cjs-and-test && npm run bundle-and-test",
+    "watch": "node scripts/watch.cjs",
     "prepare": "npm run compile-modules && npm run esm-to-cjs",
     "prepack": "npm run lint && npm run test && npm run test:cjs && npm run bundle-and-test",
     "coverage": "c8 --reporter=lcovonly npm test"
