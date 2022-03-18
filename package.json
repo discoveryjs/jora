@@ -14,9 +14,10 @@
     "json"
   ],
   "type": "module",
-  "main": "src/index",
-  "unpkg": "dist/jora.esm.js",
-  "jsdelivr": "dist/jora.esm.js",
+  "main": "./cjs/index.cjs",
+  "module": "./src/index.js",
+  "unpkg": "./dist/jora.esm.js",
+  "jsdelivr": "./dist/jora.esm.js",
   "exports": {
     ".": {
       "import": "./src/index.js",
