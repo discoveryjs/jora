@@ -267,6 +267,11 @@ exports.lex = {
         ['\\%', 'return "%";'],
         ['\\|', 'return "|";'],
 
+        // bad token
+        ['.', function(yylloc) {
+            this.parseError(`Bad input on line ${yylloc.first_line} column ${yylloc.first_column}`, { token: 'BAD_TOKEN' });
+        }],
+
         // eof
         ['$', 'return "EOF";']
     ]
