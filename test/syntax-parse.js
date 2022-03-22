@@ -17,26 +17,26 @@ describe('syntax/parse', () => {
                 () => parse('foo()\n пыщ'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: 'Lexical error on line 2. Unrecognized text.\nfoo()\\n пыщ\n--------^',
-                        text: '',
-                        token: null,
+                        rawMessage: 'Bad input on line 2 column 1\nfoo()\\n пыщ\n--------^',
+                        text: 'п',
+                        token: 'BAD_TOKEN',
                         expected: null,
                         loc: {
-                            range: [7, 7],
+                            range: [7, 8],
                             start: {
                                 column: 1,
                                 line: 2,
                                 offset: 7
                             },
                             end: {
-                                column: 1,
+                                column: 2,
                                 line: 2,
-                                offset: 7
+                                offset: 8
                             }
                         }
                     });
 
-                    return /Lexical error on line 2\. Unrecognized text\.\n\nfoo\(\)\\n пыщ\n--------\^/.test(e.message);
+                    return e.message === e.details.rawMessage.replace(/\n/, '\n\n');
                 }
             );
         });
