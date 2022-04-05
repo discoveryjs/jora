@@ -116,7 +116,7 @@ module.exports = function buildParsers(strictParser) {
                 }
 
                 if (i === valueEnd - 1) {
-                    this.parseError('Invalid line terminator', { inside: [i, i + 1] });
+                    this.parseError('Invalid backslash', { inside: [i, i + 1] });
                 }
 
                 const next = value[++i];
