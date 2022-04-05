@@ -197,10 +197,25 @@ module.exports = function buildParsers(strictParser) {
             return result;
         },
 
-        toRegExp: value => new RegExp(
-            value.substr(1, value.lastIndexOf('/') - 1),
-            value.substr(value.lastIndexOf('/') + 1)
-        )
+        toRegExp(value) {
+            const flagsIndex = value.lastIndexOf('/') + 1;
+            const flags = value.substr(flagsIndex);
+
+            flags.split('').forEach((flag, idx, array) => {
+                const duplicateIndex = array.indexOf(flag, idx + 1);
+                if (duplicateIndex !== -1) {
+                    this.parseError('Duplicate flag in regexp', {
+                        inside: flagsIndex + duplicateIndex,
+                        insideEnd: flagsIndex + duplicateIndex + 1
+                    });
+                }
+            });
+
+            return new RegExp(
+                value.substr(1, value.lastIndexOf('/') - 1),
+                flags
+            );
+        }
     });
 
     // patch setInput method to add additional lexer fields on init

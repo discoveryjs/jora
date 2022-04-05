@@ -136,7 +136,7 @@ exports.lex = {
         ws: '\\s+',
         comment: '//.*?(?:\\n|\\r\\n?|\\u2028|\\u2029|$)|/\\*(?:.|\\s)*?(?:\\*/|$)',
         ident: '(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z_$0-9]|\\\\u[0-9a-fA-F]{4})*',
-        rx: '/(?:\\\\.|[^/])+/i?'
+        rx: '/(?:\\\\.|[^/])+/[gimsu]*'
     },
     startConditions: {
         preventPrimitive: 0,
@@ -221,7 +221,6 @@ exports.lex = {
         ['{rx}', 'yy.pps(); yytext = this.toRegExp(yytext); return "REGEXP";'],
         ['{ident}', 'yy.pps(); yytext = this.ident(yytext); return "IDENT";'],
         ['\\${ident}', 'yy.pps(); yytext = this.ident(yytext.slice(1)); return "$IDENT";'],
-
 
         // special vars
         ['@', 'yy.pps(); return "@";'],
