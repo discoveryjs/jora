@@ -11,9 +11,19 @@ module.exports = function buildParsers(strictParser) {
         const lines = lexer.match.slice(0, offset).split(/\r\n?|\n|\u2028|\u2029/g);
         lexer.yylineno += lines.length - 1;
         lexer.yylloc.first_line = lexer.yylineno + 1;
-        lexer.yylloc.first_column = lines.length > 1 ? lines[lines.length - 1].length + 1 : lexer.yylloc.first_column + lines[0].length;
+        lexer.yylloc.first_column = lines.length > 1 ? lines.pop().length + 1 : lexer.yylloc.first_column + lines[0].length;
         lexer.yylloc.range[0] += offset;
         lexer.match = lexer.match.slice(offset);
+    }
+
+    function backwardLoc(lexer, offset) {
+        const newMatch = lexer.match.slice(0, offset);
+        const lines = newMatch.split(/\r\n?|\n|\u2028|\u2029/g);
+        lexer.yylloc.last_line = lexer.yylloc.first_line + lines.length - 1;
+        lexer.yylloc.last_column = lines.length > 1 ? lines.pop().length + 1 : lexer.yylloc.first_column + lines[0].length;
+        lexer.yylloc.range[1] = lexer.yylloc.range[0] + offset;
+        lexer.offset -= lexer.match.length - offset;
+        lexer.match = newMatch;
     }
 
     // better error details
@@ -44,6 +54,10 @@ module.exports = function buildParsers(strictParser) {
         if (details.recoverable) {
             this.trace(rawMessage);
         } else {
+            if (typeof details.insideEnd === 'number') {
+                backwardLoc(yy.lexer, details.insideEnd);
+            }
+
             if (typeof details.inside === 'number') {
                 forwardLoc(yy.lexer, details.inside);
             }
@@ -107,15 +121,21 @@ module.exports = function buildParsers(strictParser) {
             /* eslint-enable */
 
         toStringLiteral(value, multiline = false, end = 1) {
+            const valueEnd = value.length - end;
             let result = '';
-            for (let i = 1; i < value.length - end; i++) {
+
+            for (let i = 1; i < valueEnd; i++) {
                 if (!multiline && lineTerminator.has(value[i])) {
-                    this.parseError('Invalid line terminator', { inside: i });
+                    this.parseError('Invalid line terminator', { inside: i, insideEnd: i + 1 });
                 }
 
                 if (value[i] !== '\\') {
                     result += value[i];
                     continue;
+                }
+
+                if (i === valueEnd - 1) {
+                    this.parseError('Invalid line terminator', { inside: i, insideEnd: i + 1 });
                 }
 
                 const next = value[++i];
@@ -139,28 +159,34 @@ module.exports = function buildParsers(strictParser) {
                     case 'v': result += '\v'; break;
 
                     case 'u': {
-                        const hex4 = value.slice(i + 1, i + 5);
+                        const [hex = ''] = value.slice(i + 1, i + 5).match(/^[0-9a-f]*/i) || [];
 
-                        if (/^[0-9a-f]{4}$/i.test(hex4)) {
-                            result += String.fromCharCode(parseInt(hex4, 16));
+                        if (hex.length === 4) {
+                            result += String.fromCharCode(parseInt(hex, 16));
                             i += 4;
                             break;
                         }
 
-                        this.parseError('Invalid Unicode escape sequence', { inside: i - 1 });
+                        this.parseError('Invalid Unicode escape sequence', {
+                            inside: i - 1,
+                            insideEnd: Math.min(i + 1 + hex.length, valueEnd)
+                        });
                         break;
                     }
 
                     case 'x': {
-                        const hex2 = value.slice(i + 1, i + 3);
+                        const [hex = ''] = value.slice(i + 1, i + 3).match(/^[0-9a-f]*/i) || [];
 
-                        if (/^[0-9a-f]{2}$/i.test(hex2)) {
-                            result += String.fromCharCode(parseInt(hex2, 16));
+                        if (hex.length === 2) {
+                            result += String.fromCharCode(parseInt(hex, 16));
                             i += 2;
                             break;
                         }
 
-                        this.parseError('Invalid hexadecimal escape sequence', { inside: i - 1 });
+                        this.parseError('Invalid hexadecimal escape sequence', {
+                            inside: i - 1,
+                            insideEnd: Math.min(i + 1 + hex.length, valueEnd)
+                        });
                         break;
                     }
 

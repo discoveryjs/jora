@@ -46,7 +46,9 @@ const invalid = {
     "' \n'": 'Invalid line terminator',
     "' \r'": 'Invalid line terminator',
     "' \u2028'": 'Invalid line terminator',
-    "' \u2029'": 'Invalid line terminator'
+    "' \u2029'": 'Invalid line terminator',
+    '" \\"': 'Invalid line terminator',
+    "' \\'": 'Invalid line terminator'
 };
 
 describe('lang/string', () => {

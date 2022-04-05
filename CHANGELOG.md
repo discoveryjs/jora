@@ -3,6 +3,8 @@
 - Added support for custom methods as jora query (a string) in `jora.setup()`
 - Added a check for all methods are defined on query compilation to avoid runtime exceptions
 - Improved error message when a methods is not defined, i.e. `Method "foo" is not defined` instead of `m.foo is not a function`
+- Improved error locations in string literals
+- Disallowed a backslash before closing quote or apostrophe in string literals
 - Fixed range in details for bad input errors
 - Dropped support for Node.js prior 10.12
 - Changed dist modules:
