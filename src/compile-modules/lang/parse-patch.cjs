@@ -107,18 +107,17 @@ module.exports = function buildParsers(strictParser) {
 
     // add new helpers to lexer
     const lineTerminator = new Set(['\n', '\r', '\u2028', '\u2029']);
+    const literals = new Map([
+        ['null', null],
+        ['false', false],
+        ['true', true],
+        ['Infinity', Infinity],
+        ['NaN', NaN]
+    ]);
     Object.assign(strictParser.lexer, {
         ident: value => value.replace(/\\u[0-9a-fA-F]{4}/g, m => String.fromCharCode(parseInt(m.slice(2), 16))),
 
-        toLiteral: value =>
-            /* eslint-disable operator-linebreak, indent */
-            value === 'null' ? null :
-            value === 'false' ? false :
-            value === 'true' ? true :
-            value === 'Infinity' ? Infinity :
-            value === 'NaN' ? NaN :
-            undefined,
-            /* eslint-enable */
+        toLiteral: value => literals.get(value),
 
         toStringLiteral(value, multiline = false, end = 1) {
             const valueEnd = value.length - end;
