@@ -7,13 +7,12 @@ module.exports = function buildParsers(strictParser) {
         );
     }
 
-    function forwardLoc(lexer, offset, str) {
-        const lines = str.split(/\r\n?|\n|\u2028|\u2029/g);
+    function forwardLoc(lexer, offset) {
+        const lines = lexer.match.slice(0, offset).split(/\r\n?|\n|\u2028|\u2029/g);
         lexer.yylineno += lines.length - 1;
         lexer.yylloc.first_line = lexer.yylineno + 1;
-        lexer.yylloc.first_column = lexer.length > 1 ? lines[lines.length - 1].length + 1 : lexer.yylloc.first_column + lines[0].length;
+        lexer.yylloc.first_column = lines.length > 1 ? lines[lines.length - 1].length + 1 : lexer.yylloc.first_column + lines[0].length;
         lexer.yylloc.range[0] += offset;
-        lexer.offset += offset;
         lexer.match = lexer.match.slice(offset);
     }
 
@@ -46,7 +45,7 @@ module.exports = function buildParsers(strictParser) {
             this.trace(rawMessage);
         } else {
             if (typeof details.inside === 'number') {
-                forwardLoc(yy.lexer, details.inside, yy.lexer.match.slice(0, details.inside));
+                forwardLoc(yy.lexer, details.inside);
             }
 
             const yylloc = yy.lexer.yylloc;
@@ -194,7 +193,7 @@ module.exports = function buildParsers(strictParser) {
                 return parseError.call(this, ...args, yy);
             };
             yy.pps = () => {
-                if (this._input) {
+                if (!this.eof()) {
                     this.begin('preventPrimitive');
                 }
             };
@@ -253,7 +252,7 @@ module.exports = function buildParsers(strictParser) {
 
     patch(tolerantParser.lexer, {
         lex: origLex => function patchedLex() {
-            const prevInput = this._input;
+            const prevOffset = this.offset;
             const nextToken = origLex.call(this);
 
             if (tokenPair.has(this.prevToken) && tokenPair.get(this.prevToken).has(nextToken)) {
@@ -271,10 +270,8 @@ module.exports = function buildParsers(strictParser) {
                 this.yylloc = this.prevYylloc = yylloc;
 
                 // position correction for a white space before a keyword
-                if (prevInput !== this._input && words.includes(nextToken)) {
-                    const prevChIndex = prevInput.length - this._input.length - 1;
-
-                    switch (prevInput[prevChIndex]) {
+                if (prevOffset !== this.offset && words.includes(nextToken)) {
+                    switch (this._input[prevOffset]) {
                         case ' ':
                         case '\t':
                             yylloc.last_column--;
@@ -282,12 +279,12 @@ module.exports = function buildParsers(strictParser) {
                             break;
 
                         case '\n': {
-                            const lastN = prevInput.lastIndexOf('\n', prevChIndex - 1);
+                            const lastN = this._input.lastIndexOf('\n', prevOffset - 1);
 
                             yylloc.last_line--;
                             yylloc.last_column = lastN === -1
                                 ? yylloc.last_column - 1
-                                : prevChIndex - lastN;
+                                : prevOffset - lastN;
                             yylloc.range[1]--;
                             break;
                         }
@@ -301,7 +298,7 @@ module.exports = function buildParsers(strictParser) {
 
             // position correction for a white space after a keyword
             if (words.includes(nextToken)) {
-                switch (this._input[0]) {
+                switch (this._input[this.offset]) {
                     case ' ':
                     case '\t':
                         this.prevYylloc = {
