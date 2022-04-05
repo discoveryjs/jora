@@ -46,7 +46,7 @@
     "@discoveryjs/natural-compare": "^1.0.0"
   },
   "devDependencies": {
-    "@lahmatiy/jison": "^0.4.18-remastered.4",
+    "@lahmatiy/jison": "^0.4.18-remastered.5",
     "c8": "^7.11.0",
     "esbuild": "~0.14.25",
     "eslint": "^8.10.0",

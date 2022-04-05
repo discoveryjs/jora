@@ -7,25 +7,6 @@ module.exports = function buildParsers(strictParser) {
         );
     }
 
-    function forwardLoc(lexer, offset) {
-        const lines = lexer.match.slice(0, offset).split(/\r\n?|\n|\u2028|\u2029/g);
-        lexer.yylineno += lines.length - 1;
-        lexer.yylloc.first_line = lexer.yylineno + 1;
-        lexer.yylloc.first_column = lines.length > 1 ? lines.pop().length + 1 : lexer.yylloc.first_column + lines[0].length;
-        lexer.yylloc.range[0] += offset;
-        lexer.match = lexer.match.slice(offset);
-    }
-
-    function backwardLoc(lexer, offset) {
-        const newMatch = lexer.match.slice(0, offset);
-        const lines = newMatch.split(/\r\n?|\n|\u2028|\u2029/g);
-        lexer.yylloc.last_line = lexer.yylloc.first_line + lines.length - 1;
-        lexer.yylloc.last_column = lines.length > 1 ? lines.pop().length + 1 : lexer.yylloc.first_column + lines[0].length;
-        lexer.yylloc.range[1] = lexer.yylloc.range[0] + offset;
-        lexer.offset -= lexer.match.length - offset;
-        lexer.match = newMatch;
-    }
-
     // better error details
     const humanTokens = new Map([
         ['EOF', ['<end of input>']],
@@ -54,12 +35,13 @@ module.exports = function buildParsers(strictParser) {
         if (details.recoverable) {
             this.trace(rawMessage);
         } else {
-            if (typeof details.insideEnd === 'number') {
-                backwardLoc(yy.lexer, details.insideEnd);
-            }
+            if (Array.isArray(details.inside)) {
+                const start = yy.lexer.offset - yy.lexer.match.length;
 
-            if (typeof details.inside === 'number') {
-                forwardLoc(yy.lexer, details.inside);
+                yy.lexer.setMatch(
+                    start + details.inside[0],
+                    start + details.inside[1]
+                );
             }
 
             const yylloc = yy.lexer.yylloc;
@@ -125,7 +107,7 @@ module.exports = function buildParsers(strictParser) {
 
             for (let i = 1; i < valueEnd; i++) {
                 if (!multiline && lineTerminator.has(value[i])) {
-                    this.parseError('Invalid line terminator', { inside: i, insideEnd: i + 1 });
+                    this.parseError('Invalid line terminator', { inside: [i, i + 1] });
                 }
 
                 if (value[i] !== '\\') {
@@ -134,7 +116,7 @@ module.exports = function buildParsers(strictParser) {
                 }
 
                 if (i === valueEnd - 1) {
-                    this.parseError('Invalid line terminator', { inside: i, insideEnd: i + 1 });
+                    this.parseError('Invalid line terminator', { inside: [i, i + 1] });
                 }
 
                 const next = value[++i];
@@ -167,8 +149,7 @@ module.exports = function buildParsers(strictParser) {
                         }
 
                         this.parseError('Invalid Unicode escape sequence', {
-                            inside: i - 1,
-                            insideEnd: Math.min(i + 1 + hex.length, valueEnd)
+                            inside: [i - 1, Math.min(i + 1 + hex.length, valueEnd)]
                         });
                         break;
                     }
@@ -183,8 +164,7 @@ module.exports = function buildParsers(strictParser) {
                         }
 
                         this.parseError('Invalid hexadecimal escape sequence', {
-                            inside: i - 1,
-                            insideEnd: Math.min(i + 1 + hex.length, valueEnd)
+                            inside: [i - 1, Math.min(i + 1 + hex.length, valueEnd)]
                         });
                         break;
                     }
@@ -205,8 +185,7 @@ module.exports = function buildParsers(strictParser) {
                 const duplicateIndex = array.indexOf(flag, idx + 1);
                 if (duplicateIndex !== -1) {
                     this.parseError('Duplicate flag in regexp', {
-                        inside: flagsIndex + duplicateIndex,
-                        insideEnd: flagsIndex + duplicateIndex + 1
+                        inside: [flagsIndex + duplicateIndex, flagsIndex + duplicateIndex + 1]
                     });
                 }
             });
