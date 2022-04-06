@@ -259,6 +259,7 @@ module.exports = function buildParsers(strictParser) {
     const defaultNext = new Set([
         ',', '?', ':', ';', 'EOF',
         ']', ')', '}',
+        'TPL_CONTINUE', 'TPL_END',
         ...operators,
         ...keywords,
         'ORDER'
@@ -282,7 +283,7 @@ module.exports = function buildParsers(strictParser) {
                     last_column: this.yylloc.first_column,
                     range: [this.prevYylloc.range[1], this.yylloc.range[0]]
                 };
-                this.unput(this.yytext);
+                this.unput(this.match);
                 this.pushState('preventPrimitive');
                 this.done = false;
                 this.yytext = '_';

@@ -204,6 +204,23 @@ describe('query/suggestions', () => {
         );
     });
 
+    describeCases('string templates', {
+        '`${| |}`': [
+            suggestion('', ['foo', 'bar'], 3, 3),
+            suggestion('', ['foo', 'bar'], 4, 4)
+        ],
+        '`${| |}${| |}`': [
+            suggestion('', ['foo', 'bar'], 3, 3),
+            suggestion('', ['foo', 'bar'], 4, 4),
+            suggestion('', ['foo', 'bar'], 7, 7),
+            suggestion('', ['foo', 'bar'], 8, 8)
+        ],
+        '`${}${| |}`': [
+            suggestion('', ['foo', 'bar'], 6, 6),
+            suggestion('', ['foo', 'bar'], 7, 7)
+        ]
+    });
+
     describe('method context', () => {
         ['', '.', '..', '$.', '$..'].forEach(prefix => {
             describe(`${prefix}method(...)`, () => {
@@ -939,6 +956,24 @@ describe('query/suggestions (tolerant mode)', () => {
         '$_:{ a: 1, b: 2 };{$|}.|': [
             suggestion('$', ['$_:variable'], 19, 20),
             null
+        ],
+        '`${| |.| |}`': [
+            suggestion('', ['foo', 'bar'], 3, 3),
+            suggestion('', ['foo', 'bar'], 4, 4),
+            suggestion('', ['foo', 'bar'], 5, 5),
+            suggestion('', ['foo', 'bar'], 6, 6)
+        ],
+        '`${| |.| |}${}`': [
+            suggestion('', ['foo', 'bar'], 3, 3),
+            suggestion('', ['foo', 'bar'], 4, 4),
+            suggestion('', ['foo', 'bar'], 5, 5),
+            suggestion('', ['foo', 'bar'], 6, 6)
+        ],
+        '`${}${| |.| |}`': [
+            suggestion('', ['foo', 'bar'], 6, 6),
+            suggestion('', ['foo', 'bar'], 7, 7),
+            suggestion('', ['foo', 'bar'], 8, 8),
+            suggestion('', ['foo', 'bar'], 9, 9)
         ]
     });
 });
