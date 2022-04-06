@@ -221,6 +221,20 @@ describe('query/suggestions', () => {
         ]
     });
 
+    it('stress test', () => {
+        const values = Array.from({ length: 1.2e5 }).map((_, idx) => String(idx));
+        const actual = suggestQuery('.[$=|]', values)[0];
+        const expected = suggestion('', values.slice(0, 20).map(v => JSON.stringify(v) + ':value'), 4, 4);
+
+        assert.equal(actual.length, values.length);
+
+        // compare first N items only for performance reasons (deepEqual is too slow for such big arrays)
+        assert.deepEqual(
+            actual.slice(0, expected.length),
+            expected
+        );
+    });
+
     describe('method context', () => {
         ['', '.', '..', '$.', '$..'].forEach(prefix => {
             describe(`${prefix}method(...)`, () => {

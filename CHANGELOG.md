@@ -8,6 +8,7 @@
 - Improved error locations in string literals
 - Fixed range in details for bad input errors
 - Fixed suggestion support in template literals (#33)
+- Fixed a stack overflow exception when too many (over ~110k) suggestion values for a range
 - Dropped support for Node.js prior 10.12
 - Changed dist modules:
     - Removed `jora.min.js`

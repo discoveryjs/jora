@@ -142,16 +142,15 @@ export default (source, points) => ({
             const { context, current, from, to, values, related } = range;
 
             // console.log({current, variants:[...suggestions.get(range)], suggestions })
-            suggestions.push(
-                ...valuesToSuggestions(context, values, related)
-                    .map(value => ({
-                        current,
-                        type: contextToType[context],
-                        value,
-                        from,
-                        to
-                    }))
-            );
+            for (const value of valuesToSuggestions(context, values, related)) {
+                suggestions.push({
+                    current,
+                    type: contextToType[context],
+                    value,
+                    from,
+                    to
+                });
+            }
         });
 
         return suggestions.length ? suggestions : null;
