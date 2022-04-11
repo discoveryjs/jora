@@ -48,8 +48,9 @@ Table of content:
 <!-- TOC depthfrom:2 -->
 
 - [Install](#install)
-- [API](#api)
 - [Quick demo](#quick-demo)
+- [API](#api)
+    - [Query introspection](#query-introspection)
 - [Syntax](#syntax)
     - [Comments](#comments)
     - [Primitives](#primitives)
@@ -86,53 +87,6 @@ For a browser unminified (`dist/jora.js`) and minified (`dist/jora.min.js`) buil
 <script src="https://unpkg.com/jora/dist/jora.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
 ```
-
-## API
-
-```js
-const jora = require('jora');
-
-// create a query
-const query = jora('foo.bar');
-// or with custom methods
-const queryWithCustomMethods = jora.setup({
-    myMethod(current) { /* do something and return a new value */ }
-});
-
-// perform a query
-const result = query(data, context);
-const result = queryWithCustomMethods('foo.myMethod()')(data, context);
-```
-
-Options:
-
-- methods
-
-  Type: `Object`  
-  Default: `undefined`
-
-  Additional methods for using in query passed as an object, where a key is a method name and a value is a function to perform an action. It can override build-in methods.
-
-- debug
-
-  Type: `Boolean` or `function(name, value)`  
-  Default: `false`
-
-  Enables debug output. When set a function, this function will recieve a section name and its value.
-
-- tolerant
-
-  Type: `Boolean`  
-  Default: `false`
-
-  Enables tolerant parsing mode. This mode supresses parsing errors when possible.
-
-- stat
-
-  Type: `Boolean`  
-  Default: `false`
-
-  Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
 
 ## Quick demo
 
@@ -194,6 +148,178 @@ jora@1.0.0
 │  │  └─ inherits@2.0.3 [other versions: 2.0.1]
 ...
 ```
+
+## API
+
+```js
+const jora = require('jora');
+
+// create a query
+const query = jora('foo.bar');
+// or with custom methods
+const queryWithCustomMethods = jora.setup({
+    myMethod(current) { /* do something and return a new value */ }
+});
+
+// perform a query
+const result = query(data, context);
+const result = queryWithCustomMethods('foo.myMethod()')(data, context);
+```
+
+Options:
+
+- methods
+
+  Type: `Object`  
+  Default: `undefined`
+
+  Additional methods for using in query passed as an object, where a key is a method name and a value is a function to perform an action. It can override build-in methods.
+
+- debug
+
+  Type: `Boolean` or `function(name, value)`  
+  Default: `false`
+
+  Enables debug output. When set a function, this function will recieve a section name and its value.
+
+- tolerant
+
+  Type: `Boolean`  
+  Default: `false`
+
+  Enables tolerant parsing mode. This mode supresses parsing errors when possible.
+
+- stat
+
+  Type: `Boolean`  
+  Default: `false`
+
+  Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
+### Query introspection
+
+To introspect a query, it should be compiled in "stat" (statistic) mode by passing a `stat` option. In this case a result of the query evaluation will be a special API with encapsulated state instead of a value:
+
+```js
+import jora from 'jora';
+
+const query = jora('...query...', { stat: true });
+const statApi = query(data);
+// { stat() { ... }, suggestion() { ... }, ... }
+```
+
+The returned API allows fetching the values which are passed through a location in a query (the `stat()` method) as well as a list of suggestions for a location (the `suggestion()` method):
+
+```js
+import jora from 'jora';
+
+const query = jora('.[foo=""]', { stat: true });
+const statApi = query([{ id: 1, foo: "hello" }, { id: 2, foo: "world" }]);
+
+statApi.stat(3);
+// [
+//   {
+//     context: 'path',
+//     from: 2,
+//     to: 5,
+//     text: 'foo',
+//     values: Set(2) { [Object], [Object] },
+//     related: null
+//   }
+// ]
+
+statApi.suggestion(3); // .[f|oo=""]
+// [
+//   {
+//     type: 'property',
+//     from: 2,
+//     to: 5,
+//     text: 'foo',
+//     suggestions: [ 'id', 'foo' ]
+//   }
+// ]
+
+statApi.suggestion(7); // .[foo="|"]
+// [
+//   {
+//     type: 'value',
+//     from: 6,
+//     to: 8,
+//     text: '""',
+//     suggestions: [ 'hello', 'world' ]
+//   }
+// ]
+```
+
+That's an effective way to use stat mode together with `tolerant` mode for incomplete queries:
+
+```js
+import jora from 'jora';
+
+const query = jora('.[foo=]', {
+    stat: true,
+    tolerant: true // without the tolerant option a query compilation
+                   // will raise a parse error:
+                   // .[foo=]
+                   // ------^
+});
+const statApi = query([{ id: 1, foo: "hello" }, { id: 2, foo: "world" }]);
+
+statApi.suggestion(6); // .[foo=|]
+// [
+//   {
+//     type: 'value',
+//     from: 6,
+//     to: 6,
+//     text: '',
+//     suggestions: [ 'hello', 'world' ]
+//   },
+//   {
+//     type: 'property',
+//     from: 6,
+//     to: 6,
+//     text: '',
+//     suggestions: [ 'id', 'foo' ]
+//   }
+// ]
+```
+
+#### Methods
+
+- `stat(pos: number, includeEmpty?: boolean)`
+
+    Returns an array of ranges with all the values which are passed through `pos` during performing a query.
+
+    Output format:
+
+    ```ts
+        suggestion(): Array<{
+            context: 'path' | 'key' | 'value' | 'in-value' | 'value-subset' | 'var',
+            from: number,
+            to: number,
+            text: string,
+            values: Set<any>,
+            related: Set<any> | null
+        }> | null
+    ```
+
+- `suggestion(pos: number, options?)`
+
+    Returns suggesion values grouped by a type or `null` if there is no any suggestions. The following options are supported (all are optional):
+    - `limit` (default: `Infinity`) – a max number of the values that should be returned for each value type (`"property"`, `"value"` or `"variable"`)
+    - `sort` (default: `false`) – a comparator function (should take 2 arguments and return a negative number, `0` or a positive number) for value list sorting, makes sence when `limit` is used
+    - `filter` (default: `function`) – a filter function factory (`pattern => value => <expr>`) to discard values from the result when returns a falsy value (default is equivalent to `patttern => value => String(value).toLowerCase().includes(pattern)`)
+
+    Output format:
+
+    ```ts
+        suggestion(): Array<{
+            type: 'property' | 'value' | 'variable',
+            from: number,
+            to: number,
+            text: string,
+            suggestions: Array<string | number>
+        }> | null
+    ```
 
 ## Syntax
 

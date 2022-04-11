@@ -11,6 +11,30 @@ const data = {
     bar: 32
 };
 
+function linearSuggestions(suggestionsByType) {
+    if (!suggestionsByType) {
+        return suggestionsByType;
+    }
+
+    const suggestions = [];
+
+    for (const entry of suggestionsByType) {
+        for (const value of entry.suggestions) {
+            suggestions.push({
+                type: entry.type,
+                from: entry.from,
+                to: entry.to,
+                text: entry.text,
+                value: entry.type === 'value'
+                    ? (typeof value === 'string' ? JSON.stringify(value) : String(value))
+                    : value
+            });
+        }
+    }
+
+    return suggestions;
+}
+
 function suggestQuery(str, data, context) {
     let offset = 0;
     const suggestPoints = [];
@@ -33,19 +57,19 @@ function suggestQuery(str, data, context) {
         .join('');
     const stat = query(clearedStr, { tolerant: true, stat: true })(data, context);
 
-    return suggestPoints.map(idx => stat.suggestion(idx));
+    return suggestPoints.map(idx => linearSuggestions(stat.suggestion(idx)));
 }
 
-function suggestion(current, list, from, to = from) {
+function suggestion(text, list, from, to = from) {
     return list.map(item => {
         const [value, type = 'property'] = item.split(':');
 
         return {
-            current,
             type,
             value,
             from,
-            to
+            to,
+            text
         };
     });
 }

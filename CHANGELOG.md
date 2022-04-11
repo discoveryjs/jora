@@ -8,7 +8,24 @@
 - Improved error locations in string literals
 - Fixed range in details for bad input errors
 - Fixed suggestion support in template literals (#33)
-- Fixed a stack overflow exception when too many (over ~110k) suggestion values for a range
+- Fixed a call stack overflow exception when too many (over ~110k) suggestion values for a range
+- **BREAKING** Reworked stat API:
+    - Changed `stat()` method result value to return `values` as is, i.e. a `Set` instance instead of its materialization as an array. Mutations of sets (`values` and `related`) should be avoided since they are shared between all stat API methods calls.
+    - Changed a signature of `suggestion()` method to get `options` as a second argument (optional), with the following options:
+        - `limit` (default: `Infinity`) – a max number of the values that should be returned for each value type (`"property"`, `"value"` or `"variable"`)
+        - `sort` (default: `false`) – a comparator function (should take 2 arguments and return a negative number, `0` or a positive number) for value list sorting, makes sence when `limit` is used
+        - `filter` (default: `function`) – a filter function factory (`pattern => value => <expr>`) to discard values from the result when returns a falsy value (default is equivalent to `patttern => value => String(value).toLowerCase().includes(pattern)`)
+    - Changed `suggestion()` method result to return values grouped by a type:
+        ```ts
+            suggestion(): Array<{
+                type: 'property' | 'value' | 'variable',
+                from: number,
+                to: number,
+                text: string,
+                suggestions: Array<string | number>
+            }> | null
+        ```
+    - All the changes are targeted to improve performance and memory consumption when a query is performing to a huge datasets (hundreds of thousands of values). As a result a suggestions fetching is boosted up to 30-40 times for such cases.
 - Dropped support for Node.js prior 10.12
 - Changed dist modules:
     - Removed `jora.min.js`

@@ -53,11 +53,9 @@ describe('query/modes', () => {
         const options = { stat: true };
 
         it('should return a stat interface', () => {
-            const res = jora('foo', options)({ foo: { bar: 42 } });
+            const res = jora('foo', options)({ foo: 42 });
 
             assert.equal(typeof res, 'object');
-            assert.equal(typeof res.stat, 'function');
-            assert.equal(typeof res.suggestion, 'function');
         });
 
         it('should raise an error on query parsing', () => {
@@ -72,39 +70,18 @@ describe('query/modes', () => {
         const options = { tolerant: true, stat: true };
 
         it('should return a stat interface', () => {
-            const res = jora('foo', options)({ foo: { bar: 42 } });
+            const res = jora('foo', options)({ foo: 42 });
 
             assert.equal(typeof res, 'object');
             assert.equal(typeof res.stat, 'function');
             assert.equal(typeof res.suggestion, 'function');
-            assert.deepEqual(res.stat(2), [{
-                context: 'path',
-                current: 'foo',
-                from: 0,
-                to: 3,
-                related: null,
-                values: [{
-                    foo: {
-                        bar: 42
-                    }
-                }]
-            }]);
         });
 
         it('should not raise an error on query parsing', () => {
             assert.doesNotThrow(() => jora('foo.', options));
 
-            const res = jora('foo.', options)({ foo: { bar: 42 } });
-            assert.deepEqual(res.stat(4), [{
-                context: 'path',
-                current: '',
-                from: 4,
-                to: 4,
-                related: null,
-                values: [{
-                    bar: 42
-                }]
-            }]);
+            const res = jora('foo.', options)({ foo: 42 });
+            assert.equal(typeof res, 'object');
         });
     });
 });

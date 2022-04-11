@@ -1,4 +1,6 @@
-import { addToSet, isPlainObject } from './utils.js';
+import { MaxHeap } from './max-heap.js';
+import { isPlainObject } from './utils.js';
+import buildin from './lang/compile-buildin.js';
 
 const contextToType = {
     'path': 'property',
@@ -9,112 +11,144 @@ const contextToType = {
     'var': 'variable'
 };
 
+function addObjectKeysToSet(object, set) {
+    Object.keys(object).forEach(set.add, set);
+}
 
-function valuesToSuggestions(context, values, related) {
-    const suggestions = new Set();
-    const addValue = value => {
-        switch (typeof value) {
-            case 'string':
-                suggestions.add(JSON.stringify(value));
-                break;
-            case 'number':
-                suggestions.add(String(value));
-                break;
+function valuesToSuggestions(context, values, related, suggestions = new Set(), raw) {
+    const addValue = raw
+        ? value => {
+            switch (typeof value) {
+                case 'string':
+                case 'number':
+                    suggestions.add(value);
+                    break;
+            }
         }
-    };
+        : value => {
+            switch (typeof value) {
+                case 'string':
+                    suggestions.add(JSON.stringify(value));
+                    break;
+                case 'number':
+                    suggestions.add(String(value));
+                    break;
+            }
+        };
 
     switch (context) {
         case '':
-        case 'path':
-            values.forEach(value => {
-                if (Array.isArray(value)) {
-                    value.forEach(item => {
-                        if (isPlainObject(item)) {
-                            addToSet(suggestions, Object.keys(item));
-                        }
-                    });
-                } else if (isPlainObject(value)) {
-                    addToSet(suggestions, Object.keys(value));
-                }
-            });
-            break;
+        case 'path': {
+            // use keys set to prevent duplications
+            const keys = new Set();
 
-        case 'key':
-            values.forEach(value => {
-                if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-                    Object.keys(value).forEach(addValue);
+            for (const value of values) {
+                if (Array.isArray(value)) {
+                    for (const item of value) {
+                        if (isPlainObject(item)) {
+                            addObjectKeysToSet(item, keys);
+                        }
+                    }
+                } else if (isPlainObject(value)) {
+                    addObjectKeysToSet(value, keys);
                 }
-            });
+            }
+
+            keys.forEach(suggestions.add, suggestions);
+
             break;
+        }
+
+        case 'key': {
+            // use keys set to prevent duplications
+            const keys = new Set();
+
+            for (const value of values) {
+                if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+                    addObjectKeysToSet(value, keys);
+                }
+            }
+
+            keys.forEach(suggestions.add, suggestions);
+
+            break;
+        }
 
         case 'value':
-            values.forEach(value => {
+            for (const value of values) {
                 if (Array.isArray(value)) {
                     value.forEach(addValue);
                 } else {
                     addValue(value);
                 }
-            });
+            }
             break;
 
-        case 'in-value':
-            values.forEach(value => {
+        case 'in-value': {
+            // use keys set to prevent duplications
+            const keys = new Set();
+
+            for (const value of values) {
                 if (Array.isArray(value)) {
                     value.forEach(addValue);
                 } else if (isPlainObject(value)) {
-                    Object.keys(value).forEach(addValue);
+                    addObjectKeysToSet(value, keys);
                 } else {
                     addValue(value);
                 }
-            });
+            }
+
+            keys.forEach(suggestions.add, suggestions);
+
             break;
+        }
 
         case 'var':
-            values.forEach(value => {
+            for (const value of values) {
                 suggestions.add('$' + value);
-            });
+            }
             break;
 
         case 'value-subset':
-            values.forEach(value => {
+            for (const value of values) {
                 if (Array.isArray(value)) {
                     value.forEach(addValue);
                 } else {
                     addValue(value);
                 }
-            });
+            }
 
             // delete used
-            related.forEach(arr => {
-                arr.forEach(value => {
+            for (const values of related) {
+                for (const value of values) {
                     if (typeof value === 'string' || typeof value === 'number') {
-                        suggestions.delete(JSON.stringify(value));
+                        suggestions.delete(value);
                     }
-                });
-            });
+                }
+            }
             break;
     }
 
-    return [...suggestions];
+    return suggestions;
 }
 
-function findSourcePosRanges(source, pos, points, includeEmpty) {
+function findSourcePosRanges(source, pos, points, includeEmpty = false) {
     const result = [];
 
     for (let [from, to, context, values, related = null] of points) {
         if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
-            let current = source.substring(from, to);
+            let text = source.substring(from, to);
 
-            if (!/\S/.test(current)) {
-                current = '';
+            if (!/\S/.test(text)) {
                 from = to = pos;
+                text = '';
             }
 
             result.push({
                 context,
-                current,
                 from,
                 to,
+                text,
                 values,
                 related
             });
@@ -124,35 +158,125 @@ function findSourcePosRanges(source, pos, points, includeEmpty) {
     return result;
 }
 
+function normalizeFunctionOption(value, fn) {
+    if (typeof value === 'function') {
+        return value;
+    }
+
+    if (value === true) {
+        return fn;
+    }
+
+    return false;
+}
+
+function normalizeFilterPattern(value) {
+    if (/^(["'])(.*)\1$/.test(value)) {
+        try {
+            value = JSON.parse(value);
+        } catch (e) {}
+    }
+
+    return value;
+}
+
+function defaultFilterFactory(pattern) {
+    // 2022-04-08
+    // v8: includes() is 20-30% slower than indexOf() !== -1
+    // Firefox & Safari approximate the same
+    return value => (typeof value === 'string' ? value : String(value)).toLowerCase().indexOf(pattern) !== -1;
+}
+
 export default (source, points) => ({
     stat(pos, includeEmpty) {
-        const ranges = findSourcePosRanges(source, pos, points, includeEmpty);
-
-        ranges.forEach(range => {
-            range.values = [...range.values];
-        });
-
-        return ranges.length ? ranges : null;
+        return findSourcePosRanges(source, pos, points, includeEmpty);
     },
-    suggestion(pos, includeEmpty) {
-        const ranges = findSourcePosRanges(source, pos, points, includeEmpty);
-        const suggestions = [];
+    suggestion(pos, options) {
+        let { limit = Infinity, sort, filter: filterFactory } = options || {};
+        sort = normalizeFunctionOption(sort, buildin.cmp);
+        filterFactory = normalizeFunctionOption(filterFactory, defaultFilterFactory);
 
-        ranges.forEach(range => {
-            const { context, current, from, to, values, related } = range;
+        const storageType = sort && isFinite(limit) ? MaxHeap : Set;
+        const ranges = findSourcePosRanges(source, pos, points);
+        const typeSuggestions = new Map();
+        const result = [];
 
-            // console.log({current, variants:[...suggestions.get(range)], suggestions })
-            for (const value of valuesToSuggestions(context, values, related)) {
-                suggestions.push({
-                    current,
+        for (const range of ranges) {
+            const { context, text, from, to, values, related } = range;
+            const type = contextToType[context];
+
+            if (!typeSuggestions.has(type)) {
+                let storage;
+
+                switch (storageType) {
+                    case MaxHeap:
+                        storage = new MaxHeap(
+                            limit,
+                            filterFactory && filterFactory(normalizeFilterPattern(text)),
+                            sort
+                        );
+                        break;
+
+                    case Set:
+                        storage = new Set();
+                        break;
+                }
+
+                typeSuggestions.set(type, {
                     type: contextToType[context],
-                    value,
                     from,
-                    to
+                    to,
+                    text,
+                    suggestions: storage
                 });
             }
-        });
 
-        return suggestions.length ? suggestions : null;
+            const { suggestions } = typeSuggestions.get(type);
+            valuesToSuggestions(context, values, related, suggestions, true);
+        }
+
+        if (storageType === Set) {
+            for (const entry of typeSuggestions.values()) {
+                let { suggestions } = entry;
+
+                if (sort) {
+                    suggestions = [...suggestions].sort(sort);
+                }
+
+                if (filterFactory) {
+                    const result = [];
+                    const filter = filterFactory(normalizeFilterPattern(entry.text));
+
+                    for (const value of suggestions) {
+                        if (filter(value)) {
+                            const newSize = result.push(value);
+
+                            if (newSize >= limit) {
+                                break;
+                            }
+                        }
+                    }
+
+                    suggestions = result;
+                } else if (isFinite(limit)) {
+                    suggestions = (Array.isArray(suggestions) ? suggestions : [...suggestions])
+                        .slice(0, limit);
+                }
+
+                entry.suggestions = suggestions;
+            }
+        }
+
+        for (const entry of typeSuggestions.values()) {
+            entry.suggestions = Array.isArray(entry.suggestions)
+                ? entry.suggestions
+                : [...entry.suggestions];
+
+            if (entry.suggestions.length) {
+                result.push(entry);
+            }
+        }
+
+        return result.length ? result : null;
     }
 });
