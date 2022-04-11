@@ -1,5 +1,5 @@
 import buildin from './lang/compile-buildin.js';
-import { hasOwnProperty, addToSet, isPlainObject } from './utils.js';
+import { hasOwnProperty, addToSet, isPlainObject, isRegExp } from './utils.js';
 
 function noop() {}
 
@@ -159,10 +159,11 @@ export default Object.freeze({
     },
     match(current, pattern, matchAll) {
         const input = String(current);
+        const flags = isRegExp(pattern) ? pattern.flags : '';
 
-        if (matchAll) {
+        if (matchAll || flags.includes('g')) {
             const result = [];
-            let cursor = new RegExp(pattern, pattern.flags + 'g');
+            let cursor = new RegExp(pattern, (flags || '').replace(/g|$/, 'g'));
             let match;
 
             while (match = cursor.exec(input)) {
@@ -172,7 +173,7 @@ export default Object.freeze({
             return result;
         }
 
-        const match = String(current).match(pattern);
+        const match = input.match(pattern);
         return match && matchEntry(match);
     },
     reduce(current, fn, initValue = undefined) {

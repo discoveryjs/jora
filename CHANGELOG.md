@@ -6,6 +6,7 @@
 - Allowed `g`, `m`, `s` and `u` flags in regexp literals
 - Disallowed a backslash before closing quote or apostrophe in string literals
 - Improved error locations in string literals
+- Fixed `match()` method to work well for RegExp with `g` flag and for strings when `matchAll` is true
 - Fixed range in details for bad input errors
 - Fixed suggestion support in template literals (#33)
 - Fixed a call stack overflow exception when too many (over ~110k) suggestion values for a range

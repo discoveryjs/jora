@@ -505,7 +505,7 @@ map(\<fn>) | The same as `Array#map()` in JS
 split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
 join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
 slice(from, to) | The same as `Array#slice()` or `String#slice()` in JS
-match(pattern, matchAll) | Similar to `String#match()`. Since regexp'es in jora doesn't support for `g` flag, use `matchAll` argument to get all matches, i.e. `'abcabc'.match(/ab/, true)` (jora) instead of `'abcabc'.match(/ab/g)` (JS)
+match(pattern, matchAll?) | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy then returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent.
 reduce(fn\[, initValue]) | The same as `Array#reduce()` in JS. Use `$$` to access to accumulator and `$` to current value, e.g. find the max value `reduce(=>$ > $$ ? $ : $$)`
 
 ## License
