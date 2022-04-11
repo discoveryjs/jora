@@ -15,26 +15,15 @@ function addObjectKeysToSet(object, set) {
     Object.keys(object).forEach(set.add, set);
 }
 
-function valuesToSuggestions(context, values, related, suggestions = new Set(), raw) {
-    const addValue = raw
-        ? value => {
-            switch (typeof value) {
-                case 'string':
-                case 'number':
-                    suggestions.add(value);
-                    break;
-            }
+function valuesToSuggestions(context, values, related, suggestions = new Set()) {
+    const addValue = value => {
+        switch (typeof value) {
+            case 'string':
+            case 'number':
+                suggestions.add(value);
+                break;
         }
-        : value => {
-            switch (typeof value) {
-                case 'string':
-                    suggestions.add(JSON.stringify(value));
-                    break;
-                case 'number':
-                    suggestions.add(String(value));
-                    break;
-            }
-        };
+    };
 
     switch (context) {
         case '':
@@ -228,7 +217,7 @@ export default (source, points) => ({
             }
 
             const { suggestions } = typeSuggestions.get(type);
-            valuesToSuggestions(context, values, related, suggestions, true);
+            valuesToSuggestions(context, values, related, suggestions);
         }
 
         if (storageType === Set) {
