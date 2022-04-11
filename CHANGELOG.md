@@ -32,7 +32,8 @@
 - Changed dist modules:
     - Removed `jora.min.js`
     - Changed `jora.js` format from CJS to IIFE and applied minification
-    - Added `jora.js.map`
+    - Added `jora.esm.js` (minified ESM module)
+    - Added source maps `jora.js.map` & `jora.esm.js.map`
 
 ## 1.0.0-beta.5 (November 10, 2020)
 
