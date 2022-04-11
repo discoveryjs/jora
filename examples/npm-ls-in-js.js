@@ -1,4 +1,5 @@
 // Plain JavaScript version of npm-ls.js
+import { exec } from 'child_process';
 
 function printTree(pkg, level = '') {
     console.log(level + pkg.name + '@' + pkg.version + (pkg.otherVersions.length ? ` [more versions: ${pkg.otherVersions.join(', ')}]` : ''));
@@ -44,28 +45,27 @@ function processTree(pkg, name, map) {
     return false;
 }
 
-require('child_process')
-    .exec('npm ls --json', {maxBuffer: 1024 * 1024}, (error, stdout) => {
-        if (!stdout) {
-            return;
-        }
+exec('npm ls --all --json', { maxBuffer: 1024 * 1024 }, (error, stdout) => {
+    if (!stdout) {
+        return;
+    }
 
-        try {
-            const tree = JSON.parse(stdout);
-            const multipleVersionPackages = collectVersions(tree);
+    try {
+        const tree = JSON.parse(stdout);
+        const multipleVersionPackages = collectVersions(tree);
 
-            for (let key in multipleVersionPackages) {
-                if (multipleVersionPackages[key].size === 1) {
-                    delete multipleVersionPackages[key];
-                } else {
-                    multipleVersionPackages[key] = [...multipleVersionPackages[key]].sort();
-                }
+        for (let key in multipleVersionPackages) {
+            if (multipleVersionPackages[key].size === 1) {
+                delete multipleVersionPackages[key];
+            } else {
+                multipleVersionPackages[key] = [...multipleVersionPackages[key]].sort();
             }
-
-            const depsPathsToMultipleVersionPackages = processTree(tree, null, multipleVersionPackages);
-
-            printTree(depsPathsToMultipleVersionPackages);
-        } catch (e) {
-            console.error('Error: ', e);
         }
-    });
+
+        const depsPathsToMultipleVersionPackages = processTree(tree, null, multipleVersionPackages);
+
+        printTree(depsPathsToMultipleVersionPackages);
+    } catch (e) {
+        console.error('Error: ', e);
+    }
+});

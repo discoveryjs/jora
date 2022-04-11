@@ -68,24 +68,52 @@ Table of content:
 
 ## Install
 
+Install with npm:
+
 ```
 npm install jora
 ```
 
-In node.js
+Basic usage:
 
 ```js
+// ESM
+import jora from 'jora';
+
+// CommonJS
 const jora = require('jora');
 ```
 
-For a browser unminified (`dist/jora.js`) and minified (`dist/jora.min.js`) builds are available:
+Bundles are available for use in a browser:
 
+- `dist/jora.js` – minified IIFE with `jora` as global
 ```html
 <script src="node_modules/jora/dist/jora.js"></script>
-<script src="node_modules/jora/dist/jora.min.js"></script>
-<!-- or use one of CDN -->
-<script src="https://unpkg.com/jora/dist/jora.js"></script>
+<script>
+  jora('query')(data, context);
+</script>
+```
+
+- `dist/jora.esm.js` – minified ES module
+```html
+<script type="module">
+  import jora from 'node_modules/jora/dist/jora.esm.js'
+  jora('query')(data, context);
+</script>
+```
+
+One of CDN services like `unpkg` or `jsDelivr` can be used. By default (for short path) a ESM version is exposing. For IIFE version a full path to a bundle should be specified:
+
+```html
+<!-- ESM -->
+<script type="module">
+  import jora from 'https://cdn.jsdelivr.net/npm/jora';
+  import jora from 'https://unpkg.com/jora';
+</script>
+
+<!-- IIFE with an export `jora` to global -->
 <script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
+<script src="https://unpkg.com/jora/dist/jora.js"></script>
 ```
 
 ## Quick demo
@@ -93,13 +121,14 @@ For a browser unminified (`dist/jora.js`) and minified (`dist/jora.min.js`) buil
 Get npm dependency paths (as a tree) that have packages with more than one version:
 
 ```js
-const jora = require('jora');
+import jora from 'jora';
+import { exec } from 'child_process';
 
 function printTree() {
     // see implementation in examples/npm-ls.js
 }
 
-require('child_process').exec('npm ls --json', (error, stdout) => {
+exec('npm ls --all --json', (error, stdout) => {
     if (error) {
         return;
     }
@@ -133,26 +162,28 @@ Example of output:
 
 ```
 jora@1.0.0
-├─ browserify@16.2.2
-│  ├─ assert@1.4.1
-│  │  └─ util@0.10.3 [other versions: 0.10.4]
-│  │     └─ inherits@2.0.1 [other versions: 2.0.3]
-│  ├─ browser-pack@6.1.0
-│  │  └─ combine-source-map@0.8.0
-│  │     ├─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
-│  │     └─ inline-source-map@0.6.2
-│  │        └─ source-map@0.5.7 [other versions: 0.6.1, 0.4.4, 0.2.0, 0.1.43]
-│  ├─ browser-resolve@1.11.3
-│  │  └─ resolve@1.1.7 [other versions: 1.8.1]
-│  ├─ concat-stream@1.6.2
-│  │  └─ inherits@2.0.3 [other versions: 2.0.1]
+├─ c8@7.11.0
+│  ├─ istanbul-lib-report@3.0.0
+│  │  └─ supports-color@7.2.0 [more versions: 8.1.1]
+│  ├─ test-exclude@6.0.0
+│  │  └─ minimatch@3.1.2 [more versions: 3.0.4]
+│  ├─ v8-to-istanbul@8.1.1
+│  │  └─ convert-source-map@1.8.0
+│  │     └─ safe-buffer@5.1.2 [more versions: 5.2.1]
+│  ├─ yargs-parser@20.2.9 [more versions: 20.2.4]
+│  └─ yargs@16.2.0
+│     └─ yargs-parser@20.2.9 [more versions: 20.2.4]
+├─ eslint@8.10.0
+│  ├─ @eslint/eslintrc@1.2.0
+│  │  ├─ ignore@4.0.6 [more versions: 5.2.0]
+│  │  └─ minimatch@3.1.2 [more versions: 3.0.4]
 ...
 ```
 
 ## API
 
 ```js
-const jora = require('jora');
+import jora from 'jora';
 
 // create a query
 const query = jora('foo.bar');
