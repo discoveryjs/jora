@@ -908,13 +908,13 @@ describe('query/suggestions (tolerant mode)', () => {
         });
 
         ['=', '!='].forEach(operator => {
-            const queryString = 'foo.b ' + operator + '| |';
+            const queryString = 'foo.[b ' + operator + '| |]';
             it(queryString, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
                     [
-                        suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 3),
-                        suggestion('', ['2:value', '3:value', 'foo', 'bar'], queryString.length - 2)
+                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], queryString.length - 4),
+                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], queryString.length - 3)
                     ]
                 );
             });

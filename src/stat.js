@@ -76,11 +76,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set(), 
 
         case 'value':
             for (const value of values) {
-                if (Array.isArray(value)) {
-                    value.forEach(addValue);
-                } else {
-                    addValue(value);
-                }
+                addValue(value);
             }
             break;
 
