@@ -4,7 +4,7 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx) {
-    ctx.put('current');
+    ctx.put('$');
 }
 export function walk() { }
 export function stringify(node, ctx) {

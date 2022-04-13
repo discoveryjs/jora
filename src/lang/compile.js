@@ -3,14 +3,18 @@ import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 
 export default function compile(ast, tolerant = false, suggestions = null) {
-    function getNodeSpName(node) {
-        let spName;
+    function newSpName() {
+        const spName = 's' + spNames.length;
 
-        if (!nodeSpName.has(node)) {
-            spNames.push(spName = 's' + spNames.length);
-            nodeSpName.set(node, spName);
-        } else {
-            spName = nodeSpName.get(node);
+        spNames.push(spName);
+        return spName;
+    }
+
+    function getNodeSpName(node) {
+        let spName = nodeSpName.get(node);
+
+        if (!spName) {
+            nodeSpName.set(node, spName = newSpName());
         }
 
         return spName;
@@ -27,7 +31,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
             range.push(JSON.stringify(ctx.scope));
         } else {
             if (!spName) {
-                spNames.push(spName = 's' + spNames.length);
+                spName = newSpName();
             }
 
             range.push(spName);
@@ -36,7 +40,6 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                 range.push(related);
             }
         }
-
 
         normalizedSuggestRanges.push(range);
 
@@ -60,7 +63,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                 (spName, range) => addSuggestPoint(...range, spName),
                 undefined
             );
-            const stat = 'stat(' + spName + ',current)';
+            const stat = 'stat(' + spName + ',$)';
 
             if (ctx.scope.firstCurrent) {
                 buffer[ctx.scope.firstCurrent] = stat;
@@ -119,7 +122,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     const normalizedSuggestRanges = [];
     const buffer = [
         '((data,context)=>{',
-        'const current=data;',
+        'const $=data;',
         { toString() {
             return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
         } },
@@ -135,9 +138,14 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     ];
 
     const initCtx = {};
+    const usedBuildinMethods = new Set();
     const ctx = {
         tolerant,
         usedMethods: new Map(),
+        buildinFn(name) {
+            usedBuildinMethods.add(name);
+            return 'f.' + name;
+        },
         scope: [],
         createScope,
         error: (message, node) => {
@@ -157,7 +165,9 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         },
         allocateVar() {
             const name = 'tmp' + allocatedVars.length;
+
             allocatedVars.push(name);
+
             return name;
         },
         put: chunk => buffer.push(chunk),

@@ -2,7 +2,9 @@ export function compile(node, ctx) {
     switch (node.operator) {
         case 'no':
         case 'not':
-            ctx.put('!f.bool(');
+            ctx.put('!');
+            ctx.put(ctx.buildinFn('bool'));
+            ctx.put('(');
             ctx.node(node.argument);
             ctx.put(')');
             break;

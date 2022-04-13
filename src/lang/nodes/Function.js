@@ -2,7 +2,7 @@ export function compile(node, ctx) {
     ctx.createScope(
         () => {
             ctx.scope.arg1 = true;
-            ctx.put('function(current){return ');
+            ctx.put('function($){return ');
             ctx.node(node.body);
             ctx.put('}');
         },

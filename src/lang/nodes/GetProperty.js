@@ -12,7 +12,8 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx) {
-    ctx.put('f.map(');
+    ctx.put(ctx.buildinFn('map'));
+    ctx.put('(');
     ctx.nodeOrCurrent(node.value);
     ctx.put(',');
 

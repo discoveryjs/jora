@@ -1,5 +1,6 @@
 export function compile(node, ctx) {
-    ctx.put('f.bool(');
+    ctx.put(ctx.buildinFn('bool'));
+    ctx.put('(');
     ctx.node(node.test);
     ctx.scope.captureCurrent.disabled = true;
     ctx.put(')?');

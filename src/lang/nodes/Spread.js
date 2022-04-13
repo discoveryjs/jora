@@ -5,7 +5,9 @@ export function suggest(node, ctx) {
 }
 export function compile(node, ctx) {
     if (node.array) {
-        ctx.put('...f.ensureArray(');
+        ctx.put('...');
+        ctx.put(ctx.buildinFn('ensureArray'));
+        ctx.put('(');
         ctx.nodeOrCurrent(node.query);
         ctx.put(')');
         return;

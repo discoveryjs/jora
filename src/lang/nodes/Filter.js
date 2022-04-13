@@ -1,9 +1,10 @@
 export function compile(node, ctx) {
-    ctx.put('f.filter(');
+    ctx.put(ctx.buildinFn('filter'));
+    ctx.put('(');
     ctx.nodeOrCurrent(node.value);
     ctx.createScope(
         () => {
-            ctx.put(',current=>');
+            ctx.put(',$=>');
             ctx.node(node.query);
         },
         (scopeStart, sp) => {

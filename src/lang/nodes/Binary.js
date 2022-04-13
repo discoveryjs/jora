@@ -74,7 +74,7 @@ export function compile(node, ctx) {
         case 'or': {
             const tmpVar = ctx.allocateVar();
 
-            ctx.put(`f.bool(${tmpVar}=`);
+            ctx.put(`${ctx.buildinFn('bool')}(${tmpVar}=`);
             ctx.node(node.left);
             ctx.put(`)?${tmpVar}:`);
             ctx.scope.captureCurrent.disabled = true;
@@ -87,7 +87,8 @@ export function compile(node, ctx) {
         case 'has no':
             ctx.put('!');
         case 'has':
-            ctx.put('f.in(');
+            ctx.put(ctx.buildinFn('in'));
+            ctx.put('(');
             ctx.node(node.right);
             ctx.put(',');
             ctx.node(node.left);
@@ -95,8 +96,7 @@ export function compile(node, ctx) {
             break;
 
         default:
-            ctx.put('f.');
-            ctx.put(binary[node.operator]);
+            ctx.put(ctx.buildinFn(binary[node.operator]));
             ctx.put('(');
             ctx.node(node.left);
             ctx.put(',');

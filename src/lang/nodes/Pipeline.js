@@ -1,7 +1,7 @@
 export function compile(node, ctx) {
     ctx.createScope(
         () => {
-            ctx.put('(current=>(');
+            ctx.put('($=>(');
             ctx.node(node.right);
             ctx.put('))');
         },

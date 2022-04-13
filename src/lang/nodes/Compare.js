@@ -15,7 +15,8 @@ export function compile(node, ctx) {
         () => {
             const cmpFn = comparator[node.order.slice(3 + node.order.startsWith('desc'))] || comparator[''];
 
-            ctx.put('f.' + cmpFn + '((_q=current=>(');
+            ctx.put(ctx.buildinFn(cmpFn));
+            ctx.put('((_q=$=>(');
             ctx.node(node.query);
             ctx.put('))(a),_q(b))');
         },

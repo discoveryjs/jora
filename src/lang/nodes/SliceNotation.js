@@ -1,5 +1,6 @@
 export function compile(node, ctx) {
-    ctx.put('f.slice(');
+    ctx.put(ctx.buildinFn('slice'));
+    ctx.put('(');
     ctx.nodeOrCurrent(node.value);
     node.arguments.slice(0, 3).forEach(item => {
         ctx.put(',');

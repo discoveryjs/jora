@@ -8,7 +8,8 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx) {
-    ctx.put('f.pick(');
+    ctx.put(ctx.buildinFn('pick'));
+    ctx.put('(');
     ctx.node(node.value);
 
     if (node.getter) {
