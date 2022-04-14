@@ -109,9 +109,6 @@ function collectNodeSuggestions(ast) {
     const ctx = {
         range(range, type, node = currentNode, related = true) {
             add(node, [...range, type, related]);
-            if (related && related !== true) {
-                add(related, []);
-            }
         },
         literalList(values) {
             const name = 'l' + literalList.length;

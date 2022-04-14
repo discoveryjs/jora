@@ -49,7 +49,7 @@ describe('query/debug', () => {
             'dir',
             '[Restored source]',
             'log',
-            '[Suggest ranges]',
+            '[Stat/suggestion ranges]',
             'log',
             '[Compiled code]',
             'log'

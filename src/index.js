@@ -50,7 +50,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         let prevRange = [];
         let prevPrefix = null;
 
-        debug('Suggest ranges', ranges.sort((a, b) => a[1] - b[1]).map(([node, ...range]) => {
+        debug('Stat/suggestion ranges', ranges.sort((a, b) => a[1] - b[1]).map(([node, ...range]) => {
             const [start, end, type, extra] = range;
             let prelude;
 
