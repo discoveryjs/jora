@@ -5,6 +5,7 @@
 /node_modules/
 /cjs/
 /cjs-test/
+/coverage/
 /src/lang/parse.js
 /src/lang/build.js
 /src/version.js

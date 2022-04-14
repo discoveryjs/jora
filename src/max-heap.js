@@ -1,12 +1,11 @@
-const defaultMaxSize = 50;
+const defaultCompare = (a, b) => a - b;
 const defaultAccept = () => true;
-const defaultComparator = (a, b) => a - b;
 
 export class MaxHeap {
-    constructor(maxSize, accept, comparator) {
-        this.maxSize = isFinite(maxSize) ? maxSize : defaultMaxSize;
-        this.accept = typeof accept === 'function' ? accept : defaultAccept;
-        this.compare = typeof comparator === 'function' ? comparator : defaultComparator;
+    constructor(maxSize, compare, accept) {
+        this.maxSize = maxSize || Infinity;
+        this.compare = compare || defaultCompare;
+        this.accept = accept || defaultAccept;
 
         this.values = [];
     }

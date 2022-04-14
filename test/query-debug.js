@@ -39,7 +39,7 @@ describe('query/debug', () => {
     });
 
     it('stat mode debug log', () => {
-        jora('xyzDebug', { debug: true, stat: true })({ a: 1, b: 2 });
+        jora('a in []', { debug: true, stat: true })({ a: 1, b: 2 });
 
         assert.deepEqual(buffer.map((item, idx) => idx % 2 ? item.value : item.type), [
             'log',

@@ -9,6 +9,13 @@ describe('reduce()', () => {
         );
     });
 
+    it('with non-array value', () => {
+        assert.deepEqual(
+            query('reduce(=>$$+$, 2)')(40),
+            42
+        );
+    });
+
     it('init value', () => {
         assert.deepEqual(
             query('reduce(=>$$+$, 10)')([1, 2, 3]),

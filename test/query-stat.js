@@ -146,6 +146,37 @@ describe('query/stat mode', () => {
                 }]);
             });
 
+            it('filter & limit', () => {
+                const data = [
+                    { id: 1, foo: 1 },
+                    { id: 2, foo: 'zip', fix: 3 },
+                    { id: 3, foo: 33, qux: 5, foobar: 4, index: 123 },
+                    { id: 4, foo: 'index', FOO: 1 }
+                ];
+                const res = jora('.[foo=i]', options)(data);
+
+                assert.deepEqual(res.suggestion(3, { filter: true, limit: 2 }), [{
+                    type: 'property',
+                    from: 2,
+                    to: 5,
+                    text: 'foo',
+                    suggestions: ['foo', 'foobar']
+                }]);
+                assert.deepEqual(res.suggestion(6, { filter: true, limit: 2 }), [{
+                    type: 'value',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: ['zip', 'index']
+                }, {
+                    type: 'property',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: ['id', 'fix']
+                }]);
+            });
+
             it('default sorting', () => {
                 const data = [
                     { id: 1, Foo: 1 },

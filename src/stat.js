@@ -26,7 +26,6 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
     };
 
     switch (context) {
-        case '':
         case 'path': {
             // use keys set to prevent duplications
             const keys = new Set();
@@ -188,8 +187,8 @@ export default (source, points) => ({
                     case MaxHeap:
                         storage = new MaxHeap(
                             limit,
-                            filterFactory && filterFactory(normalizeFilterPattern(text)),
-                            sort
+                            sort,
+                            filterFactory && filterFactory(normalizeFilterPattern(text))
                         );
                         break;
 
@@ -219,24 +218,19 @@ export default (source, points) => ({
                     suggestions = [...suggestions].sort(sort);
                 }
 
-                if (filterFactory) {
+                if (filterFactory || isFinite(limit)) {
                     const result = [];
-                    const filter = filterFactory(normalizeFilterPattern(entry.text));
+                    const accept = filterFactory
+                        ? filterFactory(normalizeFilterPattern(entry.text))
+                        : () => true;
 
                     for (const value of suggestions) {
-                        if (filter(value)) {
-                            const newSize = result.push(value);
-
-                            if (newSize >= limit) {
-                                break;
-                            }
+                        if (accept(value) && result.push(value) >= limit) {
+                            break;
                         }
                     }
 
                     suggestions = result;
-                } else if (isFinite(limit)) {
-                    suggestions = (Array.isArray(suggestions) ? suggestions : [...suggestions])
-                        .slice(0, limit);
                 }
 
                 entry.suggestions = suggestions;

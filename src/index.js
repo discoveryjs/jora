@@ -51,12 +51,8 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         let prevPrefix = null;
 
         debug('Stat/suggestion ranges', ranges.sort((a, b) => a[1] - b[1]).map(([node, ...range]) => {
-            const [start, end, type, extra] = range;
+            const [start, end, type, related] = range;
             let prelude;
-
-            if (!type) {
-                return;
-            }
 
             if (start === prevRange[0] && end === prevRange[1]) {
                 prelude = ' '.repeat(prevPrefix.length);
@@ -73,7 +69,7 @@ function compileFunction(source, statMode, tolerantMode, debug) {
 
             return (
                 prelude + ' [' + type + '] on ' + node.type +
-                (extra === true ? ' (current)' : extra ? ' & ' + extra.type : '')
+                (related === true ? ' (current)' : related && related.type ? ' & ' + related.type : '')
             );
         }).join('\n'));
     }
