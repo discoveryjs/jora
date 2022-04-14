@@ -30,7 +30,7 @@
             }> | null
         ```
     - All the changes are targeted to improve performance and memory consumption when a query is performing to a huge datasets (hundreds of thousands of values). As a result a suggestions fetching is boosted up to 30-40 times for such cases.
-- Dropped support for Node.js prior 10.12
+- Changed Node.js support to `^10.12.0 || ^12.20.0 || ^14.13.0 || >=15.0.0`
 - Changed dist modules:
     - Removed `jora.min.js`
     - Changed `jora.js` format from CJS to IIFE and applied minification
