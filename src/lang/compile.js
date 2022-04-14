@@ -221,7 +221,13 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     }
 
     try {
-        return new Function('f', 'm', 'return' + buffer.join('') + '})').bind(initCtx);
+        const fn = new Function('f,m', 'return' + buffer.join('') + '})');
+
+        return Object.assign(fn.bind(initCtx), {
+            toString() {
+                return fn.toString().replace(/^(\S+\s+)anonymous([^)\s]+)\s*\)/, '$1query$2)');
+            }
+        });
     } catch (e) {
         throw createError('SyntaxError', 'Jora query compilation error', {
             compiledSource: buffer.join(''),
