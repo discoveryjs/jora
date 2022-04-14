@@ -1,6 +1,8 @@
 import assert from 'assert';
 import query from 'jora';
 
+const match = assert.match || ((str, rx) => assert(rx.test(str)));
+
 describe('syntax/compile', () => {
     it('compilation error', () => {
         assert.throws(
@@ -10,9 +12,9 @@ describe('syntax/compile', () => {
                 query.syntax.compile(ast);
             },
             (error) => {
-                assert.match(error.compiledSource, /data,context/);
-                assert.match(error.details.message, /Unexpected token ','/);
-                assert.match(error.stack, /Jora query compilation error/);
+                match(error.compiledSource, /data,context/);
+                match(error.details.message, /Unexpected token ','/);
+                match(error.stack, /Jora query compilation error/);
 
                 return /Jora query compilation error/.test(error);
             }
