@@ -97,7 +97,8 @@ function processSuggestRanges(suggestRanges, source, commentRanges, noSuggestOnE
 
 function collectNodeSuggestions(ast) {
     let currentNode = null;
-    const suggestions = new Map();
+    const literalList = [];
+    const suggestions = Object.assign(new Map(), { literalList });
     const add = (node, range) => {
         if (!suggestions.has(node)) {
             suggestions.set(node, [range]);
@@ -111,6 +112,13 @@ function collectNodeSuggestions(ast) {
             if (related && related !== true) {
                 add(related, []);
             }
+        },
+        literalList(values) {
+            const name = 'l' + literalList.length;
+
+            literalList.push([name, values]);
+
+            return name;
         },
         queryRoot(start, end = start) {
             add(currentNode, [start, end, 'var', true]);

@@ -19,15 +19,26 @@ const binary = {
     '~=': 'match'
 };
 
-function valueSubset(ctx, values, extra) {
-    if (extra.type === 'Array') {
-        if (extra.elements.length === 0) {
-            ctx.range([extra.range[0] + 1, extra.range[1] - 1], 'value-subset', values, extra);
+function valueSubset(ctx, values, dict) {
+    if (dict.type === 'Array') {
+        if (dict.elements.length === 0) {
+            ctx.range([dict.range[0] + 1, dict.range[1] - 1], 'value-subset', values, false);
+            return;
         }
 
-        for (const { type, range, value } of extra.elements) {
-            if (range && (type === 'Literal' || type === 'Identifier' || (type === 'GetProperty' && value === null))) {
-                ctx.range(range, 'value-subset', values, extra);
+        const excludeValues = [];
+        for (const { type, range, value } of dict.elements) {
+            if (range && (type === 'Literal' || type === 'Identifier')) {
+                excludeValues.push(value);
+            }
+        }
+
+        const related = excludeValues.length ? ctx.literalList(excludeValues) : false;
+        for (const { type, range, value } of dict.elements) {
+            if (range) {
+                if (type === 'Literal' || type === 'Identifier' || (type === 'GetProperty' && value === null)) {
+                    ctx.range(range, 'value-subset', values, related);
+                }
             }
         }
     }

@@ -94,24 +94,17 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
             }
             break;
 
-        case 'value-subset':
+        case 'value-subset': {
+            const ignoreValues = new Set(related);
+
             for (const value of values) {
-                if (Array.isArray(value)) {
-                    value.forEach(addValue);
-                } else {
+                if (!ignoreValues.has(value)) {
                     addValue(value);
                 }
             }
 
-            // delete used
-            for (const values of related) {
-                for (const value of values) {
-                    if (typeof value === 'string' || typeof value === 'number') {
-                        suggestions.delete(value);
-                    }
-                }
-            }
             break;
+        }
     }
 
     return suggestions;

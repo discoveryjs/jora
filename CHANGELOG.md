@@ -10,6 +10,7 @@
 - Fixed range in details for bad input errors
 - Fixed suggestion support in template literals (#33)
 - Fixed suggestions for `=` and `!=` operators by avoiding unfold array values
+- Fixed suggestions for arrays in `in`, `not in`, `has` and `has no` operators to exclude literal values only
 - Fixed a call stack overflow exception when too many (over ~110k) suggestion values for a range
 - **BREAKING** Reworked stat API:
     - Changed `stat()` method result value to return `values` as is, i.e. a `Set` instance instead of its materialization as an array. Mutations of sets (`values` and `related`) should be avoided since they are shared between all stat API methods calls.

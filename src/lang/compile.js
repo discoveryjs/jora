@@ -3,10 +3,11 @@ import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 
 export default function compile(ast, tolerant = false, suggestions = null) {
-    function newSpName() {
+    function newStatPoint(values) {
         const spName = 's' + spNames.length;
 
-        spNames.push(spName);
+        spNames.push(values ? [spName, values] : [spName]);
+
         return spName;
     }
 
@@ -14,7 +15,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         let spName = nodeSpName.get(node);
 
         if (!spName) {
-            nodeSpName.set(node, spName = newSpName());
+            nodeSpName.set(node, spName = newStatPoint());
         }
 
         return spName;
@@ -31,13 +32,13 @@ export default function compile(ast, tolerant = false, suggestions = null) {
             range.push(JSON.stringify(ctx.scope));
         } else {
             if (!spName) {
-                spName = newSpName();
+                spName = newStatPoint();
             }
 
             range.push(spName);
 
             if (related) {
-                range.push(related);
+                range.push(typeof related === 'string' ? related : getNodeSpName(related));
             }
         }
 
@@ -92,7 +93,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                         }
 
                         if (type) {
-                            addSuggestPoint(start, end, type, spName, related && getNodeSpName(related));
+                            addSuggestPoint(start, end, type, spName, related);
                         }
                     }
                 }
@@ -127,12 +128,22 @@ export default function compile(ast, tolerant = false, suggestions = null) {
             return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
         } },
         { toString() {
-            return spNames.length === 0
-                ? ''
-                : [
+            return spNames.length > 0
+                ? [
                     'const stat=(s,v)=>(s.add(v),v);\n',
-                    'const ' + spNames.map(name => name + '=new Set()') + ';\n'
-                ].join('');
+                    'const ' + spNames.map(([name, values]) =>
+                        name + '=new Set(' + (values ? JSON.stringify(values) : '') + ')'
+                    ) + ';\n'
+                ].join('')
+                : '';
+        } },
+        { toString() {
+            const lists = suggestions &&
+                Array.isArray(suggestions.literalList) &&
+                suggestions.literalList
+                    .map(([name, values]) => name + '=' + JSON.stringify(values));
+
+            return lists && lists.length ? 'const ' + lists + ';\n' : '';
         } },
         'return '
     ];
