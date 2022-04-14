@@ -407,15 +407,9 @@ describe('query/suggestions (tolerant mode)', () => {
             const queryString = '.| ' + operator + (operator === '~=' ? ' /a/' : ' 5');
             (it)(operator, () => {
                 assert.deepEqual(
-                    suggestQuery(queryString, data),
-                    operator === 'in'
-                        ? [[
-                            ...suggestion('.', ['5:value'], 0, 1),
-                            ...suggestion('', ['foo', 'bar'], 1)
-                        ]]
-                        : [
-                            suggestion('', ['foo', 'bar'], 1)
-                        ]
+                    suggestQuery(queryString, data), [
+                        suggestion('', ['foo', 'bar'], 1)
+                    ]
                 );
             });
         });

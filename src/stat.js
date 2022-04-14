@@ -78,8 +78,6 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
                     value.forEach(addValue);
                 } else if (isPlainObject(value)) {
                     addObjectKeysToSet(value, keys);
-                } else {
-                    addValue(value);
                 }
             }
 
