@@ -53,4 +53,11 @@ describe('syntax/walk', () => {
 
         assert.deepEqual(actual.sort(), expected.sort());
     });
+
+    it('unknown node type', () => {
+        assert.throws(
+            () => walk({ type: 'Foo' }),
+            /Unknown node type "Foo"/
+        );
+    });
 });

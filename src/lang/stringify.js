@@ -5,23 +5,11 @@ function isSimpleGetPropertyQuery(node) {
         return false;
     }
 
-    if (node.value && node.value.type !== 'Current') {
-        return false;
-    }
-
-    if (node.property.type !== 'Identifier') {
-        return false;
-    }
-
     return true;
 }
 
 function isSimpleMethodCallQuery(node) {
     if (node.type !== 'MethodCall') {
-        return false;
-    }
-
-    if (node.value && node.value.type !== 'Current') {
         return false;
     }
 
@@ -33,7 +21,7 @@ export default function stringify(ast) {
         if (nodes.has(node.type)) {
             nodes.get(node.type)(node, ctx);
         } else {
-            throw new Error('Unknown node type `' + node.type + '`');
+            throw new Error('Unknown node type "' + node.type + '"');
         }
     }
 

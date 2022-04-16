@@ -40,7 +40,7 @@
     "watch": "node scripts/watch.cjs",
     "prepare": "npm run compile-modules && npm run esm-to-cjs",
     "prepack": "npm run lint && npm run test && npm run test:cjs && npm run bundle-and-test",
-    "coverage": "c8 --exclude src/lang/build.js --exclude src/lang/parse.js --reporter=lcovonly npm test"
+    "coverage": "c8 --exclude src/lang/build.js --exclude src/lang/parse.js --exclude test --reporter=lcovonly npm test"
   },
   "dependencies": {
     "@discoveryjs/natural-compare": "^1.0.0"

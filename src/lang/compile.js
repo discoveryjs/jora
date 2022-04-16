@@ -109,7 +109,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         if (nodes.has(node.type)) {
             nodes.get(node.type)(node, ctx, relatedNode);
         } else {
-            throw new Error('Unknown node type `' + node.type + '`');
+            throw new Error('Unknown node type "' + node.type + '"');
         }
 
         if (spName) {
@@ -183,11 +183,6 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         },
         put: chunk => buffer.push(chunk),
         node: walk,
-        nodeOrNothing(node, relatedNode) {
-            if (node) {
-                walk(node, relatedNode);
-            }
-        },
         nodeOrCurrent(node, relatedNode) {
             walk(node || { type: 'Current' }, relatedNode);
         },

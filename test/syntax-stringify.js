@@ -10,4 +10,11 @@ describe('syntax/stringify', () => {
 
         assert.equal(actual, allSyntax);
     });
+
+    it('unknown node type', () => {
+        assert.throws(
+            () => stringify({ type: 'Foo' }),
+            /Unknown node type "Foo"/
+        );
+    });
 });

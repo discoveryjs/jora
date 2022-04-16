@@ -38,12 +38,7 @@ function getSuggestRanges(from, to, input, commentRanges, noSuggestOnEofPos) {
             continue;
         }
 
-        if (commentFrom === from) {
-            ranges.push(from, from);
-        } else {
-            ranges.push(from, commentFrom);
-        }
-
+        ranges.push(from, commentFrom);
         from = commentTo;
     }
 

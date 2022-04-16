@@ -7,7 +7,7 @@ export default function walk(ast, options) {
             nodes.get(node.type)(node, ctx);
             leave(node);
         } else {
-            throw new Error('Unknown node type `' + node.type + '`');
+            throw new Error('Unknown node type "' + node.type + '"');
         }
     }
 

@@ -142,6 +142,7 @@ describe('sort()', () => {
     });
 
     describe('mixed value types', () => {
+        const fn = () => {};
         const data = [
             true,
             1,
@@ -156,7 +157,8 @@ describe('sort()', () => {
             { b: 1 },
             undefined,
             NaN,
-            Infinity
+            Infinity,
+            fn
         ];
 
         it('asc', () => {
@@ -176,6 +178,7 @@ describe('sort()', () => {
                     null,
                     { c: 1 },
                     { b: 1 },
+                    fn,
                     undefined
                 ])
             );
@@ -184,6 +187,7 @@ describe('sort()', () => {
             assert.deepEqual(
                 escapeNaN(query('sort($ desc)')([...data])),
                 escapeNaN([
+                    fn,
                     { c: 1 },
                     { b: 1 },
                     null,

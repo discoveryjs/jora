@@ -1,15 +1,16 @@
 import assert from 'assert';
-import query from 'jora';
+import jora from 'jora';
 
+const { syntax: { parse, compile } } = jora;
 const match = assert.match || ((str, rx) => assert(rx.test(str), `${str} doesn't match to ${rx}`));
 
 describe('syntax/compile', () => {
     it('compilation error', () => {
         assert.throws(
             () => {
-                const { ast } = query.syntax.parse('foo()');
+                const { ast } = parse('foo()');
                 ast.body.method.reference.name = ','; // break AST for a compilation error simulation
-                query.syntax.compile(ast);
+                compile(ast);
             },
             (error) => {
                 match(error.compiledSource, /data,context/);
@@ -18,6 +19,13 @@ describe('syntax/compile', () => {
 
                 return /Jora query compilation error/.test(error);
             }
+        );
+    });
+
+    it('unknown node type', () => {
+        assert.throws(
+            () => compile({ type: 'Foo' }),
+            /Unknown node type "Foo"/
         );
     });
 });
