@@ -1,11 +1,11 @@
-## next
+## 1.0.0-beta.6 (April 18, 2022)
 
-- Added support for custom methods as jora query (a string) in `jora.setup()`
-- Added a check for all methods are defined on query compilation to avoid runtime exceptions
-- Improved error message when a methods is not defined, i.e. `Method "foo" is not defined` instead of `m.foo is not a function`
+- Added support for custom methods as a string (jora query) in `jora.setup()`
+- Added a check for all methods are defined on query compilation step to avoid runtime exceptions
 - Allowed `g`, `m`, `s` and `u` flags in regexp literals
-- Disallowed a backslash before closing quote or apostrophe in string literals
+- Improved error message when a methods is not defined, i.e. `Method "foo" is not defined` instead of `m.foo is not a function`
 - Improved error locations in string literals
+- Disallowed a backslash before closing quote or apostrophe in string literals
 - Fixed `match()` method to work well for RegExp with `g` flag and for strings when `matchAll` is true
 - Fixed `sort()` method to perform a stable sort for old js-engines and always place `undefined` values last
 - Fixed range in details for bad input errors
@@ -31,6 +31,7 @@
             }> | null
         ```
     - All the changes are targeted to improve performance and memory consumption when a query is performing to a huge datasets (hundreds of thousands of values). As a result a suggestions fetching is boosted up to 30-40 times for such cases.
+- Converted to Dual Package, i.e. ESM and CommonJS support
 - Changed Node.js support to `^10.12.0 || ^12.20.0 || ^14.13.0 || >=15.0.0`
 - Changed dist modules:
     - Removed `jora.min.js`
