@@ -7,6 +7,7 @@
 - Disallowed a backslash before closing quote or apostrophe in string literals
 - Improved error locations in string literals
 - Fixed `match()` method to work well for RegExp with `g` flag and for strings when `matchAll` is true
+- Fixed `sort()` method to perform a stable sort for old js-engines and always place `undefined` values last
 - Fixed range in details for bad input errors
 - Fixed suggestion support in template literals (#33)
 - Fixed suggestions for `=` and `!=` operators by avoiding unfold array values

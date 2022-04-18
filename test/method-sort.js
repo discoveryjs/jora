@@ -142,6 +142,7 @@ describe('sort()', () => {
     });
 
     describe('mixed value types', () => {
+        const filterUndefined = (arr) => arr.filter(x => x !== undefined);
         const fn = () => {};
         const data = [
             true,
@@ -162,47 +163,70 @@ describe('sort()', () => {
         ];
 
         it('asc', () => {
+            const expected = [
+                false,
+                true,
+                NaN,
+                -Infinity,
+                1,
+                4,
+                Infinity,
+                '2',
+                'b',
+                'z',
+                null,
+                { c: 1 },
+                { b: 1 },
+                fn,
+                undefined
+            ];
+
             assert.deepEqual(
-                escapeNaN(query('sort($ asc)')(data)),
-                escapeNaN([
-                    false,
-                    true,
-                    NaN,
-                    -Infinity,
-                    1,
-                    4,
-                    Infinity,
-                    '2',
-                    'b',
-                    'z',
-                    null,
-                    { c: 1 },
-                    { b: 1 },
-                    fn,
-                    undefined
-                ])
+                escapeNaN(query('sort()')(data)),
+                escapeNaN(expected)
+            );
+            assert.deepEqual(
+                escapeNaN(query('sort()')(filterUndefined(data))),
+                escapeNaN(filterUndefined(expected))
             );
         });
         it('desc', () => {
+            const expected = [
+                fn,
+                { c: 1 },
+                { b: 1 },
+                null,
+                'z',
+                'b',
+                '2',
+                Infinity,
+                4,
+                1,
+                -Infinity,
+                NaN,
+                true,
+                false,
+                undefined
+            ];
+
             assert.deepEqual(
-                escapeNaN(query('sort($ desc)')([...data])),
-                escapeNaN([
-                    fn,
-                    { c: 1 },
-                    { b: 1 },
-                    null,
-                    'z',
-                    'b',
-                    '2',
-                    Infinity,
-                    4,
-                    1,
-                    -Infinity,
-                    NaN,
-                    true,
-                    false,
-                    undefined
-                ])
+                escapeNaN(query('sort($ desc)')(data)),
+                escapeNaN(expected)
+            );
+            assert.deepEqual(
+                escapeNaN(query('sort($ desc)')(filterUndefined(data))),
+                escapeNaN(filterUndefined(expected))
+            );
+        });
+
+        it('undefined should be always last', () => {
+            assert.deepEqual(
+                query('sort()')([
+                    1, 'zzz', undefined, 4, 'asd', undefined, 3, undefined, 2
+                ]),
+                [
+                    1, 2, 3, 4, 'asd', 'zzz', undefined, undefined, undefined
+                ]
             );
         });
     });

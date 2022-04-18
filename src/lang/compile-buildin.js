@@ -8,6 +8,7 @@ const TYPE_STRING = 4;
 const TYPE_NULL = 5;
 const TYPE_OBJECT = 6;
 const TYPE_OTHER = 7;
+const TYPE_UNDEFINED = 8;
 
 function cmpType(value) {
     switch (typeof value) {
@@ -19,6 +20,8 @@ function cmpType(value) {
             return TYPE_STRING;
         case 'object':
             return value === null ? TYPE_NULL : TYPE_OBJECT;
+        case 'undefined':
+            return TYPE_UNDEFINED;
         default:
             return TYPE_OTHER;
     }
