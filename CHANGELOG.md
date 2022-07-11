@@ -1,8 +1,9 @@
 ## next
 
-- Fixed a suggestions for `Block` nodes with empty body in non-tolerant mode
+- Fixed a suggestions for `Block` nodes with empty body in strict parse mode
 - Added `Placeholder` node type
 - Changed `Block` node to store a `Placeholder` node instead of `null` when block's body is empty
+- Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`
 
 ## 1.0.0-beta.6 (April 18, 2022)
 

@@ -389,11 +389,10 @@ module.exports = function buildParsers(strictParser) {
                 : strictParser.parse(source);
         },
         *tokenize(source, tolerantMode, loc) {
-            const lexer = Object.create(tolerantMode ? tolerantParser.lexer : strictParser.lexer);
+            const parser = tolerantMode ? tolerantParser : strictParser;
+            const lexer = Object.create(parser.lexer);
 
-            lexer.setInput(source, {
-                parser: strictParser
-            });
+            lexer.setInput(source, { parser });
 
             while (!lexer.done) {
                 const token = {
