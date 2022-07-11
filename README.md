@@ -346,22 +346,106 @@ statApi.suggestion(6); // .[foo=|]
 comment */
 ```
 
-### Primitives
+### Numbers
 
-Jora | Description
---- | ---
-42<br>-123<br>4.22<br>1e3<br>1e-2 | Numbers
-0xdecaf<br>-0xC0FFEE | Hexadecimal numbers
-"string"<br>'string' | Strings
-\`template line1<br>template line2\`<br>\`template ${hello} ${world}` | Template
-/regexp/<br>/regexp/i | A JavaScript regexp, only `i` flag supported
-{ } | Object initializer/literal syntax. Spread operator (`...`) can be used, e.g. `{ a: 1, ..., ...foo }` (`...` with no expression on right side the same as `...$`)
-[ ] | Array initializer/literal syntax. Spread operator (`...`) can be used, e.g. `[1, ..., ...foo]` (`...` with no expression on right side the same as `...$`). Unlike JavaScript, spread operator in jora inlines arrays only and left as is any other values, i.e. `[...[1, 2], ...3, ..."45", { "6": 7 }]` -> `[1, 2, 3, "45", { "6": 7 }]`
-=> e<br>< block > (deprecated) | A function<br>NOTE: Syntax `< block >` is deprecated, avoid to use it
-query asc<br>query desc<br>query asc, query desc, ... | A sorting function that takes two arguments and compare query result for each in specified order (`asc` – ascending, `desc` – descending)
-query ascN<br>query descN | The same as `asc`/`desc` but natural sorting
-query ascA<br>query descA | The same as `asc`/`desc` but reverse order for numbers
-query ascAN<br>query descAN | The same as `asc`/`desc` but natural sorting and reverse order for numbers
+```js
+42
+-123
+4.22
+1e3
+1e-2
+```
+
+### Hexadecimal numbers
+
+```js
+0xdecaf
+-0xC0FFEE
+```
+
+### Strings
+
+```js
+"string"
+'string'
+`template ${hello} ${world}`
+```
+
+[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) are supported as well as an escaping to continue a string on next line:
+
+```js
+"\u2013 This is a very long string which needs \
+to wrap across multiple lines because \
+otherwise my code is unreadable\x21"
+```
+
+### Regular expressions:
+
+The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s` and `u`
+
+```
+/regexp/
+/regexp/i
+```
+
+### Object literals
+
+Object initializer/literal syntax is the same as in JavaScript:
+
+```js
+{ foo: 123, bar: true }
+```
+
+Spread operator (`...`) can be used in object literals as well, e.g. `{ a: 1, ..., ...foo }`. When spread operator used with no expression on the right side it's the same as `...$`.
+
+### Array
+
+Array initializer/literal syntax is the same as in JavaScript:
+
+```js
+[1, 'foo', { prop: 123 }]
+```
+
+Spread operator (`...`) can be used, e.g. `[1, ...arr]`, but unlike JavaScript, spread operator in jora only inlines arrays and left as is any other values:
+
+```js
+[...[1, 2], ...3, ..."45", { "6": 7 }] // -> [1, 2, 3, "45", { "6": 7 }]
+```
+
+When spread operator used with no expression on the right side it's the same as `...$`.
+
+### Functions
+
+```js
+=> expr
+```
+
+> NOTE: The depricated syntax `< block >` is still supported, but avoid to use it since it will be removed in next releases.
+
+There are several ways to define a comparator function. Such functions (a sorting function) take two arguments and compare a query result for each in specified order (`asc` – ascending, `desc` – descending):
+
+```js
+expr asc  // JS: (a, b) => expr(a) > expr(b) ? 1 : expr(a) < expr(b) ? -1 : 0
+```
+
+```js
+expr desc // JS: (a, b) => expr(a) < expr(b) ? 1 : expr(a) > expr(b) ? -1 : 0
+```
+
+A comma separated sequence defines a single function:
+
+```js
+foo asc, bar desc // JS: (a, b) =>
+                  //       a.foo > b.foo ? 1 : a.foo < b.foo ? -1 :
+                  //       a.bar < b.bar ? 1 : a.bar > b.bar ? -1 :
+                  //       0
+```
+
+There are some modification for `asc` and `desc`:
+
+- `ascN` / `descN` – natural sorting (using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare))
+- `ascA` / `descA` – the same as `asc` / `desc` but reverse order for numbers
+- `ascAN` / `descAN` – the same as `asc`/`desc` but using natural compare and reverse order for numbers
 
 ### Keywords
 
