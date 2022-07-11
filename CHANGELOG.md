@@ -1,5 +1,6 @@
 ## next
 
+- Fixed a suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
 - Fixed a suggestions for `Block` nodes with empty body in strict parse mode
 - Added `Placeholder` node type
 - Changed `Block` node to store a `Placeholder` node instead of `null` when block's body is empty

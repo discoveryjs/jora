@@ -3,7 +3,11 @@ export function suggest(node, ctx) {
         const pos = node.range[1] - 1;
         ctx.range([pos, pos], 'key', node.value, false);
         ctx.queryRoot(pos);
-    } else {
+    } else if (
+        node.getter.type === 'GetProperty' ||
+        node.getter.type === 'Reference' ||
+        (node.getter.type === 'Literal' && typeof node.getter.value === 'string')
+    ) {
         ctx.range(node.getter.range, 'key', node.value, false);
     }
 }

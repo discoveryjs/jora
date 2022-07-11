@@ -236,6 +236,69 @@ describe('query/suggestions', () => {
         );
     });
 
+    describeCases('pick', {
+        '$[| |]': [
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 2, 2),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 3)
+        ],
+        '$[| |"|"| |]': [
+            null,
+            suggestion('""', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('""', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('""', ['"foo":value', '"bar":value'], 3, 5),
+            null
+        ],
+        '$[| |"|x|"| |]': [
+            null,
+            suggestion('"x"', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('"x"', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('"x"', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('"x"', ['"foo":value', '"bar":value'], 3, 6),
+            null
+        ],
+        '$[| |\'|\'| |]': [
+            null,
+            suggestion('\'\'', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('\'\'', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('\'\'', ['"foo":value', '"bar":value'], 3, 5),
+            null
+        ],
+        '$[| |\'|x|\'| |]': [
+            null,
+            suggestion('\'x\'', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('\'x\'', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('\'x\'', ['"foo":value', '"bar":value'], 3, 6),
+            suggestion('\'x\'', ['"foo":value', '"bar":value'], 3, 6),
+            null
+        ],
+        '$[| |1| |]': [
+            null,
+            null,
+            null,
+            null
+        ],
+        '$[| |a| |]': [
+            null,
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            null
+        ],
+        '$a;$[| |$|a| |]': [
+            null,
+            suggestion('$a', ['"foo":value', '"bar":value', '$a:variable'], 6, 8),
+            suggestion('$a', ['"foo":value', '"bar":value', '$a:variable'], 6, 8),
+            suggestion('$a', ['"foo":value', '"bar":value', '$a:variable'], 6, 8),
+            null
+        ],
+        '$[=> $$ =| |"|"| |]': [
+            null,
+            suggestion('""', ['"foo":value', '"bar":value'], 10, 12),
+            suggestion('""', ['"foo":value', '"bar":value'], 10, 12),
+            suggestion('""', ['"foo":value', '"bar":value'], 10, 12),
+            null
+        ]
+    });
+
     describeCases('string templates', {
         '`${| |}`': [
             suggestion('', ['foo', 'bar'], 3, 3),
@@ -1016,6 +1079,17 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             null
+        ],
+        '$[| |$|a| |]': [
+            null,
+            suggestion('$a', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('$a', ['"foo":value', '"bar":value'], 3, 5),
+            suggestion('$a', ['"foo":value', '"bar":value'], 3, 5),
+            null
+        ],
+        '$[=> $$ =| |]': [
+            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd'], 9, 9),
+            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd'], 10, 10)
         ],
         '`${| |.| |}`': [
             suggestion('', ['foo', 'bar'], 3, 3),
