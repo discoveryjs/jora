@@ -552,8 +552,8 @@ jora | Description
 ident | The same as `$.ident`
 .ident | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
 ..ident<br>..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
-.[ block ] | Filter a current data. Equivalent to a `.filter(<block>)`
-.( block ) | Map a current data. Equivalent to a `.map(<block>)`
+.[ block ] | Filter a current data. Equivalent to a `.filter(=>(block))` or `.filter(=>expr)` when a block has no definitions
+.( block ) | Map a current data. Equivalent to a `.map(=>(block))` or `.map(=>expr)` when a block has no definitions
 method()<br>.method()<br>..$method() | Invoke a method to current value, where `$method` is a reference to definition value (i.e. `$example: => $ * 10; 2.$plural(["example", "examples"])`). Can take arguments (i.e. `$method(one, 2)`).
 $method()<br>.$method()<br>..method() | Invoke a method to current value. See [build-in methods below](#build-in-methods)
 path[expr] | Array-like notation to access properties. Behaves like `pick()` method. In case you need to fetch a value to each element of array use `.($[expr])` or `map(=>$[expr])`
@@ -571,11 +571,11 @@ entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value
 fromEntries() | Similar to `Object.fromEntries()` in JS with difference: `{ key, value }` objects are expecting as entries instead of array tuples
 pick("key")<br>pick(index)<br>pick(fn) | Get a value by a key, an index or a function. It returns an element with `e` index for arrays, a char with `e` index for strings, and a value with `e` key (must be own key) for enything else. Negative indecies are supported for arrays and strings. Current value is element for an array, a char for a string or an entry value for object. Arg1 (i.e. `$$`) is an index for arrays and strings, and a key for objects.
 size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(\<fn>) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. Following queries are equivalents:<br>`sort(<foo.bar>)` and `sort(foo.bar asc)`<br>`sort(<foo>).reverse()` and `sort(foo desc)`<br>`sort(<[a, b]>)` and `sort(a asc, b asc)`
+sort(fn) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. The following queries are equivalent:<br>`sort(=> foo.bar)` and `sort(foo.bar asc)`<br>`sort(=> foo).reverse()` and `sort(foo desc)`<br>`sort(=> [a, b])` and `sort(a asc, b asc)`
 reverse() | Reverse order of items
-group(\<fn>[, \<fn>]) | Group an array items by a value fetched with first getter.
-filter(\<fn>) | The same as `Array#filter()` in JS
-map(\<fn>) | The same as `Array#map()` in JS
+group(fn[, fn]) | Group an array items by a value fetched with first getter and return an array of `{ key, value }` entries. The second parameter is used to fetch a value, the following queries are equivalent:<br>`group(=> foo, => bar)` and `group(=> foo).({ key, value: value.bar })`
+filter(fn) | The same as `Array#filter()` in JS
+map(fn) | The same as `Array#map()` in JS
 split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
 join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
 slice(from, to) | The same as `Array#slice()` or `String#slice()` in JS
