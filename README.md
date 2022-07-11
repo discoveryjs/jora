@@ -9,7 +9,7 @@
 
 JavaScript object query engine
 
-> STATUS: Jora is still very much work in progress. Syntax may change in next releases.
+> STATUS: Jora is still very much work in progress ([ideas and thoughts](https://gist.github.com/lahmatiy/d5af7a987e9548e80eae5f46e6edc931)). Syntax may change in next releases. 
 
 Features:
 
@@ -22,26 +22,10 @@ Features:
 
 Related projects:
 
-- [jora-cli](https://github.com/discoveryjs/jora-cli) – Command line interface for Jora
+- [Discovery](https://github.com/discoveryjs/discovery) – Uses jora as core fuctionality to transform a data flow for views and query data for reports
+- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – a browser’s extension based on Discovery for viewing JSON documents, available for [Chrome](https://chrome.google.com/webstore/detail/jsondiscovery/pamhglogfolfbmlpnenhpeholpnlcclo) and [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/jsondiscovery/) (read more [Changing a way we’re viewing JSON in a browser](https://medium.com/@rdvornov/changing-a-way-were-viewing-json-in-a-browser-51eda9103fa2))
+- [jora-cli](https://github.com/discoveryjs/jora-cli) – Command line interface for transforming data using Jora
 - [Jora sandbox](https://discoveryjs.github.io/jora-sandbox/) – A Web interface where you can play with jora syntax or transform some JSON with zero setup
-- [Discovery](https://github.com/discoveryjs/discovery) – Uses jora to query a data for views
-- [JsonDiscovery](https://github.com/discoveryjs/browser-extension-json-discovery) – a browser’s extension for viewing JSON based on Discovery, available for [Chrome](https://chrome.google.com/webstore/detail/jsondiscovery/pamhglogfolfbmlpnenhpeholpnlcclo) and [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/jsondiscovery/) (read more in the article [Changing a way we’re viewing JSON in a browser](https://medium.com/@rdvornov/changing-a-way-were-viewing-json-in-a-browser-51eda9103fa2))
-
-TODO:
-
-- [x] AST
-- [ ] Immutable paths hoisting (reduce computations -> performance)
-- [ ] Smart computation caching across queries
-- [ ] Query parts performance stat
-- [ ] Query transforming, e.g. query merge, subquery to a query, context inlining
-- [ ] Method namespaces, e.g. semver, path, math etc
-- [ ] Syntax highlighting
-- [ ] Prettifier
-- [x] Move jison to dev dependencies
-- [ ] Debugging (step by step evaluation)
-- [ ] Input data shape prediction suitable for a query (based on touching paths)
-
-> More ideas and thoughts: [Jora todo gist](https://gist.github.com/lahmatiy/d5af7a987e9548e80eae5f46e6edc931), [Jora ToDo on Discovery.js projects state overview](https://docs.google.com/document/d/1z89UAY6Z8CP6VHX11-0yc1irD7WhAOM4F8X9RR1h1QQ/edit#heading=h.cm1jq2rux492)
 
 Table of content:
 
