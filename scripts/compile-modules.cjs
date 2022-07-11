@@ -27,7 +27,8 @@ const files = [
         input: [
             'src/compile-modules/lang/grammar.cjs',
             'src/compile-modules/lang/parse-patch.cjs',
-            'src/compile-modules/lang/parse.cjs'
+            'src/compile-modules/lang/parse.cjs',
+            'src/compile-modules/lang/nodes.cjs'
         ],
         output: 'src/lang/parse.js',
         content(input) {
