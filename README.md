@@ -37,7 +37,13 @@ Table of content:
     - [Query introspection](#query-introspection)
 - [Syntax](#syntax)
     - [Comments](#comments)
-    - [Primitives](#primitives)
+    - [Numbers](#numbers)
+    - [Hexadecimal numbers](#hexadecimal-numbers)
+    - [Strings](#strings)
+    - [Regular expressions](#regular-expressions)
+    - [Object literals](#object-literals)
+    - [Array literals](#array-literals)
+    - [Functions](#functions)
     - [Keywords](#keywords)
     - [Operators](#operators)
     - [Comparisons](#comparisons)
@@ -379,13 +385,13 @@ to wrap across multiple lines because \
 otherwise my code is unreadable\x21"
 ```
 
-### Regular expressions:
+### Regular expressions
 
 The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s` and `u`
 
-```
+```js
 /regexp/
-/regexp/i
+/regexp/mi
 ```
 
 ### Object literals
@@ -398,7 +404,7 @@ Object initializer/literal syntax is the same as in JavaScript:
 
 Spread operator (`...`) can be used in object literals as well, e.g. `{ a: 1, ..., ...foo }`. When spread operator used with no expression on the right side it's the same as `...$`.
 
-### Array
+### Array literals
 
 Array initializer/literal syntax is the same as in JavaScript:
 
