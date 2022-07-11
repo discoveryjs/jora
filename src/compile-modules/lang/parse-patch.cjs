@@ -132,6 +132,7 @@ module.exports = function buildParsers(strictParser) {
                         // ignore line terminator
                         break;
 
+                    case '0': result += '\0'; break;
                     case 'b': result += '\b'; break;
                     case 'n': result += '\n'; break;
                     case 'r': result += '\r'; break;
