@@ -23,6 +23,7 @@ import * as ObjectEntry from './ObjectEntry.js';
 import * as Parentheses from './Parentheses.js';
 import * as Pick from './Pick.js';
 import * as Pipeline from './Pipeline.js';
+import * as Placeholder from './Placeholder.js';
 import * as Reference from './Reference.js';
 import * as SliceNotation from './SliceNotation.js';
 import * as SortingFunction from './SortingFunction.js';
@@ -56,6 +57,7 @@ export const nodes = {
     Parentheses,
     Pick,
     Pipeline,
+    Placeholder,
     Reference,
     SliceNotation,
     SortingFunction,

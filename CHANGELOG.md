@@ -1,3 +1,9 @@
+## next
+
+- Fixed a suggestions for `Block` nodes with empty body in non-tolerant mode
+- Added `Placeholder` node type
+- Changed `Block` node to store a `Placeholder` node instead of `null` when block's body is empty
+
 ## 1.0.0-beta.6 (April 18, 2022)
 
 - Added support for custom methods as a string (jora query) in `jora.setup()`

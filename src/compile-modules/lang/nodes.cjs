@@ -162,6 +162,11 @@ exports.Pipeline = function(left, right) {
         right
     };
 };
+exports.Placeholder = function() {
+    return {
+        type: 'Placeholder'
+    };
+};
 exports.Reference = function(name) {
     return {
         type: 'Reference',

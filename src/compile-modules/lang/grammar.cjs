@@ -24,6 +24,7 @@ const {
     Parentheses,
     Pick,
     Pipeline,
+    Placeholder,
     Reference,
     SliceNotation,
     SortingFunction,
@@ -31,17 +32,19 @@ const {
     Template,
     Unary
 } = require('./nodes.cjs');
-const $0 = { name: '$0' };
-const $1 = { name: '$1' };
-const $1name = { name: '$1.name' };
-const $$1name = { name: '"$" + $1.name' };
-const $2 = { name: '$2' };
-const $3 = { name: '$3' };
-const $4 = { name: '$4' };
-const $5 = { name: '$5' };
-const $r0 = { name: '@0.range' };
-const $r1 = { name: '@1.range' };
-const refs = new Set([$0, $1, $1name, $$1name, $2, $3, $4, $5, $r0, $r1]);
+const $0 = { code: '$0' };
+const $1 = { code: '$1' };
+const $1name = { code: '$1.name' };
+const $$1name = { code: '"$" + $1.name' };
+const $2 = { code: '$2' };
+const $3 = { code: '$3' };
+const $4 = { code: '$4' };
+const $5 = { code: '$5' };
+const $r0 = { code: '@0.range' };
+const $r1 = { code: '@1.range' };
+const $rr = { code: '[@1.range[1],@1.range[1]]' };
+const $placeholder = { code: { ...Placeholder(), range: $rr } };
+const refs = new Set([$0, $1, $1name, $$1name, $2, $3, $4, $5, $r0, $r1, $rr, $placeholder]);
 const asis = '';
 
 function isPlainObject(value) {
@@ -64,7 +67,7 @@ function stringify(value) {
             }
 
             if (refs.has(value)) {
-                return value.name;
+                return typeof value.code === 'string' ? value.code : stringify(value.code);
             }
 
             if (value instanceof RegExp) {
@@ -305,9 +308,9 @@ exports.bnf = {
 
     block: [
         ['definitions e', $$(Block($1, $2))],
-        ['definitions', $$(Block($1, null))],
+        ['definitions', $$(Block($1, $placeholder))],
         ['e', $$(Block([], $1))],
-        ['', $$(Block([], null))]
+        ['', $$(Block([], $placeholder))]
     ],
     definitions: [
         ['def', $$([$1])],

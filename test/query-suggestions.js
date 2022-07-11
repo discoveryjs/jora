@@ -35,7 +35,7 @@ function linearSuggestions(suggestionsByType) {
     return suggestions;
 }
 
-function suggestQuery(str, data, context) {
+function suggestQuery(str, data, options) {
     let offset = 0;
     const suggestPoints = [];
     const clearedStr = str
@@ -55,7 +55,7 @@ function suggestQuery(str, data, context) {
             return '';
         })
         .join('');
-    const stat = query(clearedStr, { tolerant: true, stat: true })(data, context);
+    const stat = query(clearedStr, { tolerant: true, ...options, stat: true })(data, context);
 
     return suggestPoints.map(idx => linearSuggestions(stat.suggestion(idx)));
 }
@@ -74,17 +74,25 @@ function suggestion(text, list, from, to = from) {
     });
 }
 
-function describeCases(title, cases) {
+function describeCasesWithOptions(title, options, cases) {
     describe(title, () => {
         Object.entries(cases).forEach(([queryString, expected]) => {
             (queryString[0] === '!' ? it.skip : it)(queryString, () => {
                 assert.deepEqual(
-                    suggestQuery(queryString, data),
+                    suggestQuery(queryString, data, options),
                     expected
                 );
             });
         });
     });
+}
+
+function describeCases(title, cases) {
+    return describeCasesWithOptions(title, { tolerant: false }, cases);
+}
+
+function describeCasesTolerant(title, cases) {
+    return describeCasesWithOptions(title, { tolerant: true }, cases);
 }
 
 describe('query/suggestions', () => {
@@ -336,16 +344,6 @@ describe('query/suggestions', () => {
             suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
             suggestion('$a', ['$a:variable', '$aa:variable', '$aaa:variable'], 16, 18),
             null
-        ],
-        '$foo;{| |$|f|,| |f| |}': [
-            null,
-            suggestion('$f', ['$foo:variable'], 7, 9),
-            suggestion('$f', ['$foo:variable'], 7, 9),
-            suggestion('$f', ['$foo:variable'], 7, 9),
-            null,
-            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
-            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
-            null
         ]
     });
 
@@ -389,7 +387,7 @@ describe('query/suggestions', () => {
 });
 
 describe('query/suggestions (tolerant mode)', () => {
-    describeCases('trailing full stop', {
+    describeCasesTolerant('trailing full stop', {
         '.|': [
             suggestion('', ['foo', 'bar'], 1, 1)
         ],
@@ -415,7 +413,7 @@ describe('query/suggestions (tolerant mode)', () => {
         });
     });
 
-    describeCases('trailing double full stop', {
+    describeCasesTolerant('trailing double full stop', {
         '.|.|': [
             null,
             suggestion('', ['foo', 'bar'], 2, 2)
@@ -436,7 +434,7 @@ describe('query/suggestions (tolerant mode)', () => {
         );
     });
 
-    describeCases('trailing full stop with trailing whitespaces', {
+    describeCasesTolerant('trailing full stop with trailing whitespaces', {
         '.| |': [
             suggestion('', ['foo', 'bar'], 1),
             suggestion('', ['foo', 'bar'], 2)
@@ -446,7 +444,7 @@ describe('query/suggestions (tolerant mode)', () => {
         ]
     });
 
-    describeCases('trailing full stop with trailing comment', {
+    describeCasesTolerant('trailing full stop with trailing comment', {
         '.|/|/|': [
             suggestion('', ['foo', 'bar'], 1),
             null,
@@ -952,7 +950,7 @@ describe('query/suggestions (tolerant mode)', () => {
         });
     });
 
-    describeCases('variables', {
+    describeCasesTolerant('variables', {
         '|$|;|': [
             suggestion('$', ['foo', 'bar'], 0, 1),
             suggestion('$', ['foo', 'bar'], 0, 1),
@@ -1007,6 +1005,16 @@ describe('query/suggestions (tolerant mode)', () => {
         ],
         '$_:{ a: 1, b: 2 };{$|}.|': [
             suggestion('$', ['$_:variable'], 19, 20),
+            null
+        ],
+        '$foo;{| |$|f|,| |f| |}': [
+            null,
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            suggestion('$f', ['$foo:variable'], 7, 9),
+            null,
+            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
             null
         ],
         '`${| |.| |}`': [
