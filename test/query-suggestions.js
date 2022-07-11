@@ -791,6 +791,39 @@ describe('query/suggestions (tolerant mode)', () => {
         );
     });
 
+    describeCasesTolerant('suggestion before and after operators in blocks', {
+        '[| |or| |]': [
+            suggestion('', ['foo', 'bar'], 1),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 5)
+        ],
+        '(| |or| |)': [
+            suggestion('', ['foo', 'bar'], 1),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 5)
+        ],
+        '.(| |or| |)': [
+            suggestion('', ['foo', 'bar'], 2),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 6)
+        ],
+        '.[| |or| |]': [
+            suggestion('', ['foo', 'bar'], 2),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 6)
+        ],
+        '..(| |or| |)': [
+            suggestion('', ['foo', 'bar'], 3),
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 7)
+        ]
+    });
+
     describe('value suggestion', () => {
         describe('in', () => {
             Object.entries({
