@@ -289,7 +289,7 @@ module.exports = function buildParsers(strictParser) {
                 this.unput(this.match);
                 this.pushState('preventPrimitive');
                 this.done = false;
-                this.yytext = '_';
+                this.yytext = '';
                 this.yylloc = this.prevYylloc = yylloc;
 
                 // position correction for a white space before a keyword
