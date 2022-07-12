@@ -1,14 +1,14 @@
-## next
+## 1.0.0-beta.7 (July 12, 2022)
 
 - Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`
 - Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and `..()` when their body starts with an operator, a keyword, etc.
 - Fixed suggestions when pattern is a single quoted string (i.e. for `'foo'` in `.[field='foo']`)
 - Fixed suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
 - Fixed suggestions for `Block` nodes with empty body in strict parse mode
+- Fixed processing `\0` in strings as a null character for a [parity](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) with JavaScript
+- Fixed `Indentifier` node to store an empty string as a name instead of `_` for placeholder identifiers in tolerant parse mode. This fixes the problem of restoring a query from an AST after parsing in tolerant mode
 - Added `Placeholder` node type
-- Added processing `\0` as a null character in strings for a [parity](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) with JavaScript
 - Changed `Block` node to store a `Placeholder` node instead of `null` when block's body is empty
-- Changed `Indentifier` node to store an empty string as a name instead of `_` for placeholder identifiers in tolerant parse mode. This fixes the problem of restoring a query from an AST after parsing in tolerant mode
 
 ## 1.0.0-beta.6 (April 18, 2022)
 
