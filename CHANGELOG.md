@@ -2,8 +2,9 @@
 
 - Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`
 - Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and `..()` when their body starts with an operator, a keyword, etc.
-- Fixed a suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
-- Fixed a suggestions for `Block` nodes with empty body in strict parse mode
+- Fixed suggestions when pattern is a single quoted string (i.e. for `'foo'` in `.[field='foo']`)
+- Fixed suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
+- Fixed suggestions for `Block` nodes with empty body in strict parse mode
 - Added `Placeholder` node type
 - Added processing `\0` as a null character in strings for a [parity](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) with JavaScript
 - Changed `Block` node to store a `Placeholder` node instead of `null` when block's body is empty

@@ -146,9 +146,20 @@ function normalizeFunctionOption(value, fn) {
 }
 
 function normalizeFilterPattern(value) {
-    if (/^(["'])(.*)\1$/.test(value)) {
+    if (/^(["']).*\1$/.test(value)) {
         try {
-            value = JSON.parse(value);
+            // convert 'string' -> "string"
+            // \' -> '
+            // "  -> \"
+            // \. -> \. (any other escaped char left as is)
+            if (value[0] === '\'') {
+                value = `"${value.slice(1, -1).replace(
+                    /\\.|"/g,
+                    m => m === '\\\'' ? '\'' : m === '"' ? '\\\"' : m
+                )}"`;
+            }
+
+            return JSON.parse(value);
         } catch (e) {}
     }
 
@@ -198,7 +209,7 @@ export default (source, points) => ({
                 }
 
                 typeSuggestions.set(type, {
-                    type: contextToType[context],
+                    type,
                     from,
                     to,
                     text,

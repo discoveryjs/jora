@@ -77,7 +77,7 @@ describe('query/stat mode', () => {
                 }]);
             });
 
-            it('default filter for a string value', () => {
+            it('default filter for a "string" value', () => {
                 const data = [
                     { id: 1, foo: 'hello' },
                     { id: 2, foo: 'WORLD' },
@@ -90,6 +90,23 @@ describe('query/stat mode', () => {
                     from: 6,
                     to: 9,
                     text: '"o"',
+                    suggestions: ['hello', 'WORLD']
+                }]);
+            });
+
+            it('default filter for a \'string\' value', () => {
+                const data = [
+                    { id: 1, foo: 'hello' },
+                    { id: 2, foo: 'WORLD' },
+                    { id: 3, foo: 'test' }
+                ];
+                const res = jora('.[foo=\'o\']', options)(data);
+
+                assert.deepEqual(res.suggestion(6, { filter: true }), [{
+                    type: 'value',
+                    from: 6,
+                    to: 9,
+                    text: '\'o\'',
                     suggestions: ['hello', 'WORLD']
                 }]);
             });
