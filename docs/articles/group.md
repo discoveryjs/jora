@@ -1,4 +1,4 @@
-# Grouping data with `group()` method
+# Grouping: `group()` method
 
 The `group()` method in Jora allows you to group data in arrays based on specified properties or computed values. The method returns an array of objects containing a `key` and a `value` property. The `key` represents the grouping criterion, and the `value` is an array of unique input elements associated with that key. Note that keys can be any value, even an object.
 

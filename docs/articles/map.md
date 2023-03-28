@@ -1,6 +1,6 @@
-# Mapping
+# Mapping: `.(...)` and `map()` method
 
-The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This is achieved using the `.(...)` syntax and `.map()` method.
+The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This is achieved using the `.(...)` syntax and `map()` method.
 
 Jora's map method works not only with arrays but also with primitive types and objects, making it incredibly versatile for various data transformation tasks. Note that the map method produces unique values and ignores `undefined` values, meaning that the resulting array might have a smaller length than the original array. If an expression returns an array, its result is concatenated with the overall result, possibly leading to a larger resulting array than the original.
 

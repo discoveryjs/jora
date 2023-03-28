@@ -1,6 +1,6 @@
-# Filtering Data
+# Filtering: `.[...]` and `filter()` method
 
-In Jora, filtering data is a fundamental operation that allows you to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax and `.filter()` method. Both of these methods work on arrays and provide the same filtering functionality, but with slightly different syntax.
+In Jora, filtering data is a fundamental operation that allows you to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax and `filter()` method. Both of these methods work on arrays and provide the same filtering functionality, but with slightly different syntax.
 
 Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
 
@@ -16,7 +16,7 @@ Filtering returns an element in the result if the condition inside the filter ev
 - [Filtering an array of numbers](#filtering-an-array-of-numbers)
 - [Filtering an array of objects](#filtering-an-array-of-objects)
 - [Filtering an array of objects using a nested property](#filtering-an-array-of-objects-using-a-nested-property)
-- [.[...] vs. .filter() method](#-vs-filter-method)
+- [`.[...]` vs. `filter()` method](#-vs-filter-method)
 
 ### Filtering an array of numbers
 
@@ -117,13 +117,13 @@ or
 ]
 ```
 
-### `.[...]` vs. `.filter()` method
+### `.[...]` vs. `filter()` method
 
-In general, `.[...]` is the preferred syntax because it is more concise. However, the `.filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
+In general, `.[...]` is the preferred syntax because it is more concise. However, the `filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
 
 ```jora
 $myFilter: => data.value > 20;
 .filter($myFilter)
 ```
 
-In this case, the choice between `.[...]` and `.filter()` depends on the specific use case and the desired level of readability and flexibility.
+In this case, the choice between `.[...]` and `filter()` depends on the specific use case and the desired level of readability and flexibility.
