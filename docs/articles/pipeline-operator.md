@@ -32,6 +32,12 @@ This is equivalent to:
 (foo.bar).subquery
 ```
 
+Keep in mind that the pipeline operator produces a regular query, which means it can be used in any place where a query is applicable:
+
+```jora
+.({ foo: $bar | a + b, baz: [1, $qux.size() | [$, $]] })
+```
+
 ### Treating query results as scalar values
 
 Suppose you want to create an object from an array, like this:

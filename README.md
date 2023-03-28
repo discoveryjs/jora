@@ -554,8 +554,8 @@ ident | The same as `$.ident`
 ..ident<br>..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
 .[ block ] | Filter a current data. Equivalent to a `.filter(=>(block))` or `.filter(=>expr)` when a block has no definitions
 .( block ) | Map a current data. Equivalent to a `.map(=>(block))` or `.map(=>expr)` when a block has no definitions
-method()<br>.method()<br>..$method() | Invoke a method to current value, where `$method` is a reference to definition value (i.e. `$example: => $ * 10; 2.$plural(["example", "examples"])`). Can take arguments (i.e. `$method(one, 2)`).
-$method()<br>.$method()<br>..method() | Invoke a method to current value. See [build-in methods below](#build-in-methods)
+method()<br>.method()<br>..method() | Invoke a predefined method to a value of the left side or to current value `$`. See [build-in methods below](#build-in-methods). The list of methods can be extended on query creating (see API above)
+$method()<br>.$method()<br>..$method() | Invoke a function stored into a `$method` (i.e. `$example: => $ * 10; 2.$plural(["example", "examples"])`) to a value of the left side or to current value `$`. Can take arguments (i.e. `$method(one, 2)`).
 path[expr] | Array-like notation to access properties. Behaves like `pick()` method. In case you need to fetch a value to each element of array use `.($[expr])` or `map(=>$[expr])`
 [from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
 expr \| [definitions] expr \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`
@@ -564,7 +564,7 @@ expr \| [definitions] expr \| ... | Pipeline operator. It's useful to make a que
 
 jora | Description
 --- | ---
-bool() | The same as `Boolean()` in JS, with exception that *empty arrays* and *objects with no keys* treats as falsy
+bool() | The same as `Boolean()` in JS, but treats *empty arrays* and *objects with no keys* as falsy
 keys() | The same as `Object.keys()` in JS
 values() | The same as `Object.values()` in JS
 entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value }` objects is using for entries instead of array tuples

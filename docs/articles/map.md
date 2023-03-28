@@ -25,6 +25,7 @@ Jora's map method works not only with arrays but also with primitive types and o
     - [In an array of objects](#in-an-array-of-objects)
     - [In an array of nested objects](#in-an-array-of-nested-objects)
 - [Workaround to keep the same number of elements as in input array](#workaround-to-keep-the-same-number-of-elements-as-in-input-array)
+- [`.()` vs. `map()`](#-vs-map)
 
 ### Pick object properties
 
@@ -336,3 +337,17 @@ In some cases, you might want to preserve the same number of elements in the out
 ```
 
 In this example, we wrap the result of the map method into an object with a `value` property, which results in an output array with the same number of elements as the input array.
+
+### `.()` vs. `map()`
+
+In general, `.(...)` is the preferred syntax because it is more concise. However, the `map()` method exists to allow mapping with a given function, for instance via a context (`#`) or defined in the query.
+
+```jora
+$myMapper: => { value: $ * 2 };
+[1, 2, 3].map($myMapper) // [2, 4, 6]
+```
+
+In this case, the choice between `.(...)` and `map()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for mapping purposes, equivalence of syntaxes:
+
+- `.map(fn)` is equivalent to `.(fn())`
+- `.(expr)` is equivalent to `.map(=> expr)`

@@ -6,6 +6,7 @@
 - [Filtering](./articles/filter.md): `.[...]` and `filter()` method
 - [Grouping](./articles/group.md): `group()` method
 - [Pipeline operator](./articles/pipeline-operator.md)
+- [Methods](./articles/methods.md)
 
 ## Examples
 

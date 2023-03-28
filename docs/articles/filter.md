@@ -16,7 +16,7 @@ Filtering returns an element in the result if the condition inside the filter ev
 - [Filtering an array of numbers](#filtering-an-array-of-numbers)
 - [Filtering an array of objects](#filtering-an-array-of-objects)
 - [Filtering an array of objects using a nested property](#filtering-an-array-of-objects-using-a-nested-property)
-- [`.[...]` vs. `filter()` method](#-vs-filter-method)
+- [`.[]` vs. `filter()`](#-vs-filter)
 
 ### Filtering an array of numbers
 
@@ -117,7 +117,7 @@ or
 ]
 ```
 
-### `.[...]` vs. `filter()` method
+### `.[]` vs. `filter()`
 
 In general, `.[...]` is the preferred syntax because it is more concise. However, the `filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
 
@@ -126,4 +126,7 @@ $myFilter: => data.value > 20;
 .filter($myFilter)
 ```
 
-In this case, the choice between `.[...]` and `filter()` depends on the specific use case and the desired level of readability and flexibility.
+In this case, the choice between `.[...]` and `filter()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for filtering purposes, equivalence of syntaxes:
+
+- `.filter(fn)` is equivalent to `.[fn()]`
+- `.[expr]` is equivalent to `.filter(=> expr)`
