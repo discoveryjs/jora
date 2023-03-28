@@ -18,11 +18,19 @@ In this article, we'll explore various examples of using the `group()` method in
 
 ## Examples
 
-### Example: Grouping by a property
+- [Grouping by a property](#grouping-by-a-property)
+- [Grouping by a computed property](#grouping-by-a-computed-property)
+- [Grouping by a list of values](#grouping-by-a-list-of-values)
+- [Using an object as a group key](#using-an-object-as-a-group-key)
+- [Values in the `value` array are unique](#values-in-the-value-array-are-unique)
+- [Using mapping with `group()` method to get the desired shape of the result](#using-mapping-with-group-method-to-get-the-desired-shape-of-the-result)
+- [Using `group()` method with `fromEntries()` method to convert the result into an object](#using-group-method-with-fromentries-method-to-convert-the-result-into-an-object)
+
+### Grouping by a property
 
 Suppose you have an array of objects representing sales data, and you want to group the data by the `"region"` property while keeping only the sales values in the resulting groups.
 
-#### Input
+`Input`
 
 ```json
 [
@@ -34,7 +42,7 @@ Suppose you have an array of objects representing sales data, and you want to gr
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> region, => sales)
@@ -46,7 +54,7 @@ or
 .group(=> region).({ key, value: value.(sales) })
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -56,23 +64,23 @@ or
 ]
 ```
 
-### Example: Grouping by a computed property
+### Grouping by a computed property
 
 You can also group data based on a computed property. In this example, we'll group an array of numbers into even and odd groups.
 
-#### Input
+`Input`
 
 ```json
 [ 1, 2, 3, 4, 5, 6 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> $ % 2 ? 'odd' : 'even')
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -81,11 +89,11 @@ You can also group data based on a computed property. In this example, we'll gro
 ]
 ```
 
-### Example: Grouping by a list of values
+### Grouping by a list of values
 
 Suppose you have an array of objects representing products with multiple tags. You want to group products by each tag.
 
-#### Input
+`Input`
 
 ```json
 [
@@ -96,13 +104,13 @@ Suppose you have an array of objects representing products with multiple tags. Y
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> tags)
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -128,31 +136,32 @@ Suppose you have an array of objects representing products with multiple tags. Y
         ]
     }
 ]
+```
 
-### Example: Using an object as a group key
+### Using an object as a group key
 
 Suppose you have an array of objects representing sales data with different currencies. You want to group sales data by the currency object.
 
-#### Input
+`Input`
 
-```json
-[
-    { "amount": 100, "currency": { "code": "USD", "symbol": "$" } },
-    { "amount": 150, "currency": { "code": "USD", "symbol": "$" } },
-    { "amount": 200, "currency": { "code": "EUR", "symbol": "€" } },
-    { "amount": 250, "currency": { "code": "EUR", "symbol": "€" } }
-]
+```js
+const USD = { "code": "USD", "symbol": "$" };
+const EUR = { "code": "EUR", "symbol": "€" };
+const data = [
+    { "amount": 100, "currency": USD },
+    { "amount": 150, "currency": USD },
+    { "amount": 200, "currency": EUR },
+    { "amount": 250, "currency": EUR }
+];
 ```
 
-> NOTE: In this example, we assume that currency objects with the same `code` value are equal by reference.
-
-#### Query
+`Query`
 
 ```jora
 .group(=> currency)
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -173,11 +182,11 @@ Suppose you have an array of objects representing sales data with different curr
 ]
 ```
 
-### Example: Values in the `value` array are unique
+### Values in the `value` array are unique
 
 The `group()` method ensures that the elements in the `value` array are unique.
 
-#### Input
+`Input`
 
 ```js
 const a = { "category": "Electronics", "name": "Product A" };
@@ -186,13 +195,13 @@ const c = { "category": "Gadgets", "name": "Product C" };
 const input = [a, b, b, c, a];
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> category)
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -212,11 +221,11 @@ const input = [a, b, b, c, a];
 ]
 ```
 
-### Example: Using mapping with `group()` method to get the desired shape of the result
+### Using mapping with `group()` method to get the desired shape of the result
 
 Suppose you have an array of objects representing sales data, and you want to count the number of sales per region.
 
-#### Input
+`Input`
 
 ```json
 [
@@ -228,7 +237,7 @@ Suppose you have an array of objects representing sales data, and you want to co
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> region)
@@ -239,22 +248,23 @@ Suppose you have an array of objects representing sales data, and you want to co
 })
 ```
 
-#### Output
+`Output`
 
 ```json
 [
-  { "region": "North", "salesCount": 2, "totalSales": 400 },
-  { "region": "South", "salesCount": 2, "totalSales": 450 },
-  { "region": "East", "salesCount": 1, "totalSales": 150 }
+    { "region": "North", "salesCount": 2, "totalSales": 400 },
+    { "region": "South", "salesCount": 2, "totalSales": 450 },
+    { "region": "East", "salesCount": 1, "totalSales": 150 }
 ]
+```
 
-### Example: Using `group()` method with `fromEntries()` method to convert the result into an object
+### Using `group()` method with `fromEntries()` method to convert the result into an object
 
 `fromEntries()` is a convenient method to convert an array of objects with `{ key, value }` structure into an object. As the `group()` method returns an array of such objects, you can use `fromEntries()` directly to transform the grouped result into an object.
 
 Suppose you have an array of objects representing sales data, and you want to group the data by region.
 
-#### Input
+`Input`
 
 ```json
 [
@@ -266,26 +276,26 @@ Suppose you have an array of objects representing sales data, and you want to gr
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .group(=> region)
 .fromEntries()
 ```
 
-#### Output
+`Output`
 
 ```json
 {
-  "North": [
-    { "region": "North", "sales": 100 },
-    { "region": "North", "sales": 300 }
-  ],
-  "South": [
-    { "region": "South", "sales": 200 },
-    { "region": "South", "sales": 250 }
-  ],
-  "East": [
-    { "region": "East", "sales": 150 }
-  ]
+    "North": [
+        { "region": "North", "sales": 100 },
+        { "region": "North", "sales": 300 }
+    ],
+    "South": [
+        { "region": "South", "sales": 200 },
+        { "region": "South", "sales": 250 }
+    ],
+    "East": [
+        { "region": "East", "sales": 150 }
+    ]
 }

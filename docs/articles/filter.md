@@ -1,6 +1,6 @@
 # Filtering Data
 
-In Jora, filtering data is a fundamental operation that allows you to extract specific elements from an array based on a condition. This is achieved using the `.[...]` and `.filter()` methods. Both of these methods work on arrays and provide the same filtering functionality, but with slightly different syntax.
+In Jora, filtering data is a fundamental operation that allows you to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax and `.filter()` method. Both of these methods work on arrays and provide the same filtering functionality, but with slightly different syntax.
 
 Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
 
@@ -11,41 +11,46 @@ Filtering returns an element in the result if the condition inside the filter ev
 .[block]
 ```
 
-## Example: Filtering an array of numbers
+## Examples
+
+- [Filtering an array of numbers](#filtering-an-array-of-numbers)
+- [Filtering an array of objects](#filtering-an-array-of-objects)
+- [Filtering an array of objects using a nested property](#filtering-an-array-of-objects-using-a-nested-property)
+- [.[...] vs. .filter() method](#-vs-filter-method)
+
+### Filtering an array of numbers
 
 Suppose we want to filter out all numbers less than 3 from an array of integers.
 
-### Input
+`Input`
 
 ```json
 [1, 2, 3, 4, 5]
 ```
 
-### Query
-
-Using `.[...]`:
+`Query`
 
 ```jora
 .[$ >= 3]
 ```
 
-Using `.filter()`:
+or
 
 ```jora
 .filter(=> $ >= 3)
 ```
 
-### Output
+`Output`
 
 ```json
 [3, 4, 5]
 ```
 
-## Example: Filtering an array of objects
+### Filtering an array of objects
 
 Let's say we have an array of objects representing books, and we want to filter out all books with a price greater than 10.
 
-### Input
+`Input`
 
 ```json
 [
@@ -56,21 +61,19 @@ Let's say we have an array of objects representing books, and we want to filter 
 ]
 ```
 
-### Query
-
-Using `.[...]`:
+`Query`
 
 ```jora
 .[price <= 10]
 ```
 
-Using `.filter()`:
+or
 
 ```jora
 .filter(=> price <= 10)
 ```
 
-### Output
+`Output`
 
 ```json
 [
@@ -79,11 +82,11 @@ Using `.filter()`:
 ]
 ```
 
-## Example: Filtering an array of objects using a nested property
+### Filtering an array of objects using a nested property
 
 Consider an array of objects with nested properties, and we want to filter out all objects with a nested property value less than a specified threshold.
 
-### Input
+`Input`
 
 ```json
 [
@@ -93,21 +96,19 @@ Consider an array of objects with nested properties, and we want to filter out a
 ]
 ```
 
-### Query
-
-Using `.[...]`:
+`Query`
 
 ```jora
 .[data.value > 20]
 ```
 
-Using `.filter()`:
+or
 
 ```jora
 .filter(=> data.value > 20)
 ```
 
-### Output
+`Output`
 
 ```json
 [
@@ -116,9 +117,9 @@ Using `.filter()`:
 ]
 ```
 
-In general, `.[...]` is the preferred syntax because it is more concise. However, the `.filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
+### `.[...]` vs. `.filter()` method
 
-### Query example with a custom filter function:
+In general, `.[...]` is the preferred syntax because it is more concise. However, the `.filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
 
 ```jora
 $myFilter: => data.value > 20;

@@ -1,6 +1,6 @@
 # Mapping
 
-The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This method has a shorthand syntax, `.()`, which can be used for brevity. 
+The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This is achieved using the `.(...)` syntax and `.map()` method.
 
 Jora's map method works not only with arrays but also with primitive types and objects, making it incredibly versatile for various data transformation tasks. Note that the map method produces unique values and ignores `undefined` values, meaning that the resulting array might have a smaller length than the original array. If an expression returns an array, its result is concatenated with the overall result, possibly leading to a larger resulting array than the original.
 
@@ -11,11 +11,26 @@ Jora's map method works not only with arrays but also with primitive types and o
 .(block)
 ```
 
-### Example: Pick object properties
+## Examples
+
+- [Pick object properties](#pick-object-properties)
+- [Pick property values](#pick-property-values)
+- [Rename property](#rename-property)
+- [Mapping a number](#mapping-a-number)
+- [Copying over the object with spread and computing additional properties](#copying-over-the-object-with-spread-and-computing-additional-properties)
+- [Map method returns unique values](#map-method-returns-unique-values)
+- [Concatenating arrays with overall result](#concatenating-arrays-with-overall-result)
+- [Ignoring `undefined` values](#ignoring-undefined-values)
+    - [In a simple array](#in-a-simple-array)
+    - [In an array of objects](#in-an-array-of-objects)
+    - [In an array of nested objects](#in-an-array-of-nested-objects)
+- [Workaround to keep the same number of elements as in input array](#workaround-to-keep-the-same-number-of-elements-as-in-input-array)
+
+### Pick object properties
 
 Suppose we are only interested in the value of the `"baz"` property in the input objects.
 
-#### Input
+`Input`
 
 ```json
 [
@@ -25,7 +40,7 @@ Suppose we are only interested in the value of the `"baz"` property in the input
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .({ baz })
@@ -37,7 +52,7 @@ or
 .map(=> { baz })
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -47,11 +62,11 @@ or
 ]
 ```
 
-### Example: Pick property values
+### Pick property values
 
 Suppose we want to convert our array of objects into an array of `"baz"` values:
 
-#### Input
+`Input`
 
 ```json
 [
@@ -61,7 +76,7 @@ Suppose we want to convert our array of objects into an array of `"baz"` values:
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .(baz)
@@ -79,15 +94,15 @@ or simply
 .baz
 ```
 
-#### Output
+`Output`
 
 ```json
 [ 1, 2, 3 ]
 ```
 
-### Example: Rename property
+### Rename property
 
-#### Input
+`Input`
 
 ```json
 [
@@ -97,7 +112,7 @@ or simply
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .({ answer: a })
@@ -109,7 +124,7 @@ or
 .map(=> { answer: a })
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -119,17 +134,17 @@ or
 ]
 ```
 
-### Example: Mapping a number
+### Mapping a number
 
 In Jora, the map operation can apply to numbers, strings, etc. For example, you can take a primitive value and store it in an object:
 
-#### Input
+`Input`
 
 ```json
 123
 ```
 
-#### Query
+`Query`
 
 ```jora
 .({ foo: $ })
@@ -143,23 +158,23 @@ or
 
 > **Note:** In the above example, `$` references the current value.
 
-#### Output
+`Output`
 
 ```json
 { "foo": 123 }
 ```
 
-### Example: Copying over the object with spread and computing additional properties
+### Copying over the object with spread and computing additional properties
 
 Jora's map method can also be applied to objects.
 
-#### Input
+`Input`
 
 ```json
 { "foo": 41 }
 ```
 
-#### Query
+`Query`
 
 ```jora
 .({ ..., answer: foo + 1 })
@@ -171,7 +186,7 @@ or
 .map(=> { ..., answer: foo + 1 })
 ```
 
-#### Output
+`Output`
 
 ```json
 {
@@ -180,23 +195,23 @@ or
 }
 ```
 
-### Example: Map method returns unique values
+### Map method returns unique values
 
 When using the map method in Jora, it automatically returns unique values in the resulting array, which can lead to a smaller output array than the input array. Let's consider an example:
 
-#### Input
+`Input`
 
 ```json
 [ 1, 2, 2, 3, 3, 3 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .map(=> $)
 ```
 
-#### Output
+`Output`
 
 ```json
 [ 1, 2, 3 ]
@@ -204,11 +219,11 @@ When using the map method in Jora, it automatically returns unique values in the
 
 As you can see, the duplicate values in the input array were removed in the output array.
 
-### Example: Concatenating arrays with overall result
+### Concatenating arrays with overall result
 
 If an expression in the map method returns an array, the resulting array will be concatenated with the overall result. This may lead to a larger output array than the input array. Let's consider an example:
 
-#### Input
+`Input`
 
 ```json
 [
@@ -217,13 +232,13 @@ If an expression in the map method returns an array, the resulting array will be
 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .(values)
 ```
 
-#### Output
+`Output`
 
 ```json
 [ 1, 2, 3, 4 ]
@@ -231,23 +246,83 @@ If an expression in the map method returns an array, the resulting array will be
 
 As you can see, the output array is a concatenation of the `values` arrays from the input objects.
 
-### Example: Workaround to keep the same number of elements as in input array
+## Ignoring `undefined` values
+
+The map method in Jora automatically ignores `undefined` values when processing an array. This feature can be useful when you want to filter out `undefined` values from the result while mapping an array of objects where some objects do not have a specified property.
+
+### In a simple array
+
+```js
+[ 1, undefined, 3 ]
+```
+
+`Query`
+
+```jora
+.($)
+```
+
+`Output`
+
+```json
+[ 1, 3 ]
+```
+
+### In an array of objects
+
+```json
+[ { "a": 1 }, { }, { "a": 3 } ]
+```
+
+`Query`
+
+```jora
+.(a)
+```
+
+`Output`
+
+```json
+[ 1, 3 ]
+```
+
+### In an array of nested objects
+
+```json
+[ { "a": { "nested": 1 } }, { }, { "a": 3 } ]
+```
+
+`Query`
+
+```jora
+.(a.nested)
+```
+
+`Output`
+
+```json
+[ 1 ]
+```
+
+In the above examples, we can see how Jora's map method handles `undefined` values, effectively filtering them out of the output while preserving the values that are not `undefined`.
+
+## Workaround to keep the same number of elements as in input array
 
 In some cases, you might want to preserve the same number of elements in the output array as in the input array. You can use a simple workaround by wrapping the result of the map method into an object. Let's consider an example:
 
-#### Input
+`Input`
 
 ```json
 [ 1, 2, 2, 3, 3, 3 ]
 ```
 
-#### Query
+`Query`
 
 ```jora
 .({ value })
 ```
 
-#### Output
+`Output`
 
 ```json
 [
@@ -261,63 +336,3 @@ In some cases, you might want to preserve the same number of elements in the out
 ```
 
 In this example, we wrap the result of the map method into an object with a `value` property, which results in an output array with the same number of elements as the input array.
-
-### Example: Ignoring `undefined` values with map method
-
-The map method in Jora automatically ignores `undefined` values when processing an array. This feature can be useful when you want to filter out `undefined` values from the result while mapping an array of objects where some objects do not have a specified property.
-
-#### Example: Ignoring `undefined` values in a simple array
-
-```json
-[ 1, undefined, 3 ]
-```
-
-#### Query
-
-```jora
-.($)
-```
-
-#### Output
-
-```json
-[ 1, 3 ]
-```
-
-#### Example: Ignoring `undefined` values in an array of objects
-
-```json
-[ { "a": 1 }, { }, { "a": 3 } ]
-```
-
-#### Query
-
-```jora
-.(a)
-```
-
-#### Output
-
-```json
-[ 1, 3 ]
-```
-
-#### Example: Ignoring `undefined` values in an array of nested objects
-
-```json
-[ { "a": { "nested": 1 } }, { }, { "a": 3 } ]
-```
-
-#### Query
-
-```jora
-.(a.nested)
-```
-
-#### Output
-
-```json
-[ 1 ]
-```
-
-In the above examples, we can see how Jora's map method handles `undefined` values, effectively filtering them out of the output while preserving the values that are not `undefined`.
