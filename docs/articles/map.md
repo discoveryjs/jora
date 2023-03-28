@@ -1,220 +1,178 @@
-[↢ back to list](../README.md)
+# Mapping
 
-# map
+The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This method has a shorthand syntax, `.()`, which can be used for brevity. 
 
-The **map** method creates a new array and replaces the elements of the given array with the results of calling a provided function on every element.
-
-The map method has a shorthand syntax `.()` in **Jora**.
-
-In addition to working with arrays, map method works on primitive types and objects, which allows you to transform your data in almost any way desired, while keeping your queries very simple.
-
-> **NB** Please note that map method produces unique values, you can read more about [the concept of unique values](../concept-unique-values.md). As an implication the resulting array can have smaller length than the original array.
-
-> **NB** Please also note that if an expression returns an array, its result is concatenated with the overall result.  As an implication of this behaviour the resulting array can have bigger length than the original array
+Jora's map method works not only with arrays but also with primitive types and objects, making it incredibly versatile for various data transformation tasks. Note that the map method produces unique values and ignores `undefined` values, meaning that the resulting array might have a smaller length than the original array. If an expression returns an array, its result is concatenated with the overall result, possibly leading to a larger resulting array than the original.
 
 ## Syntax
 
 ```
-.map(<fn>)
+.map(fn) // or .map(=> expr)
 .(block)
 ```
 
-### Example: pick object properties
+### Example: Pick object properties
 
-Suppose that we only care what the value of `"baz"` is in the object.
+Suppose we are only interested in the value of the `"baz"` property in the input objects.
 
 #### Input
+
 ```json
 [
-    {
-        "foo": "bar",
-        "baz": 1
-    },
-    {
-        "foo": "bar",
-        "baz": 2
-    },
-    {
-        "foo": "bar",
-        "baz": 3
-    }
+    { "foo": "bar", "baz": 1 },
+    { "foo": "bar", "baz": 2 },
+    { "foo": "bar", "baz": 3 }
 ]
 ```
 
 #### Query
-```txt
+
+```jora
 .({ baz })
 ```
 
 or
 
-```txt
-.map(<{ baz }>)
+```jora
+.map(=> { baz })
 ```
 
 #### Output
+
 ```json
 [
-    {
-        "baz": 1
-    },
-    {
-        "baz": 2
-    },
-    {
-        "baz": 3
-    }
+    { "baz": 1 },
+    { "baz": 2 },
+    { "baz": 3 }
 ]
 ```
 
-[Try it in JSFiddle](https://jsfiddle.net/homyasusina/dvgnp78e/)
+### Example: Pick property values
 
-### Example: pick property values
-
-Suppose that we want to turn our array into array of `"baz"` values:
+Suppose we want to convert our array of objects into an array of `"baz"` values:
 
 #### Input
+
 ```json
 [
-    {
-        "baz": 1
-    },
-    {
-        "baz": 2
-    },
-    {
-        "baz": 3
-    }
+    { "baz": 1 },
+    { "baz": 2 },
+    { "baz": 3 }
 ]
 ```
 
 #### Query
 
-```txt
+```jora
 .(baz)
 ```
 
 or
 
-```txt
-.map(<baz>)
+```jora
+.map(=> baz)
 ```
 
 or simply
 
-```txt
+```jora
 .baz
 ```
 
 #### Output
+
 ```json
-[
-    1,
-    2,
-    3
-]
+[ 1, 2, 3 ]
 ```
 
-[Try it in JSFiddle](https://jsfiddle.net/homyasusina/fmL6ac3j/)
-
-### Example: rename property
+### Example: Rename property
 
 #### Input
+
 ```json
 [
-    {
-        "a": 42
-    },
-    {
-        "a": 42
-    },
-    {
-        "a": 42
-    }
+    { "a": 42 },
+    { "a": 42 },
+    { "a": 42 }
 ]
 ```
 
 #### Query
-```txt
+
+```jora
 .({ answer: a })
 ```
 
 or
 
-```txt
-.map(<{ answer: a }>)
+```jora
+.map(=> { answer: a })
 ```
 
 #### Output
+
 ```json
 [
-    {
-        "answer": 42
-    },
-    {
-        "answer": 42
-    },
-    {
-        "answer": 42
-    }
+    { "answer": 42 },
+    { "answer": 42 },
+    { "answer": 42 }
 ]
 ```
 
-[Try it in JSFiddle](https://jsfiddle.net/homyasusina/rjpxbLh5/)
-
 ### Example: Mapping a number
 
-In Jora map operation can also apply to numbers, strings etc... For example - you can take the primitive value and store it in an object:
+In Jora, the map operation can apply to numbers, strings, etc. For example, you can take a primitive value and store it in an object:
 
 #### Input
+
 ```json
 123
 ```
 
 #### Query
-```txt
-.({ foo: $})
+
+```jora
+.({ foo: $ })
 ```
+
 or
 
-```txt
-.map(<{ foo: $ }>)
+```jora
+.map(=> { foo: $ })
 ```
 
-> **NB** in the above example `$` references the current value
+> **Note:** In the above example, `$` references the current value.
 
 #### Output
-```json
-{
-    "foo": 123
-}
-```
 
-[Try it in JSFiddle](https://jsfiddle.net/homyasusina/bogc39uy/)
+```json
+{ "foo": 123 }
+```
 
 ### Example: Copying over the object with spread and computing additional properties
 
-Yes, you can map and object too.
+Jora's map method can also be applied to objects.
 
 #### Input
+
 ```json
-{
-    "foo": 41
-}
+{ "foo": 41 }
 ```
 
 #### Query
-```txt
+
+```jora
 .({ ..., answer: foo + 1 })
 ```
 
 or
 
-```txt
-.map(<{ ..., answer: foo + 1 }>)
+```jora
+.map(=> { ..., answer: foo + 1 })
 ```
 
 #### Output
+
 ```json
 {
     "foo": 41,
@@ -222,4 +180,144 @@ or
 }
 ```
 
-[Try it in JSFiddle](https://jsfiddle.net/homyasusina/r97ybdhn/)
+### Example: Map method returns unique values
+
+When using the map method in Jora, it automatically returns unique values in the resulting array, which can lead to a smaller output array than the input array. Let's consider an example:
+
+#### Input
+
+```json
+[ 1, 2, 2, 3, 3, 3 ]
+```
+
+#### Query
+
+```jora
+.map(=> $)
+```
+
+#### Output
+
+```json
+[ 1, 2, 3 ]
+```
+
+As you can see, the duplicate values in the input array were removed in the output array.
+
+### Example: Concatenating arrays with overall result
+
+If an expression in the map method returns an array, the resulting array will be concatenated with the overall result. This may lead to a larger output array than the input array. Let's consider an example:
+
+#### Input
+
+```json
+[
+    { "values": [1, 2] },
+    { "values": [3, 4] }
+]
+```
+
+#### Query
+
+```jora
+.(values)
+```
+
+#### Output
+
+```json
+[ 1, 2, 3, 4 ]
+```
+
+As you can see, the output array is a concatenation of the `values` arrays from the input objects.
+
+### Example: Workaround to keep the same number of elements as in input array
+
+In some cases, you might want to preserve the same number of elements in the output array as in the input array. You can use a simple workaround by wrapping the result of the map method into an object. Let's consider an example:
+
+#### Input
+
+```json
+[ 1, 2, 2, 3, 3, 3 ]
+```
+
+#### Query
+
+```jora
+.({ value })
+```
+
+#### Output
+
+```json
+[
+  { "value": 1 },
+  { "value": 2 },
+  { "value": 2 },
+  { "value": 3 },
+  { "value": 3 },
+  { "value": 3 }
+]
+```
+
+In this example, we wrap the result of the map method into an object with a `value` property, which results in an output array with the same number of elements as the input array.
+
+### Example: Ignoring `undefined` values with map method
+
+The map method in Jora automatically ignores `undefined` values when processing an array. This feature can be useful when you want to filter out `undefined` values from the result while mapping an array of objects where some objects do not have a specified property.
+
+#### Example: Ignoring `undefined` values in a simple array
+
+```json
+[ 1, undefined, 3 ]
+```
+
+#### Query
+
+```jora
+.($)
+```
+
+#### Output
+
+```json
+[ 1, 3 ]
+```
+
+#### Example: Ignoring `undefined` values in an array of objects
+
+```json
+[ { "a": 1 }, { }, { "a": 3 } ]
+```
+
+#### Query
+
+```jora
+.(a)
+```
+
+#### Output
+
+```json
+[ 1, 3 ]
+```
+
+#### Example: Ignoring `undefined` values in an array of nested objects
+
+```json
+[ { "a": { "nested": 1 } }, { }, { "a": 3 } ]
+```
+
+#### Query
+
+```jora
+.(a.nested)
+```
+
+#### Output
+
+```json
+[ 1 ]
+```
+
+In the above examples, we can see how Jora's map method handles `undefined` values, effectively filtering them out of the output while preserving the values that are not `undefined`.
