@@ -4,20 +4,29 @@ Jora is a powerful and expressive query language designed for querying and trans
 
 ## Core principles
 
-### Immutability
-Jora is an immutable language, which means it does not modify the original data. Instead, it creates new data based on the input. This ensures data consistency and reduces the risk of accidental data corruption.
+- **Immutability**
 
-### Concise syntax
-Jora aims to provide a readable and concise syntax, which allows you to write complex queries with a minimal amount of code. It offers a compact syntax for common tasks, reducing boilerplate code and improving readability.
+  Jora is an immutable language, which means it does not modify the original data. Instead, it creates new data based on the input. This ensures data consistency and reduces the risk of accidental data corruption.
 
-### Flexibility
-Jora offers a variety of built-in methods and functions, allowing you to easily process and manipulate data to meet your specific needs. Additionally, you can extend Jora with custom methods and functions, further enhancing its capabilities.
+- **Concise syntax**
 
-### Performance
-Jora is designed to be fast and efficient, ensuring that even large and complex data sets can be processed quickly and without significant performance overhead.
+  Jora aims to provide a readable and concise syntax, which allows you to write complex queries with a minimal amount of code. It offers a compact syntax for common tasks, reducing boilerplate code and improving readability.
 
-### Tolerant to data structure
-Jora is tolerant to data structure, meaning it doesn't fail on paths that don't exist and instead returns nothing. In other words, if there are no parse or compile errors for a query, it can be applied without errors to any data, and no exceptions will be raised (although the result might be incorrect). This makes it a robust language for handling various data structures.
+- **Flexibility**
+
+  Jora offers a variety of built-in methods and functions, allowing you to easily process and manipulate data to meet your specific needs. Additionally, you can extend Jora with custom methods and functions, further enhancing its capabilities.
+
+- **Performance**
+
+  Jora is designed to be fast and efficient, ensuring that even large and complex data sets can be processed quickly and without significant performance overhead.
+
+- **Tolerant to data structure**
+
+  Jora is tolerant to data structure, meaning it doesn't fail on paths that don't exist and instead returns nothing. In other words, if there are no parse or compile errors for a query, it can be applied without errors to any data, and no exceptions will be raised (although the result might be incorrect). This makes it a robust language for handling various data structures.
+
+- **Aggregates and eliminates duplicates**
+
+  Jora automatically aggregates values across arrays and eliminates duplicates by default. This simplifies data queries and reduces the need for additional processing steps to handle duplicate values.
 
 ### Aggregates and eliminates duplicates
 Jora automatically aggregates values across arrays and eliminates duplicates by default. This simplifies data queries and reduces the need for additional processing steps to handle duplicate values.
