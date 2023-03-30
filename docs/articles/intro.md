@@ -28,9 +28,6 @@ Jora is a powerful and expressive query language designed for querying and trans
 
   Jora automatically aggregates values across arrays and eliminates duplicates by default. This simplifies data queries and reduces the need for additional processing steps to handle duplicate values.
 
-### Aggregates and eliminates duplicates
-Jora automatically aggregates values across arrays and eliminates duplicates by default. This simplifies data queries and reduces the need for additional processing steps to handle duplicate values.
-
 ## Syntax basics
 
 Jora's syntax is designed to be simple and easy to understand. Here are some basic examples to help you get started:
