@@ -1,5 +1,6 @@
 # Docs
 
+- [Introduction to Jora language](./articles/intro.md)
 - [Variables](./articles/variables.md)
 - [Mapping](./articles/map.md): `.(...)` and `map()` method
 - [Filtering](./articles/filter.md): `.[...]` and `filter()` method

@@ -1,4 +1,4 @@
-# Methods Usage in Jora
+# Methods
 
 In Jora, methods are functions that are invoked in a functional way. This means that the left side value (the part before a method call, or `$` if nothing is specified) is always passed as the first argument to the method. Jora has a set of built-in methods, and you can also create custom methods to extend its functionality.
 
