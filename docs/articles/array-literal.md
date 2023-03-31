@@ -89,7 +89,11 @@ $input.reduce(=>$ % 2 ? [...$$, $] : $$, []) // Result: [1, 3, 5, 7, 9]
 
 In this example, the `reduce()` method iterates over the `$input` array and checks if the current value (`$`) is odd (i.e., `$ % 2`). If the value is odd, it appends the value to the accumulator array (`...$$, $`); otherwise, it leaves the accumulator unchanged (`$$`). The initial value of the accumulator is an empty array `[]`.
 
+Unlike JavaScript, spread operator in Jora inlines arrays only and left any other values "as is":
 
+```jora
+[...[1, 2], ...3, ..."45", ...{ "6": 7 }] // -> [1, 2, 3, "45", { "6": 7 }]
+```
 
 ## Special behavior with operators `+` and `-`
 

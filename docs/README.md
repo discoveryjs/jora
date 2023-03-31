@@ -8,6 +8,7 @@
 - [Filtering](./articles/filter.md): `.[...]` and `filter()` method
 - [Grouping](./articles/group.md): `group()` method
 - [Sorting](./articles/sort): `sort()` method
+- [Slice notation](./articles/slice-notation.md)
 - [Pipeline operator](./articles/pipeline-operator.md)
 - [Methods](./articles/methods.md)
 
