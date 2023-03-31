@@ -1,6 +1,6 @@
 # Object literals
 
-Jora, being a superset of JSON5, supports object literals as an integral part of its syntax. Object literals provide a convenient way to define and manipulate complex data structures. This article covers the basics of object literals in Jora, including their syntax, usage, computed properties, spread operator, and the `entries()` and `fromEntries()` methods.
+Jora supports object literals as an integral part of its syntax. Object literals provide a convenient way to define and manipulate complex data structures. This article covers the basics of object literals in Jora, including their syntax, usage, computed properties, spread operator, and the `entries()` and `fromEntries()` methods.
 
 - [Syntax](#syntax)
 - [Computed properties](#computed-properties)

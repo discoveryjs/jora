@@ -3,6 +3,7 @@
 - [Introduction to Jora language](./articles/intro.md)
 - [Variables](./articles/variables.md)
 - [Object literals](./articles/object-literal.md)
+- [Array literals](./articles/array-literal.md)
 - [Mapping](./articles/map.md): `.(...)` and `map()` method
 - [Filtering](./articles/filter.md): `.[...]` and `filter()` method
 - [Grouping](./articles/group.md): `group()` method
