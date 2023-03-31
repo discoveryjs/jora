@@ -1,9 +1,12 @@
 # Docs
 
-- [Introduction to Jora language](./articles/intro.md)
+- [Introduction](./articles/intro.md)
+- [Syntax basics](./articles/basics.md)
 - [Literals](./articles/literals.md)
 - [Operators](./articles/operators.md)
 - [Variables](./articles/variables.md)
+- [Dot notation](./articles/dot-notation.md)
+- [Bracket notation](./articles/bracket-notation.md)
 - [Object literals](./articles/object-literal.md)
 - [Array literals](./articles/array-literal.md)
 - [Methods](./articles/methods.md)
