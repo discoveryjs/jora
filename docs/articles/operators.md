@@ -4,7 +4,7 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 
 - [Arithmetic operators](#arithmetic-operators)
 - [Comparisons](#comparisons)
-- [Boolean logic](#boolean-logic)
+- [Logical operators](#logical-operators)
 - [Grouping operator](#grouping-operator)
 - [Operator precedence](#operator-precedence)
 
@@ -88,14 +88,14 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 'bar' ~= 123 // false
 ```
 
-## Boolean logic
+## Logical operators
 
 | Jora | Description |
 |------|-------------|
 | x or y | Logical `or`. Equivalent to `\|\|` in JavaScript, but `x` tests with the `bool()` method.
 | x and y | Logical `and`. Equivalent to `&&` in JavaScript, but `x` tests with the `bool()` method.
 | not x<br>no x | Logical `not`. Equivalent to `!` in JavaScript, but `x` tests with the `bool()` method.
-| x ? y : z | If `x` is truthy, return `y`, else return `z`. `x` tests with the `bool()` method.
+| x ? y : z | Ternary operator. If `x` is truthy, return `y`, else return `z`. `x` tests with the `bool()` method.
 | x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`.
 | x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`.
 
