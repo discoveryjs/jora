@@ -1,6 +1,7 @@
 # Docs
 
 - [Introduction to Jora language](./articles/intro.md)
+- [Operators](./articles/operators.md)
 - [Variables](./articles/variables.md)
 - [Object literals](./articles/object-literal.md)
 - [Array literals](./articles/array-literal.md)
