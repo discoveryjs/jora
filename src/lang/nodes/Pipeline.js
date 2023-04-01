@@ -6,7 +6,7 @@ export function compile(node, ctx) {
             ctx.put('))');
         },
         (scopeStart, sp) => {
-            return scopeStart + sp + ';';
+            return scopeStart + sp + ',';
         }
     );
 

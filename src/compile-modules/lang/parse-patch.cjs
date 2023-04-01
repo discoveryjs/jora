@@ -260,19 +260,22 @@ module.exports = function buildParsers(strictParser) {
         ...keywords,
         'NOT'
     ];
-    const defaultNext = new Set([
+    const defaultNext = [
         ',', '?', ':', ';', 'EOF',
         ']', ')', '}',
         'TPL_CONTINUE', 'TPL_END',
         ...operators,
         ...keywords,
         'ORDER'
-    ]);
-    const tokenPair = new Map(prev.map(token => [token, defaultNext]));
+    ];
+    const tokenPair = new Map(prev.map(token => [token, new Set(defaultNext)]));
     // special cases
-    tokenPair.set('{', new Set([',']));
-    tokenPair.set('[', new Set([...defaultNext, ',']));
-    tokenPair.set('(', new Set([...defaultNext, ',']));
+    for (const token of ['(', '.(', '..(']) {
+        tokenPair.get(token).delete(')');
+    }
+    for (const token of ['[', '.[']) {
+        tokenPair.get(token).delete(']');
+    }
 
     patch(tolerantParser.lexer, {
         lex: origLex => function patchedLex() {
