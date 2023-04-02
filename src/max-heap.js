@@ -1,69 +1,106 @@
 const defaultCompare = (a, b) => a - b;
-const defaultAccept = () => true;
 
 export class MaxHeap {
     constructor(maxSize, compare, accept) {
         this.maxSize = maxSize || Infinity;
         this.compare = compare || defaultCompare;
-        this.accept = accept || defaultAccept;
+        this.accept = accept || null;
 
         this.values = [];
     }
 
     add(value) {
-        const newSize = this.values.length + 1;
-
-        if (newSize > this.maxSize) {
-            if (this.compare(this.values[0], value) > 0) {
-                if (this.accept(value)) {
-                    this.values[0] = value;
-                    this.heapify(0);
-                }
-            }
-        } else {
-            if (this.accept(value)) {
-                this.values.push(value);
-
-                // calling heapify for each nodes when reach max size
-                if (newSize === this.maxSize) {
-                    for (let i = newSize - 1; i >= 0; i--) {
-                        this.heapify(i);
-                    }
-                }
-            }
-        }
-    }
-
-    heapify(idx) {
-        const size = this.values.length;
-
-        // if node doesn't exists, simply return
-        if (idx >= (size >> 1)) {
+        if (this.accept !== null && !this.accept(value)) {
             return;
         }
 
-        // indexes for left and right nodes
-        const left = 2 * idx + 1;
-        const right = 2 * idx + 2;
-        const idxValue = this.values[idx];
+        if (this.values.length < this.maxSize) {
+            this.values.push(value);
+            this.heapifyUp(this.values.length - 1);
+        } else if (this.compare(this.values[0], value) > 0) {
+            this.values[0] = value;
+            this.heapifyDown();
+        }
+    }
 
-        // select minimum from left node and current node idx
-        let smallestIdx = this.compare(this.values[left], idxValue) > 0 ? left : idx;
+    extract() {
+        const maxValue = this.values[0];
+        const lastValue = this.values.pop();
 
-        // if right child exist, compare and update the smallestIdx variable
-        if (right < size && this.compare(this.values[right], this.values[smallestIdx]) > 0) {
-            smallestIdx = right;
+        if (this.values.length > 0) {
+            this.values[0] = lastValue;
+            this.heapifyDown();
         }
 
-        // if node idx violates the min-heap property, swap current node idx
-        // with smallestIdx to fix the min-heap property and recursively call heapify for smallestIdx
-        if (smallestIdx !== idx) {
+        return maxValue;
+    }
+
+    heapifyUp(idx) {
+        const values = this.values;
+        // let idx = values.length - 1;
+        let idxValue = values[idx];
+
+        while (idx > 0) {
+            const parentIdx = (idx - 1) >> 1;
+            const parentValue = values[parentIdx];
+
+            if (this.compare(parentValue, idxValue) >= 0) {
+                break;
+            }
+
             // swap
-            this.values[idx] = this.values[smallestIdx];
-            this.values[smallestIdx] = idxValue;
+            values[parentIdx] = idxValue;
+            values[idx] = parentValue;
+
+            // move up
+            idx = parentIdx;
+        }
+    }
+
+    heapifyDown() {
+        const values = this.values;
+        const size = values.length;
+        const halfSize = size >> 1;
+        let idx = 0;
+        let idxValue = values[idx];
+        let largestIdx = idx;
+        let largestValue = idxValue;
+
+        // if node doesn't exist, simply return
+        while (idx < halfSize) {
+            // select the maximum from left node and current node
+            const left = 2 * idx + 1;
+            const leftValue = values[left];
+
+            if (this.compare(leftValue, idxValue) > 0) {
+                largestIdx = left;
+                largestValue = leftValue;
+            }
+
+            // if the right child exists, select the maximum from right node and current largest node
+            const right = 2 * idx + 2;
+
+            if (right < size) {
+                const rightValue = values[right];
+
+                if (this.compare(rightValue, largestValue) > 0) {
+                    largestIdx = right;
+                    largestValue = rightValue;
+                }
+            }
+
+            // if node idx does not violate the max-heap property, break the loop
+            if (largestIdx === idx) {
+                break;
+            }
+
+            // swap
+            values[idx] = largestValue;
+            values[largestIdx] = idxValue;
 
             // go down
-            this.heapify(smallestIdx);
+            idx = largestIdx;
+            idxValue = largestValue;
         }
     }
 
@@ -74,5 +111,5 @@ export class MaxHeap {
 
 // const h = new MaxHeap(6);
 // [1, 12, 2, 21, 3, 33, 8, 7, 10, 6, 52, 99, 44].forEach(v=>h.add(v));
-// console.log(h.values);
-// console.log([...h]);
+// console.log(h.values); // [ 8, 7, 2, 6, 3, 1 ]
+// console.log([...h]); // [ 1, 2, 3, 6, 7, 8 ]
