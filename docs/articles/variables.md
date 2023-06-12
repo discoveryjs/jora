@@ -1,14 +1,14 @@
-## Variables
+# Variables <!-- omit in toc -->
 
 Jora allows defining and using variables within queries. A value can be assigned to a variable only on its definition. Once a variable is defined, its value cannot be changed throughout the query. Variables are useful for storing intermediate results, improving readability, reusing expressions and preserving values across scopes.
 
-- [Syntax and basic usage](#syntax-and-basic-usage)
+- [Syntax](#syntax)
 - [Special variables](#special-variables)
 - [Scopes](#scopes)
 - [Preserving values across scopes](#preserving-values-across-scopes)
 - [Reserved names](#reserved-names)
 
-## Syntax and basic usage
+## Syntax
 
 There are two main forms for defining variables:
 
@@ -146,7 +146,7 @@ $items.(
 
 In this example, we store the entire current item in the variable `$item` before entering the nested scope created by the `.()` operation on the `children` property. This allows us to access the parent value within the nested scope even though `$` has changed to represent the current child.
 
-#### Reserved names
+## Reserved names
 
 Jora reserves some names for future special use cases. These names cannot be used as variable names to ensure compatibility with future versions:
 

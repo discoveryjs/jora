@@ -34,7 +34,7 @@ There are some modifiers for `asc` and `desc` that provide additional sorting op
 
 - `ascN` / `descN`: Natural sorting (using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare))
 - `ascA` / `descA`: The same as `asc` / `desc`, but reverse order for numbers
-- `ascAN` / `descAN`: The same as `asc`/`desc`, but using natural compare and reverse order for numbers
+- `ascAN` / `descAN`: The same as `asc` / `desc`, but using natural compare and reverse order for numbers
 
 ## Examples
 

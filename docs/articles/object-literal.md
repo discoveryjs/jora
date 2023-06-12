@@ -34,19 +34,24 @@ $country: "USA";
 This is equivalent to:
 
 ```jora
+$city: "New York";
+$country: "USA";
+
 {
   city: $city,
   country: $country
 }
 ```
 
-### Computed properties
+## Computed properties
 
 Jora supports computed properties in object literals, allowing you to create dynamic keys based on expressions. To use computed properties, wrap the key expression in square brackets `[]`. Here's an example:
 
 ```jora
+$prefix: 'city';
+
 {
-  ['city' + 'Code']: "NYC"
+  [$prefix + 'Code']: "NYC"
 }
 ```
 
@@ -58,7 +63,7 @@ This results in:
 }
 ```
 
-### Spread operator
+## Spread operator
 
 The spread operator (`...`) is used in Jora to merge properties from one object into another. It can be used with a variable or an expression that evaluates to an object:
 

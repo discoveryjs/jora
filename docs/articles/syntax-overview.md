@@ -1,10 +1,10 @@
-# Basics
+# Syntax overview
 
-Jora is a query language designed for JSON-like data structures. It extends JSON5 and shares many similarities with JavaScript. 
+Jora is a query language designed for JSON-like data structures. It extends [JSON5](https://json5.org/) and shares many similarities with JavaScript.
 
 ## Expressions
-    
-Jora expressions are the building blocks of Jora queries. Expressions can include literals, operators, functions, and variables.
+
+Jora expressions are the building blocks of Jora queries. Expressions can include comments, literals, operators, functions, and variables.
 
 ## Comments
 
@@ -41,7 +41,7 @@ Jora supports most JavaScript operators, including:
 
 See [Operators](./operators.md)
 
-## Dot and Bracket Notations
+## Dot and bracket notations
 
 Jora provides two notations for accessing object properties and array elements: dot notation and bracket notation. Dot notation is similar to JavaScript's property access notation, using a period followed by the property name (e.g., `$.propertyName`). Bracket notation, on the other hand, encloses the property name or index within square brackets (e.g., `$['propertyName']` or `$[0]`). Jora's bracket notation also allows you to use functions for dynamic property access and supports optional chaining by default.
 
@@ -56,7 +56,7 @@ Jora provides a rich set of built-in methods for manipulating data, such as `.ma
 - [Grouping](./articles/group.md): `group()` method
 - [Sorting](./articles/sort): `sort()` method
 
-## Mapping and Filtering
+## Mapping and filtering
 
 Jora has a concise syntax for mapping and filtering arrays. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`. This compact syntax makes it easy to transform and filter data.
 

@@ -2,18 +2,18 @@
 
 Array literals in Jora are similar to those in JavaScript. They allow you to create an array by enclosing a comma-separated list of values or expressions within square brackets `[]`. Jora supports a wide range of values, including numbers, strings, objects, other arrays, and even Jora expressions.
 
-## Syntax
-
-```jora
-[1, 2, 3, 4, 5]
-```
-
 - [Nested arrays](#nested-arrays)
 - [Computed values](#computed-values)
 - [Array slicing](#array-slicing)
 - [Concatenating arrays](#concatenating-arrays)
 - [Spread operator](#spread-operator)
 - [Special behavior with operators `+` and `-`](#special-behavior-with-operators--and--)
+
+## Syntax
+
+```jora
+[1, 2, 3, 4, 5]
+```
 
 ## Nested arrays
 
@@ -31,14 +31,14 @@ This creates a 3x3 matrix represented as a 2-dimensional array.
 
 ## Computed values
 
-Jora allows you to use expressions and variables within array literals to compute values dynamically. Here's an example that calculates squares of numbers from 1 to 5:
+Jora allows you to use expressions and variables within array literals to compute values dynamically:
 
 ```jora
 $n: 5;
-[1..$n].($ * $)
+[1, 1 + 1, $n > 1 ? 3 : 42, $n - 1, $n]
 ```
 
-The result is an array `[1, 4, 9, 16, 25]`.
+The result is an array `[1, 2, 3, 4, 5]`.
 
 ## Array slicing
 

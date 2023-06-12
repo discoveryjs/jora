@@ -11,21 +11,22 @@ Jora's map method works not only with arrays but also with primitive types and o
 .(block)
 ```
 
-## Examples
-
-- [Pick object properties](#pick-object-properties)
-- [Pick property values](#pick-property-values)
-- [Rename property](#rename-property)
-- [Mapping a number](#mapping-a-number)
-- [Copying over the object with spread and computing additional properties](#copying-over-the-object-with-spread-and-computing-additional-properties)
-- [Map method returns unique values](#map-method-returns-unique-values)
-- [Concatenating arrays with overall result](#concatenating-arrays-with-overall-result)
+- [Examples](#examples)
+    - [Pick object properties](#pick-object-properties)
+    - [Pick property values](#pick-property-values)
+    - [Rename property](#rename-property)
+    - [Mapping a number](#mapping-a-number)
+    - [Copying over the object with spread and computing additional properties](#copying-over-the-object-with-spread-and-computing-additional-properties)
+    - [Map method returns unique values](#map-method-returns-unique-values)
+    - [Concatenating arrays with overall result](#concatenating-arrays-with-overall-result)
 - [Ignoring `undefined` values](#ignoring-undefined-values)
     - [In a simple array](#in-a-simple-array)
     - [In an array of objects](#in-an-array-of-objects)
     - [In an array of nested objects](#in-an-array-of-nested-objects)
 - [Workaround to keep the same number of elements as in input array](#workaround-to-keep-the-same-number-of-elements-as-in-input-array)
 - [`.()` vs. `map()`](#-vs-map)
+
+## Examples
 
 ### Pick object properties
 

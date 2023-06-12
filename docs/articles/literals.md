@@ -3,7 +3,7 @@
 Literals in Jora are mostly the same as in JavaScript. 
 
 - [Numbers](#numbers)
-- [Hexadecimal Numbers](#hexadecimal-numbers)
+- [Hexadecimal numbers](#hexadecimal-numbers)
 - [Strings](#strings)
 - [Regular expressions](#regular-expressions)
 - [Object literals](#object-literals)
@@ -21,7 +21,7 @@ Literals in Jora are mostly the same as in JavaScript.
 1e-2
 ```
 
-## Hexadecimal Numbers
+## Hexadecimal numbers
 
 ```jora
 0xdecaf

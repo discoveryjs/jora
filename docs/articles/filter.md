@@ -117,7 +117,7 @@ or
 ]
 ```
 
-### `.[]` vs. `filter()`
+## `.[]` vs. `filter()`
 
 In general, `.[...]` is the preferred syntax because it is more concise. However, the `filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
 

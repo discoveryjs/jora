@@ -952,7 +952,7 @@ The Jora query is composed of two main parts:
 
 1. Calculate the top 5 popular tags in products. This expression calculates the popular tags by using the `group()` function with the `tags` property as the key. When a function in `group()` returns an array, a value will be added to several groups corresponding to each element in the array. The groups are then sorted by size in descending order. The top 5 tags are selected using slice notation `[0:5]`:
 
-```
+```jora
 $popularTags: products
   .group(=> tags)
   .sort(value.size() desc)
@@ -961,7 +961,7 @@ $popularTags: products
 
 2. Add a `popularTagsMatchCount` field to each product by counting the number of popular tags it has, and then group the products by this count:
 
-```
+```jora
 products
   .({
     ...,
@@ -971,13 +971,13 @@ products
 
 3. Sort products within each group by the `popularTagsMatchCount` in descending order, then by `category` in ascending order, and finally by `price` in ascending order:
 
-```
+```jora
   .sort(popularTagsMatchCount desc, category asc, price asc)
 ```
 
 4. Group the products by their `popularTagsMatchCount`, and for each group, create an object with the count and an array of products containing their `name`, `category`, and `price`:
 
-```
+```jora
   .group(=> popularTagsMatchCount)
   .({
     popularTagsCount: key,
