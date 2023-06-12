@@ -1,0 +1,7 @@
+.page-article .article-path .view-list-item:not(:first-child)::before {
+    content: '/';
+    font-size: 80%;
+    font-weight: normal;
+    padding: .65ex;
+    color: #888;
+}
