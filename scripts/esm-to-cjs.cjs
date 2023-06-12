@@ -22,7 +22,15 @@ function patchTests() {
     // a relative path to a module.
     try {
         require(`${packageName}/package.json`);
-        return;
+        return {
+            name: 'cjs-tests-fix',
+            resolveId(source) {
+                if (/^..\/src/.test(source)) {
+                    return { id: source.replace('/src/', '/cjs/').replace(/\.js/, '.cjs'), external: true };
+                }
+                return null;
+            }
+        };
     } catch (e) {}
 
     const pathToIndex = path.resolve(__dirname, '../cjs/index.cjs');
@@ -37,6 +45,9 @@ function patchTests() {
         resolveId(source) {
             if (/^..\/cjs/.test(source)) {
                 return { id: source, external: true };
+            }
+            if (/^..\/src/.test(source)) {
+                return { id: source.replace('/src/', '/cjs/').replace(/\.js/, '.cjs'), external: true };
             }
             return null;
         },
