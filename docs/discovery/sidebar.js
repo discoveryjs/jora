@@ -23,7 +23,7 @@ discovery.view.define('sidebar', [
                 children
                     ? children.({ ..., text: title, href: slug.pageLink("article") })
                     : headers.[level=2].({ text: title, href: @.slug.pageLink("article", { "!anchor": title.slug() }) })
-            `,
+            `
         }
     }
 ]);

@@ -25,7 +25,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint src test",
+    "lint": "eslint src test docs",
     "test": "mocha --reporter ${REPORTER:-progress}",
     "test:cjs": "mocha cjs-test --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",

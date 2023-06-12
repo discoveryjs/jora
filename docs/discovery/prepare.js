@@ -3,7 +3,29 @@ require('codemirror/addon/mode/simple');
 const { Slugger } = require('marked');
 const slugger = new Slugger();
 
+function walkArticles(article, articleList) {
+    articleList.push(article);
+    if (Array.isArray(article.children)) {
+        for (const child of article.children) {
+            walkArticles(child, articleList);
+        }
+    }
+}
+
 module.exports = function(data, { addQueryHelpers }) {
+    const articleList = [];
+
+    for (const article of data.articles) {
+        walkArticles(article, articleList);
+    }
+
+    for (let i = 0; i < articleList.length; i++) {
+        const article = articleList[i];
+
+        article.prev = i > 0 ? articleList[i - 1] : null;
+        article.next = i + 1 < articleList.length ? articleList[i + 1] : null;
+    }
+
     addQueryHelpers({
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';
