@@ -106,7 +106,7 @@ function createQuery(source, options) {
     fn = fn(buildin, localMethods);
 
     return statMode
-        ? (data, context) => createStatApi(source, fn(data, context))
+        ? Object.assign((data, context) => createStatApi(source, fn(data, context)), { query: fn })
         : fn;
 }
 
@@ -150,7 +150,7 @@ function setup(customMethods) {
         } else {
             const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods);
             fn = statMode
-                ? (data, context) => createStatApi(source, perform(data, context))
+                ? Object.assign((data, context) => createStatApi(source, perform(data, context)), { query: perform })
                 : perform;
             cache.set(source, fn);
         }

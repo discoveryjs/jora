@@ -1,0 +1,65 @@
+.view-playground .view-checkbox:last-child .view-checkbox__label {
+    margin-right: 0;
+}
+
+.view-playground {
+    height: calc(100vh - 130px);
+    display: grid;
+    grid-template:
+        'query-editor query-editor'
+        'compiled-code ast';
+    grid-template-rows: auto minmax(48%, 1fr);
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 20px;
+}
+.view-playground > .query-editor {
+    grid-area: query-editor;
+}
+.view-playground > .query-editor > .query-editor__toolbar {
+    display: flex;
+}
+.view-playground > .query-editor > .query-editor__toolbar > :first-child {
+    flex: 1;
+}
+.view-playground > .query-editor .discovery-editor .CodeMirror-scroll {
+    max-height: 35vh;
+}
+
+.view-playground > .compiled-code {
+    grid-area: compiled-code;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.view-playground > .compiled-code > .compiled-code__toolbar {
+    display: flex;
+}
+.view-playground > .compiled-code > .compiled-code__toolbar > :first-child {
+    flex: 1;
+}
+.view-playground > .compiled-code > .compiled-code__content {
+    flex: 1;
+    overflow: auto;
+}
+.view-playground > .compiled-code .view-source {
+    min-height: 100%;
+    box-sizing: border-box;
+}
+.view-playground > .compiled-code > .compiled-code__content.error {
+    padding: 8px 12px;
+    border-left: 3px solid rgba(255, 0, 0, .8);
+    background: rgba(225,75,75,.2);
+    white-space: pre-wrap;
+    font-family: var(--discovery-monospace-font-family);
+    font-size: 11px;
+}
+
+.view-playground > .ast {
+    grid-area: ast;
+    display: flex;
+    flex-direction: column;
+}
+.view-playground > .ast > .ast__content {
+    flex: 1;
+    overflow: auto;
+}

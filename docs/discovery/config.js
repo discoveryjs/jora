@@ -8,6 +8,9 @@ module.exports = {
             './pages/default.js',
             './pages/article.js',
             './pages/article.css',
+            './pages/playground.js',
+            './views/playground.js',
+            './views/playground.css',
             './sidebar.js',
             './sidebar.css'
         ]
