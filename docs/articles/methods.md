@@ -1,16 +1,16 @@
 # Methods
 
-In Jora, methods are functions that are invoked in a functional way. This means that the left side value (the part before a method call, or `$` if nothing is specified) is always passed as the first argument to the method. Jora has a set of built-in methods, and you can also create custom methods to extend its functionality.
+In Jora, methods are functions that are invoked in a functional way. This means that the left side value (the part before a method call, or `$` if nothing is specified) is always passed as the first argument to the method. Jora has a set of built-in methods which can be extended with custom methods. Also functions can be used as a method.
 
 ## Syntax
 
 ```jora
-expr.method(...args?) // or .method(...args?) or method(...args?)
+expr.method(...args?) // `expr` can be omitted, i.e. `.method(...args?)` or `method(...args?)` are valid forms
 ```
 
 ## Built-in methods
 
-Jora comes with a set of built-in methods that you can use in your queries. Some Jora build-in methods:
+Jora comes with a set of built-in methods:
 
 | Jora method | Description
 |-------------|------------
@@ -21,7 +21,7 @@ Jora comes with a set of built-in methods that you can use in your queries. Some
 | `fromEntries()` | Similar to `Object.fromEntries()` in JS, expects `{ key, value }` objects as entries instead of array tuples
 | `pick()` | Get a value by a key, index, or function. Supports negative indices for arrays and strings
 | `size()` | Returns count of keys if data is an object, otherwise returns `length` value or `0` when the field is absent
-| `sort(fn)` | Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc
+| `sort(fn)` | Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc` (see [Sorting][./sort.md])
 | `reverse()` | Reverse order of items
 | `group(fn[, fn])` | Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries  (see [Grouping](./group.md))
 | `map(fn)` | The same as `Array#map()` in JS, is equivalent to `.(fn())` (see [Mapping](./map.md))
@@ -34,23 +34,25 @@ Jora comes with a set of built-in methods that you can use in your queries. Some
 
 ## Custom methods
 
-To create custom methods in Jora, you can use the following API:
+To provide custom methods in Jora use the following API:
 
 ```js
 import jora from 'jora';
 
 // Setup query factory with custom methods
 const createQueryWithCustomMethods = jora.setup({
-    myMethod($) { /* do something and return a new value */ }
+    myMethod($) {
+        /* do something and return a new value */
+    }
 });
 
 // Create a query
 const queryWithMyMethod = createQueryWithCustomMethods('foo.myMethod()');
 ```
 
-## Storing functions in local variables
+## Functions as a method
 
-You can store a function in a local variable and then use it the same way as a regular method:
+A function can be stored in a local variable and then used it the same way as a regular method:
 
 ```jora
 $method: => /* do something */;
@@ -58,19 +60,19 @@ $method: => /* do something */;
 expr.$method(...args?) // or .$method(...args?) or $method(...args?)
 ```
 
-### Example: Summing up an array
+The following example demonstrates how to sum up an array using a function as a method:
 
 ```jora
-$sum: => .reduce(=> $$ + $, 0); // the same as $.reduce(...)
+$sum: => .reduce(=> $$ + $, 0); // The same as $.reduce(...)
 
-[1, 2, 3, 4].$sum() // returns 10
+[1, 2, 3, 4].$sum() // Returns 10
 ```
 
 An equivalent JavaScript for the query:
 
 ```js
 function $sum($) {
-    // take into account that in Jora, the order of arguments in functions is always `$, $$`,
+    // Take into account that in Jora, the order of arguments in functions is always `$, $$`,
     // but in JavaScript's reduce() method has reversed order of arguments
     return $.reduce(($$, $) => $$ + $, 0);
 }
@@ -80,12 +82,10 @@ $sum([1, 2, 3, 4])
 
 ## Calling functions from context or data
 
-There is no syntax in Jora to directly call a function passed via context or data. However, you can store a function in a local definition and then use it:
+There is no syntax in Jora to directly call a function passed via context or data. However, you can store a function in a local variable and then use it as a method:
 
 ```jora
 $fn: #.functionFromContext;
 
 someValue.$fn()
 ```
-
-With this approach, you can leverage functions passed via context or data in your Jora queries, expanding the possibilities of your data manipulation tasks.
