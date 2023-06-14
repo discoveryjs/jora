@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* global discovery */
 
-const jora = require('jora');
+const jora = require('../jora').default;
 const { utils: { base64 } } = require('@discoveryjs/discovery');
 const beautify = require('js-beautify/js').js;
 
