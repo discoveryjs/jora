@@ -5,6 +5,7 @@ module.exports = {
     view: {
         assets: [
             './common.css',
+            './pages/default.css',
             './pages/default.js',
             './pages/article.js',
             './pages/article.css',
