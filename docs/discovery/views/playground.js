@@ -6,16 +6,19 @@ const { utils: { base64 } } = require('@discoveryjs/discovery');
 const beautify = require('js-beautify/js').js;
 
 function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options) {
-    astSectionEl.innerHTML = '';
-
     try {
         const ast = jora.syntax.parse(query, queryOptions.tolerant);
 
+        astSectionEl.classList.remove('not-available');
+        astSectionEl.innerHTML = '';
         discovery.view.render(astSectionEl, {
             view: 'struct',
             expanded: 20
         }, ast);
-    } catch (e) {}
+    } catch (e) {
+        astSectionEl.classList.add('not-available');
+        astSectionEl.textContent = 'AST is not available due to a parse error';
+    }
 
     try {
         const res = jora(query, queryOptions);

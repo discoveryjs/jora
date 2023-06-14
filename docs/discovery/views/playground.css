@@ -58,8 +58,16 @@
     grid-area: ast;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .view-playground > .ast > .ast__content {
     flex: 1;
     overflow: auto;
+    background-color: rgba(205, 205, 205, .1);
+}
+.view-playground > .ast > .ast__content.not-available {
+    padding: 8px;
+}
+.view-playground > .ast > .ast__content > .view-struct.struct-expanded-value {
+    background-color: transparent;
 }
