@@ -34,8 +34,7 @@ function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options
     }
 }
 
-const getQuerySuggestions = (query, offset, data, context) => null; // jora(query, offset, data, context);
-
+const getQuerySuggestions = () => null; // (query, offset, data, context) => jora(query, offset, data, context);
 const queryEditor = new discovery.view.QueryEditor(getQuerySuggestions);
 
 discovery.view.define('playground', function(el, config, data, context) {
