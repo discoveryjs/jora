@@ -15,9 +15,14 @@ function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options
             view: 'struct',
             expanded: 20
         }, ast);
-    } catch (e) {
+    } catch (error) {
         astSectionEl.classList.add('not-available');
         astSectionEl.textContent = 'AST is not available due to a parse error';
+    }
+
+    if (queryEditorErrorMarker) {
+        queryEditorErrorMarker.clear();
+        queryEditorErrorMarker = null;
     }
 
     try {
@@ -30,15 +35,42 @@ function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options
             syntax: 'javascript',
             content: options.raw ? code : beautify(code)
         });
-    } catch (e) {
+    } catch (error) {
         compiledCodeEl.classList.add('error');
-        compiledCodeEl.textContent = String(e) +
-            (e.compiledSource ? '\n\n' + e.compiledSource : '');
+        compiledCodeEl.textContent = String(error) +
+            (error.compiledSource ? '\n\n' + error.compiledSource : '');
+
+        const loc = error.details && error.details.loc;
+        const doc = queryEditor.cm.doc;
+
+        if (loc) {
+            const [start, end] = error.details.loc.range;
+
+            queryEditorErrorMarker = error.details.token === 'EOF' || start === end || query[start] === '\n'
+                ? doc.setBookmark(
+                    doc.posFromIndex(start),
+                    { widget: errorMarkerWidgetProto.cloneNode(true) }
+                )
+                : doc.markText(
+                    doc.posFromIndex(start),
+                    doc.posFromIndex(end),
+                    { className: 'discovery-editor-error' }
+                );
+        }
     }
 }
 
 const getQuerySuggestions = () => null; // (query, offset, data, context) => jora(query, offset, data, context);
 const queryEditor = new discovery.view.QueryEditor(getQuerySuggestions);
+let queryEditorErrorMarker;
+const errorMarkerWidgetProto = (() => {
+    const el = document.createElement('span');
+
+    el.className = 'discovery-editor-error';
+    el.textContent = ' ';
+
+    return el;
+})();
 
 discovery.view.define('playground', function(el, config, data, context) {
     const destroyEl = document.createElement('destroy-handler');

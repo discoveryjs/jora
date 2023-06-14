@@ -24,6 +24,10 @@
 .view-playground > .query-editor .discovery-editor .CodeMirror-scroll {
     max-height: 35vh;
 }
+.view-playground > .query-editor .discovery-editor-error {
+    border-bottom: 1px solid rgba(255, 0, 0, .6);
+    background: rgba(255, 215, 209, 0.3);
+}
 
 .view-playground > .compiled-code {
     grid-area: compiled-code;
