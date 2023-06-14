@@ -5,19 +5,53 @@ const jora = require('../jora').default;
 const { utils: { base64 } } = require('@discoveryjs/discovery');
 const beautify = require('js-beautify/js').js;
 
-function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options) {
+const querySuggestionRangeTooltip = [
+    { view: 'block', content: 'text:`Range: [${range[0]}, ${range[1]}]`' },
+    { view: 'block', content: [
+        'text:"Origins:"',
+        {
+            view: 'ul',
+            data: 'defs',
+            item: [
+                'badge:type',
+                'text:" " + origin'
+            ]
+        }
+    ] },
+    { view: 'block', content: [
+        'text:"Suggestions:"',
+        {
+            view: 'ul',
+            emptyText: 'No suggestions',
+            data: 'suggestions', item: [
+                'badge:type',
+                'text:` ${suggestions[0:3].join(", ")}${suggestions.size() | $ > 3 ? `, +${$ - 3} more…` : ""}`'
+            ]
+        }
+    ] }
+
+    // 'struct{ expanded: 2, data: suggestions }',
+    // 'struct{ expanded: 2 }'
+];
+
+function compileQuery(compiledCodeEl, statSectionEl, astSectionEl, query, { stat, tolerant, raw }) {
+    const data = {};
+    const context = {};
+    let parseResult = null;
+    let queryFn = null;
+
     try {
-        const ast = jora.syntax.parse(query, queryOptions.tolerant);
+        parseResult = jora.syntax.parse(query, tolerant);
 
         astSectionEl.classList.remove('not-available');
         astSectionEl.innerHTML = '';
         discovery.view.render(astSectionEl, {
             view: 'struct',
             expanded: 20
-        }, ast);
+        }, parseResult.ast);
     } catch (error) {
         astSectionEl.classList.add('not-available');
-        astSectionEl.textContent = 'AST is not available due to a parse error';
+        astSectionEl.textContent = 'Not available due to a parse error';
     }
 
     if (queryEditorErrorMarker) {
@@ -26,14 +60,15 @@ function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options
     }
 
     try {
-        const res = jora(query, queryOptions);
-        const code = (res.query || res).toString();
+        queryFn = jora(query, { stat, tolerant });
+
+        const code = (queryFn.query || queryFn).toString();
 
         compiledCodeEl.innerHTML = '';
         compiledCodeEl.classList.remove('error');
         discovery.view.render(compiledCodeEl, 'source', {
             syntax: 'javascript',
-            content: options.raw ? code : beautify(code)
+            content: raw ? code : beautify(code)
         });
     } catch (error) {
         compiledCodeEl.classList.add('error');
@@ -58,6 +93,72 @@ function compileQuery(compiledCodeEl, astSectionEl, query, queryOptions, options
                 );
         }
     }
+
+    if (stat) {
+        if (parseResult) {
+            statSectionEl.classList.remove('not-available');
+
+            try {
+                const suggestions = jora.syntax.suggest(query, parseResult);
+                const ranges = [].concat(...[...suggestions.entries()]
+                    .map(([node, ranges]) => ranges.map(range => [node, ...range]))
+                    .sort((a, b) => a[1] - b[1]));
+                const groupedRanges = [];
+                let prevGroupedRange = null;
+
+                for (let i = 0; i < ranges.length; i++) {
+                    const [node, start, end, type, related] = ranges[i];
+                    const def = {
+                        type,
+                        origin: node.type +
+                            (related === true
+                                ? ' (current)'
+                                : related && related.type
+                                    ? ' & ' + related.type
+                                    : '')
+                    };
+
+                    if (prevGroupedRange !== null &&
+                        prevGroupedRange.start === start &&
+                        prevGroupedRange.end === end) {
+                        prevGroupedRange.defs.push(def);
+                    } else {
+                        prevGroupedRange = { start, end, defs: [def] };
+                        groupedRanges.push(prevGroupedRange);
+                    }
+                }
+
+                statSectionEl.innerHTML = '';
+                discovery.view.render(statSectionEl, 'source', {
+                    syntax: 'jora',
+                    content: query,
+                    refs: groupedRanges.map(({ start, end, defs }) => {
+                        return {
+                            range: [start, end],
+                            get suggestions() {
+                                if (!queryFn) {
+                                    return null;
+                                }
+
+                                const res = queryFn(data, context);
+                                return res.suggestion(start);
+                            },
+                            defs,
+                            tooltip: querySuggestionRangeTooltip
+                        };
+                    })
+                });
+            } catch (error) {
+                statSectionEl.textContent = String(error);
+            }
+        } else {
+            statSectionEl.classList.add('not-available');
+            statSectionEl.textContent = 'Not available due to a parse error';
+        }
+    } else {
+        statSectionEl.classList.add('not-available');
+        statSectionEl.textContent = 'Enable stat mode to see suggestions and statistics';
+    }
 }
 
 const getQuerySuggestions = () => null; // (query, offset, data, context) => jora(query, offset, data, context);
@@ -76,10 +177,12 @@ discovery.view.define('playground', function(el, config, data, context) {
     const destroyEl = document.createElement('destroy-handler');
     const queryEditorSectionEl = document.createElement('div');
     const queryEditorSectionToolbarEl = document.createElement('div');
-    const queryEditorSectionContentEl = document.createElement('div');
     const compiledCodeSectionEl = document.createElement('div');
     const compiledCodeSectionToolbarEl = document.createElement('div');
     const compiledCodeSectionContentEl = document.createElement('div');
+    const statSectionEl = document.createElement('div');
+    const statSectionToolbarEl = document.createElement('div');
+    const statSectionContentEl = document.createElement('div');
     const astSectionEl = document.createElement('div');
     const astSectionToolbarEl = document.createElement('div');
     const astSectionContentEl = document.createElement('div');
@@ -99,15 +202,12 @@ discovery.view.define('playground', function(el, config, data, context) {
             }
         }
 
-        const { tolerant, stat } = newPageParams;
-        const { raw } = newPageParams;
-
         compileQuery(
             compiledCodeSectionContentEl,
+            statSectionContentEl,
             astSectionContentEl,
             query,
-            { tolerant, stat },
-            { raw }
+            newPageParams
         );
         discovery.setPageParams(newPageParams, true);
         discovery.cancelScheduledRender();
@@ -118,7 +218,7 @@ discovery.view.define('playground', function(el, config, data, context) {
     queryEditorSectionToolbarEl.className = 'query-editor__toolbar';
     queryEditor.on('change', changeHandler);
     Promise.resolve().then(() => {
-        queryEditorSectionContentEl.append(queryEditor.el);
+        queryEditorSectionEl.append(queryEditor.el);
         if (context.params.query) {
             queryEditor.setValue(base64.decode(context.params.query));
         } else {
@@ -147,6 +247,12 @@ discovery.view.define('playground', function(el, config, data, context) {
         } }
     ], {}, context);
 
+    // STAT
+    statSectionEl.className = 'stat';
+    statSectionToolbarEl.className = 'stat__toolbar';
+    statSectionToolbarEl.append('Suggestions');
+    statSectionContentEl.className = 'stat__content';
+
     // AST
     astSectionEl.className = 'ast';
     astSectionToolbarEl.className = 'ast__toolbar';
@@ -154,11 +260,13 @@ discovery.view.define('playground', function(el, config, data, context) {
     astSectionContentEl.className = 'ast__content';
 
     // LAYOUT
-    queryEditorSectionEl.append(queryEditorSectionToolbarEl, queryEditorSectionContentEl, destroyEl);
+    queryEditorSectionEl.append(queryEditorSectionToolbarEl, destroyEl);
     compiledCodeSectionEl.append(compiledCodeSectionToolbarEl, compiledCodeSectionContentEl);
+    statSectionEl.append(statSectionToolbarEl, statSectionContentEl);
     astSectionEl.append(astSectionToolbarEl, astSectionContentEl);
-    el.append(queryEditorSectionEl, compiledCodeSectionEl, astSectionEl);
+    el.append(queryEditorSectionEl, compiledCodeSectionEl, statSectionEl, astSectionEl);
 
+    // TEARDOWN
     destroyEl.onDestroy = () => {
         queryEditor.off('change', changeHandler);
         queryEditor.setValue('');
