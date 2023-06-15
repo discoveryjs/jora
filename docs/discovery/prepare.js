@@ -1,6 +1,7 @@
 const CodeMirror = require('codemirror');
 require('codemirror/addon/mode/simple');
 const { Slugger } = require('marked');
+const { utils: { base64 } } = require('@discoveryjs/discovery');
 const slugger = new Slugger();
 
 function walkArticles(article, articleList) {
@@ -29,6 +30,20 @@ module.exports = function(data, { addQueryHelpers }) {
     addQueryHelpers({
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';
+        },
+        playgroundLink(current) {
+            const res = new URLSearchParams();
+            for (const [key, value] of Object.entries(current || {})) {
+                if (value !== null && value !== undefined && value !== false && value !== '') {
+                    if (key === 'query') {
+                        res.append(key, base64.encode(value));
+                    } else {
+                        res.append(key, value);
+                    }
+                }
+            }
+
+            return `#playground&${res.toString()}`;
         }
     });
 };

@@ -250,7 +250,7 @@ discovery.view.define('playground', function(el, config, data, context) {
     // STAT
     statSectionEl.className = 'stat';
     statSectionToolbarEl.className = 'stat__toolbar';
-    statSectionToolbarEl.append('Suggestions');
+    statSectionToolbarEl.append('Suggestion ranges');
     statSectionContentEl.className = 'stat__content';
 
     // AST

@@ -14,7 +14,16 @@ discovery.page.define('article', {
                 }
             }
         },
-        'md:content',
+        {
+            view: 'markdown',
+            data: 'content',
+            codeActionButtons: {
+                view: 'button',
+                when: 'syntax = "jora"',
+                content: 'text:"Open in playground"',
+                data: '{ href: { query: content }.playgroundLink() }'
+            }
+        },
         {
             view: 'block',
             className: 'prev-next-nav',
