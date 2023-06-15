@@ -26,10 +26,10 @@ $baz: $foo + $bar;  // Definitions may be used in following expressions
 In the following example, we define two variables: `$multiplier` and `$array`. Then, we use the `$multiplier` variable with `.()` ([mapping](./map.md)) to multiply each element of the `$array` array.
 
 ```jora
+$numbers: [1, 2, 3];
 $multiplier: 2;
-$array: [1, 2, 3];
 
-$array.($ * $multiplier) // Result: [2, 4, 6]
+$numbers.($ * $multiplier) // Result: [2, 4, 6]
 ```
 
 ## Special variables
@@ -67,7 +67,7 @@ $foo: 'bar';
 $foo // Result: 'bar'
 ```
 
-2. [Mapping `.(...)`](./map.md):
+2. [Mapping](./map.md) `.(...)`:
 
 ```jora
 {
@@ -76,7 +76,7 @@ $foo // Result: 'bar'
 }.($a; $b; $a + $b) // Result: 30
 ```
 
-3. [Filter `.[]`](./filter.md):
+3. [Filter](./filter.md) `.[]`:
 
 ```jora
 [1, 2, 3].[$num: $; $num * 2] // Result: [2, 4, 6]
@@ -88,7 +88,7 @@ $foo // Result: 'bar'
 ($a: 5; $b: 10; $a + $b) // Result: 15
 ```
 
-5. Object literal `{...}`:
+5. [Object literal](./object-literal.md) `{...}`:
 
 ```jora
 {
@@ -98,7 +98,7 @@ $foo // Result: 'bar'
 } // Result: { c: 12 }
 ```
 
-6. [Pipeline operator `|`](./pipeline-operator.md):
+6. [Pipeline operator](./pipeline-operator.md) `|`:
 
 ```jora
 [1, 2, 3] | $size: size(); .($ * $size) // Result: [3, 6, 9]
@@ -114,12 +114,12 @@ user.({
     $email; // The same as `$email: email;`
 
     ...,
-    signedPost: posts.({
+    signedPosts: posts.({
         author: $username,
         authorEmail: $email,
         title
     })
-)}
+})
 ```
 
 In this example, we store the `name` and `email` properties of the current user in variables `$username` and `$email`. This allows us to access these values within the nested scope created by the `.()` operation on the `posts` property, even though `$` has changed to represent the current post.

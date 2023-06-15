@@ -3,8 +3,11 @@
 Bracket notation enables convenient access to object properties and array elements. Bracket notation is especially useful when the property name is stored in a variable, computed dynamically, or when accessing array elements using indices. Jora supports bracket notation, similar to JavaScript, by enclosing the property name or index within square brackets (`[]`). You can also use bracket notation for the current value by using `$['name']`.
 
 ```jora
-person['name']; // Accesses the `name` property of the `person` object
-items[0]; // Accesses the first element of the `items` array
+person['name'] // Accesses the `name` property of the `person` object
+```
+
+```jora
+items[0] // Accesses the first element of the `items` array
 ```
 
 ## Optional chaining
@@ -43,7 +46,7 @@ $items: {
     item3: { id: 3, name: 'Third Item', price: 30 }
 };
 
-$items[=> $$ ~= /^item/ && price >= 20] // Returns { id: 2, name: 'Second Item', price: 20 }
+$items[=> $$ ~= /^item/ and price >= 20] // Returns { id: 2, name: 'Second Item', price: 20 }
 ```
 
 ## Negative indexing
@@ -87,7 +90,7 @@ $text[2] // Returns 'r'
 ### Find the first element in an array that meets multiple criteria
 
 ```jora
-$data: [
+$items: [
     { category: 'A', value: 5 },
     { category: 'B', value: 10 },
     { category: 'A', value: 15 },
@@ -95,5 +98,5 @@ $data: [
     { category: 'A', value: 25 }
 ];
 
-$data[=> category = 'A' and value >= 20] // Returns { category: 'A', value: 25 }
+$items[=> category = 'A' and value >= 20] // Returns { category: 'A', value: 25 }
 ```
