@@ -8,7 +8,7 @@
     grid-template:
         'query-editor stat'
         'compiled-code ast';
-    grid-template-rows: auto minmax(48%, 1fr);
+    grid-template-rows: auto 1fr;
     grid-template-columns: 1fr 1fr;
     gap: 10px 20px;
 }
@@ -83,6 +83,7 @@
 }
 .view-playground > .stat > .stat__content .view-source {
     height: 100%;
+    max-height: calc(34vh + 10px);
     overflow: auto;
     box-sizing: border-box;
     padding: 6px;
