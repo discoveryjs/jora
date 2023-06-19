@@ -12,10 +12,10 @@ Jora allows defining and using variables within queries. A value can be assigned
 
 There are two main forms for defining variables:
 
-1. `$ident: expression;` - Define a variable and assign the result of an expression to it.
-2. `$ident;` - Shorthand for defining a variable with a value equal to the property with the same name as the variable.
+1. `$ident: expression;` – define a variable and assign the result of an expression to it.
+2. `$ident;` – shorthand for defining a variable with a value equal to the property with the same name as the variable.
 
-Here's an example of defining and using variables in various ways:
+An example of defining and using variables in various ways:
 
 ```jora
 $foo: 123;          // Define `$foo` variable
@@ -23,7 +23,7 @@ $bar;               // Shorthand for `$bar: bar;`
 $baz: $foo + $bar;  // Definitions may be used in following expressions
 ```
 
-In the following example, we define two variables: `$multiplier` and `$array`. Then, we use the `$multiplier` variable with `.()` ([mapping](./map.md)) to multiply each element of the `$array` array.
+In the following example, two variables are defining: `$numbers` and `$multiplier`. Then, the `$multiplier` is used within [mapping](./map.md) to multiply each element of the `$numbers` array.
 
 ```jora
 $numbers: [1, 2, 3];
@@ -36,12 +36,12 @@ $numbers.($ * $multiplier) // Result: [2, 4, 6]
 
 Jora has several special variables that serve specific purposes:
 
-- `@`: Represents the current value of the input data.
-- `#`: Represents the context provided to the query.
-- `$`: Represents the current value within a subquery or method. When used in a function, it represents the first parameter.
-- `$$`: Represents the second parameter of a function.
+- `@` – represents the query input data.
+- `#` – represents the context provided to the query.
+- `$` – represents the current value within a scope. When used in a function, it represents the first parameter.
+- `$$` – represents the second parameter of a function.
 
-Input data and context are provided when executing a query: `query(inputData, context)`.
+Query input data and context are provided when executing a query: `query(inputData, context)`.
 
 Examples of using `$` and `$$` in functions:
 
@@ -51,7 +51,7 @@ $fn: => { a: $, b: $$ };
 'hello'.$fn('world') // result: { a: 'hello', b: 'world' }
 ```
 
-> See also [Methods](./methods.md) article on details of methods usage
+> See [Methods](./methods.md) on details of methods usage
 
 ## Scopes
 
@@ -76,13 +76,13 @@ $foo // Result: 'bar'
 }.($a; $b; $a + $b) // Result: 30
 ```
 
-3. [Filter](./filter.md) `.[]`:
+3. [Filtering](./filter.md) `.[]`:
 
 ```jora
 [1, 2, 3].[$num: $; $num * 2] // Result: [2, 4, 6]
 ```
 
-4. Parentheses `(...)`:
+4. [Grouping operator](./operators.md#grouping-operator) `(...)`:
 
 ```jora
 ($a: 5; $b: 10; $a + $b) // Result: 15
@@ -127,16 +127,16 @@ In this example, we store the `name` and `email` properties of the current user 
 
 ```jora
 $items: [
-    { value: 1, children: [2, 3] },
-    { value: 2, children: [4, 5] },
-    { value: 3, children: [6, 7] }
+    { id: 1, children: [2, 3] },
+    { id: 2, children: [4, 5] },
+    { id: 3, children: [6, 7] }
 ];
 
 $items.(
     $item: $;
 
     children.({
-        parent: $item.value,
+        parent: $item.id,
         child: $
     })
 )

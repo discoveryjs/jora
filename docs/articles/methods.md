@@ -14,21 +14,21 @@ Jora comes with a set of built-in methods:
 
 | Jora method | Description
 |-------------|------------
-| `bool()` | Similar to `Boolean()` in JS, but treats *empty arrays* and *objects with no keys* as falsy
-| `keys()` | The same as `Object.keys()` in JS
-| `values()` | The same as `Object.values()` in JS
-| `entries()` | Similar to `Object.entries()` in JS, using `{ key, value }` objects for entries instead of array tuples
-| `fromEntries()` | Similar to `Object.fromEntries()` in JS, expects `{ key, value }` objects as entries instead of array tuples
+| `bool()` | Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy
+| `keys()` | The same as `Object.keys()` in JavaScript
+| `values()` | The same as `Object.values()` in JavaScript
+| `entries()` | Similar to `Object.entries()` in JavaScript, using `{ key, value }` objects for entries instead of array tuples
+| `fromEntries()` | Similar to `Object.fromEntries()` in JavaScript, expects `{ key, value }` objects as entries instead of array tuples
 | `pick()` | Get a value by a key, index, or function. Supports negative indices for arrays and strings
 | `size()` | Returns count of keys if data is an object, otherwise returns `length` value or `0` when the field is absent
-| `sort(fn)` | Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc` (see [Sorting][./sort.md])
+| `sort(fn)` | Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc` (see [Sorting](./sort.md))
 | `reverse()` | Reverse order of items
 | `group(fn[, fn])` | Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries  (see [Grouping](./group.md))
-| `map(fn)` | The same as `Array#map()` in JS, is equivalent to `.(fn())` (see [Mapping](./map.md))
-| `filter(fn)` | The same as `Array#filter()` in JS, is equivalent to `.[fn()]` (see [Filtering](./filter.md))
-| `split(pattern)` | The same as `String#split()` in JS. `pattern` may be a string or regex
-| `join(separator)` | The same as `Array#join()` in JS. When `separator` is not specified, `,` is used
-| `slice(from, to)` | The same as `Array#slice()` and `String#slice()` in JS
+| `map(fn)` | The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mapping](./map.md))
+| `filter(fn)` | The same as `Array#filter()` in JavaScript, is equivalent to `.[fn()]` (see [Filtering](./filter.md))
+| `split(pattern)` | The same as `String#split()` in JavaScript. `pattern` may be a string or regex
+| `join(separator)` | The same as `Array#join()` in JavaScript. When `separator` is not specified, `,` is used
+| `slice(from, to)` | The same as `Array#slice()` and `String#slice()` in JavaScript (see also [Slice notation](./slice-notation.md))
 | <nobr>`match(pattern, matchAll?)`</nobr> | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent
 | `reduce(fn[, initValue])` | The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value `reduce(=>$ > $$ ? $ : $$)`
 

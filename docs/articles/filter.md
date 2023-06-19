@@ -1,120 +1,74 @@
 # Filtering: `.[...]` and `filter()` method
 
-In Jora, filtering data is a fundamental operation that allows you to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax and `filter()` method. Both of these methods work on arrays and provide the same filtering functionality, but with slightly different syntax.
+In Jora, filtering allows to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax or `filter()` method. Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
 
-Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
+> Note: In Jora, empty arrays and objects with no entries are considered falsy.
+
+- [Syntax](#syntax)
+- [Examples](#examples)
+- [`.[]` vs. `filter()`](#-vs-filter)
 
 ## Syntax
 
-```
-.filter(fn) // or .filter(=> expr)
+```jora
 .[block]
+```
+
+Using `filter()` method:
+
+```jora
+.filter(fn) // or .filter(=> expr)
 ```
 
 ## Examples
 
-- [Filtering an array of numbers](#filtering-an-array-of-numbers)
-- [Filtering an array of objects](#filtering-an-array-of-objects)
-- [Filtering an array of objects using a nested property](#filtering-an-array-of-objects-using-a-nested-property)
-- [`.[]` vs. `filter()`](#-vs-filter)
-
-### Filtering an array of numbers
-
-Suppose we want to filter out all numbers less than 3 from an array of integers.
-
-`Input`
-
-```json
-[1, 2, 3, 4, 5]
-```
-
-`Query`
+Filtering an array of numbers:
 
 ```jora
-.[$ >= 3]
+[1, 2, 3, 4, 5].[$ >= 3]
+// Result: [3, 4, 5]
 ```
 
-or
+An alternative:
 
 ```jora
-.filter(=> $ >= 3)
+[1, 2, 3, 4, 5].filter(=> $ >= 3)
+// Result: [3, 4, 5]
 ```
 
-`Output`
+Filtering an array of objects:
 
-```json
-[3, 4, 5]
-```
-
-### Filtering an array of objects
-
-Let's say we have an array of objects representing books, and we want to filter out all books with a price greater than 10.
-
-`Input`
-
-```json
-[
+```jora
+$input: [
   { "title": "Book 1", "price": 5 },
   { "title": "Book 2", "price": 15 },
   { "title": "Book 3", "price": 7 },
   { "title": "Book 4", "price": 12 }
-]
+];
+
+$input.[price <= 10]
+// Result:
+// [
+//   { "title": "Book 1", "price": 5 },
+//   { "title": "Book 3", "price": 7 }
+// ]
 ```
 
-`Query`
+Filtering an array of objects using a nested property:
 
 ```jora
-.[price <= 10]
-```
-
-or
-
-```jora
-.filter(=> price <= 10)
-```
-
-`Output`
-
-```json
-[
-  { "title": "Book 1", "price": 5 },
-  { "title": "Book 3", "price": 7 }
-]
-```
-
-### Filtering an array of objects using a nested property
-
-Consider an array of objects with nested properties, and we want to filter out all objects with a nested property value less than a specified threshold.
-
-`Input`
-
-```json
-[
+$input: [
   { "id": 1, "data": { "value": 42 } },
   { "id": 2, "data": { "value": 17 } },
   { "id": 3, "data": { "value": 99 } }
-]
-```
+];
 
-`Query`
-
-```jora
-.[data.value > 20]
-```
-
-or
-
-```jora
-.filter(=> data.value > 20)
-```
-
-`Output`
-
-```json
-[
-  { "id": 1, "data": { "value": 42 } },
-  { "id": 3, "data": { "value": 99 } }
-]
+$input.[data.value > 20]
+// Result:
+// [
+//   { "id": 1, "data": { "value": 42 } },
+//   { "id": 3, "data": { "value": 99 } }
+// ]
 ```
 
 ## `.[]` vs. `filter()`

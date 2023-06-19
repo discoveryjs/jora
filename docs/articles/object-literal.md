@@ -1,6 +1,6 @@
 # Object literals
 
-Jora supports object literals as an integral part of its syntax. Object literals provide a convenient way to define and manipulate complex data structures. This article covers the basics of object literals in Jora, including their syntax, usage, computed properties, spread operator, and the `entries()` and `fromEntries()` methods.
+Jora supports object literals as an integral part of its syntax. Object literals provide a convenient way to define and manipulate complex data structures.
 
 - [Syntax](#syntax)
 - [Computed properties](#computed-properties)
@@ -9,17 +9,29 @@ Jora supports object literals as an integral part of its syntax. Object literals
 
 ## Syntax
 
-Object literals in Jora follow the familiar syntax found in JSON5 and JavaScript. They are enclosed in curly braces `{}` and consist of key-value pairs, with keys being strings and values being any valid Jora expression. Here's an example of a simple object literal:
+Object literals in Jora follow the familiar syntax found in JSON5 and JavaScript. They are enclosed in curly braces `{}` and consist of key-value pairs, with keys being strings and values being any valid Jora expression. In Jora, keys in object literals don't need to be wrapped in quotes unless they contain special characters, spaces, or start with a digit. Here's an example of a simple object literal:
 
 ```jora
 {
-  name: "John Doe",
-  age: 30,
+  "name": "John Doe",
+  'age': 30,
   isActive: true
 }
 ```
 
-In Jora, keys in object literals don't need to be wrapped in quotes unless they contain special characters, spaces, or start with a digit. Also, it's possible to use a shorthand syntax for key-value pairs when the key and the value have the same name:
+## Computed properties
+
+Jora supports computed properties in object literals, allowing you to create dynamic keys based on expressions. To use computed properties, wrap the key expression in square brackets `[]`. Here's an example:
+
+```jora
+$prefix: 'city';
+
+{
+  [$prefix + 'Code']: "NYC"
+} // Result: { cityCode: "NYC" }
+```
+
+Also, it's possible to use a shorthand syntax for key-value pairs when the value is a variable and it has the same name as the key:
 
 ```jora
 $city: "New York";
@@ -40,26 +52,6 @@ $country: "USA";
 {
   city: $city,
   country: $country
-}
-```
-
-## Computed properties
-
-Jora supports computed properties in object literals, allowing you to create dynamic keys based on expressions. To use computed properties, wrap the key expression in square brackets `[]`. Here's an example:
-
-```jora
-$prefix: 'city';
-
-{
-  [$prefix + 'Code']: "NYC"
-}
-```
-
-This results in:
-
-```json
-{
-  "cityCode": "NYC"
 }
 ```
 
