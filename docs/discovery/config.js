@@ -1,8 +1,9 @@
 module.exports = {
-    name: 'Jora',
+    name: 'Jora docs',
     data: './data.js',
     prepare: './prepare.js',
     view: {
+        noscript: './noscript.js',
         assets: [
             './common.css',
             './pages/default.css',

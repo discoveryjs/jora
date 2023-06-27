@@ -8,7 +8,6 @@ function md(filename) {
 
 module.exports = function() {
     const articles = [
-        // { slug: 'intro', title: 'Introduction' },
         { slug: 'getting-started', title: 'Getting started', expanded: true, headers: true },
         { slug: 'changelog', title: 'Changelog', headers: true, content: md('../../CHANGELOG') }
     ];
@@ -22,11 +21,12 @@ module.exports = function() {
                 .replace(/^#.+?\n+/, '')
                 .replace(/\(#(.+?)\)/g, `(#article:jora-syntax-${slug}&!anchor=$1)`)
                 .replace(/\(\.\/syntax-overview\.md\)/g, '(#article:jora-syntax)')
-                .replace(/\(\.\/(.+?)\.md\)/g, '(#article:jora-syntax-$1)');
+                .replace(/\(\.\/(.+?)\.md#([a-z0-9\-]+)\)/g, '(#article:jora-syntax-$1&!anchor=$2)')
+                .replace(/\(\.\/(.+?)\.md?\)/g, '(#article:jora-syntax-$1)');
 
-            for (const { type, text, depth } of marked.lexer(content || '')) {
-                if (type === 'heading') {
-                    headers.push({ title: text, level: depth });
+            for (const token of marked.lexer(content || '')) {
+                if (token.type === 'heading') {
+                    headers.push({ title: token.text, level: token.depth });
                 }
             }
 
@@ -47,9 +47,9 @@ module.exports = function() {
 
         if (article.headers) {
             article.headers = [];
-            for (const { type, text, depth } of marked.lexer(article.content || '')) {
-                if (type === 'heading') {
-                    article.headers.push({ title: text, level: depth });
+            for (const token of marked.lexer(article.content || '')) {
+                if (token.type === 'heading') {
+                    article.headers.push({ title: token.text, level: token.depth });
                 }
             }
         }
@@ -67,6 +67,7 @@ module.exports = function() {
 
     return {
         version: require('../../package.json').version,
+        intro: md('./text/intro'),
         articles
     };
 };
