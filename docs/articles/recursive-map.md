@@ -108,7 +108,7 @@ $ + ..children | name
 
 Ensure that operations like filtering are performed after the recursive mapping is complete, to avoid missing some results. The following example returns only the names of files:
 
-```
+```jora
 $ + ..children | .[type = "file"].name
 // Result: ["file1.txt", "file2.txt", "file3.txt"]
 ```

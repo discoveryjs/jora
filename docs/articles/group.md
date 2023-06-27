@@ -299,3 +299,4 @@ Suppose you have an array of objects representing sales data, and you want to gr
         { "region": "East", "sales": 150 }
     ]
 }
+```
