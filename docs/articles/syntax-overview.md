@@ -52,16 +52,16 @@ Jora provides two notations for accessing object properties and array elements: 
 
 Jora provides a rich set of built-in methods for manipulating data, such as `.map()`, `.filter()`, `.group()`, `.sort()`, `.reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax.
 
-- [Methods](./articles/methods.md)
-- [Grouping](./articles/group.md): `group()` method
-- [Sorting](./articles/sort): `sort()` method
+- [Methods](./methods.md)
+- [Grouping](./group.md): `group()` method
+- [Sorting](./sort.md): `sort()` method
 
 ## Mapping and filtering
 
 Jora has a concise syntax for mapping and filtering arrays. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`. This compact syntax makes it easy to transform and filter data.
 
-- [Mapping](./articles/map.md): `.(...)` and `map()` method
-- [Filtering](./articles/filter.md): `.[...]` and `filter()` method
+- [Mapping](./map.md): `.(...)` and `map()` method
+- [Filtering](./filter.md): `.[...]` and `filter()` method
 
 ## Variables
 
