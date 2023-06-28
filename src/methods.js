@@ -234,5 +234,14 @@ export default Object.freeze({
         }
 
         return String(current).split(pattern);
-    }
+    },
+
+    // math
+    ...Object.fromEntries([
+        // all Math static method with exclusion of 'max', 'min', 'random'
+        'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
+        'cbrt', 'ceil', 'clz32', 'cos', 'cosh', 'exp', 'expm1', 'floor',
+        'fround', 'hypot', 'imul', 'log', 'log10', 'log1p', 'log2', 'pow',
+        'round', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc'
+    ].map(method => [method, Math[method]]))
 });
