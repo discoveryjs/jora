@@ -76,14 +76,14 @@ export default Object.freeze({
         return entries;
     },
     fromEntries(current) {
-        const result = {};
+        const result = Object.create(null);
 
         if (Array.isArray(current)) {
-            current.forEach(entry => {
+            for (const entry of current) {
                 if (entry) {
                     result[entry.key] = entry.value;
                 }
-            });
+            }
         }
 
         return result;
@@ -95,17 +95,17 @@ export default Object.freeze({
 
         return (current && current.length) || 0;
     },
-    sort(current, fn) {
-        let sorter;
+    sort(current, cmpOrMap = buildin.cmp) {
+        let cmp;
 
         if (!Array.isArray(current)) {
             return current;
         }
 
-        if (typeof fn === 'function') {
-            sorter = fn.length === 2 ? fn : (a, b) => {
-                a = fn(a);
-                b = fn(b);
+        if (typeof cmpOrMap === 'function') {
+            cmp = cmpOrMap.length === 2 ? cmpOrMap : (a, b) => {
+                a = cmpOrMap(a);
+                b = cmpOrMap(b);
 
                 if (Array.isArray(a) && Array.isArray(b)) {
                     if (a.length !== b.length) {
@@ -113,30 +113,28 @@ export default Object.freeze({
                     }
 
                     for (let i = 0; i < a.length; i++) {
-                        if (a[i] < b[i]) {
-                            return -1;
-                        } else if (a[i] > b[i]) {
-                            return 1;
+                        const ret = buildin.cmp(a[i], b[i]);
+
+                        if (ret !== 0) {
+                            return ret;
                         }
                     }
 
                     return 0;
                 }
 
-                return a < b ? -1 : a > b;
+                return buildin.cmp(a, b);
             };
         } else {
-            sorter = buildin.cmp;
+            cmp = cmpOrMap;
         }
 
-        return stableSort(current, sorter);
+        return stableSort(current, cmp);
     },
     reverse(current) {
-        if (!Array.isArray(current)) {
-            return current;
-        }
-
-        return current.slice().reverse();
+        return Array.isArray(current)
+            ? current.slice().reverse()
+            : current;
     },
     slice(current, from, to) {
         return buildin.slice(current, from, to);
