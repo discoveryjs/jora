@@ -1,4 +1,4 @@
-import { hasOwnProperty } from '../utils.js';
+import { hasOwnProperty } from '../utils/misc.js';
 import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 

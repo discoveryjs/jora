@@ -1,7 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
 
-describe('lang/pipeline `e | e`', () => {
+describe('lang/pipeline', () => {
     const data = [
         { foo: { bar: 1 } },
         { foo: { bar: 2 } },

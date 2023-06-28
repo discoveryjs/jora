@@ -1,6 +1,6 @@
 import assert from 'assert';
 import jora from 'jora';
-import allSyntax from './helpers/all-syntax.js';
+import allSyntax from '../helpers/all-syntax.js';
 
 const { syntax: { parse, stringify } } = jora;
 

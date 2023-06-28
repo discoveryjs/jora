@@ -1,6 +1,6 @@
-import { MaxHeap } from './max-heap.js';
-import { isPlainObject } from './utils.js';
 import buildin from './lang/compile-buildin.js';
+import { MaxHeap } from './utils/heap.js';
+import { isPlainObject } from './utils/misc.js';
 
 const contextToType = {
     'path': 'property',

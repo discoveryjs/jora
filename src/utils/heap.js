@@ -1,9 +1,10 @@
-const defaultCompare = (a, b) => a - b;
+const defaultMinCompare = (a, b) => a - b;
+const defaultMaxCompare = (a, b) => b - a;
 
-export class MaxHeap {
+export class Heap {
     constructor(maxSize, compare, accept) {
         this.maxSize = maxSize || Infinity;
-        this.compare = compare || defaultCompare;
+        this.compare = compare || defaultMaxCompare;
         this.accept = accept || null;
 
         this.values = [];
@@ -23,8 +24,14 @@ export class MaxHeap {
         }
     }
 
+    addArray(array) {
+        for (let i = 0; i < array.length; i++) {
+            this.add(array[i]);
+        }
+    }
+
     extract() {
-        const maxValue = this.values[0];
+        const topValue = this.values[0];
         const lastValue = this.values.pop();
 
         if (this.values.length > 0) {
@@ -32,19 +39,18 @@ export class MaxHeap {
             this.heapifyDown();
         }
 
-        return maxValue;
+        return topValue;
     }
 
     heapifyUp(idx) {
         const values = this.values;
-        // let idx = values.length - 1;
         let idxValue = values[idx];
 
         while (idx > 0) {
             const parentIdx = (idx - 1) >> 1;
             const parentValue = values[parentIdx];
 
-            if (this.compare(parentValue, idxValue) >= 0) {
+            if (this.compare(parentValue, idxValue) > 0) {
                 break;
             }
 
@@ -71,15 +77,14 @@ export class MaxHeap {
             // select the maximum from left node and current node
             const left = 2 * idx + 1;
             const leftValue = values[left];
+            const right = left + 1;
 
             if (this.compare(leftValue, idxValue) > 0) {
                 largestIdx = left;
                 largestValue = leftValue;
             }
 
-            // if the right child exists, select the maximum from right node and current largest node
-            const right = 2 * idx + 2;
-
+            // if the right child exists, compare the maximum with right node
             if (right < size) {
                 const rightValue = values[right];
 
@@ -100,7 +105,7 @@ export class MaxHeap {
 
             // go down
             idx = largestIdx;
-            idxValue = largestValue;
+            largestValue = idxValue;
         }
     }
 
@@ -109,7 +114,13 @@ export class MaxHeap {
     }
 }
 
-// const h = new MaxHeap(6);
-// [1, 12, 2, 21, 3, 33, 8, 7, 10, 6, 52, 99, 44].forEach(v=>h.add(v));
-// console.log(h.values); // [ 8, 7, 2, 6, 3, 1 ]
-// console.log([...h]); // [ 1, 2, 3, 6, 7, 8 ]
+export class MaxHeap extends Heap {};
+export class MinHeap extends Heap {
+    constructor(maxSize, compare, accept) {
+        super(
+            maxSize,
+            compare ? (a, b) => -compare(a, b) : defaultMinCompare,
+            accept
+        );
+    }
+};

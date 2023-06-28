@@ -1,7 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
 
-describe('lang/function `<body>`', () => {
+describe('lang/function (legacy)', () => {
     it('empty function', () => {
         assert.strictEqual(
             typeof query('<>')(),
@@ -139,7 +139,7 @@ describe('lang/function `<body>`', () => {
     });
 });
 
-describe('lang/function `=>body`', () => {
+describe('lang/function', () => {
     it('empty function', () => {
         assert.strictEqual(
             typeof query('=>$')(),

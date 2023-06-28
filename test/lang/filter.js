@@ -1,8 +1,8 @@
 import assert from 'assert';
 import query from 'jora';
-import data from './helpers/fixture.js';
+import data from '../helpers/fixture.js';
 
-describe('lang/filter `.[]`', () => {
+describe('lang/filter', () => {
     it('should filter a current array', () => {
         assert.deepEqual(
             query('.[type="js"]')(data),

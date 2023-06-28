@@ -1,6 +1,6 @@
 import assert from 'assert';
 import query from 'jora';
-import data from './helpers/fixture.js';
+import data from '../helpers/fixture.js';
 
 describe('lang/data roots', () => {
     it('should return <data> when query is empty', () => {

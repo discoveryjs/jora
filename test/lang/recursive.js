@@ -1,6 +1,6 @@
 import assert from 'assert';
 import query from 'jora';
-import data from './helpers/fixture.js';
+import data from '../helpers/fixture.js';
 
 function addUnique(arr, items) {
     for (let i = 0; i < items.length; i++) {

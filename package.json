@@ -26,8 +26,8 @@
   },
   "scripts": {
     "lint": "eslint src test docs",
-    "test": "mocha --reporter ${REPORTER:-progress}",
-    "test:cjs": "mocha cjs-test --reporter ${REPORTER:-progress}",
+    "test": "mocha --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
+    "test:cjs": "mocha cjs-test --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",
     "compile-modules": "node scripts/compile-modules.cjs",
     "compile-modules-and-test": "npm run compile-modules && npm test",

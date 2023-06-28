@@ -25,7 +25,7 @@ function patchTests() {
         return {
             name: 'cjs-tests-fix',
             resolveId(source) {
-                if (/^..\/src/.test(source)) {
+                if (/^(..\/)+src/.test(source)) {
                     return { id: source.replace('/src/', '/cjs/').replace(/\.js/, '.cjs'), external: true };
                 }
                 return null;
@@ -43,10 +43,10 @@ function patchTests() {
     return {
         name: 'cjs-tests-fix',
         resolveId(source) {
-            if (/^..\/cjs/.test(source)) {
+            if (/^(\.\.\/)+cjs/.test(source)) {
                 return { id: source, external: true };
             }
-            if (/^..\/src/.test(source)) {
+            if (/^(\.\.\/)+src/.test(source)) {
                 return { id: source.replace('/src/', '/cjs/').replace(/\.js/, '.cjs'), external: true };
             }
             return null;
@@ -79,10 +79,20 @@ function replaceContent(map) {
     };
 }
 
-function readDir(dir) {
-    return fs.readdirSync(dir)
-        .filter(fn => fn.endsWith('.js'))
-        .map(fn => `${dir}/${fn}`);
+function readDir(dir, recursive) {
+    const result = [];
+
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const entryPath = `${dir}/${entry.name}`;
+
+        result.push(entryPath);
+
+        if (entry.isDirectory()) {
+            result.push(...readDir(entryPath, recursive));
+        }
+    }
+
+    return result;
 }
 
 async function build(outputDir, { watch: watchMode = false, patch = false }, ...entryPoints) {
@@ -136,7 +146,9 @@ async function build(outputDir, { watch: watchMode = false, patch = false }, ...
 
 async function buildAll(watch = false) {
     await build('./cjs', { watch, patch: false }, 'src/index.js');
-    await build('./cjs-test', { watch, patch: true }, ...readDir('test'));
+    await build('./cjs-test', { watch, patch: true }, ...readDir('test').filter(fn =>
+        !/\/helpers\//.test(fn) && fn.endsWith('.js')
+    ));
 }
 
 module.exports = buildAll;

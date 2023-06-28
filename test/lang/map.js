@@ -1,8 +1,8 @@
 import assert from 'assert';
 import query from 'jora';
-import data from './helpers/fixture.js';
+import data from '../helpers/fixture.js';
 
-describe('lang/map `.()`', () => {
+describe('lang/map', () => {
     it('should be a data root', () => {
         assert.deepEqual(
             query('.(deps + dependants).filename')(data).sort(),
