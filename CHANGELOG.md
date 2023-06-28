@@ -1,3 +1,7 @@
+## next
+
+- Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
+
 ## 1.0.0-beta.7 (July 12, 2022)
 
 - Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`

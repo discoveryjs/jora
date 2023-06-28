@@ -179,9 +179,6 @@ export default Object.freeze({
 
         return result;
     },
-    split(current, pattern) {
-        return String(current).split(pattern);
-    },
     join(current, separator) {
         return Array.isArray(current)
             ? current.join(separator)
@@ -214,5 +211,28 @@ export default Object.freeze({
         }
 
         return fn(current, initValue);
+    },
+
+    // array/string
+    split(current, pattern) {
+        if (Array.isArray(current)) {
+            const patternFn = typeof pattern === 'function' ? pattern : Object.is.bind(null, pattern);
+            const result = [];
+            let start = 0;
+            let end = 0;
+
+            for (; end < current.length; end++) {
+                if (patternFn(current[end])) {
+                    result.push(current.slice(start, end));
+                    start = end + 1;
+                }
+            }
+
+            result.push(current.slice(start, end));
+
+            return result;
+        }
+
+        return String(current).split(pattern);
     }
 });
