@@ -278,9 +278,6 @@ export default Object.freeze({
         );
     },
 
-    // math
-    ...Object.fromEntries([
-        // all Math static method with exclusion of 'max', 'min', 'random'
     // all Math static method with exclusion of 'max', 'min' and 'random'
     ...[
         'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
