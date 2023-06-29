@@ -281,9 +281,14 @@ export default Object.freeze({
     // math
     ...Object.fromEntries([
         // all Math static method with exclusion of 'max', 'min', 'random'
+    // all Math static method with exclusion of 'max', 'min' and 'random'
+    ...[
         'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
         'cbrt', 'ceil', 'clz32', 'cos', 'cosh', 'exp', 'expm1', 'floor',
         'fround', 'hypot', 'imul', 'log', 'log10', 'log1p', 'log2', 'pow',
         'round', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc'
-    ].map(method => [method, Math[method]]))
+    ].reduce((res, method) => {
+        res[method] = Math[method];
+        return res;
+    }, {})
 });
