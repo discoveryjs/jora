@@ -233,7 +233,7 @@ describe('lang/operators', () => {
             );
         });
 
-        it('should support for `i` flag', () => {
+        it('should support for regexp flags', () => {
             assert.strictEqual(
                 query('$~=/\\.js$/i')('1.js'),
                 true
@@ -254,11 +254,11 @@ describe('lang/operators', () => {
 
         it('should apply as some() for array', () => {
             assert.strictEqual(
-                query('foo~=/\\.js$/')([{ foo: '1.js' }, { foo: '2.css' }, { foo: '3.js' }]),
+                query('$~=/\\.js$/')(['1.js', '2.css', '3.js']),
                 true
             );
             assert.strictEqual(
-                query('foo~=/\\.svg$/')([{ foo: '1.js' }, { foo: '2.css' }, { foo: '3.js' }]),
+                query('$~=/\\.svg$/')(['1.js', '2.css', '3.js']),
                 false
             );
         });
@@ -270,83 +270,111 @@ describe('lang/operators', () => {
             );
         });
 
-        it('issue #2 - regexp shouldn\'t be hungry', () => {
-            assert.strictEqual(
-                query('foo~=/./ and "a/b" in bar')({ foo: 'abc', bar: 'aaa/bbb' }),
-                true
-            );
-        });
-
         it('should take a function as tester', () => {
             assert.strictEqual(
                 query('$ ~= =>$=123')(123),
                 true
             );
             assert.strictEqual(
-                query('$ ~= =>$=123')(234),
+                query('$ ~= =>$=234')(123),
+                false
+            );
+            assert.strictEqual(
+                query('$ ~= #.fn')(234, { fn: val => val === 234}),
+                true
+            );
+            assert.strictEqual(
+                query('$ ~= #.fn')(234, { fn: val => val === 123}),
                 false
             );
         });
 
-        it('should be positive when tester is `null`', () => {
+        it('should be always positive when tester is `null`', () => {
             assert.strictEqual(
-                query('$ ~= null')('foo'),
+                query('"foo" ~= null')(),
                 true
             );
             assert.strictEqual(
-                query('$ ~= null')(false),
+                query('false ~= null')(),
+                true
+            );
+            assert.strictEqual(
+                query('null ~= null')(),
+                true
+            );
+            assert.strictEqual(
+                query('undefined ~= null')(),
                 true
             );
         });
 
-        it('should be positive when tester is `undefined`', () => {
+        it('should be always positive when tester is `undefined`', () => {
             assert.strictEqual(
-                query('$ ~= undefined')('foo'),
+                query('"foo" ~= undefined')(),
                 true
             );
             assert.strictEqual(
-                query('$ ~= undefined')(false),
+                query('false ~= undefined')(),
+                true
+            );
+            assert.strictEqual(
+                query('null ~= undefined')(),
+                true
+            );
+            assert.strictEqual(
+                query('undefined ~= undefined')(),
                 true
             );
         });
 
         it('should be negative when pattern is a string', () => {
             assert.strictEqual(
-                query('$ ~= "123"')('41234'),
+                query('"41234" ~= "123"')(),
                 false
             );
         });
 
         it('should be negative when pattern is a number', () => {
             assert.strictEqual(
-                query('$ ~= 123')('41234'),
+                query('"41234" ~= 123')(),
                 false
             );
         });
     });
 
-    describe('not', () => {
-        it('basic', () => {
-            assert.deepEqual(
-                query('.[not errors]')(data),
-                data
-                    .filter(item => !item.errors || !item.errors.length)
-            );
+    for (const operator of ['not', 'no']) {
+        describe(operator, () => {
+            for (const expr of [
+                '0',
+                'false',
+                'null',
+                'undefined',
+                'NaN',
+                '""',
+                '[]',
+                '{}'
+            ]) {
+                it(expr, () => {
+                    assert.strictEqual(query(`${operator} ${expr}`)(), true);
+                });
+            }
 
-            assert.deepEqual(
-                query('.[not type="css"]')(data),
-                query('.[type!="css"]')(data)
-            );
+            for (const expr of [
+                '1',
+                'true',
+                'Infinity',
+                '-Infinity',
+                '[1]',
+                '[undefined]',
+                '{ foo: 1 }',
+                '{ foo: undefined }'
+            ]) {
+                it(expr, () => {
+                    assert.strictEqual(query(`${operator} ${expr}`)(), false);
+                });
+            }
         });
-
-        it('should support alias `no`', () => {
-            assert.deepEqual(
-                query('.[no errors]')(data),
-                data
-                    .filter(item => !item.errors || !item.errors.length)
-            );
-        });
-    });
+    }
 
     describe('in', () => {
         it('basic usage with an array', () => {
