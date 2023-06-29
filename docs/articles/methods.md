@@ -27,6 +27,7 @@ Jora comes with a set of built-in methods:
 | `map(fn)` | The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mapping](./map.md))
 | `filter(fn)` | The same as `Array#filter()` in JavaScript, is equivalent to `.[fn()]` (see [Filtering](./filter.md))
 | `split(pattern)` | The same as `String#split()` in JavaScript. `pattern` may be a string or regex
+| `replace(pattern, replacement)` | The same as `String#replaceAll()` in JavaScript, but also works for arrays. When `pattern` is RegExp, a `g` flags adds automatically if omitted.
 | `join(separator)` | The same as `Array#join()` in JavaScript. When `separator` is not specified, `,` is used
 | `slice(from, to)` | The same as `Array#slice()` and `String#slice()` in JavaScript (see also [Slice notation](./slice-notation.md))
 | <nobr>`match(pattern, matchAll?)`</nobr> | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent

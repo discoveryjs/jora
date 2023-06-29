@@ -17,6 +17,21 @@ function matchEntry(match) {
     };
 }
 
+function replaceMatchEntry(args) {
+    const last = args.pop();
+    const groups = typeof last === 'string' ? null : last;
+    const input = groups === null ? last : args.pop();
+    const start = args.pop();
+
+    return {
+        matched: args,
+        start,
+        end: start + args[0].length,
+        input,
+        groups
+    };
+}
+
 const stableSortSize = isSortStable(20) ? Infinity : isSortStable(10) ? 10 : 0;
 
 function isSortStable(n) {
@@ -232,6 +247,28 @@ export default Object.freeze({
         }
 
         return String(current).split(pattern);
+    },
+    replace(current, pattern, replacement) {
+        if (Array.isArray(current)) {
+            const patternFn = typeof pattern === 'function' ? pattern : Object.is.bind(null, pattern);
+
+            return current.map(
+                typeof replacement === 'function'
+                    ? current => patternFn(current) ? replacement(current) : current
+                    : current => patternFn(current) ? replacement : current
+            );
+        }
+
+        if (isRegExp(pattern) && !pattern.flags.includes('g')) {
+            pattern = new RegExp(pattern, pattern.flags + 'g');
+        }
+
+        return String(current).replaceAll(
+            pattern,
+            typeof replacement === 'function'
+                ? (...args) => replacement(replaceMatchEntry(args))
+                : replacement
+        );
     },
 
     // math
