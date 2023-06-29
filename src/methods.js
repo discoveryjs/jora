@@ -32,6 +32,12 @@ function replaceMatchEntry(args) {
     };
 }
 
+const replaceAll = String.prototype.replaceAll || function(pattern, replacement) {
+    return isRegExp(pattern)
+        ? this.replace(pattern, replacement)
+        : this.split(pattern).join(String(replacement));
+};
+
 const stableSortSize = isSortStable(20) ? Infinity : isSortStable(10) ? 10 : 0;
 
 function isSortStable(n) {
@@ -263,7 +269,8 @@ export default Object.freeze({
             pattern = new RegExp(pattern, pattern.flags + 'g');
         }
 
-        return String(current).replaceAll(
+        return replaceAll.call(
+            String(current),
             pattern,
             typeof replacement === 'function'
                 ? (...args) => replacement(replaceMatchEntry(args))
