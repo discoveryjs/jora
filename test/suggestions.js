@@ -686,7 +686,10 @@ describe('query/suggestions (tolerant mode)', () => {
             keywords.forEach(operator => {
                 const queryString = '|[|]|' + operator;
 
-                if (/^not?/.test(operator) || operator === 'asc' || operator === 'desc') {
+                if (operator === 'not' ||
+                    operator === 'no' ||
+                    operator === 'asc' ||
+                    operator === 'desc') {
                     return;
                 }
 
@@ -773,17 +776,17 @@ describe('query/suggestions (tolerant mode)', () => {
         );
 
         describe('array after keyword', () =>
-            ensureRightExprEvaluate.forEach(queryString => {
-                if (postfixOps.has(queryString)) {
+            ensureRightExprEvaluate.forEach(operator => {
+                if (operator === 'asc' || operator === 'desc') {
                     return;
                 }
 
-                it(queryString + '|[|]', () => {
+                it(operator + '|[|]', () => {
                     assert.deepEqual(
-                        suggestQuery(queryString + '|[|]', data),
+                        suggestQuery(operator + '|[|]', data),
                         [
                             null,
-                            suggestion('', ['foo', 'bar'], queryString.length + 1)
+                            suggestion('', ['foo', 'bar'], operator.length + 1)
                         ]
                     );
                 });

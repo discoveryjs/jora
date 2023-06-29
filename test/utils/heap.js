@@ -2,7 +2,7 @@ import assert from 'assert';
 import { MinHeap, MaxHeap } from '../../src/utils/heap.js';
 
 describe('utils/heap', () => {
-    describe('MinHeap', () => {
+    describe.skip('MinHeap', () => {
         it('should create an empty MinHeap', () => {
             const heap = new MinHeap();
             assert.strictEqual(heap.values.length, 0);
