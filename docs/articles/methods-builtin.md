@@ -83,6 +83,60 @@ The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mappin
 
 Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent.
 
+## max(compare)
+
+Return max value from an array of string, excluding `undefined`. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`.
+
+The logic of `max()` method equivalent (but more performant and memory efficient) to the following expression:
+- no comparator: `sort().[$ != undefined][-1]`
+- with comparator: `sort(compare).[compare($, undefined) != 0][-1]`
+
+```jora
+[1, 4, 2, 3].max()  // Result: 4
+```
+
+```jora
+$input: [{ a: 10 }, { a: 42 }, {}, { a: 42, ok: 1 }, { a: 20 }];
+
+$input.max(=> a)  // Result: { a: 42, ok: 1 }
+```
+
+```jora
+$input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
+
+$input.max(a desc)  // Result: { a: 10 }
+```
+
+```jora
+'hello world'.max() // Result: 'w'
+```
+
+## min(compare)
+
+Return min value from an array of string. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`.
+
+The logic of `min()` method equivalent to expression `sort()[0]` or `sort(fn)[0]`, but more performant and memory efficient.
+
+```jora
+[4, 1, 2, 3].min()  // Result: 1
+```
+
+```jora
+$input: [{ a: 10 }, { a: 5, ok: 1 }, {}, { a: 5 }, { a: 20 }];
+
+$input.min(=> a)  // Result: { a: 5, ok: 1 }
+```
+
+```jora
+$input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
+
+$input.min(a desc)  // Result: { a: 42 }
+```
+
+```jora
+'hello world'.min() // Result: ' '
+```
+
 ## pick()
 
 Get a value by a key, index, or function. Supports negative indices for arrays and strings.

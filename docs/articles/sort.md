@@ -28,7 +28,19 @@ foo asc, bar desc // JS equivalent: (a, b) =>
                   //       0
 ```
 
-### Sorting function modifiers
+## Sorting of mixed type value arrays
+
+Before comparing a pair of values, a comparator function compares their types. When types are different, a comparator returns a result of types comparison, since comparing let say a number and an object makes no sense. In other words, an object value is always bigger than a number, and a boolean is always lower than a string:
+
+1. boolean
+2. NaN
+3. number
+4. string
+5. null
+6. object
+7. other
+8. undefined
+## Sorting function modifiers
 
 There are some modifiers for `asc` and `desc` that provide additional sorting options:
 
@@ -69,7 +81,6 @@ We can also sort by multiple properties. For example, suppose we have an array o
     { "name": "Charlie", "age": 30 }
 ]
 ```
-
 
 We can sort the users first by age in ascending order and then by name in descending order:
 

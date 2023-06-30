@@ -66,6 +66,12 @@ function stableSort(array, cmp) {
         .map(item => item.value);
 }
 
+function getterToCmp(getter, cmp) {
+    return getter.length === 1
+        ? (a, b) => cmp(getter(a), getter(b))
+        : getter;
+}
+
 export default Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
@@ -298,5 +304,41 @@ export default Object.freeze({
     ].reduce((res, method) => {
         res[method] = Math[method];
         return res;
-    }, {})
+    }, {}),
+
+    // statistics
+    min(current, cmp = buildin.cmpNatural) {
+        let min;
+
+        if (isFinite(current?.length) && typeof cmp === 'function') {
+            cmp = getterToCmp(cmp, buildin.cmpNatural);
+
+            for (let i = 0; i < current.length; i++) {
+                const value = current[i];
+
+                if ((min === undefined || cmp(value, min) < 0) && cmp(value, undefined) !== 0) {
+                    min = value;
+                }
+            }
+        }
+
+        return min;
+    },
+    max(current, cmp = buildin.cmpNatural) {
+        let max;
+
+        if (isFinite(current?.length) && typeof cmp === 'function') {
+            cmp = getterToCmp(cmp, buildin.cmpNatural);
+
+            for (let i = 0; i < current.length; i++) {
+                const value = current[i];
+
+                if ((max === undefined || cmp(value, max) >= 0) && cmp(value, undefined) !== 0) {
+                    max = value;
+                }
+            }
+        }
+
+        return max;
+    }
 });
