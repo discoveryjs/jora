@@ -10,32 +10,15 @@ expr.method(...args?) // `expr` can be omitted, i.e. `.method(...args?)` or `met
 
 ## Built-in methods
 
-Jora comes with a set of built-in methods:
+Jora comes with a set of built-in methods which perform most common operations on data. There is an example of using `group()`, `sort()` and `size()` methods:
 
-| Jora method | Description
-|-------------|------------
-| `bool()` | Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy
-| `keys()` | The same as `Object.keys()` in JavaScript
-| `values()` | The same as `Object.values()` in JavaScript
-| `entries()` | Similar to `Object.entries()` in JavaScript, using `{ key, value }` objects for entries instead of array tuples
-| `fromEntries()` | Similar to `Object.fromEntries()` in JavaScript, expects `{ key, value }` objects as entries instead of array tuples
-| `pick()` | Get a value by a key, index, or function. Supports negative indices for arrays and strings
-| `size()` | Returns count of keys if data is an object, otherwise returns `length` value or `0` when the field is absent
-| `sort(fn)` | Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc` (see [Sorting](./sort.md))
-| `reverse()` | Reverse order of items
-| `group(fn[, fn])` | Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries  (see [Grouping](./group.md))
-| `map(fn)` | The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mapping](./map.md))
-| `filter(fn)` | The same as `Array#filter()` in JavaScript, is equivalent to `.[fn()]` (see [Filtering](./filter.md))
-| `split(pattern)` | The same as `String#split()` in JavaScript. `pattern` may be a string or regex
-| <nobr>`replace(pattern, replacement)`</nobr> | The same as `String#replaceAll()` in JavaScript, but also works for arrays. When `pattern` is RegExp, a `g` flags adds automatically if omitted.
-| `join(separator)` | The same as `Array#join()` in JavaScript. When `separator` is not specified, `,` is used
-| `slice(from, to)` | The same as `Array#slice()` and `String#slice()` in JavaScript (see also [Slice notation](./slice-notation.md))
-| <nobr>`match(pattern, matchAll?)`</nobr> | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent
-| `reduce(fn[, initValue])` | The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value `reduce(=>$ > $$ ? $ : $$)`
-| [math] | JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) methods: `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `log()`, `log10()`, `log1p()`, `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()`
-| `toLowerCase(locales)` | The same as `String#toLocaleLowerCase()` in JavaScript
-| `toUpperCase(locales)` | The same as `String#toLocaleUpperCase()` in JavaScript
-| `trim()` | The same as `String#trim()` in JavaScript
+```jora
+group(=> name)
+    .({ name: key, records: value })
+    .sort(records.size() desc)
+```
+
+See [Built-in methods](./methods-builtin.md).
 
 ## Custom methods
 

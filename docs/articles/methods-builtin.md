@@ -85,7 +85,7 @@ Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchA
 
 ## max(compare)
 
-Return max value from an array of string, excluding `undefined`. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`.
+Return max value from an array of string, excluding `undefined`. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`. For string values a natural comparison is used by default.
 
 The logic of `max()` method equivalent (but more performant and memory efficient) to the following expression:
 - no comparator: `sort().[$ != undefined][-1]`
@@ -113,7 +113,7 @@ $input.max(a desc)  // Result: { a: 10 }
 
 ## min(compare)
 
-Return min value from an array of string. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`.
+Return min value from an array of string. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`. For string values a natural comparison is used by default.
 
 The logic of `min()` method equivalent to expression `sort()[0]` or `sort(fn)[0]`, but more performant and memory efficient.
 
