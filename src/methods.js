@@ -310,7 +310,7 @@ export default Object.freeze({
     min(current, cmp = buildin.cmpNatural) {
         let min;
 
-        if (isFinite(current?.length) && typeof cmp === 'function') {
+        if (current && isFinite(current.length) && typeof cmp === 'function') {
             cmp = getterToCmp(cmp, buildin.cmpNatural);
 
             for (let i = 0; i < current.length; i++) {
@@ -327,7 +327,7 @@ export default Object.freeze({
     max(current, cmp = buildin.cmpNatural) {
         let max;
 
-        if (isFinite(current?.length) && typeof cmp === 'function') {
+        if (current && isFinite(current.length) && typeof cmp === 'function') {
             cmp = getterToCmp(cmp, buildin.cmpNatural);
 
             for (let i = 0; i < current.length; i++) {
