@@ -1,6 +1,6 @@
-# Mapping: `.(...)` and `map()` method
+# Mapping: `.(…)` and `map()` method
 
-The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This is achieved using the `.(...)` syntax or `map()` method.
+The **mapping** in Jora allows you to create a new array by transforming the elements of the given array with a provided function. This is achieved using the `.(…)` syntax or `map()` method.
 
 Jora's mapping works not only with arrays but also with primitive types and objects. Note that the map method produces unique values, meaning that the resulting array might have a smaller length than the original array. If an expression returns an array, its result is concatenated with the overall result ignoring `undefined` values, possibly leading to a larger resulting array than the original.
 
@@ -183,14 +183,14 @@ In this example, we wrap the result of the map method into an object with a `val
 
 ## `.()` vs. `map()`
 
-In general, `.(...)` is the preferred syntax because it is more concise. However, the `map()` method exists to allow mapping with a given function, for instance via a context (`#`) or defined in the query.
+In general, `.(…)` is the preferred syntax because it is more concise. However, the `map()` method exists to allow mapping with a given function, for instance via a context (`#`) or defined in the query.
 
 ```jora
 $myMapper: => { value: $ * 2 };
 [1, 2, 3].map($myMapper) // Result: [2, 4, 6]
 ```
 
-In this case, the choice between `.(...)` and `map()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for mapping purposes, equivalence of syntaxes:
+In this case, the choice between `.(…)` and `map()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for mapping purposes, equivalence of syntaxes:
 
 - `.map(fn)` is equivalent to `.(fn())`
 - `.(expr)` is equivalent to `.map(=> expr)`

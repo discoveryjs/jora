@@ -24,8 +24,8 @@ Jora supports literals, which include:
 - Regular expressions: `/regexp/flags`
 - Object literals: `{ hello: 'world' }` (see [Object literals](./object-literal.md))
 - Array literals: `[1, 2, 3]` (see [Array literals](./array-literal.md))
-- `null` and `undefined`
-- ... and others
+- Functions: `=> …`
+- Keywords: `NaN`, `Infinity`, `null` and `undefined`
     
 See [Literals](./literals.md)
 
@@ -34,34 +34,38 @@ See [Literals](./literals.md)
 Jora supports most JavaScript operators, including:
 
 - Arithmetic: `+`, `-`, `*`, `/`, `%`
-- Comparison: `=`, `!=`, `<`, `<=`, `>`, `>=`
-- Logical: `and`, `or`, `not`
+- Comparison: `=`, `!=`, `<`, `<=`, `>`, `>=`, `~=`
+- Logical: `and`, `or`, `not` (alias `no`), `??`, `in`, `not in`, `has`, `has no`
 - Ternary: `?:`
-- ... and others
+- Grouing: `( )`
+- Pipeline: `|`
 
 See [Operators](./operators.md)
 
-## Dot and bracket notations
+## Dot, bracket and slice notations
 
-Jora provides two notations for accessing object properties and array elements: dot notation and bracket notation. Dot notation is similar to JavaScript's property access notation, using a period followed by the property name (e.g., `$.propertyName`). Bracket notation, on the other hand, encloses the property name or index within square brackets (e.g., `$['propertyName']` or `$[0]`). Jora's bracket notation also allows you to use functions for dynamic property access and supports optional chaining by default.
+Jora provides notations for accessing properties and elements: dot, bracket and slice notations. Dot notation is similar to JavaScript's property access notation, using a period followed by the property name (e.g., `$.propertyName`). Bracket notation encloses the property name or index within square brackets (e.g., `$['propertyName']` or `$[0]`), it's also possible to use functions to choose. Slice notation provides a concise syntax to slice elements with optional step (`array[5:10:2]` selects each odd element from 5th to 10th indecies).
 
 - [Dot notation](./dot-notation.md)
 - [Bracket notation](./bracket-notation.md)
+- [Slice notation](./slice-notation.md)
 
 ## Methods and functions
 
-Jora provides a rich set of built-in methods for manipulating data, such as `.map()`, `.filter()`, `.group()`, `.sort()`, `.reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax.
+Jora provides a rich set of built-in methods for manipulating data, such as `.map()`, `.filter()`, `.group()`, `.sort()`, `.reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax, and use them as a method.
 
 - [Methods](./methods.md)
+- [Built-in methods](./methods-builtin.md)
 - [Grouping](./group.md): `group()` method
 - [Sorting](./sort.md): `sort()` method
 
 ## Mapping and filtering
 
-Jora has a concise syntax for mapping and filtering arrays. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`. This compact syntax makes it easy to transform and filter data.
+Jora has a concise syntax for mapping and filtering. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`.
 
-- [Mapping](./map.md): `.(...)` and `map()` method
-- [Filtering](./filter.md): `.[...]` and `filter()` method
+- [Mapping](./map.md): `.(…)` and `map()` method
+- [Recursive mapping](./recursive-map.md): `..(…)`
+- [Filtering](./filter.md): `.[…]` and `filter()` method
 
 ## Variables
 

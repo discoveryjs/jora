@@ -51,7 +51,7 @@ expr.$method(...args?) // or .$method(...args?) or $method(...args?)
 The following example demonstrates how to sum up an array using a function as a method:
 
 ```jora
-$sum: => .reduce(=> $$ + $, 0); // The same as $.reduce(...)
+$sum: => .reduce(=> $$ + $, 0); // The same as $.reduce(…)
 
 [1, 2, 3, 4].$sum() // Returns 10
 ```

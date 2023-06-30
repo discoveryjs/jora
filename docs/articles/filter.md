@@ -1,6 +1,6 @@
-# Filtering: `.[...]` and `filter()` method
+# Filtering: `.[…]` and `filter()` method
 
-In Jora, filtering allows to extract specific elements from an array based on a condition. This is achieved using the `.[...]` syntax or `filter()` method. Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
+In Jora, filtering allows to extract specific elements from an array based on a condition. This is achieved using the `.[…]` syntax or `filter()` method. Filtering returns an element in the result if the condition inside the filter evaluates to a truthy value. If the condition evaluates to a falsy value, the element will be excluded from the result.
 
 > Note: In Jora, empty arrays and objects with no entries are considered falsy.
 
@@ -73,14 +73,14 @@ $input.[data.value > 20]
 
 ## `.[]` vs. `filter()`
 
-In general, `.[...]` is the preferred syntax because it is more concise. However, the `filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
+In general, `.[…]` is the preferred syntax because it is more concise. However, the `filter()` method exists to allow filtering with a given function, for instance via a context (`#`) or defined in the query.
 
 ```jora
 $myFilter: => data.value > 20;
 .filter($myFilter)
 ```
 
-In this case, the choice between `.[...]` and `filter()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for filtering purposes, equivalence of syntaxes:
+In this case, the choice between `.[…]` and `filter()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for filtering purposes, equivalence of syntaxes:
 
 - `.filter(fn)` is equivalent to `.[fn()]`
 - `.[expr]` is equivalent to `.filter(=> expr)`

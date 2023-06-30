@@ -67,7 +67,7 @@ $foo: 'bar';
 $foo // Result: 'bar'
 ```
 
-2. [Mapping](./map.md) `.(...)`:
+2. [Mapping](./map.md) `.(…)`:
 
 ```jora
 {
@@ -82,13 +82,13 @@ $foo // Result: 'bar'
 [1, 2, 3].[$num: $; $num * 2] // Result: [2, 4, 6]
 ```
 
-4. [Grouping operator](./operators.md#grouping-operator) `(...)`:
+4. [Grouping operator](./operators.md#grouping-operator) `(…)`
 
 ```jora
 ($a: 5; $b: 10; $a + $b) // Result: 15
 ```
 
-5. [Object literal](./object-literal.md) `{...}`:
+5. [Object literal](./object-literal.md) `{…}`
 
 ```jora
 {
@@ -141,7 +141,7 @@ $items.(
     })
 )
 // Result:
-// [{ parent: 1, child: 2 }, { parent: 1, child: 3 }, { parent: 2, child: 4 }, ...]
+// [{ parent: 1, child: 2 }, { parent: 1, child: 3 }, { parent: 2, child: 4 }, …]
 ```
 
 In this example, we store the entire current item in the variable `$item` before entering the nested scope created by the `.()` operation on the `children` property. This allows us to access the parent value within the nested scope even though `$` has changed to represent the current child.
