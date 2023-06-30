@@ -278,6 +278,17 @@ export default Object.freeze({
         );
     },
 
+    // strings
+    toLowerCase(current, locales) {
+        return String(current).toLocaleLowerCase(locales);
+    },
+    toUpperCase(current, locales) {
+        return String(current).toLocaleUpperCase(locales);
+    },
+    trim(current) {
+        return String(current).trim();
+    },
+
     // all Math static method with exclusion of 'max', 'min' and 'random'
     ...[
         'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',

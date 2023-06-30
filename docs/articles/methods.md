@@ -33,6 +33,9 @@ Jora comes with a set of built-in methods:
 | <nobr>`match(pattern, matchAll?)`</nobr> | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent
 | `reduce(fn[, initValue])` | The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value `reduce(=>$ > $$ ? $ : $$)`
 | [math] | JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) methods: `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `log()`, `log10()`, `log1p()`, `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()`
+| `toLowerCase(locales)` | The same as `String#toLocaleLowerCase()` in JavaScript
+| `toUpperCase(locales)` | The same as `String#toLocaleUpperCase()` in JavaScript
+| `trim()` | The same as `String#trim()` in JavaScript
 
 ## Custom methods
 

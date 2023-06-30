@@ -2,13 +2,14 @@
 
 - Added nullish coalescing operator (`??`)
 - Added `replace()` method
+- Added `toLowerCase()`, `toUpperCase()` and `trim()` methods
 - Added math methods `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `log()`, `log10()`, `log1p()`, `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()`. All the methods works the same as static methods of [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) in JavaScript
 - Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
 
 ## 1.0.0-beta.7 (July 12, 2022)
 
 - Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`
-- Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and `..()` when their body starts with an operator, a keyword, etc.
+- Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and ё`..()` when their body starts with an operator, a keyword, etc.
 - Fixed suggestions when pattern is a single quoted string (i.e. for `'foo'` in `.[field='foo']`)
 - Fixed suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
 - Fixed suggestions for `Block` nodes with empty body in strict parse mode
