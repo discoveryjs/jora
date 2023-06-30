@@ -12,6 +12,7 @@
 - [Bracket notation](./articles/bracket-notation.md)
 - [Slice notation](./articles/slice-notation.md)
 - [Methods](./articles/methods.md)
+- [Built-in methods](./articles/methods-builtin.md)
 - [Mapping](./articles/map.md): `.(...)` and `map()` method
 - [Recursive mapping](./articles/recursive-map.md): `..(...)`
 - [Filtering](./articles/filter.md): `.[...]` and `filter()` method
