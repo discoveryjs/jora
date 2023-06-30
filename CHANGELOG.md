@@ -1,7 +1,9 @@
 ## next
 
-- Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
+- Added nullish coalescing operator (`??`)
+- Added `replace()` method
 - Added math methods `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `log()`, `log10()`, `log1p()`, `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()`. All the methods works the same as static methods of [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) in JavaScript
+- Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
 
 ## 1.0.0-beta.7 (July 12, 2022)
 

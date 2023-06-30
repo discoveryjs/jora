@@ -97,6 +97,7 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 | `x and y` | Logical AND. Equivalent to `&&` in JavaScript, but `x` is testing for truthy with the `bool()` method.
 | `not x`<br>`no x` | Logical NOT. Equivalent to `!` in JavaScript, but `x` is testing for truthy with the `bool()` method.
 | `x ? y : z` | Ternary operator. If `x` is truthy, return `y`, else return `z`. `x` is testing for truthy with the `bool()` method.
+| `x ?? y` | The [nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing), equivalent to `??` in JavaScript.
 | `x in [a, b, c]`<br>`[a, b, c] has x` | Equivalent to `x = a or x = b or x = c`.
 | `x not in [a, b, c]`<br>`[a, b, c] has no x` | Equivalent to `x != a and x != b and x != c`.
 
@@ -181,14 +182,15 @@ The following table shows the operators' precedence from lowest to highest:
 | Precedence | Operator |
 |-----:|---|
 | (lowest) 1 | `\|`
-| 2 | `?:`
-| 3 | `,`
+| 2 | `,`
+| 3 | `?:`
 | 4 | `or`
 | 5 | `and`
-| 6 | `not` `no`
-| 7 | `in` `not in` `has` `has no`
-| 8 | `=` `!=` `~=`
-| 9 | `<` `<=` `>` `>=`
-| 10 | `+` `-`
-| 11 | `*` `/` `%`
-| (highest) 12 | `( … )`
+| 6 | `??`
+| 7 | `not` `no`
+| 8 | `in` `not in` `has` `has no`
+| 9 | `=` `!=` `~=`
+| 10 | `<` `<=` `>` `>=`
+| 12 | `+` `-`
+| 13 | `*` `/` `%`
+| (highest) 14 | `( … )`

@@ -5,6 +5,7 @@ const binary = {
     'has no': 'hasNo',
     'and': 'and',
     'or': 'or',
+    '??': 'nullish',
     '+': 'add',
     '-': 'sub',
     '*': 'mul',
@@ -77,7 +78,7 @@ export function compile(node, ctx) {
     }
 
     switch (node.operator) {
-        // separate branch since node.right might not to be evaluated when:
+        // separate branch since node.right might not to be evaluated (short-circuiting) when:
         // - node.left is falsy for "and"
         // - node.left is truthy for "or"
         case 'and':
@@ -88,6 +89,20 @@ export function compile(node, ctx) {
             ctx.put(`${ctx.buildinFn('bool')}(${tmpVar}=`);
             ctx.node(node.left);
             ctx.put(`)?${tmpVar}:`);
+            ctx.scope.captureCurrent.disabled = true;
+            ctx.node(node.right);
+            ctx.scope.captureCurrent.disabled = false;
+            break;
+        }
+
+        // separate branch since node.right might not to be evaluated (short-circuiting)
+        // when node.left is null or undefined
+        case '??': {
+            const tmpVar = ctx.allocateVar();
+
+            ctx.put(`(${tmpVar}=`);
+            ctx.node(node.left);
+            ctx.put(`,${tmpVar}!==null&&${tmpVar}!==undefined)?${tmpVar}:`);
             ctx.scope.captureCurrent.disabled = true;
             ctx.node(node.right);
             ctx.scope.captureCurrent.disabled = false;

@@ -472,6 +472,79 @@ describe('lang/operators', () => {
         });
     });
 
+    describe('??', () => {
+        it('basic', () => {
+            assert.strictEqual(
+                query('null ?? 42')(),
+                42
+            );
+            assert.strictEqual(
+                query('undefined ?? 42')(),
+                42
+            );
+        });
+
+        for (const expr of [
+            '0',
+            'false',
+            '""',
+            '{}',
+            '[]',
+            'NaN'
+        ]) {
+            it(expr, () => {
+                assert.notStrictEqual(
+                    query(expr + ' ?? "fail"')(),
+                    'fail'
+                );
+            });
+        }
+
+        describe('should work with "or" and "and" operators', () => {
+            for (const { expr, expected } of [
+                { expr: 'true and null ?? true', expected: true },
+                { expr: 'true and true ?? false', expected: true },
+                { expr: 'true and null ?? true and 123', expected: 123 },
+                { expr: 'false and null ?? true', expected: false },
+                { expr: 'null and false ?? true', expected: null },
+                { expr: 'true and null ?? false or 42', expected: 42 },
+                { expr: 'false or null ?? false and 42', expected: false },
+                { expr: 'true or null ?? false', expected: true },
+                { expr: 'null or false ?? true', expected: false },
+                { expr: 'false or null ?? 42', expected: 42 },
+                { expr: 'false or 42 ?? false', expected: 42 },
+                { expr: 'false or null ?? 0 or 42', expected: 42 }
+            ]) {
+                it(expr, () => {
+                    assert.strictEqual(
+                        query(expr)(),
+                        expected
+                    );
+                });
+            }
+        });
+
+        it('should not evaluate right expression when left expression is truthy', () => {
+            let left = 0;
+            let right = 0;
+            const value = { foo: 123 };
+            const result = query('left ?? right')({
+                get left() {
+                    left++;
+                    return value;
+                },
+                get right() {
+                    right++;
+                    return true;
+                }
+            });
+
+            assert.strictEqual(result, value, 'should return truthy expression result as is');
+            assert.strictEqual(left, 1, 'should evaluate left expression once');
+            assert.strictEqual(right, 0, 'should not evaluate right expression');
+        });
+    });
+
     describe('or', () => {
         it('basic', () => {
             assert.deepEqual(
