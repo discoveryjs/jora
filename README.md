@@ -7,9 +7,9 @@
 [![Minified + gzip size](https://badgen.net/bundlephobia/minzip/jora)](https://bundlephobia.com/result?p=jora)
 [![Twitter](https://badgen.net/badge/follow/@js_discovery?icon=twitter)](https://twitter.com/js_discovery)
 
-JavaScript object query engine
+JavaScript object query language, and a library to process and perform Jora queries on data.
 
-> STATUS: Jora is still very much work in progress ([ideas and thoughts](https://gist.github.com/lahmatiy/d5af7a987e9548e80eae5f46e6edc931)). Syntax may change in next releases. 
+> STATUS: Jora is stable, but syntax may change in next releases. Still very much work in progress ([ideas and thoughts](https://gist.github.com/lahmatiy/d5af7a987e9548e80eae5f46e6edc931)). 
 
 Features:
 
@@ -31,32 +31,103 @@ Table of content:
 
 <!-- TOC depthfrom:2 -->
 
-- [Install](#install)
-- [Quick demo](#quick-demo)
-- [API](#api)
-    - [Query introspection](#query-introspection)
-- [Syntax](#syntax)
+- [Query syntax overview](#query-syntax-overview)
     - [Comments](#comments)
-    - [Numbers](#numbers)
-    - [Hexadecimal numbers](#hexadecimal-numbers)
-    - [Strings](#strings)
-    - [Regular expressions](#regular-expressions)
-    - [Object literals](#object-literals)
-    - [Array literals](#array-literals)
-    - [Functions](#functions)
-    - [Keywords](#keywords)
+    - [Expressions](#expressions)
+    - [Literals](#literals)
     - [Operators](#operators)
-    - [Comparisons](#comparisons)
-    - [Boolean logic](#boolean-logic)
-    - [Block & definitions](#block--definitions)
-    - [Special references](#special-references)
-    - [Path chaining](#path-chaining)
-    - [Build-in methods](#build-in-methods)
-- [License](#license)
+    - [Dot, bracket and slice notations](#dot-bracket-and-slice-notations)
+    - [Methods and functions](#methods-and-functions)
+    - [Mapping and filtering](#mapping-and-filtering)
+    - [Variables](#variables)
+- [NPM package](#npm-package)
+    - [Install & import](#install--import)
+    - [Quick demo](#quick-demo)
+    - [API](#api)
+    - [Query introspection](#query-introspection)
 
 <!-- /TOC -->
 
-## Install
+## Query syntax overview
+
+Jora is a query language designed for JSON-like data structures. It extends [JSON5](https://json5.org/) and shares many similarities with JavaScript.
+
+See [Docs & playground](https://discoveryjs.github.io/jora/).
+
+### Comments
+
+```js
+// single-line comment
+/* multi-line
+comment */
+```
+
+### Expressions
+
+Jora expressions are the building blocks of Jora queries. Expressions can include comments, literals, operators, functions, and variables.
+
+### Literals
+
+Jora supports literals, which include:
+
+- Numbers: `42`, `-3.14`, `6.022e23`
+- Strings: `"hello"`, `'world'`, `"\u{1F600}"`
+- Booleans: `true`, `false`
+- Regular expressions: `/regexp/flags`
+- Object literals: `{ hello: 'world' }` (see [Object literals](https://discoveryjs.github.io/jora/#article:jora-syntax-object-literal))
+- Array literals: `[1, 2, 3]` (see [Array literals](https://discoveryjs.github.io/jora/#article:jora-syntax-array-literal))
+- Functions: `=> …`
+- Keywords: `NaN`, `Infinity`, `null` and `undefined`
+    
+See [Literals](https://discoveryjs.github.io/jora/#article:jora-syntax-literals)
+
+### Operators
+
+Jora supports most JavaScript operators, including:
+
+- Arithmetic: `+`, `-`, `*`, `/`, `%`
+- Comparison: `=`, `!=`, `<`, `<=`, `>`, `>=`, `~=`
+- Logical: `and`, `or`, `not` (alias `no`), `??`, `in`, `not in`, `has`, `has no`
+- Ternary: `?:`
+- Grouing: `( )`
+- Pipeline: `|`
+
+See [Operators](https://discoveryjs.github.io/jora/#article:jora-syntax-operators)
+
+### Dot, bracket and slice notations
+
+Jora provides notations for accessing properties and elements: dot, bracket and slice notations. Dot notation is similar to JavaScript's property access notation, using a period followed by the property name (e.g., `$.propertyName`). Bracket notation encloses the property name or index within square brackets (e.g., `$['propertyName']` or `$[0]`), it's also possible to use functions to choose. Slice notation provides a concise syntax to slice elements with optional step (`array[5:10:2]` selects each odd element from 5th to 10th indecies).
+
+- [Dot notation](https://discoveryjs.github.io/jora/#article:jora-syntax-dot-notation)
+- [Bracket notation](https://discoveryjs.github.io/jora/#article:jora-syntax-bracket-notation)
+- [Slice notation](https://discoveryjs.github.io/jora/#article:jora-syntax-slice-notation)
+
+### Methods and functions
+
+Jora provides a rich set of built-in methods for manipulating data, such as `.map()`, `.filter()`, `.group()`, `.sort()`, `.reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax, and use them as a method.
+
+- [Methods](https://discoveryjs.github.io/jora/#article:jora-syntax-methods)
+- [Built-in methods](https://discoveryjs.github.io/jora/#article:jora-syntax-methods-builtin)
+- [Grouping](https://discoveryjs.github.io/jora/#article:jora-syntax-group): `group()` method
+- [Sorting](https://discoveryjs.github.io/jora/#article:jora-syntax-sort): `sort()` method
+
+### Mapping and filtering
+
+Jora has a concise syntax for mapping and filtering. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`.
+
+- [Mapping](https://discoveryjs.github.io/jora/#article:jora-syntax-map): `.(…)` and `map()` method
+- [Recursive mapping](https://discoveryjs.github.io/jora/#article:jora-syntax-recursive-map): `..(…)`
+- [Filtering](https://discoveryjs.github.io/jora/#article:jora-syntax-filter): `.[…]` and `filter()` method
+
+### Variables
+
+Variables in Jora are helpful for storing intermediate results or simplifying complex expressions. To define a variable, use the `$variableName: expression;` syntax.
+
+See [Variables](https://discoveryjs.github.io/jora/#article:jora-syntax-variables)
+
+## NPM package
+
+### Install & import
 
 Install with npm:
 
@@ -88,25 +159,40 @@ Bundles are available for use in a browser:
 ```html
 <script type="module">
   import jora from 'node_modules/jora/dist/jora.esm.js'
-  jora('query')(data, context);
+  // ...
 </script>
 ```
 
-One of CDN services like `unpkg` or `jsDelivr` can be used. By default (for short path) a ESM version is exposing. For IIFE version a full path to a bundle should be specified:
+By default (for short path) a ESM version is exposing. For IIFE version a full path to a bundle should be specified. One of CDN services like `unpkg` or `jsDelivr` can be used:
 
-```html
-<!-- ESM -->
-<script type="module">
-  import jora from 'https://cdn.jsdelivr.net/npm/jora';
-  import jora from 'https://unpkg.com/jora';
-</script>
+- `jsDeliver`
 
-<!-- IIFE with an export `jora` to global -->
-<script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
-<script src="https://unpkg.com/jora/dist/jora.js"></script>
-```
+    ```html
+    <!-- ESM -->
+    <script type="module">
+    import jora from 'https://cdn.jsdelivr.net/npm/jora';
+    </script>
+    ```
 
-## Quick demo
+    ```html
+    <!-- IIFE with an export `jora` to global -->
+    <script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
+    ```
+- `unpkg`
+
+    ```html
+    <!-- ESM -->
+    <script type="module">
+    import jora from 'https://unpkg.com/jora';
+    </script>
+    ```
+
+    ```html
+    <!-- IIFE with an export `jora` to global -->
+    <script src="https://unpkg.com/jora/dist/jora.js"></script>
+    ```
+
+### Quick demo
 
 Get npm dependency paths (as a tree) that have packages with more than one version:
 
@@ -170,7 +256,7 @@ jora@1.0.0
 ...
 ```
 
-## API
+### API
 
 ```js
 import jora from 'jora';
@@ -216,6 +302,7 @@ Options:
   Default: `false`
 
   Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
+
 ### Query introspection
 
 To introspect a query, it should be compiled in "stat" (statistic) mode by passing a `stat` option. In this case a result of the query evaluation will be a special API with encapsulated state instead of a value:
@@ -341,247 +428,3 @@ statApi.suggestion(6); // .[foo=|]
             suggestions: Array<string | number>
         }> | null
     ```
-
-## Syntax
-
-### Comments
-
-```
-// single-line comment
-/* multi-line
-comment */
-```
-
-### Numbers
-
-```js
-42
--123
-4.22
-1e3
-1e-2
-```
-
-### Hexadecimal numbers
-
-```js
-0xdecaf
--0xC0FFEE
-```
-
-### Strings
-
-```js
-"string"
-'string'
-`template ${hello} ${world}`
-```
-
-[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) are supported as well as an escaping to continue a string on next line:
-
-```js
-"\u2013 This is a very long string which needs \
-to wrap across multiple lines because \
-otherwise my code is unreadable\x21"
-```
-
-### Regular expressions
-
-The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s` and `u`
-
-```js
-/regexp/
-/regexp/mi
-```
-
-### Object literals
-
-Object initializer/literal syntax is the same as in JavaScript:
-
-```js
-{ foo: 123, bar: true }
-```
-
-Spread operator (`...`) can be used in object literals as well, e.g. `{ a: 1, ..., ...foo }`. When spread operator used with no expression on the right side it's the same as `...$`.
-
-### Array literals
-
-Array initializer/literal syntax is the same as in JavaScript:
-
-```js
-[1, 'foo', { prop: 123 }]
-```
-
-Spread operator (`...`) can be used, e.g. `[1, ...arr]`, but unlike JavaScript, spread operator in jora only inlines arrays and left as is any other values:
-
-```js
-[...[1, 2], ...3, ..."45", { "6": 7 }] // -> [1, 2, 3, "45", { "6": 7 }]
-```
-
-When spread operator used with no expression on the right side it's the same as `...$`.
-
-### Functions
-
-```js
-=> expr
-```
-
-> NOTE: The depricated syntax `< block >` is still supported, but avoid to use it since it will be removed in next releases.
-
-There are several ways to define a comparator function. Such functions (a sorting function) take two arguments and compare a query result for each in specified order (`asc` – ascending, `desc` – descending):
-
-```js
-expr asc  // JS: (a, b) => expr(a) > expr(b) ? 1 : expr(a) < expr(b) ? -1 : 0
-```
-
-```js
-expr desc // JS: (a, b) => expr(a) < expr(b) ? 1 : expr(a) > expr(b) ? -1 : 0
-```
-
-A comma separated sequence defines a single function:
-
-```js
-foo asc, bar desc // JS: (a, b) =>
-                  //       a.foo > b.foo ? 1 : a.foo < b.foo ? -1 :
-                  //       a.bar < b.bar ? 1 : a.bar > b.bar ? -1 :
-                  //       0
-```
-
-There are some modification for `asc` and `desc`:
-
-- `ascN` / `descN` – natural sorting (using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare))
-- `ascA` / `descA` – the same as `asc` / `desc` but reverse order for numbers
-- `ascAN` / `descAN` – the same as `asc`/`desc` but using natural compare and reverse order for numbers
-
-### Keywords
-
-Following keywords can be used with the same meaning as in JavaScript:
-
-- `true`
-- `false`
-- `null`
-- `undefined`
-- `Infinity`
-- `NaN`
-
-### Operators
-
-<table>
-<tr>
-    <th>Jora
-    <th>Description
-</tr>
-<tr>
-    <td nowrap valign="top">x + y
-    <td>Add<br>In case one of the operands is an array it produces new array with elements from `x` and `y` excluding duplicates
-</tr><tr>
-    <td nowrap valign="top">x - y
-    <td>Subtract<br>In case one of the operands is an array with elements from `x` excluding elements from `y`
-</tr><tr>
-    <td nowrap>x * y
-    <td>Multiply
-</tr><tr>
-    <td nowrap>x / y
-    <td>Divide
-</tr><tr>
-    <td nowrap>x % y
-    <td>Modulo
-</tr>
-</table>
-
-### Comparisons
-
-Jora | Description
---- | ---
-x = y | Equals (as `===` in JS)
-x != y | Not equals (as `!==` in JS)
-x < y | Less than
-x <= y | Less than or equal to
-x > y | Greater than
-x >= y | Greater than or equal to
-x ~= y | Match operator, behaviour depends on `y` type:<br>RegExp – test against regexp<br>function – test like `filter()`<br>`null` or `undefined` – always truthy<br>anything else – always falsy
-
-### Boolean logic
-
-Jora | Description
---- | ---
-( x ) | Explicity operator precedence. Definitions are allowed (i.e. `($a: 1; $a + $a)` see bellow)
-x or y | Boolean `or`.<br>Equivalent to `\|\|` in JS, but `x` tests with `bool()` method
-x and y | Boolean `and`.<br>Equivalent to `&&` in JS, but `x` tests with `bool()` method
-not x<br>no x | Boolean `not`.<br>Equivalent to `!` in JS, but `x` tests with `bool()` method
-x ? y : z | If `x` is truthy than return `y` else return `z`. `x` tests with `bool()` method
-x in [a, b, c]<br>[a, b, c] has x | Equivalent to `x = a or x = b or x = c`
-x not in [a, b, c]<br>[a, b, c] has no x | Equivalent to `x != a and x != b and x != c`
-
-### Block & definitions
-
-Some constructions suppose to use a block, which may consists of a variable definition list (should comes first) and an expression. Both are optional. When an expression is empty, a current value (i.e. `$`) returns.
-
-The syntax of definition (white spaces between any part are optional):
-
-```
-$ident ;
-$ident : expression ;
-```
-
-For example:
-
-```
-$foo:123;          // Define `$foo` variable
-$bar;              // The same as `$bar:$.bar;` or `$a: bar;`
-$baz: $foo + $bar; // Definitions may be used in following expressions
-```
-
-In terms of JavaScript, a block creates a new scope. Once a variable is defined, its value never change. Variables can be redefined in nested scopes, but can't be duplicated in the same scope - it causes to error.
-
-### Special references
-
-Jora | Description
---- | ---
-$ | A scope input data (current value). On top level scope it's the same as `@`. In most cases it may be omitted. Used implicitly an input for subquery when no other subjects is defined (e.g. `foo()` and `.foo()` are equivalent for `$.foo()`).
-$$ | A reference to the second parameter of closest function or undefined when no such
-@ | A query input data
-\# | A query context
-
-Since Jora's query performs as `query(data, context)`, in terms of Jora it looks like `query(@, #)`.
-
-### Path chaining
-
-jora | Description
---- | ---
-ident | The same as `$.ident`
-.ident | Child member operator (example: `foo.bar.baz`, `#.foo['use any symbols for name']`)
-..ident<br>..( block ) | Recursive descendant operator (example: `..deps`, `..(deps + dependants)`)
-.[ block ] | Filter a current data. Equivalent to a `.filter(=>(block))` or `.filter(=>expr)` when a block has no definitions
-.( block ) | Map a current data. Equivalent to a `.map(=>(block))` or `.map(=>expr)` when a block has no definitions
-method()<br>.method()<br>..method() | Invoke a predefined method to a value of the left side or to current value `$`. See [build-in methods below](#build-in-methods). The list of methods can be extended on query creating (see API above)
-$method()<br>.$method()<br>..$method() | Invoke a function stored into a `$method` (i.e. `$example: => $ * 10; 2.$plural(["example", "examples"])`) to a value of the left side or to current value `$`. Can take arguments (i.e. `$method(one, 2)`).
-path[expr] | Array-like notation to access properties. Behaves like `pick()` method. In case you need to fetch a value to each element of array use `.($[expr])` or `map(=>$[expr])`
-[from:to]<br>[from:to:step] | [Slice notation](https://github.com/tc39/proposal-slice-notation/blob/master/README.md). Examples: `$str: '<foo>'; str[1:-1]` (result is `'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (result is `[6,5,4]`)
-expr \| [definitions] expr \| ... | Pipeline operator. It's useful to make a query value as current value. Approximately this effect can be obtained using variables: `$ar: [1,2,3]; { size: $ar.size(), top2: $ar[0:2] }`. However, with pipeline operator it's a bit simplier and clear: `[1,2,3] | { size: size(), top2: [0:2] }`
-
-### Build-in methods
-
-jora | Description
---- | ---
-bool() | The same as `Boolean()` in JS, but treats *empty arrays* and *objects with no keys* as falsy
-keys() | The same as `Object.keys()` in JS
-values() | The same as `Object.values()` in JS
-entries() | Similar to `Object.entries()` in JS with a difference: `{ key, value }` objects is using for entries instead of array tuples
-fromEntries() | Similar to `Object.fromEntries()` in JS with difference: `{ key, value }` objects are expecting as entries instead of array tuples
-pick("key")<br>pick(index)<br>pick(fn) | Get a value by a key, an index or a function. It returns an element with `e` index for arrays, a char with `e` index for strings, and a value with `e` key (must be own key) for enything else. Negative indecies are supported for arrays and strings. Current value is element for an array, a char for a string or an entry value for object. Arg1 (i.e. `$$`) is an index for arrays and strings, and a key for objects.
-size() | Returns count of keys if current data is object, otherwise returns `length` value or `0` when field is absent
-sort(fn) | Sort an array by a value fetched with getter (`<fn>`). Keep in mind, you can use sorting function definition syntax using `asc` and `desc` keywords, qhich is more effective in many ways. In case of sorting function definition usage, `<` and `>` are not needed and you can specify sorting order for each component. The following queries are equivalent:<br>`sort(=> foo.bar)` and `sort(foo.bar asc)`<br>`sort(=> foo).reverse()` and `sort(foo desc)`<br>`sort(=> [a, b])` and `sort(a asc, b asc)`
-reverse() | Reverse order of items
-group(fn[, fn]) | Group an array items by a value fetched with first getter and return an array of `{ key, value }` entries. The second parameter is used to fetch a value, the following queries are equivalent:<br>`group(=> foo, => bar)` and `group(=> foo).({ key, value: value.bar })`
-filter(fn) | The same as `Array#filter()` in JS
-map(fn) | The same as `Array#map()` in JS
-split(pattern) | The same as `String#split()` in JS. `pattern` may be a string or regexp
-join(separator) | The same as `Array#join()` in JS. When `separator` is undefined then `","` is using
-slice(from, to) | The same as `Array#slice()` or `String#slice()` in JS
-match(pattern, matchAll?) | Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy then returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent.
-reduce(fn\[, initValue]) | The same as `Array#reduce()` in JS. Use `$$` to access to accumulator and `$` to current value, e.g. find the max value `reduce(=>$ > $$ ? $ : $$)`
-
-## License
-
-MIT
