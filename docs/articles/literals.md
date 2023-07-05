@@ -15,9 +15,17 @@ Literals in Jora are mostly the same as in JavaScript.
 
 ```jora
 42
+```
+```jora
 -123
+```
+```jora
 4.22
+```
+```jora
 1e3
+```
+```jora
 1e-2
 ```
 
@@ -25,6 +33,8 @@ Literals in Jora are mostly the same as in JavaScript.
 
 ```jora
 0xdecaf
+```
+```jora
 -0xC0FFEE
 ```
 
@@ -32,11 +42,15 @@ Literals in Jora are mostly the same as in JavaScript.
 
 ```jora
 "string"
+```
+```jora
 'string'
+```
+```jora
 `template ${hello} ${world}`
 ```
 
-[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences) are supported, as well as escaping to continue a string on the next line:
+[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#escape_sequences) are supported, as well as escaping to continue a string on the next line:
 
 ```jora
 "\u2013 This is a very long string which needs \
@@ -50,6 +64,8 @@ The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s`, and `u`
 
 ```jora
 /regexp/
+```
+```jora
 /regexp/mi
 ```
 
