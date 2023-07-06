@@ -3,39 +3,35 @@
 Literals in Jora are mostly the same as in JavaScript. 
 
 - [Numbers](#numbers)
-- [Hexadecimal numbers](#hexadecimal-numbers)
 - [Strings](#strings)
 - [Regular expressions](#regular-expressions)
-- [Object literals](#object-literals)
-- [Array literals](#array-literals)
+- [Objects](#objects)
+- [Arrays](#arrays)
 - [Functions](#functions)
 - [Keywords](#keywords)
 
 ## Numbers
 
 ```jora
-42
+42         // integer number
 ```
 ```jora
--123
+-123       // negative number
 ```
 ```jora
-4.22
+4.22       // float number
 ```
 ```jora
-1e3
+1e3        // exponential number
 ```
 ```jora
-1e-2
-```
-
-## Hexadecimal numbers
-
-```jora
-0xdecaf
+1e-2       // exponential number
 ```
 ```jora
--0xC0FFEE
+0xdecaf    // hexadecimal number
+```
+```jora
+-0xC0FFEE  // hexadecimal number
 ```
 
 ## Strings
@@ -47,20 +43,20 @@ Literals in Jora are mostly the same as in JavaScript.
 'string'
 ```
 ```jora
-`template ${hello} ${world}`
+`template string ${hello} ${world}`
 ```
 
 [Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#escape_sequences) are supported, as well as escaping to continue a string on the next line:
 
 ```jora
-"\u2013 This is a very long string which needs \
+"\u2013 This is \"a very long\" string which needs \
 to wrap across multiple lines because \
 otherwise, my code is unreadable\x21"
 ```
 
 ## Regular expressions
 
-The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s`, and `u`
+The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s` and `u`.
 
 ```jora
 /regexp/
@@ -69,33 +65,31 @@ The same as in JavaScript. Supported flags: `i`, `g`, `m`, `s`, and `u`
 /regexp/mi
 ```
 
-## Object literals
+## Objects
 
-Object initializer/literal syntax is the same as in JavaScript:
+Object literal syntax is the same as in JavaScript (see [Object literals](./object-literal.md)):
 
 ```jora
 { foo: 123, bar: true }
 ```
 
-See [Object literals](./object-literal.md) for details.
+## Arrays
 
-## Array literals
-
-Array initializer/literal syntax is the same as in JavaScript:
+Array literal syntax is the same as in JavaScript (see [Array literals](./array-literal.md)):
 
 ```jora
 [1, 'foo', { prop: 123 }]
 ```
 
-See [Array literals](./array-literal.md) for details.
+## Functions
 
-### Functions
+A function defintion looks like an arrow function in JavaScript but without arguments (see [Regular functions](./functions.md#regular-functions)):
 
 ```jora
 => expr
 ```
 
-There are several ways to define a comparator function (see [Sorting](./sort.md) for details):
+There is also a syntax to define a comparator function (see [Comparator functions](./functions.md#comparator-functions)):
 
 ```jora
 name asc, age desc

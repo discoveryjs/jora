@@ -24,7 +24,7 @@ Jora supports literals, which include:
 - Regular expressions: `/regexp/flags`
 - Object literals: `{ hello: 'world' }` (see [Object literals](./object-literal.md))
 - Array literals: `[1, 2, 3]` (see [Array literals](./array-literal.md))
-- Functions: `=> …`
+- Functions: `=> …` (see [Functions](./functions.md))
 - Keywords: `NaN`, `Infinity`, `null` and `undefined`
     
 See [Literals](./literals.md)

@@ -76,7 +76,7 @@ Jora supports literals, which include:
 - Regular expressions: `/regexp/flags`
 - Object literals: `{ hello: 'world' }` (see [Object literals](https://discoveryjs.github.io/jora/#article:jora-syntax-object-literal))
 - Array literals: `[1, 2, 3]` (see [Array literals](https://discoveryjs.github.io/jora/#article:jora-syntax-array-literal))
-- Functions: `=> …`
+- Functions: `=> …` (see [Functions](https://discoveryjs.github.io/jora/#article:functions))
 - Keywords: `NaN`, `Infinity`, `null` and `undefined`
     
 See [Literals](https://discoveryjs.github.io/jora/#article:jora-syntax-literals)

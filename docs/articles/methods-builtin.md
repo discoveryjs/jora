@@ -89,7 +89,7 @@ Return max value from an array of string, excluding `undefined`. The method retu
 
 The logic of `max()` method equivalent (but more performant and memory efficient) to the following expression:
 - no comparator: `sort().[$ != undefined][-1]`
-- with comparator: `sort(compare).[compare($, undefined) != 0][-1]`
+- with comparator: `sort(compare).[compare(undefined) != 0][-1]`
 
 ```jora
 [1, 4, 2, 3].max()  // Result: 4
@@ -143,7 +143,12 @@ Get a value by a key, index, or function. Supports negative indices for arrays a
 
 ## reduce(fn, initValue)
 
-The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value `reduce(=>$ > $$ ? $ : $$)`.
+The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value:
+
+```jora
+[1, 5, 2, 3, 4].reduce(=>$ > $$ ? $ : $$)
+// Result: 5
+```
 
 ## replace(pattern, replacement)
 

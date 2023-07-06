@@ -11,6 +11,7 @@
 - [Dot notation](./articles/dot-notation.md)
 - [Bracket notation](./articles/bracket-notation.md)
 - [Slice notation](./articles/slice-notation.md)
+- [Functions](./articles/functions.md)
 - [Methods](./articles/methods.md)
 - [Built-in methods](./articles/methods-builtin.md)
 - [Mapping](./articles/map.md): `.(...)` and `map()` method
