@@ -63,8 +63,8 @@ Constructions that allow defining variables include:
 
 ```jora
 $foo: 'bar';
-
-$foo // Result: 'bar'
+$foo
+// Result: 'bar'
 ```
 
 2. [Mapping](./map.md) `.(…)`:
@@ -73,35 +73,40 @@ $foo // Result: 'bar'
 {
   a: 10,
   b: 20
-}.($a; $b; $a + $b) // Result: 30
+}.($a; $b; $a + $b)
+// Result: 30
 ```
 
 3. [Filtering](./filter.md) `.[]`:
 
 ```jora
-[1, 2, 3].[$num: $; $num * 2] // Result: [2, 4, 6]
+[1, 2, 3].[$num: $; $num * 2]
+// Result: [2, 4, 6]
 ```
 
-4. [Grouping operator](./operators.md#grouping-operator) `(…)`
+4. [Grouping operator](./operators.md#grouping-operator) `(…)`:
 
 ```jora
-($a: 5; $b: 10; $a + $b) // Result: 15
+($a: 5; $b: 10; $a + $b)
+// Result: 15
 ```
 
-5. [Object literal](./object-literal.md) `{…}`
+5. [Object literal](./object-literal.md) `{…}`:
 
 ```jora
 {
   $a: 3;
   $b: 4;
   c: $a * $b
-} // Result: { c: 12 }
+}
+// Result: { c: 12 }
 ```
 
 6. [Pipeline operator](./pipeline-operator.md) `|`:
 
 ```jora
-[1, 2, 3] | $size: size(); .($ * $size) // Result: [3, 6, 9]
+[1, 2, 3] | $size: size(); .($ * $size)
+// Result: [3, 6, 9]
 ```
 
 ## Preserving values across scopes
@@ -140,8 +145,16 @@ $items.(
         child: $
     })
 )
+
 // Result:
-// [{ parent: 1, child: 2 }, { parent: 1, child: 3 }, { parent: 2, child: 4 }, …]
+// [
+//     { parent: 1, child: 2 },
+//     { parent: 1, child: 3 },
+//     { parent: 2, child: 4 },
+//     { parent: 2, child: 5 },
+//     { parent: 3, child: 6 },
+//     { parent: 3, child: 7 }
+// ]
 ```
 
 In this example, we store the entire current item in the variable `$item` before entering the nested scope created by the `.()` operation on the `children` property. This allows us to access the parent value within the nested scope even though `$` has changed to represent the current child.

@@ -52,17 +52,17 @@ users.[age > 30]
 users.(name.first + ' ' + name.last)
 ```
 
-4. [Variables](./variables.md) and expressions:
+5. [Methods](./methods.md) and [functions](./functions.md):
 
 ```jora
-$oldestUser: users.sort(age desc)[0];
-$oldestUser.name
+users.sort(name asc).group(=> name)
 ```
 
-5. Chaining [methods](./methods.md):
+4. [Variables](./variables.md):
 
 ```jora
-users.reverse().join(', ')
+$oldestUser: users.max(age desc);
+$oldestUser.name
 ```
 
 See [Syntax overview](./syntax-overview.md) for a comprehensive overview of Jora syntax.

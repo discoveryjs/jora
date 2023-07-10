@@ -36,9 +36,8 @@ Jora allows you to use expressions and variables within array literals to comput
 ```jora
 $n: 5;
 [1, 1 + 1, $n > 1 ? 3 : 42, $n - 1, $n]
+// Result: [1, 2, 3, 4, 5]
 ```
-
-The result is an array `[1, 2, 3, 4, 5]`.
 
 ## Array slicing
 
@@ -46,16 +45,9 @@ Jora provides the `slice()` method and slice notation to extract a portion of an
 
 ```jora
 $numbers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-$numbers.slice(3, 7) // Result: [3, 4, 5, 6]
+$numbers.slice(3, 7) // Or using slice notation: $numbers[3:7]
+// Result: [3, 4, 5, 6]
 ```
-
-Or using slice notation:
-
-```jora
-$numbers[3:7]
-```
-
-Both examples return a new array containing elements at indices 3, 4, 5, and 6.
 
 ## Concatenating arrays
 
@@ -65,8 +57,8 @@ Jora supports array concatenation using the spread operator `...` and the `+` op
 $first: [1, 2, 3];
 $second: [4, 5, 6];
 
-[...$first, ...$second] // Result: [1, 2, 3, 4, 5, 6]
-// Or: $first + $second
+[...$first, ...$second] // Or: $first + $second
+// Result: [1, 2, 3, 4, 5, 6]
 ```
 
 ## Spread operator
@@ -77,14 +69,16 @@ The spread operator `...` can be used in an array literal to include all element
 $first: [1, 2, 3];
 $second: [4, 5, 6];
 
-[...$first, ...$second] // Result: [1, 2, 3, 4, 5, 6]
+[...$first, ...$second]
+// Result: [1, 2, 3, 4, 5, 6]
 ```
 
 In this example, the spread operator is used to merge `$first` and `$second` arrays into a new array containing all elements from both arrays.
 
 ```jora
 $input: [1, 2, 3, 4, 5, 6, 7, 8, 9];
-$input.reduce(=>$ % 2 ? [...$$, $] : $$, []) // Result: [1, 3, 5, 7, 9]
+$input.reduce(=>$ % 2 ? [...$$, $] : $$, [])
+// Result: [1, 3, 5, 7, 9]
 ```
 
 In this example, the `reduce()` method iterates over the `$input` array and checks if the current value (`$`) is odd (i.e., `$ % 2`). If the value is odd, it appends the value to the accumulator array (`...$$, $`); otherwise, it leaves the accumulator unchanged (`$$`). The initial value of the accumulator is an empty array `[]`.
@@ -92,7 +86,8 @@ In this example, the `reduce()` method iterates over the `$input` array and chec
 Unlike JavaScript, spread operator in Jora inlines arrays only and left any other values "as is":
 
 ```jora
-[...[1, 2], ...3, ..."45", ...{ "6": 7 }] // -> [1, 2, 3, "45", { "6": 7 }]
+[...[1, 2], ...3, ..."45", ...{ "6": 7 }]
+// Result: [1, 2, 3, "45", { "6": 7 }]
 ```
 
 ## Special behavior with operators `+` and `-`
@@ -100,13 +95,13 @@ Unlike JavaScript, spread operator in Jora inlines arrays only and left any othe
 As demonstrated above, the `+` operator can concatenate arrays and values. For example:
 
 ```jora
-[1, 2, 3] + 4 + [5, 6] // Result: [1, 2, 3, 4, 5, 6]
+[1, 2, 3] + 4 + [5, 6]
+// Result: [1, 2, 3, 4, 5, 6]
 ```
 
 The `-` operator, when the left operand is an array, produces a new array with the right operand value filtered out:
 
 ```jora
-[1, 2, 3, 4, 5] - 3 - [1, 5] // Result: [2, 4]
+[1, 2, 3, 4, 5] - 3 - [1, 5]
+// Result: [2, 4]
 ```
-
-This results in an array `[2, 4]`, with 1, 3, and 5 removed.

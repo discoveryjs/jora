@@ -86,16 +86,12 @@ We can sort the users first by age in ascending order and then by name in descen
 
 ```jora
 $users.sort(age asc, name desc)
-```
 
-This will result in the following sorted array:
-
-```json
-[
-    { "name": "Bob", "age": 25 },
-    { "name": "Charlie", "age": 30 },
-    { "name": "Alice", "age": 30 }
-]
+// Result: [
+//     { "name": "Bob", "age": 25 },
+//     { "name": "Charlie", "age": 30 },
+//     { "name": "Alice", "age": 30 }
+// ]
 ```
 
 ## Comparison with JavaScript sorting

@@ -28,7 +28,8 @@ $prefix: 'city';
 
 {
   [$prefix + 'Code']: "NYC"
-} // Result: { cityCode: "NYC" }
+}
+// Result: { cityCode: "NYC" }
 ```
 
 Also, it's possible to use a shorthand syntax for key-value pairs when the value is a variable and it has the same name as the key:
@@ -41,6 +42,7 @@ $country: "USA";
   $city,
   $country
 }
+// Result: { city: 'New York', country: 'USA' }
 ```
 
 This is equivalent to:
@@ -53,6 +55,7 @@ $country: "USA";
   city: $city,
   country: $country
 }
+// Result: { city: 'New York', country: 'USA' }
 ```
 
 ## Spread operator
@@ -67,16 +70,12 @@ $bar: { b: 3, c: 4 };
   ...$foo,
   ...$bar
 }
-```
 
-This results in:
-
-```json
-{
-  "a": 1,
-  "b": 3,
-  "c": 4
-}
+// Result: {
+//   "a": 1,
+//   "b": 3,
+//   "c": 4
+// }
 ```
 
 The spread operator can be used without an expression following it, which essentially means that it will spread the current value (`$`). In this case, the spread operator is equivalent to using `...$`. This shorthand is helpful when you want to merge an object with the current value in a concise manner. Here's an example: suppose we have a list of users, and we want to add an additional property (`active: true`) to each user object. We can use the spread operator to achieve this:
@@ -91,15 +90,11 @@ $users.({
   ..., // The same as ...$
   active: true
 })
-```
 
-The query will result in:
-
-```json
-[
-  { "id": 1, "name": "Alice", "active": true },
-  { "id": 2, "name": "Bob", "active": true }
-]
+// Result: [
+//   { "id": 1, "name": "Alice", "active": true },
+//   { "id": 2, "name": "Bob", "active": true }
+// ]
 ```
 
 In this example, the spread operator (`...`) without an expression following it represents the current value (`$`) within the mapping function, which is each user object in the `$users` array. The resulting object includes all the properties from the original user object along with the additional `active: true` property.
@@ -112,16 +107,12 @@ Jora provides two methods, `entries()` and `fromEntries()`, to work with object 
 
 ```jora
 { a: 1, b: 2, c: 3 }.entries()
-```
 
-This results in:
-
-```json
-[
-  { "key": "a", "value": 1 },
-  { "key": "b", "value": 2 },
-  { "key": "c", "value": 3 }
-]
+// Result: [
+//   { "key": "a", "value": 1 },
+//   { "key": "b", "value": 2 },
+//   { "key": "c", "value": 3 }
+// ]
 ```
 
 2. `fromEntries()`: This method is the inverse of `entries()` and is similar to `Object.fromEntries()` in JavaScript. It takes an array of `{ key, value }` objects and returns an object with properties corresponding to those keys and values. Here's an example:
@@ -132,16 +123,12 @@ This results in:
   { key: "b", value: 2 },
   { key: "c", value: 3 }
 ].fromEntries()
-```
 
-This results in:
-
-```json
-{
-  "a": 1,
-  "b": 2,
-  "c": 3
-}
+// Result: {
+//   "a": 1,
+//   "b": 2,
+//   "c": 3
+// }
 ```
 
 These methods are particularly useful when working with dynamic properties, transforming objects, or when combining multiple objects based on specific conditions.

@@ -126,7 +126,8 @@ $input: [
     { "values": [3, 4] }
 ];
 
-$input.(values) // Result: [ 1, 2, 3, 4 ]
+$input.(values)
+// Result: [ 1, 2, 3, 4 ]
 ```
 
 ## Ignoring `undefined` values

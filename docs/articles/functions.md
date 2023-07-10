@@ -30,14 +30,14 @@ Despite the fact that a function definition has no arguments, two special variab
 ```jora
 $example: => [$, $$];
 1.$example(2)
-// Retult: [1, 2]
+// Result: [1, 2]
 ```
 
 The following example demonstrates how to sum up an array using [`reduce()`](./methods-builtin.md#reducefn-initvalue) method and a function, where `$` is an array element and `$$` is an accumulator value:
 
 ```jora
 [1, 2, 3, 4].reduce(=> $$ + $, 0)
-// Retult: 10
+// Result: 10
 ```
 
 An equivalent JavaScript for the query:

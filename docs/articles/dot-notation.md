@@ -19,7 +19,8 @@ $person: {
   age: 30
 };
 
-$person.name.first // Returns 'John'
+$person.name.first
+// Result: 'John'
 ```
 
 By chaining dot notation, you can access properties at any depth within an object.
@@ -45,7 +46,8 @@ $fruits: [
   { id: 4, name: 'apple' }
 ];
 
-$fruits.name // Returns ['apple', 'banana', 'cherry']
+$fruits.name
+// Result: ['apple', 'banana', 'cherry']
 ```
 
 As you can see, when using dot notation on an array, Jora retrieves the values of the specified property for every object in the array, producing a new array with unique values.
@@ -62,7 +64,8 @@ $items: [
     { name: 'foo', value: 4 }
 ];
 
-$items.[name = 'foo'].value.sum() // Returns 5
+$items.[name = 'foo'].value.sum()
+// Result: 5
 ```
 
 In this example, Jora first filters the items with the name 'foo', then extracts the 'value' property from each filtered item, and finally calculates the sum of these values.

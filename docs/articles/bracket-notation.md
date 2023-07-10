@@ -32,7 +32,8 @@ $items: [
     { id: 3, name: 'Baz' }
 ];
 
-$items[=> id = 2] // Returns { id: 2, name: 'Bar' }
+$items[=> id = 2]
+// Result: { id: 2, name: 'Bar' }
 ```
 
 In this example, the function used with bracket notation returns the first object in the `$items` array with an `id` property equal to 2.
@@ -46,7 +47,8 @@ $items: {
     item3: { id: 3, name: 'Third Item', price: 30 }
 };
 
-$items[=> $$ ~= /^item/ and price >= 20] // Returns { id: 2, name: 'Second Item', price: 20 }
+$items[=> $$ ~= /^item/ and price >= 20]
+// Result: { id: 2, name: 'Second Item', price: 20 }
 ```
 
 ## Negative indexing
@@ -54,7 +56,8 @@ $items[=> $$ ~= /^item/ and price >= 20] // Returns { id: 2, name: 'Second Item'
 Jora supports negative indexing for arrays and strings, allowing you to access elements from the end of the array or string by specifying a negative index.
 
 ```jora
-[1, 2, 3, 4, 5][-2] // Returns 4
+[1, 2, 3, 4, 5][-2]
+// Result: 4
 ```
 
 In the example above, the negative index `-2` accesses the second-to-last element in the array, which is the number 4.
@@ -77,14 +80,16 @@ $matrix: [
     [7, 8, 9]
 ];
 
-$matrix[1][2] // Returns 6
+$matrix[1][2]
+// Result: 6
 ```
 
 ### Accessing characters in a string
 
 ```jora
 $text: 'Jora';
-$text[2] // Returns 'r'
+$text[2]
+// Result: 'r'
 ```
 
 ### Find the first element in an array that meets multiple criteria
@@ -98,5 +103,6 @@ $items: [
     { category: 'A', value: 25 }
 ];
 
-$items[=> category = 'A' and value >= 20] // Returns { category: 'A', value: 25 }
+$items[=> category = 'A' and value >= 20]
+// Result: { category: 'A', value: 25 }
 ```
