@@ -8,6 +8,10 @@ function self(value) {
 }
 
 function matchEntry(match) {
+    if (match === null) {
+        return null;
+    }
+
     return {
         matched: match.slice(),
         start: match.index,
@@ -70,6 +74,14 @@ function getterToCmp(getter, cmp) {
     return getter.length === 1
         ? (a, b) => cmp(getter(a), getter(b))
         : getter;
+}
+
+function addToMap(map, key, value) {
+    if (map.has(key)) {
+        map.get(key).add(value);
+    } else {
+        map.set(key, new Set([value]));
+    }
 }
 
 export default Object.freeze({
@@ -167,6 +179,9 @@ export default Object.freeze({
         return buildin.slice(current, from, to);
     },
     group(current, keyGetter, valueGetter) {
+        const map = new Map();
+        const result = [];
+
         if (typeof keyGetter !== 'function') {
             keyGetter = noop;
         }
@@ -179,28 +194,21 @@ export default Object.freeze({
             current = [current];
         }
 
-        const map = new Map();
-        const result = [];
+        for (const item of current) {
+            const keys = keyGetter(item);
 
-        current.forEach(item => {
-            let keys = keyGetter(item);
-
-            if (!Array.isArray(keys)) {
-                keys = [keys];
-            }
-
-            keys.forEach(key => {
-                if (map.has(key)) {
-                    map.get(key).add(valueGetter(item));
-                } else {
-                    map.set(key, new Set([valueGetter(item)]));
+            if (Array.isArray(keys)) {
+                for (const key of keys) {
+                    addToMap(map, key, valueGetter(item));
                 }
-            });
-        });
+            } else {
+                addToMap(map, keys, valueGetter(item));
+            }
+        }
 
-        map.forEach((value, key) =>
-            result.push({ key, value: [...value] })
-        );
+        for (const [key, value] of map) {
+            result.push({ key, value: [...value] });
+        }
 
         return result;
     },
@@ -225,8 +233,7 @@ export default Object.freeze({
             return result;
         }
 
-        const match = input.match(pattern);
-        return match && matchEntry(match);
+        return matchEntry(input.match(pattern));
     },
     reduce(current, fn, initValue = undefined) {
         if (Array.isArray(current)) {
