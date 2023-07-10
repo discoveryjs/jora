@@ -1,5 +1,6 @@
 const CodeMirror = require('codemirror');
 require('codemirror/addon/mode/simple');
+const jora = require('jora');
 const { Slugger } = require('marked');
 const { utils: { base64 } } = require('@discoveryjs/discovery');
 const slugger = new Slugger();
@@ -28,6 +29,12 @@ module.exports = function(data, { addQueryHelpers }) {
     }
 
     addQueryHelpers({
+        replace: jora.methods.replace,
+        result(current) {
+            try {
+                return new Function(`return ${current}`)();
+            } catch {}
+        },
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';
         },

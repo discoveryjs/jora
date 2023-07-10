@@ -1,5 +1,10 @@
 const { marked } = require('marked');
 
+marked.setOptions({
+    mangle: false,
+    headerIds: false
+});
+
 function escapeHtml(str) {
     return str
         .replace(/&/g, '&amp;')

@@ -9,3 +9,9 @@
 .prev-next-nav {
     margin-top: 2em;
 }
+
+.changelog {
+    margin-top: -15px;
+    font-size: 85%;
+    color: #888;
+}
