@@ -52,7 +52,7 @@ Jora provides notations for accessing properties and elements: dot, bracket and 
 
 ## Methods and functions
 
-Jora provides a rich set of built-in methods for manipulating data, such as `.map()`, `.filter()`, `.group()`, `.sort()`, `.reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax, and use them as a method.
+Jora provides a rich set of built-in methods for manipulating data, such as `map()`, `filter()`, `group()`, `sort()`, `reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax, and use them as a method.
 
 - [Methods](./methods.md)
 - [Built-in methods](./methods-builtin.md)
@@ -61,7 +61,7 @@ Jora provides a rich set of built-in methods for manipulating data, such as `.ma
 
 ## Mapping and filtering
 
-Jora has a concise syntax for mapping and filtering. The `.map(fn)` method is equivalent to `.(fn())`, while the `.filter(fn)` method is equivalent to `.[fn()]`.
+Jora has a concise syntax for mapping and filtering. The `map(fn)` method is equivalent to `.(fn())`, while the `filter(fn)` method is equivalent to `.[fn()]`.
 
 - [Mapping](./map.md): `.(…)` and `map()` method
 - [Recursive mapping](./recursive-map.md): `..(…)`
