@@ -10,7 +10,7 @@
 ## 1.0.0-beta.7 (July 12, 2022)
 
 - Fixed `syntax.tokenize()` method to use a tolerant parser when `tolerantMode` parameter is `true`
-- Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and ё`..()` when their body starts with an operator, a keyword, etc.
+- Fixed parsing failures in tolerant mode on blocks `[]`, `.[]`, `()`, `.()` and `..()` when their body starts with an operator, a keyword, etc.
 - Fixed suggestions when pattern is a single quoted string (i.e. for `'foo'` in `.[field='foo']`)
 - Fixed suggestions for `Pick` nodes when query is a complex expression, e.g. a function (#35)
 - Fixed suggestions for `Block` nodes with empty body in strict parse mode
@@ -36,12 +36,12 @@
 - Removed value suggestions in cases `| in <string or number>` and `<string or number> has |`
 - Fixed a call stack overflow exception when too many (over ~110k) suggestion values for a range
 - **BREAKING** Reworked stat API:
-    - Changed `stat()` method result value to return `values` as is, i.e. a `Set` instance instead of its materialization as an array. Mutations of sets (`values` and `related`) should be avoided since they are shared between all stat API methods calls.
-    - Changed a signature of `suggestion()` method to get `options` as a second argument (optional), with the following options:
+    - Changed `stat()` API method to return `values` as is, i.e. a `Set` instance instead of its materialization as an array. Mutations of sets (`values` and `related`) should be avoided since they are shared between all stat API methods calls.
+    - Changed a signature of `suggestion()` API method to get `options` as a second argument (optional), with the following options:
         - `limit` (default: `Infinity`) – a max number of the values that should be returned for each value type (`"property"`, `"value"` or `"variable"`)
         - `sort` (default: `false`) – a comparator function (should take 2 arguments and return a negative number, `0` or a positive number) for value list sorting, makes sence when `limit` is used
         - `filter` (default: `function`) – a filter function factory (`pattern => value => <expr>`) to discard values from the result when returns a falsy value (default is equivalent to `patttern => value => String(value).toLowerCase().includes(pattern)`)
-    - Changed `suggestion()` method result to return values grouped by a type:
+    - Changed `suggestion()` API method result to return values grouped by a type:
         ```ts
             suggestion(): Array<{
                 type: 'property' | 'value' | 'variable',
@@ -77,10 +77,10 @@
 
 ## 1.0.0-beta.4 (November 4, 2020)
 
-- Added `setup()` API method to create a query function with defined custom methods once
 - Allowed definitions in object's literals, i.e. `{ $a: 42; foo: $a * 2, $a }` results in `{ foo: 84, a: 42 }`
-- Exposed `suggest(source, parseResult)` method (as `syntax.suggest`) to get suggestion ranges based on AST and source
-- Exposed `tokenize(source, tolerantMode = false)` method (as `syntax.tokenize`)
+- Added `setup()` API method to create a query function with defined custom methods once
+- Exposed `syntax.suggest(source, parseResult)` method to get suggestion ranges based on AST and source
+- Exposed `syntax.tokenize(source, tolerantMode = false)` method
 
 ## 1.0.0-beta.3 (September 20, 2020)
 
@@ -102,7 +102,7 @@
 - Added `$$` root reference (`arg1`), which refers to second parameter of closest function or `undefined` when no such
 - Added `reduce()` method
 - Added support for methods as a reference to definition's value, i.e. `$method: => 123; $method() or path.$method()`
-- Added `walk()` method to traverse AST
+- Added `syntax.walk()` API method to traverse AST
 - Allowed numbers without integer part, i.e. `.123` or `.5e-4`
 - Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
 - Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
@@ -146,7 +146,7 @@
 ## 1.0.0-alpha.11 (December 17, 2019)
 
 - Reworked parsing to produce AST, other parts reworked to consume AST as well
-- Exposed `syntax` interface with 3 methods: `parse(source, tolerantMode)`, `compile(ast, suggestRanges, statMode)` and `stringify(ast)`
+- Exposed `syntax` interface with 3 methods: `syntax.parse(source, tolerantMode)`, `syntax.compile(ast, suggestRanges, statMode)` and `syntax.stringify(ast)`
 - Added slice notation like [proposed](https://github.com/tc39/proposal-slice-notation/blob/master/README.md) for adding to JavaScript, e.g. `$str: '<foo>'; str[1:-1]` (`'foo'`) or `$ar:[1,2,3,4,5,6]; $ar[-3::-1]` (`[6,5,4]`) (#11)
 - Added `slice(from, to)` method
 - Added `split(pattern)` method
@@ -185,9 +185,9 @@
 ## 1.0.0-alpha.7 (December 25, 2018)
 
 - Disallowed a whitespace between a dot and a bracket in `.[`, `.(` and `..(` tokens
-- Changed filter (i.e. `.[]` or `.filter()`) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise
+- Changed filtering (i.e. `.[]` or `filter()` method) behaviour for a non-array value to return a value itself when expression is truthy or `undefined` otherwise
 - Changed semanthic `jora(query, methods?, debug?)` -> `jora(query, options?)` where `options` is `{ methods?, debug? }`
-- Added stat mode (turns on by `stat` option, i.e. `jora(query, { stat: true })`) to return a query stat interface (an object with `stat()` and `suggestion()` methods) instead of resulting data
+- Added stat mode (turns on by `stat` option, i.e. `jora(query, { stat: true })`) to return a query stat interface (an object `{ stat(), suggestion() }`) instead of resulting data
 - Added tolerant parse mode (turns on by `tolerant` option, i.e. `jora(query, { tolerant: true })`) to supress parsing errors when possible
 - Added library `version` to export
 - Fixed parser edge cases for division (`/`) and regexp
@@ -195,9 +195,9 @@
 ## 1.0.0-alpha.6 (December 7, 2018)
 
 - Fixed nested ternary operator precendence
-- Added destuction for variables when used on object literal with no value (i.e. `{ $foo, bar: 1}` the same as `{ foo: $foo, bar: 1 }`)
+- Added destuction for variables when used on object literal with no value (i.e. `{ $foo, bar: 1 }` the same as `{ foo: $foo, bar: 1 }`)
 - Changed `in` and `not in` operators to propertly work with an object and a string on right side
-- Added support for a function as a parameter for `pick()` method
+- Changed `pick()` method to support a function as a parameter
 
 ## 1.0.0-alpha.5 (November 26, 2018)
 
@@ -216,7 +216,7 @@
 
 ## 1.0.0-alpha.3 (November 23, 2018)
 
-- Changed filter syntax to start with a dot, i.e. `[expr]` -> `.[expr]`
+- Changed filtering syntax to start with a dot, i.e. `[expr]` -> `.[expr]`
 - Added `true`, `false`, `null` and `undefined` keywords
 - Added a value argument for `mapToArray()`
 - Allowed a string, a number or a regexp to be a path root
