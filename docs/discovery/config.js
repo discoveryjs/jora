@@ -11,6 +11,7 @@ module.exports = {
             './pages/article.js',
             './pages/article.css',
             './pages/playground.js',
+            './views/example.js',
             './views/playground.js',
             './views/playground.css',
             './sidebar.js',

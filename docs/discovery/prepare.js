@@ -21,6 +21,10 @@ module.exports = function(data, { addQueryHelpers }) {
         walkArticles(article, articleList);
     }
 
+    for (const method of data.methods) {
+        method.examples = method.examples.map(idx => data.examples[idx]);
+    }
+
     for (let i = 0; i < articleList.length; i++) {
         const article = articleList[i];
 

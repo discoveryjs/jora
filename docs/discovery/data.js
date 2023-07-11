@@ -7,7 +7,7 @@ function md(filename) {
     return fs.readFileSync(path.join(__dirname, filename) + '.md', 'utf8');
 }
 
-function processMarkdown(article, href, { examples }) {
+function processMarkdown(article, href, { examples, methods }) {
     let lastHeader = null;
 
     for (const token of marked.lexer(article.content || '')) {
@@ -25,25 +25,42 @@ function processMarkdown(article, href, { examples }) {
                 if (token.lang === 'jora') {
                     // console.log(token)
                     try {
-                        const methodRefs = [];
+                        const methodRefs = Object.create(null);
                         const ast = jora.syntax.parse(token.text).ast;
 
                         jora.syntax.walk(ast, function(node) {
                             if (node.type === 'Method' && node.reference.type === 'Identifier') {
-                                methodRefs.push({
+                                const methodName = node.reference.name;
+
+                                if (methodName in methodRefs === false) {
+                                    methodRefs[methodName] = [];
+                                }
+
+                                methodRefs[methodName].push({
                                     method: node.reference.name,
-                                    range: node.range,
-                                    nameRange: node.reference.range
+                                    nameRange: node.reference.range,
+                                    range: node.range
                                 });
                             }
                         });
+
+                        for (const methodName of Object.keys(methodRefs)) {
+                            const method = methods.find(method => method.name === methodName);
+
+                            if (!method) {
+                                console.log(`Unknown method "${methodName}" found in article "${article.slug}":\n${token.text}\n`);
+                                continue;
+                            }
+
+                            method.examples.push(examples.length);
+                        }
 
                         examples.push({
                             slug: article.slug,
                             header: lastHeader,
                             methodRefs,
                             source: token.text,
-                            ast: ast
+                            ast
                         });
                     } catch (e) {
                         // console.log();
@@ -59,15 +76,57 @@ function processMarkdown(article, href, { examples }) {
     }
 }
 
+function processChangelog(changelog, methods) {
+    const changelogSections = changelog.split(/^#+\s*(.+)$/gm).slice(1);
+    const changelogMethodRefs = Object.create(null);
+
+    for (let i = 0; i < changelogSections.length; i += 2) {
+        const [header, content] = changelogSections.slice(i, i + 2);
+        const [, version, date] = header.match(/(\S+)\s+\((.+)\)/) || [, header];
+
+        for (const token of marked.lexer(content || '')) {
+            if (token.type === 'list') {
+                for (let item of token.items) {
+                    const [typeOfChange] = item.text.match(/^\S+/);
+                    const prelude = item.text.split(/[;]/)[0];
+                    const methodRefs =
+                        prelude.match(/`[a-z\d]+\([^\)]*?\)`(?=(?:\s*(?:and|,)\s*`[a-z\d]+\([^\)]*?\)`)*\s*method)/ig) ||
+                        prelude.match(/(?<=methods?\s*(?::\s*)?(?:`[a-z\d]+\([^\)]*?\)`\s*(?:and|,)\s*)*)`[a-z\d]+\([^\)]*?\)`/ig);
+                    if (methodRefs) {
+                        for (const methodRef of methodRefs) {
+                            const methodName = methodRef.slice(1).match(/^[^\(]+/);
+
+                            if (!Array.isArray(changelogMethodRefs[methodName])) {
+                                changelogMethodRefs[methodName] = [];
+                            }
+
+                            changelogMethodRefs[methodName].unshift({
+                                type: typeOfChange,
+                                version,
+                                date,
+                                entry: item.text
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (const method of methods) {
+        method.changelog = changelogMethodRefs[method.name] || [];
+    }
+}
+
 module.exports = function() {
     const examples = [];
+    const methods = Object.keys(jora.methods).sort().map(name => ({ name, examples: [] }));
     const changelog = { slug: 'changelog', title: 'Changelog', headers: true, content: md('../../CHANGELOG') };
     const articles = [
         { slug: 'getting-started', title: 'Getting started', expanded: true, headers: true },
         changelog
     ];
-    const docsReadme = md('../README');
-    const docsReadmeTOC = docsReadme.match(/- \[.+?\]\(.+?\).*?\n/g)
+    const readmeTOC = md('../README').match(/- \[.+?\]\(.+?\).*?\n/g)
         .map(point => {
             const [, title, href] = point.match(/\[(.+?)\]\((.+)\.md\)/);
             const slug = href.replace(/\.(\/articles)?\/|\.md$/g, '');
@@ -86,7 +145,7 @@ module.exports = function() {
                 content
             };
 
-            processMarkdown(article, href, { examples });
+            processMarkdown(article, href, { examples, methods });
 
             return { ...article };
         });
@@ -100,52 +159,19 @@ module.exports = function() {
             article.headers = [];
         }
 
-        processMarkdown(article, article.href || article.slug, { examples });
+        processMarkdown(article, article.href || article.slug, { examples, methods });
     }
 
-    const changelogSections = changelog.content.split(/^#+\s*(.+)$/gm).slice(1);
-    const changelogMethodRefs = {};
-    for (let i = 0; i < changelogSections.length; i += 2) {
-        const [header, content] = changelogSections.slice(i, i + 2);
-        const [, version, date] = header.match(/(\S+)\s+\((.+)\)/) || [, header];
+    processChangelog(changelog.content, methods);
 
-        for (const token of marked.lexer(content || '')) {
-            if (token.type === 'list') {
-                for (let item of token.items) {
-                    const [typeOfChange] = item.text.match(/^\S+/);
-                    const prelude = item.text.split(/[;]/)[0];
-                    const methodRefs =
-                        prelude.match(/`[a-z\d]+\([^\)]*?\)`(?=(?:\s*(?:and|,)\s*`[a-z\d]+\([^\)]*?\)`)*\s*method)/ig) ||
-                        prelude.match(/(?<=methods?\s*(?::\s*)?(?:`[a-z\d]+\([^\)]*?\)`\s*(?:and|,)\s*)*)`[a-z\d]+\([^\)]*?\)`/ig);
-                    if (methodRefs) {
-                        for (const methodRef of methodRefs) {
-                            const method = methodRef.slice(1).match(/^[^\(]+/);
-
-                            if (!Array.isArray(changelogMethodRefs[method])) {
-                                changelogMethodRefs[method] = [];
-                            }
-
-                            changelogMethodRefs[method].push({
-                                type: typeOfChange,
-                                version,
-                                date,
-                                entry: item.text
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    articles.unshift(docsReadmeTOC.shift());
+    articles.unshift(readmeTOC.shift());
     articles[0].slug = 'intro';
     articles.splice(2, 0, {
-        ...docsReadmeTOC.shift(),
+        ...readmeTOC.shift(),
         slug: 'jora-syntax',
         title: 'Jora query syntax',
         expanded: true,
-        children: docsReadmeTOC
+        children: readmeTOC
     });
 
     return {
@@ -153,6 +179,6 @@ module.exports = function() {
         intro: md('./text/intro'),
         articles,
         examples,
-        changelogMethodRefs
+        methods
     };
 };
