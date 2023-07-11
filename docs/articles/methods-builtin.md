@@ -190,6 +190,46 @@ Sort an array by a value fetched with getter (`fn`). Can use sorting function de
 
 The same as `String#split()` in JavaScript. `pattern` may be a string or regex.
 
+## sum(getter)
+
+Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method ignores `undefined` values returned by the getter function (default getter function is `=> $`, which returns the value itself), all other values are converted to a number and used in the summation, including `NaN` and ±`Infinity`. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
+
+```jora
+[].sum()
+// Result: undefined
+```
+```jora
+[1, 2, 3, 4].sum()
+// Result: 10
+```
+```jora
+[1, 2, undefined, null, '3', 4].sum()
+// Result: 10
+```
+```jora
+[1, 2, NaN, 4].sum()
+// Result: NaN
+```
+```jora
+[0.1, 0.2, 0.3].sum()
+// Result: 0.6
+```
+
+> Note: The `sum()` method returns `0.6` instead of `0.6000000000000001`, which is the result of the expression `0.1 + 0.2 + 0.3`. This is because the Kahan–Babuška summation algorithm is used to reduce numerical error.
+
+Using a custom getter function:
+
+```jora
+[1, 2, 3, 4].sum(=> $ * $) // Sum of number squares
+// Result: 30
+```
+```jora
+[{ age: 10 }, {}, { age: 20 }, null, { age: 10 }].sum(=> age)
+// Result: 40
+```
+
+> Note: When summing values in an array of objects, it is recommended to use a custom getter with the `sum()` method rather than using dot notation or mapping prior to summation. This is because dot notation and mapping are ignores duplicate values. For example, the query `[…].age.sum()` might return 30 instead of the expected 40, which would be correctly returned by the query `[…].sum(=> age)`.
+
 ## toLowerCase(locales)
 
 The same as `String#toLocaleLowerCase()` in JavaScript.

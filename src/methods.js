@@ -348,4 +348,51 @@ export default Object.freeze({
 
         return max;
     }
+    },
+    sum
 });
+
+// statistics
+function processNumericArray(current, map = self, fn) {
+    if (isArrayLike(current)) {
+        for (const value of current) {
+            const mappedValue = map(value);
+
+            if (mappedValue !== undefined) {
+                fn(Number(mappedValue));
+            }
+        }
+    }
+}
+function sum(current, fn) {
+    let sum = undefined;
+    let correction = 0;
+
+    processNumericArray(current, fn, num => {
+        if (sum === undefined) {
+            sum = num;
+        } else {
+            // Kahan–Babuška summation with respect for Infinity
+            // https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+            const transition = sum;
+            const absTransition = Math.abs(transition);
+            const absNum = Math.abs(num);
+
+            sum += num;
+
+            if (absTransition !== Infinity && absNum !== Infinity) {
+                if (absTransition >= absNum) {
+                    correction += (transition - sum) + num;
+                } else {
+                    correction += (num - sum) + transition;
+                }
+            }
+        }
+    });
+
+    if (sum !== undefined) {
+        sum += correction;
+    }
+
+    return sum;
+}
