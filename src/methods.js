@@ -347,7 +347,6 @@ export default Object.freeze({
         }
 
         return max;
-    }
     },
     sum
 });
