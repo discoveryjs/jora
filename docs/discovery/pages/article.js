@@ -32,6 +32,43 @@ discovery.page.define('article', {
                         $ ? "History: " + (version = "next" ? "Will be available in next release" : \`Added in \${version} (\${date})\`)
                         : "History:"`
                 ]
+            },
+            sectionPostlude: {
+                view: 'block',
+                className: 'across-docs-examples',
+                when: '#.id = "jora-syntax-methods-builtin" and #.section.text ~= /^[a-z\\d]+\\(/i',
+                data: `
+                    $method: #.section.text.match(/^[a-z0-9]+/i).matched[];
+                    #.data.methods[=> name = $method].examples
+                        .[article.slug != #.id or header != #.section.text]
+                        .({ ..., $method })
+                `,
+                whenData: true,
+                content: {
+                    view: 'expand',
+                    header: 'text:`${size()} more example${size() > 1 ? "s" : ""} across documentation`',
+                    content: {
+                        view: 'ul',
+                        data: 'group(=>article.slug + "/" + header)',
+                        item: [
+                            {
+                                view: 'block',
+                                className: 'path-to-example',
+                                data: 'value[]',
+                                content: [
+                                    'inline-list:article | $ + ..parent | reverse().(title + " /\\xa0").join("")',
+                                    'link:{ text: header, href: `#article:${article.slug}&!anchor=${header.slug()}` }'
+                                ]
+                            },
+                            {
+                                view: 'list',
+                                className: 'examples-list',
+                                data: 'value',
+                                item: 'example:{ $method; syntax: "jora", content: source, refs: methodRefs[$method].({ range: nameRange }) }'
+                            }
+                        ]
+                    }
+                }
             }
         },
         {

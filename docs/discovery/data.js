@@ -56,7 +56,7 @@ function processMarkdown(article, href, { examples, methods }) {
                         }
 
                         examples.push({
-                            slug: article.slug,
+                            article,
                             header: lastHeader,
                             methodRefs,
                             source: token.text,
@@ -88,7 +88,7 @@ function processChangelog(changelog, methods) {
             if (token.type === 'list') {
                 for (let item of token.items) {
                     const [typeOfChange] = item.text.match(/^\S+/);
-                    const prelude = item.text.split(/[;]/)[0];
+                    const prelude = item.text.split(/[;.]/)[0];
                     const methodRefs =
                         prelude.match(/`[a-z\d]+\([^\)]*?\)`(?=(?:\s*(?:and|,)\s*`[a-z\d]+\([^\)]*?\)`)*\s*method)/ig) ||
                         prelude.match(/(?<=methods?\s*(?::\s*)?(?:`[a-z\d]+\([^\)]*?\)`\s*(?:and|,)\s*)*)`[a-z\d]+\([^\)]*?\)`/ig);
@@ -147,7 +147,7 @@ module.exports = function() {
 
             processMarkdown(article, href, { examples, methods });
 
-            return { ...article };
+            return article;
         });
 
     for (let article of articles) {
@@ -173,6 +173,10 @@ module.exports = function() {
         expanded: true,
         children: readmeTOC
     });
+
+    for (const example of examples) {
+        example.article = example.article.slug;
+    }
 
     return {
         version: require('../../package.json').version,

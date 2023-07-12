@@ -6,12 +6,6 @@
     color: #888;
 }
 
-.prev-next-nav {
+.page-article .prev-next-nav {
     margin-top: 2em;
-}
-
-.changelog {
-    margin-top: -15px;
-    font-size: 85%;
-    color: #888;
 }

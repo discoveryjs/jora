@@ -21,6 +21,43 @@
     -webkit-mask: center / .75em no-repeat var(--mask-image);
     mask: center / .75em no-repeat var(--mask-image);
 }
+.view-markdown .view-h2 {
+    margin-top: 1.4em;
+}
+.view-markdown .changelog {
+    margin-top: -15px;
+    font-size: 85%;
+    color: #888;
+}
+.view-markdown .across-docs-examples {
+    margin-top: 12px;
+}
+.view-markdown .across-docs-examples > .view-expand > .header {
+    transition: .25s;
+    transition-property: background-color, color, margin;
+}
+.view-markdown .across-docs-examples > .view-expand:not(.expanded) > .header {
+    background-color: transparent;
+    margin-left: -8px;
+}
+.view-markdown .across-docs-examples > .view-expand:not(.expanded, :hover) > .header {
+    color: #888;
+}
+.view-markdown .across-docs-examples > .view-expand > .content {
+    padding: 8px 8px 0 0;
+}
+.view-markdown .across-docs-examples .view-list-item {
+    font-size: 13px;
+}
+.view-markdown .across-docs-examples .path-to-example {
+    opacity: .85;
+}
+.view-markdown .across-docs-examples .examples-list {
+    margin: 5px 0 10px;
+}
+.view-markdown .across-docs-examples .examples-list .view-source {
+    margin: 0 0 1px;
+}
 
 .discovery-root-darkmode .view-source .spotlight {
     background: #68624685;

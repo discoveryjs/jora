@@ -10,15 +10,30 @@ function walkArticles(article, articleList) {
     if (Array.isArray(article.children)) {
         for (const child of article.children) {
             walkArticles(child, articleList);
+            child.parent = article;
         }
     }
 }
 
-module.exports = function(data, { addQueryHelpers }) {
+module.exports = function(data, { addQueryHelpers, defineObjectMarker }) {
     const articleList = [];
+    const slugToArticle = new Map();
+    const markArticle = defineObjectMarker('article', {
+        ref: 'slug',
+        page: 'article'
+    });
 
     for (const article of data.articles) {
         walkArticles(article, articleList);
+    }
+
+    for (const article of articleList) {
+        slugToArticle.set(article.slug, article);
+        markArticle(article);
+    }
+
+    for (const example of data.examples) {
+        example.article = slugToArticle.get(example.article) || null;
     }
 
     for (const method of data.methods) {
