@@ -1,5 +1,5 @@
 import buildin from './lang/compile-buildin.js';
-import { hasOwnProperty, addToSet, isPlainObject, isRegExp } from './utils/misc.js';
+import { hasOwnProperty, addToSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
 
 function noop() {}
 
