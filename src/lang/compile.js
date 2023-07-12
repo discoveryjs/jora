@@ -145,7 +145,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
 
             return lists && lists.length ? 'const ' + lists + ';\n' : '';
         } },
-        'return '
+        suggestions === null ? 'return ' : 'return{\nvalue: '
     ];
 
     const initCtx = {};
@@ -223,7 +223,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     }
 
     if (suggestions !== null) {
-        buffer.push('\n,[' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']');
+        buffer.push(',\nstats: [' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']\n}');
     }
 
     try {

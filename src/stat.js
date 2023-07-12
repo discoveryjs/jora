@@ -108,7 +108,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
 }
 
 function findSourcePosRanges(source, pos, points, includeEmpty = false) {
-    const result = [];
+    const ranges = [];
 
     for (let [from, to, context, values, related = null] of points) {
         if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
@@ -119,7 +119,7 @@ function findSourcePosRanges(source, pos, points, includeEmpty = false) {
                 text = '';
             }
 
-            result.push({
+            ranges.push({
                 context,
                 from,
                 to,
@@ -130,7 +130,7 @@ function findSourcePosRanges(source, pos, points, includeEmpty = false) {
         }
     }
 
-    return result;
+    return ranges;
 }
 
 function normalizeFunctionOption(value, fn) {
@@ -173,9 +173,12 @@ function defaultFilterFactory(pattern) {
     return value => (typeof value === 'string' ? value : String(value)).toLowerCase().indexOf(pattern) !== -1;
 }
 
-export default (source, points) => ({
+export default (source, { value, stats }) => ({
+    get value() {
+        return value;
+    },
     stat(pos, includeEmpty) {
-        return findSourcePosRanges(source, pos, points, includeEmpty);
+        return findSourcePosRanges(source, pos, stats, includeEmpty);
     },
     suggestion(pos, options) {
         let { limit = Infinity, sort, filter: filterFactory } = options || {};
@@ -183,7 +186,7 @@ export default (source, points) => ({
         filterFactory = normalizeFunctionOption(filterFactory, defaultFilterFactory);
 
         const storageType = sort && isFinite(limit) ? MaxHeap : Set;
-        const ranges = findSourcePosRanges(source, pos, points);
+        const ranges = findSourcePosRanges(source, pos, stats);
         const typeSuggestions = new Map();
         const result = [];
 

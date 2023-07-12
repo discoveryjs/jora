@@ -1,5 +1,6 @@
 ## next
 
+- Extended query result object in stat mode to provide a result value of the query execution as `value` property (i.e. `jora(query, { stat: true })().value`)
 - Added nullish coalescing operator (`??`)
 - Added `replace()` method
 - Added `min()` and `max()` methods

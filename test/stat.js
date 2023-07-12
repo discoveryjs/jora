@@ -6,28 +6,27 @@ describe('query/stat mode', () => {
     describe('default', () => {
         const options = { stat: true };
 
-        describe('stat() method', () => {
-            it('basic', () => {
-                const data = [{ id: 1, foo: 1 }, { id: 2, foo: 42 }];
-                const res = jora('.[foo=1]', options)(data);
+        it('basic', () => {
+            const data = [{ id: 1, foo: 1 }, { id: 2, foo: 42 }];
+            const res = jora('.[foo=1]', options)(data);
 
-                assert.deepEqual(res.stat(3), [{
-                    context: 'path',
-                    from: 2,
-                    to: 5,
-                    text: 'foo',
-                    related: null,
-                    values: new Set([data[0], data[1]])
-                }]);
-                assert.deepEqual(res.stat(6), [{
-                    context: 'value',
-                    from: 6,
-                    to: 7,
-                    text: '1',
-                    related: null,
-                    values: new Set([1, 42])
-                }]);
-            });
+            assert.deepStrictEqual(res.value, [data[0]]);
+            assert.deepStrictEqual(res.stat(3), [{
+                context: 'path',
+                from: 2,
+                to: 5,
+                text: 'foo',
+                related: null,
+                values: new Set([data[0], data[1]])
+            }]);
+            assert.deepStrictEqual(res.stat(6), [{
+                context: 'value',
+                from: 6,
+                to: 7,
+                text: '1',
+                related: null,
+                values: new Set([1, 42])
+            }]);
         });
 
         describe('suggestion() method', () => {
@@ -356,37 +355,36 @@ describe('query/stat mode', () => {
     describe('tolerant mode', () => {
         const options = { stat: true, tolerant: true };
 
-        describe('stat() method', () => {
-            it('basic', () => {
-                const data = [{ id: 1, foo: 1 }, { id: 2, foo: 42 }];
-                const res = jora('.[foo=]', options)(data);
-                //                   ^  ^
-                //                   3  6
+        it('basic', () => {
+            const data = [{ id: 1, foo: 1 }, { id: 2, foo: 42 }];
+            const res = jora('.[foo=]', options)(data);
+            //                   ^  ^
+            //                   3  6
 
-                assert.deepEqual(res.stat(3), [{
-                    context: 'path',
-                    from: 2,
-                    to: 5,
-                    text: 'foo',
-                    related: null,
-                    values: new Set([data[0], data[1]])
-                }]);
-                assert.deepEqual(res.stat(6), [{
-                    context: 'value',
-                    from: 6,
-                    to: 6,
-                    text: '',
-                    related: null,
-                    values: new Set([1, 42])
-                }, {
-                    context: 'path',
-                    from: 6,
-                    to: 6,
-                    text: '',
-                    related: null,
-                    values: new Set([data[0], data[1]])
-                }]);
-            });
+            assert.deepStrictEqual(res.value, []);
+            assert.deepEqual(res.stat(3), [{
+                context: 'path',
+                from: 2,
+                to: 5,
+                text: 'foo',
+                related: null,
+                values: new Set([data[0], data[1]])
+            }]);
+            assert.deepEqual(res.stat(6), [{
+                context: 'value',
+                from: 6,
+                to: 6,
+                text: '',
+                related: null,
+                values: new Set([1, 42])
+            }, {
+                context: 'path',
+                from: 6,
+                to: 6,
+                text: '',
+                related: null,
+                values: new Set([data[0], data[1]])
+            }]);
         });
 
         describe('suggestion() method', () => {
