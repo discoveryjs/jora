@@ -358,7 +358,11 @@ function processNumericArray(current, map = self, fn) {
             const mappedValue = map(value);
 
             if (mappedValue !== undefined) {
-                fn(Number(mappedValue));
+                fn(
+                    mappedValue !== null && typeof mappedValue === 'object'
+                        ? NaN
+                        : Number(mappedValue)
+                );
             }
         }
     }

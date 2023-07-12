@@ -230,6 +230,17 @@ Using a custom getter function:
 
 > Note: When summing values in an array of objects, it is recommended to use a custom getter with the `sum()` method rather than using dot notation or mapping prior to summation. This is because dot notation and mapping are ignores duplicate values. For example, the query `[…].age.sum()` might return 30 instead of the expected 40, which would be correctly returned by the query `[…].sum(=> age)`.
 
+Arrays are always converting to `NaN`. To summing array of arrays, a summation of sums should be used:
+
+```jora
+[[1, 2], [], [4]].sum()
+// Result: NaN
+```
+```jora
+[[1, 2], [], null, [4], undefined].sum(=> sum())
+// Result: 7
+```
+
 ## toLowerCase(locales)
 
 The same as `String#toLocaleLowerCase()` in JavaScript.

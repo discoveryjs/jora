@@ -40,6 +40,24 @@ describe('sum()', () => {
         assert.strictEqual(query('[1, Infinity, "2"].sum()')(), Infinity);
     });
 
+    describe('should not convert arrays to number', () => {
+        it('empty array', () => {
+            assert.strictEqual(query('[[]].sum()')(), NaN);
+        });
+
+        it('a single number element array', () => {
+            assert.strictEqual(query('[[1]].sum()')(), NaN);
+        });
+
+        it('a multiple number element array', () => {
+            assert.strictEqual(query('[[1, 2]].sum()')(), NaN);
+        });
+
+        it('array of arrays', () => {
+            assert.strictEqual(query('[[1, 2], [3], []].sum()')(), NaN);
+        });
+    });
+
     describe('should reduce numerical error', () => {
         it('case #1', () => {
             // naive summation gives 10005.859869999998
@@ -84,6 +102,18 @@ describe('sum()', () => {
             assert.strictEqual(query('sum(=> a)')(
                 [{ a: 2 }, { a: 2 }, { a: 2 }]
             ), 6);
+        });
+
+        it('should not convert arrays to number', () => {
+            assert.strictEqual(query('sum(=> a)')(
+                [{ a: [1, 2] }, { a: [] }, { a: [4] }]
+            ), NaN);
+        });
+
+        it('sum of sum', () => {
+            assert.strictEqual(query('sum(=> a.sum())')(
+                [{ a: [1, 2] }, { a: [] }, { a: [4] }, {}, undefined]
+            ), 7);
         });
     });
 });
