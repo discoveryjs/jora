@@ -90,7 +90,7 @@
 - Added `ascA` and `descA` to define sorting functions with reverse order for numbers
 - Added `ascAN` and `descAN` to define natural sorting functions with reverse order for numbers h
 - Improved suggestion for pipeline operator in malformed query (tolerant mode)
-- Added suggestion for object keys in array-like notation property accessor
+- Added suggestion for object keys in bracket notation property accessor
 - Renamed node type `Property` to `ObjectEntry`
 
 ## 1.0.0-beta.2 (May 17, 2020)
@@ -108,7 +108,7 @@
 - Allowed numbers and literals as property name in object literals, i.e. `{ 1: 'ok', null: 'ok' }`
 - Changed `=` and `!=` operators to use `Object.is()` instead of `===` and `!==` operators
 - Changed behaviour for references to undefined definitions, now an exception raises in default mode, but no exceptions in tolerant mode
-- Changed array-like access notation (i.e. `foo[expr]`) to behave like `pick()` method
+- Changed bracket notation (i.e. `foo[expr]`) to behave like `pick()` method
 - Reworked `pick()` method:
     - Return first entry value when no argument gived
     - String values are treat as an array
@@ -204,7 +204,7 @@
 
 - Added computed property names support in object literals
 - Added `pick()` method
-- Added array-like notation to access properties, e.g. `foo["bar"]`. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array
+- Added bracket notation to access properties, e.g. `foo["bar"]`. It works like in JS for everything with exception for arrays, where it equivalents to `array.map(e => e[key])`. Use `pick()` method to get an element by index in array
 - Added syntax to define a block scoped constant, e.g. `.($foo:$.some.path.to.cache(); bar=$foo or baz=$foo)`
 - Changed single quoted string meaning to treat it as a string (used before for a property access with prohibited characters in name)
 - Changed array literals to use brackets instead of parentheses

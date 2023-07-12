@@ -46,7 +46,7 @@ Literals in Jora are mostly the same as in JavaScript.
 `template string ${hello} ${world}`
 ```
 
-[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#escape_sequences) are supported, as well as escaping to continue a string on the next line:
+[Escape sequences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#escape_sequences) are supported, as well as a new line escaping to continue a string on the next line:
 
 ```jora
 "\u2013 This is \"a very long\" string which needs \
