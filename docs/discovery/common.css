@@ -24,6 +24,9 @@
 .view-markdown .view-h2 {
     margin-top: 1.4em;
 }
+.view-markdown :is(sub, sup) {
+    font-size: 70%;
+}
 .view-markdown .changelog {
     margin-top: -15px;
     font-size: 85%;

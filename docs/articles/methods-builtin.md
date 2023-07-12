@@ -259,68 +259,287 @@ The same as `Object.values()` in JavaScript.
 
 ## Math methods
 
-JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) methods
+JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) methods.
+
+> Note: Keep in mind that the unary `-` operator has lower precedence than other operators. To apply a method to a negative scalar number, use the [grouping operator](./operators.md#grouping-operator), the [pipeline operator](./operators.md#pipeline-operator), or store the number in a [variable](./variables.md) and then apply the method to it. For example, instead of `-123.abs()`, which is interpreted as `-(123.abs())`, you should use one of the following:
+> - `(-123).abs()`
+> - `-123 | abs()`
+> - `$num = -123; $num.abs()`
 
 ### abs()
 
+Returns the absolute value of a number.
+
+```jora
+-123 | abs()
+// Result: 123
+```
+```jora
+'hello world'.abs()
+// Result: NaN
+```
+
 ### acos()
+
+Returns the arccosine of a number.
+
+```jora
+(-1).acos()
+// Result: 3.141592653589793
+```
+```jora
+1.acos()
+// Result: 0
+```
+```jora
+'hello world'.acos()
+// Result: NaN
+```
 
 ### acosh()
 
+Returns the hyperbolic arccosine of a number.
+
 ### asin()
+
+Returns the arcsine of a number.
 
 ### asinh()
 
+Returns the hyperbolic arcsine of a number.
+
 ### atan()
+
+Returns the arctangent of a number.
 
 ### atan2()
 
+Returns the arctangent of the quotient of its arguments, i.e. the angle in the plane (in radians) between the positive x-axis and the ray from `(0, 0)` to the point `(x, y)`, for `y.atan2(x)`.
+
 ### atanh()
+
+Returns the hyperbolic arctangent of a number.
 
 ### cbrt()
 
+Returns the cube root of a number.
+
+```jora
+64.cbrt()
+// Result: 4
+```
+
 ### ceil()
+
+Returns the smallest integer greater than or equal to a number.
+
+```jora
+3.123.ceil()
+// Result: 4
+```
 
 ### clz32()
 
+Returns the number of leading zero bits of the 32-bit integer of a number.
+
 ### cos()
+
+Returns the cosine of a number.
 
 ### cosh()
 
+Returns the hyperbolic cosine of a number.
+
 ### exp()
+
+Returns <code>e<sup>x</sup></code>, where `x` is the argument, and `e` is Euler's number (2.718…, the base of the natural logarithm).
+
+```jora
+2.exp()
+// Result: 7.38905609893065
+```
+```jora
+(-1).exp()
+// Result: 0.36787944117144233
+```
 
 ### expm1()
 
+Returns subtracting `1` from `exp(x)`, i.e. <code>e<sup>x</sup> - 1</code>.
+
+```jora
+2.exp()
+// Result: 6.38905609893065
+```
+```jora
+(-1).exp()
+// Result: -0.6321205588285577
+```
+
 ### floor()
+
+Returns the largest integer less than or equal to a number.
+
+```jora
+3.123.floor()
+// Result: 3
+```
 
 ### fround()
 
+Returns the nearest [32-bit single precision](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) float representation of a number.
+
+```jora
+5.5.fround()
+// Result: 5.5
+```
+```jora
+5.05.fround()
+// Result: 5.050000190734863
+```
+
 ### hypot()
+
+Returns the square root of the sum of squares of its arguments.
+
+> FIXME: Must take an array of numbers like `sum()`
+
+```jora
+[3].hypot(4, 5)
+// Result: 7.0710678118654755
+```
 
 ### imul()
 
+Returns the result of the C-like 32-bit integer multiplication of the two parameters.
+
+```jora
+3.imul(4)
+// Result: 12
+```
+```jora
+0xffffffff.imul(5)
+// Result: -5
+```
+
 ### log()
+
+Returns the natural logarithm (<code>log<sub>e</sub></code> or `ln`) of a number.
+
+```jora
+// 2^3 = 8
+8.log() / 2.log()
+// Result: 3
+```
 
 ### log10()
 
+Returns the base-10 logarithm of a number, i.e. <code>log<sub>10</sub>(x)</code>.
+
+```jora
+2.log10()
+// Result: 0.3010299956639812
+```
+
 ### log1p()
+
+Returns the natural logarithm (<code>log<sub>e</sub></code> or `ln`) of `1 + x` for the number `x`.
+
+```jora
+1.log1p()
+// Result: 0.6931471805599453
+```
 
 ### log2()
 
+Returns the base-2 logarithm of a number, i.e. <code>log<sub>2</sub>(x)</code>.
+
+```jora
+2.log2()
+// Result: 1
+```
+
 ### pow()
+
+Returns base `x` to the exponent power `y`, i.e. <code>x<sup>y</sup></code>
+
+```jora
+2.pow(3)
+// Result: 8
+```
+```jora
+25.pow(0.5)
+// Result: 5
+```
 
 ### round()
 
+Returns the value of a number rounded to the nearest integer.
+
+```jora
+5.2.round()
+// Result: 5
+```
+```jora
+5.5.round()
+// Result: 6
+```
+```jora
+5.9.round()
+// Result: 6
+```
+
 ### sign()
+
+Returns `1` or `-1`, indicating the sign of the number passed as argument. If the input is `0` or `-0`, it will be returned as-is.
+
+```jora
+5.sign()
+// Result: 1
+```
+```jora
+-42 | sign()
+// Result: -1
+```
+```jora
+0.sign()
+// Result: 0
+```
 
 ### sin()
 
+Returns the sine of a number.
+
 ### sinh()
+
+Returns the hyperbolic sine of a number.
 
 ### sqrt()
 
+Returns the positive square root of a number.
+
+```jora
+25.sqrt()
+// Result: 5
+```
+
 ### tan()
+
+Returns the tangent of a number.
 
 ### tanh()
 
+Returns the hyperbolic tangent of a number.
+
 ### trunc()
+
+Returns the integer part of a number by removing any fractional digits. It truncates (cuts off) the dot and the digits to the right of it, no matter whether the argument is a positive or negative number.
+
+```jora
+42.84.trunc()
+// Result: 42
+```
+```jora
+-123.9 | trunc()
+// Result: -123
+```
