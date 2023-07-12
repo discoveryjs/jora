@@ -35,16 +35,17 @@ $input: [
     { "baz": 3 }
 ];
 
-$input.(baz) // Result: [ 1, 2, 3 ]
-// Alternatives:
-//
-//   $input.map(=> baz)
-//
-// or simply
-//
-//   $input.baz
-//
+$input.(baz)
+// Result: [ 1, 2, 3 ]
 ```
+
+> Alternatives for the query above:
+> ```jora
+> $input.map(=> baz)
+> ```
+> ```jora
+> $input.baz
+> ```
 
 Rename property:
 

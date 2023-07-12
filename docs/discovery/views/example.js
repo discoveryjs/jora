@@ -2,7 +2,7 @@
 
 discovery.view.define('example', {
     view: 'source',
-    data: '$m: content.match(/^(.+?)(?:\\s*\\/\\/\\s*Result:\\s*(.*))?$/is).matched; { ..., content: $m[1], result: $m[2] }',
+    data: '{ ..., ...content.parseExample() }',
     actionButtons: {
         view: 'button',
         when: 'syntax = "jora"',
@@ -16,8 +16,8 @@ discovery.view.define('example', {
     postlude: {
         view: 'struct',
         className: 'view-struct_code-postlude',
-        when: 'syntax = "jora" and result != undefined',
-        data: 'result.replace(/^\\s*\\/\\//gm, "").result()',
+        when: 'syntax = "jora" and $ has "result"',
+        data: 'result',
         limitCompactObjectEntries: false
     }
 }, { tag: false });

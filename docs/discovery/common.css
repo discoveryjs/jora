@@ -29,6 +29,7 @@
 }
 .view-markdown .changelog {
     margin-top: -15px;
+    margin-bottom: -10px;
     font-size: 85%;
     color: #888;
 }
@@ -37,11 +38,22 @@
 }
 .view-markdown .across-docs-examples > .view-expand > .header {
     transition: .25s;
-    transition-property: background-color, color, margin;
+    transition-property: background-color, margin;
+}
+.view-markdown .across-docs-examples > .view-expand > .header > .trigger,
+.view-markdown .across-docs-examples > .view-expand > .header > .header-content {
+    transition: .25s;
+    transition-property: color;
 }
 .view-markdown .across-docs-examples > .view-expand:not(.expanded) > .header {
     background-color: transparent;
-    margin-left: -8px;
+    margin-left: 0;
+}
+.view-markdown .across-docs-examples > .view-expand:not(.expanded) > .header > .header-content {
+    padding-left: 0;
+}
+.view-markdown .across-docs-examples > .view-expand:not(.expanded) > .header > .trigger {
+    background-image: none;
 }
 .view-markdown .across-docs-examples > .view-expand:not(.expanded, :hover) > .header {
     color: #888;

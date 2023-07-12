@@ -49,10 +49,27 @@ module.exports = function(data, { addQueryHelpers, defineObjectMarker }) {
 
     addQueryHelpers({
         replace: jora.methods.replace,
-        result(current) {
-            try {
-                return new Function(`return ${current}`)();
-            } catch {}
+        parseExample(current) {
+            const parsed = Object.create(null);
+            const store = (prop) => (m, value) => {
+                try {
+                    parsed[prop] = new Function(`return ${value.replace(/^\s*\/\//gm, '')}`)();
+                    return '';
+                } catch (e) {
+                    parsed[prop + 'Error'] = e.message;
+                    return m + restore;
+                }
+            };
+            let restore = '';
+
+            parsed.content = '';
+            parsed.content = current
+                .replace(/\s*\/\/\s*Result:\s*(.*)$/is, store('result'))
+                .replace(/\s*\/\/\s*Context:\s*(.*)$/is, store('context'))
+                .replace(/\s*\/\/\s*Input:\s*(.*)$/is, store('input')) +
+                restore;
+
+            return parsed;
         },
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';

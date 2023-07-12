@@ -1,33 +1,32 @@
 # Built-in methods
 
-
-
 ## bool()
 
-Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy
+Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy.
 
 ```jora
-123.bool()  // Result: true
+123.bool()
+// Result: true
 ```
-
 ```jora
-"".bool()   // Result: false
+"".bool()
+// Result: false
 ```
-
 ```jora
-[].bool()   // Result: false
+[].bool()
+// Result: false
 ```
-
 ```jora
-[false].bool() // Result: true
+[false].bool()
+// Result: true
 ```
-
 ```jora
-{}.bool()   // Result: false
+{}.bool()
+// Result: false
 ```
-
 ```jora
-{ a: 42 }.bool() // Result: true
+{ a: 42 }.bool()
+// Result: true
 ```
 
 ## entries()
@@ -35,19 +34,20 @@ Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects wit
 Similar to `Object.entries()` in JavaScript, using `{ key, value }` objects for entries instead of array tuples.
 
 ```jora
-{ a: 42, b: 123 }.entries() // Result: [{ key: 'a', value: 42 }, { key: 'b', value: 123 }]
+{ a: 42, b: 123 }.entries()
+// Result: [{ key: 'a', value: 42 }, { key: 'b', value: 123 }]
 ```
-
 ```jora
-[1, 2].entries() // Result: [{ key: '0', value: 1 }, { key: '1', value: 2 }]
+[1, 2].entries()
+// Result: [{ key: '0', value: 1 }, { key: '1', value: 2 }]
 ```
-
 ```jora
-'abc'.entries() // Result: [{ key: '0', value: 'a' }, { key: '1', value: 'b' }, { key: '2', value: 'c' }]
+'abc'.entries()
+// Result: [{ key: '0', value: 'a' }, { key: '1', value: 'b' }, { key: '2', value: 'c' }]
 ```
-
 ```jora
-123.entries() // Result: []
+123.entries()
+// Result: []
 ```
 
 ## filter(fn)
@@ -65,11 +65,11 @@ Similar to `Object.fromEntries()` in JavaScript, expects array `{ key, value }` 
 
 ## group(fn, fn)
 
-Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries  (see [Grouping](./group.md)).
+Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries (see [Grouping](./group.md)).
 
 ## join(separator)
 
-The same as `Array#join()` in JavaScript. When `separator` is not specified, `,` is used.
+The same as `Array#join()` in JavaScript. When `separator` is not specified, `","` is used.
 
 ## keys()
 
@@ -92,23 +92,22 @@ The logic of `max()` method equivalent (but more performant and memory efficient
 - with comparator: `sort(compare).[compare(undefined) != 0][-1]`
 
 ```jora
-[1, 4, 2, 3].max()  // Result: 4
+[1, 4, 2, 3].max()
+// Result: 4
 ```
-
 ```jora
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 42, ok: 1 }, { a: 20 }];
-
-$input.max(=> a)  // Result: { a: 42, ok: 1 }
+$input.max(=> a)
+// Result: { a: 42, ok: 1 }
 ```
-
 ```jora
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
-
-$input.max(a desc)  // Result: { a: 10 }
+$input.max(a desc)
+// Result: { a: 10 }
 ```
-
 ```jora
-'hello world'.max() // Result: 'w'
+'hello world'.max()
+// Result: 'w'
 ```
 
 ## min(compare)
@@ -118,23 +117,22 @@ Return min value from an array of string. The method returns `undefined` when th
 The logic of `min()` method equivalent to expression `sort()[0]` or `sort(fn)[0]`, but more performant and memory efficient.
 
 ```jora
-[4, 1, 2, 3].min()  // Result: 1
+[4, 1, 2, 3].min()
+// Result: 1
 ```
-
 ```jora
 $input: [{ a: 10 }, { a: 5, ok: 1 }, {}, { a: 5 }, { a: 20 }];
-
-$input.min(=> a)  // Result: { a: 5, ok: 1 }
+$input.min(=> a)
+// Result: { a: 5, ok: 1 }
 ```
-
 ```jora
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
-
-$input.min(a desc)  // Result: { a: 42 }
+$input.min(a desc)
+// Result: { a: 42 }
 ```
-
 ```jora
-'hello world'.min() // Result: ' '
+'hello world'.min()
+// Result: ' '
 ```
 
 ## pick()
@@ -163,19 +161,20 @@ Reverse order of elements in an array.
 Returns count of entries in an object, otherwise returns `length` property value or `0` when the field is absent.
 
 ```jora
-{ a: 42, b: 123 }.size()  // Result: 2
+{ a: 42, b: 123 }.size()
+// Result: 2
 ```
-
 ```jora
-[1, 2, 3, 4].size()  // Result: 4
+[1, 2, 3, 4].size()
+// Result: 4
 ```
-
 ```jora
-"Hello world".size()  // Result: 11
+"Hello world".size()
+// Result: 11
 ```
-
 ```jora
-123.size()  // Result: 0
+123.size()
+// Result: 0
 ```
 
 ## slice(from, to)
