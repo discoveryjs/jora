@@ -142,38 +142,91 @@ false ? 'yes' : 'no' // 'no'
 
 ## Grouping operator
 
-Parentheses `( )` serve as the grouping operator, allowing you explicitly define the order in which operations should be executed, ensuring that specific calculations are performed before others. This is particularly useful when dealing with complex expressions, as it helps to avoid unexpected results due to the default operator precedence.
+Parentheses `( )` serve as the grouping operator, allowing explicitly define the order in which operations should be executed, ensuring that specific calculations are performed before others. This is particularly useful when dealing with complex expressions, as it helps to avoid unexpected results due to the default operator precedence.
 
 ```jora
-(1 + 2) * (3 + 4) // 21
+(1 + 2) * (3 + 4)
+// Result: 21
 ```
 
 In this case, the addition operations are performed first, followed by the multiplication, resulting in the correct output of 21. Without the parentheses, the expression would be calculated as `1 + (2 * 3) + 4`, giving a different result of 11.
 
-Within the parentheses, you can also include variable definitions (see [Variables](./variables.md)):
+[Variable declarations](./variables.md) are allowed within the parentheses:
 
 ```jora
 ($a: 1; $a + $a)
+// Result: 2
 ```
 
 ## Pipeline operator
 
-The pipeline operator `|` in Jora facilitates the simplification of queries by linking expressions in a chain. Its utility is especially evident when treating a query result as a scalar value or reusing the outcome of an extensive or resource-intensive subquery multiple times, without the need for storage in a variable.
-
-For example:
+The pipeline operator `|` facilitates the simplification of queries by linking expressions in a chain. Its utility is especially evident when treating a query result as a scalar value or reusing the outcome of an extensive or resource-intensive subquery multiple times, without the need for storage in a variable. When using the pipeline operator, the value of `$` on the right side of the operator becomes equal to the value of the left side.
 
 ```jora
-$values: [1, 2, 3];
-$values.sum() / $values.size()
+1.5 | floor() + ceil()
+// Result: 3
 ```
 
-Can be rewritten as:
+The following examples demostrate how a query can be simplified using the pipeline operator:
+
+- Replacement for grouping operator:
+
+    ```jora
+    (a + b).round()
+    ```
+    ```jora
+    a + b | round()
+    ```
+
+- Simplify expressions to avoid using the [mapping](./map.md):
+
+    ```jora
+    { foo: 1, bar: 2, baz: 3 }.(foo + bar + baz)
+    // Result: 6
+    ```
+    ```jora
+    { foo: 1, bar: 2, baz: 3 } | foo + bar + baz
+    // Result: 6
+    ```
+
+- Reducing repetitions:
+
+    ```jora
+    $a.bar + $a.baz
+    ```
+    ```jora
+    $a | bar + baz
+    ```
+
+- Reusing result of a long or expensive subquery without saving it into a [variable](./variables.md):
+
+    ```jora
+    $result: very.expensive.query;
+    $result ? $result.sum() / $result.size() : '–'
+    ```
+    ```jora
+    very.expensive.query | $ ? sum() / size() : '–'
+    ```
+
+The pipeline operator can be used in any place of query where any other operator is applicable as well as any number of pipeline operators can be used in sequence:
 
 ```jora
-[1, 2, 3] | sum() + size()
+.({
+    $bar: num | floor() + ceil() | $ / 2;
+
+    foo: $bar | a + b,
+    baz: [1, $qux.min() | [$, $]]
+})
 ```
 
-See [Pipeline operator](./pipeline-operator.md) for details.
+[Variable declarations](./variables.md) are allowed in the beginning of the right side of the pipeline operator:
+
+```jora
+{ a: 10, b: [2, 3, 4] } | $k: a; b.($ * $k)
+// Result: [20, 30, 40]
+```
+
+Any two independent syntactically correct queries can be joined with the pipeline operator, resulting in a syntactically correct query. But keep in mind that both queries will refer to the same variables `@` (query input) and `#` (query context), which may not work in all cases.
 
 ## Operator precedence
 

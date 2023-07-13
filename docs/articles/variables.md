@@ -102,7 +102,7 @@ $foo
 // Result: { c: 12 }
 ```
 
-6. [Pipeline operator](./pipeline-operator.md) `|`:
+6. [Pipeline operator](./operators.md#pipeline-operator) `|`:
 
 ```jora
 [1, 2, 3] | $size: size(); .($ * $size)
