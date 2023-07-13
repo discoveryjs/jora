@@ -67,6 +67,27 @@ Similar to `Object.fromEntries()` in JavaScript, expects array `{ key, value }` 
 
 Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries (see [Grouping](./group.md)).
 
+## indexOf(value, fromIndex)
+
+Returns the first index of the specified value, starting the search at `fromIndex`. If `fromIndex` is not provided or cannot be converted to a number, the search starts from index `0`. The method returns `-1` if the value is not found or if the input doesn't implement the `indexOf()` method. Unlike JavaScript, this method supports index searching for `NaN` values.
+
+```jora
+[1, 2, 3, 1, 2, 3].indexOf(2)
+// Result: 1
+```
+```jora
+[1, 2, 3, 1, 2, 3].indexOf(2, 3)
+// Result: 4
+```
+```jora
+'abc abc'.lastIndexOf('bc')
+// Result: 1
+```
+```jora
+[1, NaN, 2, NaN, 3].indexOf(NaN)
+// Result: 1
+```
+
 ## join(separator)
 
 The same as `Array#join()` in JavaScript. When `separator` is not specified, `","` is used.
@@ -74,6 +95,27 @@ The same as `Array#join()` in JavaScript. When `separator` is not specified, `",
 ## keys()
 
 The same as `Object.keys()` in JavaScript.
+
+## lastIndexOf(value, fromIndex)
+
+Returns the first index of the specified value starting from the end at `fromIndex`. If `fromIndex` is not specified or cannot be converted to a number, it defaults to array or string length. The method returns `-1` if the value is not found or if the input doesn't implement the `lastIndexOf()` method. Unlike JavaScript, this method supports index searching for `NaN` values.
+
+```jora
+[1, 2, 3, 1, 2, 3].lastIndexOf(2)
+// Result: 4
+```
+```jora
+[1, 2, 3, 1, 2, 3].lastIndexOf(2, 3)
+// Result: 1
+```
+```jora
+'abc abc'.lastIndexOf('bc')
+// Result: 4
+```
+```jora
+[1, NaN, 2, NaN, 3].lastIndexOf(NaN)
+// Result: 3
+```
 
 ## map(fn)
 

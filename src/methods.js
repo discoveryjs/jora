@@ -89,6 +89,8 @@ export default Object.freeze({
     filter: buildin.filter,
     map: buildin.map,
     pick: buildin.pick,
+    indexOf: buildin.indexOf,
+    lastIndexOf: buildin.lastIndexOf,
     keys(current) {
         return Object.keys(current || {});
     },

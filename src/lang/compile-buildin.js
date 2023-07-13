@@ -53,6 +53,8 @@ export default Object.freeze({
     cmpNaturalAnalytical,
     match,
     pick,
+    indexOf,
+    lastIndexOf,
     map,
     mapRecursive,
     some,
@@ -143,36 +145,14 @@ function gte(a, b) {
     return a >= b;
 }
 
-function indexOf(a, b, fromIndex = 0) {
-    if (b) {
-        if (Object.is(a, NaN)) {
-            if (isArrayLike(b)) {
-                for (let i = fromIndex; i < b.length; i++) {
-                    if (Object.is(b[i], a)) {
-                        return i;
-                    }
-                }
-            }
-        }
-
-        if (typeof b.indexOf === 'function') {
-            return b.indexOf(a, fromIndex);
-        }
-    }
-
-    return -1;
-}
-
 function in_(a, b) {
     if (isPlainObject(b)) {
         return hasOwnProperty.call(b, a);
     }
 
-    if (b) {
-        return indexOf(a, b) !== -1;
-    }
-
-    return false;
+    return b
+        ? internalIndexOf(b, a) !== -1
+        : false;
 }
 
 function cmp(a, b) {
@@ -275,6 +255,54 @@ function pick(current, ref = () => true) {
     }
 
     return hasOwnProperty.call(current, ref) ? current[ref] : undefined;
+}
+
+function indexOf(dict, value, fromIndex) {
+    return dict
+        ? internalIndexOf(dict, value, fromIndex)
+        : -1;
+}
+
+function internalIndexOf(dict, value, fromIndex = 0) {
+    if (Object.is(value, NaN)) {
+        if (isArrayLike(dict)) {
+            for (let i = parseInt(fromIndex, 10) || 0; i < dict.length; i++) {
+                if (Object.is(dict[i], value)) {
+                    return i;
+                }
+            }
+        }
+    }
+
+    if (typeof dict.indexOf === 'function') {
+        return dict.indexOf(value, fromIndex);
+    }
+
+    return -1;
+}
+
+function lastIndexOf(dict, value, fromIndex) {
+    return dict
+        ? internalLastIndexOf(dict, value, fromIndex)
+        : -1;
+}
+
+function internalLastIndexOf(dict, value, fromIndex) {
+    if (Object.is(value, NaN)) {
+        if (isArrayLike(dict)) {
+            for (let i = parseInt(fromIndex, 10) || dict.length - 1; i >= 0; i--) {
+                if (Object.is(dict[i], value)) {
+                    return i;
+                }
+            }
+        }
+    }
+
+    if (typeof dict.lastIndexOf === 'function') {
+        return dict.lastIndexOf(value, parseInt(fromIndex, 10) || dict.length - 1);
+    }
+
+    return -1;
 }
 
 function map(value, getter) {
