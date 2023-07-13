@@ -9,7 +9,7 @@ const {
     Context,
     Current,
     Data,
-    // Declarator,
+    Declarator,
     Definition,
     Filter,
     Function,
@@ -92,12 +92,8 @@ function $$(node) {
 
 // FIXME: temporary solution, because of `declarator` is conflicting
 // with `queryRule` when declarator specified aside
-function Declarator_(name) {
-    return {
-        type: 'Declarator',
-        name,
-        range: $r1
-    };
+function DeclaratorWithRange(name) {
+    return Object.assign(Declarator(name), { range: $r1 });
 }
 
 function createCommaList(name, element) {
@@ -319,17 +315,11 @@ exports.bnf = {
         ['definitions def', '$1.push($2)']
     ],
     def: [
-        ['$ ;', $$(Definition(Declarator_(null), null))],
-        ['$ : e ;', $$(Definition(Declarator_(null), $3))],
-        ['$ident ;', $$(Definition(Declarator_($1name), null))],
-        ['$ident : e ;', $$(Definition(Declarator_($1name), $3))]
+        ['$ ;', $$(Definition(DeclaratorWithRange(null), null))],
+        ['$ : e ;', $$(Definition(DeclaratorWithRange(null), $3))],
+        ['$ident ;', $$(Definition(DeclaratorWithRange($1name), null))],
+        ['$ident : e ;', $$(Definition(DeclaratorWithRange($1name), $3))]
     ],
-    // FIXME: temporary solution, because of `declarator` conflict
-    // with `queryRule` when declarator specified aside
-    // declarator: [
-    //     ['$', $$(Declarator(null))], // declare nothing, but avoid failure and capture stat (suggestions)
-    //     ['$ident', $$(Declarator($1))]
-    // ],
     ident: [
         ['IDENT', $$(Identifier($1))]
     ],
