@@ -398,6 +398,17 @@ describe('lang/operators', () => {
             );
         });
 
+        it('should support NaN', () => {
+            assert.deepEqual(
+                query('$ in [1, NaN]')(NaN),
+                true
+            );
+            assert.deepEqual(
+                query('$ not in [1, NaN]')(NaN),
+                false
+            );
+        });
+
         it('not a in b', () => {
             assert.deepEqual(
                 query('.[not type in #]')(data, ['css', 'svg']),
@@ -443,6 +454,17 @@ describe('lang/operators', () => {
             assert.deepEqual(
                 query('.[# has $]')(['foo', 'bar', 'baz'], 'foobaz'),
                 ['foo', 'baz']
+            );
+        });
+
+        it('should support NaN', () => {
+            assert.deepEqual(
+                query('[1, NaN] has $')(NaN),
+                true
+            );
+            assert.deepEqual(
+                query('[1, NaN] has no $')(NaN),
+                false
             );
         });
 

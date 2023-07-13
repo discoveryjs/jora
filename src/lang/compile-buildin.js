@@ -143,12 +143,36 @@ function gte(a, b) {
     return a >= b;
 }
 
+function indexOf(a, b, fromIndex = 0) {
+    if (b) {
+        if (Object.is(a, NaN)) {
+            if (isArrayLike(b)) {
+                for (let i = fromIndex; i < b.length; i++) {
+                    if (Object.is(b[i], a)) {
+                        return i;
+                    }
+                }
+            }
+        }
+
+        if (typeof b.indexOf === 'function') {
+            return b.indexOf(a, fromIndex);
+        }
+    }
+
+    return -1;
+}
+
 function in_(a, b) {
     if (isPlainObject(b)) {
         return hasOwnProperty.call(b, a);
     }
 
-    return b && typeof b.indexOf === 'function' ? b.indexOf(a) !== -1 : false;
+    if (b) {
+        return indexOf(a, b) !== -1;
+    }
+
+    return false;
 }
 
 function cmp(a, b) {

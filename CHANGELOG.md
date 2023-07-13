@@ -11,6 +11,7 @@
 - Changed the comparator function grammar to allow any expression in the definition, not just a query chain. This eliminates the need for parentheses in many cases. For example, `a + b desc` is now a valid definition, whereas previously it required parentheses: `(a + b) desc` (since evaluated as `a + (b desc)`).
 - Changed precedence of function definitions to be lower than that of the pipeline operator and comparator function definitions (i.e., the lowest precedence). For example, the expression `=> a | b` now evaluates as `=> (a | b)` instead of `(=> a) | b` as before, meaning it returns a function instead of the value of `b`.
 - Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
+- Fixed `in`, `not in`, `has` and `has no` operators to handle `NaN` values correctly, e.g. `NaN in [1, NaN, 3]` returns `true` now
 
 ## 1.0.0-beta.7 (July 12, 2022)
 
