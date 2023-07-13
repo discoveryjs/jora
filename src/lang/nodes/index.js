@@ -3,6 +3,7 @@ import * as Array from './Array.js';
 import * as Binary from './Binary.js';
 import * as Block from './Block.js';
 import * as Compare from './Compare.js';
+import * as CompareFunction from './CompareFunction.js';
 import * as Conditional from './Conditional.js';
 import * as Context from './Context.js';
 import * as Current from './Current.js';
@@ -26,7 +27,6 @@ import * as Pipeline from './Pipeline.js';
 import * as Placeholder from './Placeholder.js';
 import * as Reference from './Reference.js';
 import * as SliceNotation from './SliceNotation.js';
-import * as SortingFunction from './SortingFunction.js';
 import * as Spread from './Spread.js';
 import * as Template from './Template.js';
 import * as Unary from './Unary.js';
@@ -60,7 +60,7 @@ export const nodes = {
     Placeholder,
     Reference,
     SliceNotation,
-    SortingFunction,
+    CompareFunction,
     Spread,
     Template,
     Unary

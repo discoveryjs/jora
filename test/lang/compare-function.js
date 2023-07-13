@@ -1,7 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
 
-describe('lang/sorting function', () => {
+describe('lang/compare function', () => {
     const data = [1, 2, 3, 2, 1, 4].map((value, idx) => ({ idx, foo: value }));
 
     it('basic asc', () => {

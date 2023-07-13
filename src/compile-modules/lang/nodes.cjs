@@ -31,6 +31,12 @@ exports.Compare = function(query, order) {
         order
     };
 };
+exports.CompareFunction = function(compares) {
+    return {
+        type: 'CompareFunction',
+        compares
+    };
+};
 exports.Conditional = function(test, consequent, alternate) {
     return {
         type: 'Conditional',
@@ -178,12 +184,6 @@ exports.SliceNotation = function(value, args) {
         type: 'SliceNotation',
         value,
         arguments: args
-    };
-};
-exports.SortingFunction = function(compares) {
-    return {
-        type: 'SortingFunction',
-        compares
     };
 };
 exports.Spread = function(query, array = false) {

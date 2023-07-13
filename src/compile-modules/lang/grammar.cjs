@@ -4,6 +4,7 @@ const {
     Binary,
     Block,
     Compare,
+    CompareFunction,
     Conditional,
     Context,
     Current,
@@ -27,7 +28,6 @@ const {
     Placeholder,
     Reference,
     SliceNotation,
-    SortingFunction,
     Spread,
     Template,
     Unary
@@ -287,7 +287,7 @@ exports.operators = [
     ['left', 'def'],
     ['left', ';'],
     ['left', 'FUNCTION'],
-    ['left', 'sortingCompareList', 'sortingCompare'],
+    ['left', 'compareFunction', 'compareExpr'],
     ['left', ','],
     ['right', '?', ':'],
     ['left', 'OR'],
@@ -343,7 +343,7 @@ exports.bnf = {
         // functions
         ['FUNCTION_START block FUNCTION_END', $$(Function([], $2, true))],
         ['FUNCTION e', $$(Function([], $2))],
-        ['sortingCompareList', $$(SortingFunction($1))],
+        ['compareFunction', $$(CompareFunction($1))],
 
         // pipeline
         ['e | e', $$(Pipeline($1, $3))],
@@ -480,8 +480,8 @@ exports.bnf = {
         ['[ arrayElements , ]', $$(ArrayNode($2))]
     ],
 
-    sortingCompareList: createCommaList('sortingCompareList', 'sortingCompare'),
-    sortingCompare: [
+    compareFunction: createCommaList('compareFunction', 'compareExpr'),
+    compareExpr: [
         ['query ORDER', $$(Compare($1, $2))]
     ],
 
