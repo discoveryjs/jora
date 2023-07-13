@@ -279,11 +279,12 @@ exports.lex = {
     ]
 };
 exports.operators = [
+    ['left', 'FUNCTION'],
+    ['left', 'compareFunction', 'compareExpr'],
+    ['left', 'ORDER'],
     ['left', '|'],
     ['left', 'def'],
     ['left', ';'],
-    ['left', 'FUNCTION'],
-    ['left', 'compareFunction', 'compareExpr'],
     ['left', ','],
     ['right', '?', ':'],
     ['left', 'OR'],
@@ -472,7 +473,7 @@ exports.bnf = {
 
     compareFunction: createCommaList('compareFunction', 'compareExpr'),
     compareExpr: [
-        ['query ORDER', $$(Compare($1, $2))]
+        ['e ORDER', $$(Compare($1, $2))]
     ],
 
     sliceNotation: [

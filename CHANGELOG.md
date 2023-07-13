@@ -8,6 +8,8 @@
 - Added `sum()` method
 - Added `toLowerCase()`, `toUpperCase()` and `trim()` methods
 - Added math methods `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `log()`, `log10()`, `log1p()`, `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()`. All the methods works the same as static methods of [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) in JavaScript
+- Changed the comparator function grammar to allow any expression in the definition, not just a query chain. This eliminates the need for parentheses in many cases. For example, `a + b desc` is now a valid definition, whereas previously it required parentheses: `(a + b) desc` (since evaluated as `a + (b desc)`).
+- Changed precedence of function definitions to be lower than that of the pipeline operator and comparator function definitions (i.e., the lowest precedence). For example, the expression `=> a | b` now evaluates as `=> (a | b)` instead of `(=> a) | b` as before, meaning it returns a function instead of the value of `b`.
 - Changed `split()` method to support arrays, in that case `pattern` can be a function or any value
 
 ## 1.0.0-beta.7 (July 12, 2022)

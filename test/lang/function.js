@@ -195,4 +195,32 @@ describe('lang/function', () => {
             1
         );
     });
+
+    it('should has lower precedence than a function definition', () => {
+        assert.strictEqual(
+            typeof query('=> 1 | 2')(),
+            'function'
+        );
+    });
+
+    describe('should has lower precedence than a compare function definition', () => {
+        it('single compare', () => {
+            const actual = query('=> foo desc')();
+
+            assert.strictEqual(typeof actual, 'function');
+            assert.strictEqual(
+                typeof actual(),
+                'function'
+            );
+        });
+        it('a compare list', () => {
+            const actual = query('[=> foo desc, bar asc]')();
+
+            assert.strictEqual(actual.length, 1);
+            assert.strictEqual(typeof actual[0], 'function');
+            assert.strictEqual(actual[0]()({ foo: 2 }, { foo: 10 }), 1);
+            assert.strictEqual(actual[0]()({ bar: 2 }, { bar: 10 }), -1);
+            assert.strictEqual(actual[0]()({ baz: 2 }, { baz: 10 }), 0);
+        });
+    });
 });
