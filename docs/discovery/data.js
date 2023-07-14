@@ -1,10 +1,16 @@
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 const marked = require('marked');
 const jora = require('jora');
+const { parseExample } = require('./parse-example.js');
 
 function md(filename) {
     return fs.readFileSync(path.join(__dirname, filename) + '.md', 'utf8');
+}
+
+function ident(text, prefix = '  ') {
+    return prefix + text.split(/\r\n?|\n/).join(`\n${prefix}`);
 }
 
 function processMarkdown(article, href, { examples, methods }) {
@@ -27,6 +33,23 @@ function processMarkdown(article, href, { examples, methods }) {
                     try {
                         const methodRefs = Object.create(null);
                         const ast = jora.syntax.parse(token.text).ast;
+                        const parsedExample = parseExample(token.text);
+
+                        if ('result' in parsedExample && !parsedExample.hasErrors && !parsedExample.inputRef) {
+                            const actual = jora(parsedExample.content)(parsedExample.input, parsedExample.context);
+
+                            try {
+                                assert.deepEqual(actual, parsedExample.result);
+                            } catch {
+                                console.log('[WARN] The result in example doesn\'t match to actual result:');
+                                console.log(ident(parsedExample.content));
+                                console.log('Actual:');
+                                console.log(ident(parsedExample.result));
+                                console.log('Expected:');
+                                console.log(ident(actual));
+                                console.log();
+                            }
+                        }
 
                         jora.syntax.walk(ast, function(node) {
                             if (node.type === 'Method' && node.reference.type === 'Identifier') {
@@ -64,9 +87,10 @@ function processMarkdown(article, href, { examples, methods }) {
                         });
                     } catch (e) {
                         // console.log();
-                        // console.log('[ERROR] ========', href);
-                        // console.log(e.message);
-                        // console.log(token.text);
+                        // console.log('[ERROR] Example parse error:', e.message);
+                        // console.log('Article:', href);
+                        // console.log('Example:');
+                        // console.log(ident(token.text));
                     }
                 }
 

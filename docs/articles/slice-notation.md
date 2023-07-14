@@ -28,43 +28,46 @@ All values in the slice notation can be either positive or negative integers. Ne
 ### Arrays
 
 ```jora
-[1, 2, 3, 4, 5][1:4] // Result: [2, 3, 4]
+[1, 2, 3, 4, 5][1:4]
+// Result: [2, 3, 4]
 ```
-
 ```jora
-[1, 2, 3, 4, 5][:3] // Result: [1, 2, 3]
+[1, 2, 3, 4, 5][:3]
+// Result: [1, 2, 3]
 ```
-
 ```jora
-[1, 2, 3, 4, 5][-2:] // Result: [4, 5]
+[1, 2, 3, 4, 5][-2:]
+// Result: [4, 5]
 ```
-
 ```jora
-[1, 2, 3, 4, 5][::2] // Result: [1, 3, 5]
+[1, 2, 3, 4, 5][::2]
+// Result: [1, 3, 5]
 ```
 
 Omitting all lower bound and upper bound value, produces a new copy of the array:
 
 ```jora
-['a', 'b', 'c', 'd'][:] // Result: ['a', 'b', 'c', 'd']
+['a', 'b', 'c', 'd'][:]
+// Result: ['a', 'b', 'c', 'd']
 ```
 
 ### Strings
 
 ```jora
-"hello"[1:4] // Result: ["e", "l", "l"]
+"hello"[1:4]
+// Result: "ell"
 ```
-
 ```jora
-"hello"[:3] // Result: ["h", "e", "l"]
+"hello"[:3]
+// Result: "hel"
 ```
-
 ```jora
-"hello"[-2:] // Result: ["l", "o"]
+"hello"[-2:]
+// Result: "lo"
 ```
-
 ```jora
-"hello"[::2] // Result: ["h", "e", "o"]
+"hello"[::2]
+// Result: ["h", "l", "o"]
 ```
 
 ### Negative Step
@@ -72,11 +75,12 @@ Omitting all lower bound and upper bound value, produces a new copy of the array
 A negative step can be used to reverse the order of the elements in the slice:
 
 ```jora
-[1, 2, 3, 4, 5][1:4:-1] // Result: [4, 3, 2]
+[1, 2, 3, 4, 5][1:4:-1]
+// Result: [4, 3, 2]
 ```
-
 ```jora
-"hello"[1:4:-1] // Result: ["l", "l", "e"]
+"hello"[1:4:-1]
+// Result: ["l", "l", "e"]
 ```
 
 ## The algorithm

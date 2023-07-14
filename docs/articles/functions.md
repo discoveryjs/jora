@@ -57,7 +57,7 @@ someValue.$functionFromContext()
 
 ## Comparator functions
 
-There is a syntax to define comparator functions - functions that return -1, 0, or 1, based on whether the first value in a pair is lesser, equal to, or greater than the second. The syntax produces a function which takes two arguments and compare the query result for each in the specified order (`asc` or `desc`):
+There is a syntax to define comparator functions – functions that return `-1`, `0`, or `1`, based on whether the first value in a pair is lesser, equal to, or greater than the second. The syntax produces a function which takes two arguments and compare the query result for each in the specified order (`asc` or `desc`):
 
 ```jora
 expr asc
@@ -103,4 +103,4 @@ There are some variations for `asc` and `desc` that provide additional compariso
 
 - `ascN` / `descN`: [Natural sort order](https://en.wikipedia.org/wiki/Natural_sort_order) for strings using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare) (`N` stands for "Natural")
 - `ascA` / `descA`: The same as `asc` / `desc`, but reverse order for numbers (`A` stands for "Analytical")
-- `ascAN` / `descAN`: The same as `ascN` / `descN`, but reverse order for numbers (`AN` stands for "Analytical" and "Natural")
+- `ascAN` / `ascNA` / `descAN` / `descNA`: The same as `ascN` / `descN`, but reverse order for numbers (`AN` stands for "Analytical" and "Natural")

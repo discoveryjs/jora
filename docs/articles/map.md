@@ -169,7 +169,7 @@ In the above examples, we can see how Jora's map method handles `undefined` valu
 In some cases, you might want to preserve the same number of elements in the output array as in the input array. You can use a simple workaround by wrapping the result of the map method into an object. Let's consider an example:
 
 ```jora
-[ 1, 2, 2, 3, 3, 3 ].({ value })
+[ 1, 2, 2, 3, 3, 3 ].({ value: $ })
 // Result:
 // [
 //   { "value": 1 },
@@ -189,7 +189,8 @@ In general, `.(…)` is the preferred syntax because it is more concise. However
 
 ```jora
 $myMapper: => { value: $ * 2 };
-[1, 2, 3].map($myMapper) // Result: [2, 4, 6]
+[1, 2, 3].map($myMapper)
+// Result: [{ value: 2 }, { value: 4 }, { value: 6 }]
 ```
 
 In this case, the choice between `.(…)` and `map()` depends on the specific use case and the desired level of readability and flexibility. Both syntaxes can be used interchangeably for mapping purposes, equivalence of syntaxes:

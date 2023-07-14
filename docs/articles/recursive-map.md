@@ -96,6 +96,7 @@ To apply additional operations to the result, wrap the concatenation in parenthe
 
 ```jora
 ($ + ..children).name
+// Input[1]
 // Result: ["root", "folder1", "folder2", "file1.txt", "file2.txt", "file3.txt"]
 ```
 
@@ -103,6 +104,7 @@ The pipeline operator can also be used for the same result:
 
 ```jora
 $ + ..children | name
+// Input[1]
 // Result: ["root", "folder1", "folder2", "file1.txt", "file2.txt", "file3.txt"]
 ```
 
@@ -110,6 +112,7 @@ Ensure that operations like filtering are performed after the recursive mapping 
 
 ```jora
 $ + ..children | .[type = "file"].name
+// Input[1]
 // Result: ["file1.txt", "file2.txt", "file3.txt"]
 ```
 

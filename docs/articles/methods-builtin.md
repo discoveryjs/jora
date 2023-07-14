@@ -54,6 +54,16 @@ Similar to `Object.entries()` in JavaScript, using `{ key, value }` objects for 
 
 The same as `Array#filter()` in JavaScript, `filter(fn)` is equivalent to `.[fn()]` (see [Filtering](./filter.md)).
 
+```jora
+[1, 2, 3, 4].filter(=> $ % 2)
+// Result: [1, 3]
+```
+```jora
+$isOdd: => $ % 2;
+[1, 2, 3, 4].filter($isOdd)
+// Result: [1, 3]
+```
+
 ## fromEntries()
 
 Similar to `Object.fromEntries()` in JavaScript, expects array `{ key, value }` objects as entries instead of array tuples.
@@ -80,7 +90,7 @@ Returns the first index of the specified value, starting the search at `fromInde
 // Result: 4
 ```
 ```jora
-'abc abc'.lastIndexOf('bc')
+'abc abc'.indexOf('bc')
 // Result: 1
 ```
 ```jora
@@ -92,9 +102,31 @@ Returns the first index of the specified value, starting the search at `fromInde
 
 The same as `Array#join()` in JavaScript. When `separator` is not specified, `","` is used.
 
+```jora
+[1, 2, 3].join()
+// Result: "1,2,3"
+```
+```jora
+[undefined, null, 123, NaN, "str", [2, 3], {}].join(' / ')
+// Result: " /  / 123 / NaN / str / 2,3 / [object Object]"
+```
+
 ## keys()
 
 The same as `Object.keys()` in JavaScript.
+
+```jora
+{ foo: 1, bar: 2 }.keys()
+// Result: ["foo", "bar"]
+```
+```jora
+[2, 3, 4].keys()
+// Result: ["0", "1", "2"]
+```
+```jora
+123.keys()
+// Result: []
+```
 
 ## lastIndexOf(value, fromIndex)
 
@@ -110,7 +142,7 @@ Returns the first index of the specified value starting from the end at `fromInd
 ```
 ```jora
 'abc abc'.lastIndexOf('bc')
-// Result: 4
+// Result: 5
 ```
 ```jora
 [1, NaN, 2, NaN, 3].lastIndexOf(NaN)
@@ -121,9 +153,73 @@ Returns the first index of the specified value starting from the end at `fromInd
 
 The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mapping](./map.md)).
 
+```jora
+[1, 2, 3, 4].map(=> $ * 2)
+// Result: [2, 4, 6, 8]
+```
+```jora
+$getA: => a;
+[{ a: 1 }, { a: 2 }, { a: 1 }].map($getA)
+// Result: [1, 2]
+```
+
 ## match(pattern, matchAll)
 
 Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent.
+
+```jora
+'abcabc'.match('bc')
+// Result: {
+//     matched: ['bc'],
+//     start: 1,
+//     end: 3,
+//     input: 'abcabc',
+//     groups: null,
+// }
+```
+```jora
+'abcabc'.match('bc', true) // matchAll parameter is true
+// Result: [{
+//     matched: ['bc'],
+//     start: 1,
+//     end: 3,
+//     input: 'abcabc',
+//     groups: null,
+// }, {
+//     matched: ['bc'],
+//     start: 4,
+//     end: 6,
+//     input: 'abcabc',
+//     groups: null,
+// }]
+```
+```jora
+'abc123a45'.match(/a(bc)?(?<numbers>\d+)/)
+// Result: {
+//     matched: ['abc123', 'bc', '123'],
+//     start: 0,
+//     end: 6,
+//     input: 'abc123a45',
+//     groups: { numbers: '123' },
+// }
+```
+```jora
+'abc123a45'.match(/a(bc)?(?<numbers>\d+)/g) // the RegExp has 'g' flag
+// Result: [{
+//     matched: ['abc123', 'bc', '123'],
+//     start: 0,
+//     end: 6,
+//     input: 'abc123a45',
+//     groups: { numbers: '123' },
+// }, {
+//     matched: ['a45', undefined, '45'],
+//     start: 6,
+//     end: 9,
+//     input: 'abc123a45',
+//     groups: { numbers: '45' },
+// }]
+```
+
 
 ## max(compare)
 
@@ -179,7 +275,16 @@ $input.min(a desc)
 
 ## pick()
 
-Get a value by a key, index, or function. Supports negative indices for arrays and strings.
+Get a value by a key, index, or function. The methods repeats behaviour of [Bracket notation](./bracket-notation.md), i.e. `expr.pick(…)` is the same as `expr[…]`.
+
+```jora
+[1, 2, 3, 4].pick(2)
+// Result: 3
+```
+```jora
+{ foo: 1, bar: 2 }.pick('bar')
+// Result: 2
+```
 
 ## reduce(fn, initValue)
 
@@ -192,11 +297,45 @@ The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` f
 
 ## replace(pattern, replacement)
 
-The same as `String#replaceAll()` in JavaScript, but also works for arrays. When `pattern` is RegExp, a `g` flags adds automatically if omitted.
+The same as `String#replaceAll()` in JavaScript, but also works for arrays. When `pattern` is RegExp, a `g` flags adds automatically if omitted. When applying to arrays it's similar to `.($ = pattern ? replacement : $)`, but without dropping duplicate values and inlining arrays.
+
+```jora
+'abc123def123xyz'.replace('123', '_')
+// Result: "abc_def_xyz"
+```
+```jora
+'abc123def45xyz'.replace(/[^\d]/, '_')
+// Result: "___123___45___"
+```
+```jora
+'2023-07-14'.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3-$2-$1')
+// Result: "14-07-2023"
+```
+```jora
+'a 123 ... b 45'.replace(
+    /([a-z]+)\s+(?<numbers>\d+)/,
+    => `[numbers: ${groups.numbers} for '${matched[1]}']`
+)
+// Result: "[numbers: 123 for 'a'] ... [numbers: 45 for 'b']"
+```
+```jora
+[1, 2, 3, 3, 2, 1].replace(2, null)
+// Result: [1, null, 3, 3, null, 1]
+```
+
 
 ## reverse()
 
-Reverse order of elements in an array.
+Reverse order of elements in an array. Unlike JavaScript, doesn't modify input array but produce a new copy of it with the change (like [`Array#toReversed()`](https://github.com/tc39/proposal-change-array-by-copy)). For any values other than an array, returns the input value.
+
+```jora
+[1, 2, 5, 3].reverse()
+// Result: [3, 5, 2, 1]
+```
+```jora
+'hello world'.reverse()
+// Result: 'hello world'
+```
 
 ## size()
 
@@ -286,13 +425,28 @@ Arrays are always converting to `NaN`. To summing array of arrays, a summation o
 
 The same as `String#toLocaleLowerCase()` in JavaScript.
 
+```jora
+'Hello World!'.toLowerCase()
+// Result: "hello world!"
+```
+
 ## toUpperCase(locales)
 
 The same as `String#toLocaleUpperCase()` in JavaScript.
 
+```jora
+'Hello World!'.toUpperCase()
+// Result: "HELLO WORLD!"
+```
+
 ## trim()
 
 The same as `String#trim()` in JavaScript.
+
+```jora
+'   something in the middle   '.trim()
+// Result: "something in the middle"
+```
 
 ## values()
 
@@ -409,11 +563,11 @@ Returns <code>e<sup>x</sup></code>, where `x` is the argument, and `e` is Euler'
 Returns subtracting `1` from `exp(x)`, i.e. <code>e<sup>x</sup> - 1</code>.
 
 ```jora
-2.exp()
+2.expm1()
 // Result: 6.38905609893065
 ```
 ```jora
-(-1).exp()
+(-1).expm1()
 // Result: -0.6321205588285577
 ```
 

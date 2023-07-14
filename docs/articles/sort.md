@@ -85,8 +85,9 @@ We can also sort by multiple properties. For example, suppose we have an array o
 We can sort the users first by age in ascending order and then by name in descending order:
 
 ```jora
-$users.sort(age asc, name desc)
+sort(age asc, name desc)
 
+// Input[1]
 // Result: [
 //     { "name": "Bob", "age": 25 },
 //     { "name": "Charlie", "age": 30 },

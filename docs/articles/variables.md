@@ -80,8 +80,8 @@ $foo
 3. [Filtering](./filter.md) `.[]`:
 
 ```jora
-[1, 2, 3].[$num: $; $num * 2]
-// Result: [2, 4, 6]
+[1, 2, 3].[$num: $; $num % 2]
+// Result: [1, 3]
 ```
 
 4. [Grouping operator](./operators.md#grouping-operator) `(…)`:
