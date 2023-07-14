@@ -316,6 +316,37 @@ export default Object.freeze({
     }, {}),
 
     // statistics
+    numbers(current, getter, formula) {
+        const result = [];
+
+        processNumericArray(current, getter, formula, result.push.bind(result));
+
+        return result;
+    },
+    sum(current, getter, formula) {
+        return sumAndCount(current, getter, formula).sum;
+    },
+    avg(current, getter, formula) {
+        const { sum, count } = sumAndCount(current, getter, formula);
+        return count > 0 ? sum / count : undefined;
+    },
+    count(current, getter) {
+        let count = 0;
+
+        if (isArrayLike(current)) {
+            if (typeof getter !== 'function') {
+                getter = self;
+            }
+
+            for (const value of current) {
+                if (getter(value) !== undefined) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    },
     min(current, cmp = buildin.cmpNatural) {
         let min;
 
@@ -349,31 +380,42 @@ export default Object.freeze({
         }
 
         return max;
-    },
-    sum
+    }
 });
 
 // statistics
-function processNumericArray(current, map = self, fn) {
+function toNumber(value) {
+    return value !== null && typeof value === 'object'
+        ? NaN
+        : Number(value);
+}
+function processNumericArray(current, getter, formula, apply) {
     if (isArrayLike(current)) {
+        if (typeof getter !== 'function') {
+            getter = self;
+        }
+
+        if (typeof formula !== 'function') {
+            formula = self;
+        }
+
         for (const value of current) {
-            const mappedValue = map(value);
+            const mappedValue = getter(value);
 
             if (mappedValue !== undefined) {
-                fn(
-                    mappedValue !== null && typeof mappedValue === 'object'
-                        ? NaN
-                        : Number(mappedValue)
-                );
+                apply(toNumber(formula(toNumber(mappedValue))));
             }
         }
     }
 }
-function sum(current, fn) {
+function sumAndCount(current, getter, formula) {
     let sum = undefined;
+    let count = 0;
     let correction = 0;
 
-    processNumericArray(current, fn, num => {
+    processNumericArray(current, getter, formula, num => {
+        count++;
+
         if (sum === undefined) {
             sum = num;
         } else {
@@ -399,5 +441,7 @@ function sum(current, fn) {
         sum += correction;
     }
 
-    return sum;
+    return { sum, count };
+}
+
 }

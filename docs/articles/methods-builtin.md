@@ -1,5 +1,22 @@
 # Built-in methods
 
+## avg(getter, formula)
+
+The `avg(getter, formula)` method calculates the [arithmetic mean](https://en.wikipedia.org/wiki/Arithmetic_mean), also known as the average, of a collection of numbers. The arithmetic mean is computed by adding all the numbers in the collection and then dividing by the total count of numbers. This method is equivalent to the expressions `numbers() | sum() / size()` or `sum() / count()`.
+
+```jora
+[1, 2, 3, 4].avg()
+// Result: 2.5
+```
+```jora
+[{}, { a: 2 }, undefined, { a: 4 }].avg(=> a)
+// Result: 3
+```
+```jora
+[{ a: 2 }, { a: 4 }].avg(=> a, => $ * $)
+// Result: 10
+```
+
 ## bool()
 
 Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy.
@@ -28,6 +45,32 @@ Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects wit
 { a: 42 }.bool()
 // Result: true
 ```
+
+## count(getter)
+
+The `count()` method calculates the number of non-undefined values present in the input array. It processes each value in the array through a `getter` function (default function is `=> $`). If the processed value is not `undefined`, it increments the count by 1. If the input is not an array, the method returns `0`. This method is functionally equivalent to the expression `numbers().size()`.
+
+```jora
+[1, 2, 3].count()
+// Result: 3
+```
+```jora
+[1, NaN, false, true, '123', { foo: 1 }, [5]].count()
+// Result: 7
+```
+```jora
+[{ age: 10 }, { age: 20 }, {}, { foo: 1 }].count(=> age)
+// Result: 2
+```
+
+While the primary function of this method is to count non-undefined values in the input, it can also be utilized to count values that meet a specific condition, by converting falsy values to `undefined`:
+
+```jora
+[{ a: 1, b: 3}, { a: 5, b: 4 }, { a: 3, b: 8 }].count(=> a < b or undefined)
+// Result: 2
+```
+
+In the last example, the `count()` method returns the count of objects where the value of `a` is less than `b`.
 
 ## entries()
 
@@ -165,7 +208,7 @@ $getA: => a;
 
 ## match(pattern, matchAll)
 
-Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/../g)` and `match(/../, true)` are equivalent.
+Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/…/g)` and `match(/…/, true)` are equivalent.
 
 ```jora
 'abcabc'.match('bc')
@@ -220,7 +263,6 @@ Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchA
 // }]
 ```
 
-
 ## max(compare)
 
 Return max value from an array of string, excluding `undefined`. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`. For string values a natural comparison is used by default.
@@ -273,9 +315,37 @@ $input.min(a desc)
 // Result: ' '
 ```
 
+## numbers(getter, formula)
+
+The `numbers()` method returns an array of numbers derived from the input values. It ignores `undefined` values returned by the `getter` function (the default `getter` function is `=> $`, which returns the value itself). All other values are converted to numbers and passed to the `formula` function (including `NaN` and ±`Infinity`). The result of the `formula` function (which is also converted to a number if necessary) is stored in the resulting array. When converting a value to a number, any objects and arrays are converted to `NaN`.
+
+The `numbers()` method is utilized internally by statistical methods such as `sum()`, `avg()`, and `count()`. As such, it can be used to reveal the numbers that are being used to compute the result of these methods.
+
+```jora
+[1, NaN, false, true, '123', { foo: 1 }, [5]].numbers()
+// Result: [1, NaN, 0, 1, 123, NaN, NaN]
+```
+```jora
+[1, 2, NaN, false, true, '123'].numbers()
+// Result: [1, 2, NaN, 0, 1, 123]
+```
+```jora
+[{ age: 10 }, {}, { age: 20 }, null, { age: 10 }].numbers(=> age)
+// Result: [10, 20, 10]
+```
+
+> Note: When applying a statistical computation to an array of objects, it is recommended to use a custom `getter` with the method rather than using dot notation or mapping. This is because dot notation and mapping ignore duplicate values. For instance, the query `[…].age.numbers()` might return `[10, 20]` for the last example instead of the expected `[10, 20, 10]`, which would be correctly returned by the query `[…].numbers(=> age)`.
+
+Using custom formula:
+
+```jora
+[{ foo: 3 }, { foo: 5 }, { foo: 2 }].numbers(=> foo, => $ * $)
+// Result: [9, 25, 4]
+```
+
 ## pick()
 
-Get a value by a key, index, or function. The methods repeats behaviour of [Bracket notation](./bracket-notation.md), i.e. `expr.pick(…)` is the same as `expr[…]`.
+Get a value by a key, index, or function. The method repeats behaviour of [Bracket notation](./bracket-notation.md), i.e. `expr.pick(…)` is the same as `expr[…]`.
 
 ```jora
 [1, 2, 3, 4].pick(2)
@@ -323,7 +393,6 @@ The same as `String#replaceAll()` in JavaScript, but also works for arrays. When
 // Result: [1, null, 3, 3, null, 1]
 ```
 
-
 ## reverse()
 
 Reverse order of elements in an array. Unlike JavaScript, doesn't modify input array but produce a new copy of it with the change (like [`Array#toReversed()`](https://github.com/tc39/proposal-change-array-by-copy)). For any values other than an array, returns the input value.
@@ -370,9 +439,9 @@ Sort an array by a value fetched with getter (`fn`). Can use sorting function de
 
 The same as `String#split()` in JavaScript. `pattern` may be a string or regex.
 
-## sum(getter)
+## sum(getter, formula)
 
-Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method ignores `undefined` values returned by the getter function (default getter function is `=> $`, which returns the value itself), all other values are converted to a number and used in the summation, including `NaN` and ±`Infinity`. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
+Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter-formula) method with the same `getter` and `formula` parameters returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
 
 ```jora
 [].sum()
@@ -408,9 +477,7 @@ Using a custom getter function:
 // Result: 40
 ```
 
-> Note: When summing values in an array of objects, it is recommended to use a custom getter with the `sum()` method rather than using dot notation or mapping prior to summation. This is because dot notation and mapping are ignores duplicate values. For example, the query `[…].age.sum()` might return 30 instead of the expected 40, which would be correctly returned by the query `[…].sum(=> age)`.
-
-Arrays are always converting to `NaN`. To summing array of arrays, a summation of sums should be used:
+Since arrays are always converting to `NaN`. To summing array of arrays, a summation of sums should be used:
 
 ```jora
 [[1, 2], [], [4]].sum()

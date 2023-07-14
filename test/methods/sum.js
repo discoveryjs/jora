@@ -80,7 +80,11 @@ describe('sum()', () => {
             assert.strictEqual(query('[1, 2, 3].sum(=>$ * 2)')(), 12);
         });
 
-        it('getter should take all values', () => {
+        it('should ignore getter when getter is not a function', () => {
+            assert.strictEqual(query('[1, 2, 3].sum(123)')(), 6);
+        });
+
+        it('getter should get all values', () => {
             assert.strictEqual(query('sum(=>$ = Infinity ? 100 : $ or 10)')(
                 [1, null, undefined, Infinity, false, true, NaN, 3]
             ), 145);
@@ -114,6 +118,46 @@ describe('sum()', () => {
             assert.strictEqual(query('sum(=> a.sum())')(
                 [{ a: [1, 2] }, { a: [] }, { a: [4] }, {}, undefined]
             ), 7);
+        });
+    });
+
+    describe('custom formula', () => {
+        it('should use custom formula when passed', () => {
+            assert.strictEqual(query('[1, 2, 3].sum(=>$, =>$ * 10)')(), 60);
+        });
+
+        it('should ignore formula when formula is not a function', () => {
+            assert.strictEqual(query('[1, 2, 3].sum(=>$, 123)')(), 6);
+        });
+
+        it('should not convert arrays into numbers', () => {
+            assert.deepStrictEqual(query('sum(=> a, => [1, 2][:$ - 1])')(
+                [1, 2, 3]
+            ), undefined);
+        });
+
+        it('formula should get all non-undefined values', () => {
+            assert.strictEqual(query('sum(=>($ in [Infinity, NaN] ? undefined : $), => ($ + 1 | $ * $))')(
+                [1, null, undefined, Infinity, false, true, NaN, 3]
+            ), 26);
+        });
+
+        it('should ignore undefined values', () => {
+            assert.strictEqual(query('sum(=>a, =>$ * $)')(
+                [{}, { a: 1 }, undefined, {}, { a: 3 }]
+            ), 10);
+        });
+
+        it('should ignore undefined values from getter only but pass undefined in getter', () => {
+            assert.strictEqual(query('sum(=>$ = undefined ? 2 : a, => $ * $)')(
+                [{}, undefined, { a: 3 }]
+            ), 13);
+        });
+
+        it('should not ignore duplicates', () => {
+            assert.strictEqual(query('sum(=> a, => $ * $)')(
+                [{ a: 2 }, { a: 2 }, { a: 2 }]
+            ), 12);
         });
     });
 });
