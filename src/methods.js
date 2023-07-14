@@ -443,5 +443,3 @@ function sumAndCount(current, getter, formula) {
 
     return { sum, count };
 }
-
-}
