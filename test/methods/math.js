@@ -63,14 +63,14 @@ describe('math methods', () => {
         assert.strictEqual(query('imul()')(2), 0);
         assert.strictEqual(query('imul(2)')(2), 4);
     });
-    it('log', () => {
-        assert.strictEqual(query('log()')(2), Math.log(2));
+    it('ln', () => {
+        assert.strictEqual(query('ln()')(2), Math.log(2));
     });
     it('log10', () => {
         assert.strictEqual(query('log10()')(2), Math.log10(2));
     });
-    it('log1p', () => {
-        assert.strictEqual(query('log1p()')(2), Math.log1p(2));
+    it('ln1p', () => {
+        assert.strictEqual(query('ln1p()')(2), Math.log1p(2));
     });
     it('log2', () => {
         assert.strictEqual(query('log2()')(2), Math.log2(2));

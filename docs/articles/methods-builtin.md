@@ -583,6 +583,11 @@ The same as `Object.values()` in JavaScript.
 
 JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) methods.
 
+Modifications from the standard JavaScript `Math` object include:
+- The `log()` and `log1p()` methods have been renamed to `ln()` and `ln1p()`, respectively. This change was made to prevent confusion with the common usage of `log()` for logging purposes.
+- The [`min()`](#mincompare) and [`max()`](#maxcompare) methods have been uniquely implemented in Jora to provide additional functionality.
+- The `random()` method is not included in Jora's Math methods, as it does not align with the deterministic nature of Jora.
+
 > Note: Keep in mind that the unary `-` operator has lower precedence than other operators. To apply a method to a negative scalar number, use the [grouping operator](./operators.md#grouping-operator), the [pipeline operator](./operators.md#pipeline-operator), or store the number in a [variable](./variables.md) and then apply the method to it. For example, instead of `-123.abs()`, which is interpreted as `-(123.abs())`, you should use one of the following:
 > - `(-123).abs()`
 > - `-123 | abs()`
@@ -744,13 +749,13 @@ Returns the result of the C-like 32-bit integer multiplication of the two parame
 // Result: -5
 ```
 
-### log()
+### ln()
 
 Returns the natural logarithm (<code>log<sub>e</sub></code> or `ln`) of a number.
 
 ```jora
 // 2^3 = 8
-8.log() / 2.log()
+8.ln() / 2.ln()
 // Result: 3
 ```
 
@@ -763,12 +768,12 @@ Returns the base-10 logarithm of a number, i.e. <code>log<sub>10</sub>(x)</code>
 // Result: 0.3010299956639812
 ```
 
-### log1p()
+### ln1p()
 
 Returns the natural logarithm (<code>log<sub>e</sub></code> or `ln`) of `1 + x` for the number `x`.
 
 ```jora
-1.log1p()
+1.ln1p()
 // Result: 0.6931471805599453
 ```
 

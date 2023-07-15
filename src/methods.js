@@ -304,16 +304,18 @@ export default Object.freeze({
         return String(current).trim();
     },
 
-    // all Math static method with exclusion of 'max', 'min' and 'random'
+    // all Math static method with exclusion of 'max', 'min', 'log', `log1p` and 'random'
     ...[
         'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
         'cbrt', 'ceil', 'clz32', 'cos', 'cosh', 'exp', 'expm1', 'floor',
-        'fround', 'hypot', 'imul', 'log', 'log10', 'log1p', 'log2', 'pow',
+        'fround', 'hypot', 'imul', 'log10', 'log2', 'pow',
         'round', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc'
     ].reduce((res, method) => {
         res[method] = Math[method];
         return res;
     }, {}),
+    ln: Math.log,
+    ln1p: Math.log1p,
 
     // statistics
     numbers(current, getter, formula) {
