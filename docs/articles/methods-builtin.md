@@ -265,52 +265,76 @@ Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchA
 
 ## max(compare)
 
-Return max value from an array of string, excluding `undefined`. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`. For string values a natural comparison is used by default.
+The `max(compare)` method returns the maximum value from an array or a string, excluding `undefined`. It uses natural comparison for string values by default. When applied to an array, the method returns `undefined` if the array is empty or if a comparator function returns `0` for all values when compared with `undefined`.
 
-The logic of `max()` method equivalent (but more performant and memory efficient) to the following expression:
-- no comparator: `sort().[$ != undefined][-1]`
-- with comparator: `sort(compare).[compare(undefined) != 0][-1]`
+The logic of the `max()` method is equivalent to the expressions `sort().[$ != undefined][-1]`. However, `max()` is more performant and memory efficient because it doesn't need to sort the entire array or string.
+
+Here are some examples of how to use the `max()` method:
 
 ```jora
+// Find the maximum number in an array
 [1, 4, 2, 3].max()
 // Result: 4
 ```
+
 ```jora
+// Find the maximum object in an array based on a property
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 42, ok: 1 }, { a: 20 }];
 $input.max(=> a)
 // Result: { a: 42, ok: 1 }
 ```
+
 ```jora
+// Find the minimum object in an array based on a property
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
 $input.max(a desc)
 // Result: { a: 10 }
 ```
+
 ```jora
+// Find the maximum character in a string
 'hello world'.max()
 // Result: 'w'
 ```
 
-## min(compare)
+## median(getter, formula)
 
-Return min value from an array of string. The method returns `undefined` when there are no values (i.e. an empty array) or a comparator returns `0` for all values when compared with `undefined`. For string values a natural comparison is used by default.
-
-The logic of `min()` method equivalent to expression `sort()[0]` or `sort(fn)[0]`, but more performant and memory efficient.
+Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentilevalue-getter-formula)).
 
 ```jora
+[4, 2, 1, 3, 5].median()
+// Result: 3
+```
+```jora
+[4, 2, 1, 3, 6, 5].median()
+// Result: 3.5
+```
+
+## min(compare)
+
+The `min()` method returns the minimum value from an array or a string. It uses natural comparison for string values by default. When applied to an array, the method returns `undefined` if the array is empty or if a comparator function returns `0` for all values when compared with `undefined`.
+
+The logic of the `min()` method is equivalent to the expression `sort()[0]`. However, `min()` is more performant and memory efficient because it doesn't need to sort the entire array or string.
+
+```jora
+// Find the minimum number in an array
 [4, 1, 2, 3].min()
 // Result: 1
 ```
 ```jora
+// Find the minimum object in an array based on a property using a function
 $input: [{ a: 10 }, { a: 5, ok: 1 }, {}, { a: 5 }, { a: 20 }];
 $input.min(=> a)
 // Result: { a: 5, ok: 1 }
 ```
 ```jora
+// Find the minimum object in an array based on a property using a compare function
 $input: [{ a: 10 }, { a: 42 }, {}, { a: 20 }];
 $input.min(a desc)
 // Result: { a: 42 }
 ```
 ```jora
+// Find the minimum character in a string
 'hello world'.min()
 // Result: ' '
 ```
@@ -341,6 +365,42 @@ Using custom formula:
 ```jora
 [{ foo: 3 }, { foo: 5 }, { foo: 2 }].numbers(=> foo, => $ * $)
 // Result: [9, 25, 4]
+```
+
+## p(k, getter, formula)
+
+Alias for [`percentile()`](#percentilek-getter-formula) method.
+
+## percentile(k, getter, formula)
+
+This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbersgetter-formula) method, given the same `getter` and `formula` parameters. If the input (after processing through `getter` and `formula`) contains a `NaN`, the function will always return `NaN`.
+
+```jora
+[4, 3, 5, 2, 1].percentile(75)
+// Result: 4
+```
+```jora
+[4, 3, 5, 6, 2, 1].percentile(20)
+// Result: 2
+```
+```jora
+[4, 3, 1].percentile() // k is not specified
+// Result: undefined
+```
+```jora
+[4, 3, NaN, 1].percentile(50)
+// Result: NaN
+```
+
+Using custom `getter` and `formula`:
+
+```jora
+[{ a: 1 }, { a: 3 }, undefined, { a: 2 }].percentile(75, => a)
+// Result: 2.5
+```
+```jora
+[{ a: 1 }, { a: 3 }, undefined, { a: 2 }].percentile(75, => a, => $ * $)
+// Result: 6.5
 ```
 
 ## pick()

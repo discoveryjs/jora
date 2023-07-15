@@ -18,6 +18,7 @@ discovery.view.define('example', {
         className: 'view-struct_code-postlude',
         when: 'syntax = "jora" and $ has "result"',
         data: 'result',
-        limitCompactObjectEntries: false
+        limitCollapsed: false,
+        limitCompactObjectEntries: 10
     }
 }, { tag: false });

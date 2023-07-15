@@ -1,5 +1,7 @@
 import buildin from './lang/compile-buildin.js';
-import { hasOwnProperty, addToSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
+import { processNumericArray, sumAndCount } from './utils/statistics.js';
+import { percentile } from './utils/percentile.js';
+import { hasOwnProperty, addToSet, addToMapSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
 
 function noop() {}
 
@@ -76,11 +78,9 @@ function getterToCmp(getter, cmp) {
         : getter;
 }
 
-function addToMap(map, key, value) {
-    if (map.has(key)) {
-        map.get(key).add(value);
-    } else {
-        map.set(key, new Set([value]));
+function percentileMethod(current, p, getter, formula) {
+    if (isArrayLike(current)) {
+        return percentile(current, p, getter, formula);
     }
 }
 
@@ -201,10 +201,10 @@ export default Object.freeze({
 
             if (Array.isArray(keys)) {
                 for (const key of keys) {
-                    addToMap(map, key, valueGetter(item));
+                    addToMapSet(map, key, valueGetter(item));
                 }
             } else {
-                addToMap(map, keys, valueGetter(item));
+                addToMapSet(map, keys, valueGetter(item));
             }
         }
 
@@ -328,7 +328,10 @@ export default Object.freeze({
     },
     avg(current, getter, formula) {
         const { sum, count } = sumAndCount(current, getter, formula);
-        return count > 0 ? sum / count : undefined;
+
+        if (count > 0) {
+            return sum / count;
+        }
     },
     count(current, getter) {
         let count = 0;
@@ -346,6 +349,11 @@ export default Object.freeze({
         }
 
         return count;
+    },
+    percentile: percentileMethod,
+    p: percentileMethod, // alias for percentile()
+    median(current, getter, formula) {
+        return percentileMethod(current, 50, getter, formula);
     },
     min(current, cmp = buildin.cmpNatural) {
         let min;
@@ -383,63 +391,14 @@ export default Object.freeze({
     }
 });
 
-// statistics
-function toNumber(value) {
-    return value !== null && typeof value === 'object'
-        ? NaN
-        : Number(value);
-}
-function processNumericArray(current, getter, formula, apply) {
-    if (isArrayLike(current)) {
-        if (typeof getter !== 'function') {
-            getter = self;
-        }
+// function top(current, n = 10, cmp = buildin.cmp) {
+//     if (isArrayLike(current) && isFinite(n) && n > 0) {
+//         const heap = new MinHeap(n, cmp);
 
-        if (typeof formula !== 'function') {
-            formula = self;
-        }
+//         heap.add(current);
 
-        for (const value of current) {
-            const mappedValue = getter(value);
+//         return [...heap];
+//     }
 
-            if (mappedValue !== undefined) {
-                apply(toNumber(formula(toNumber(mappedValue))));
-            }
-        }
-    }
-}
-function sumAndCount(current, getter, formula) {
-    let sum = undefined;
-    let count = 0;
-    let correction = 0;
-
-    processNumericArray(current, getter, formula, num => {
-        count++;
-
-        if (sum === undefined) {
-            sum = num;
-        } else {
-            // Kahan–Babuška summation with respect for Infinity
-            // https://en.wikipedia.org/wiki/Kahan_summation_algorithm
-            const transition = sum;
-            const absTransition = Math.abs(transition);
-            const absNum = Math.abs(num);
-
-            sum += num;
-
-            if (absTransition !== Infinity && absNum !== Infinity) {
-                if (absTransition >= absNum) {
-                    correction += (transition - sum) + num;
-                } else {
-                    correction += (num - sum) + transition;
-                }
-            }
-        }
-    });
-
-    if (sum !== undefined) {
-        sum += correction;
-    }
-
-    return { sum, count };
-}
+//     return [];
+// }

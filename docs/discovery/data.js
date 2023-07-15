@@ -36,17 +36,24 @@ function processMarkdown(article, href, { examples, methods }) {
                         const parsedExample = parseExample(token.text);
 
                         if ('result' in parsedExample && !parsedExample.hasErrors && !parsedExample.inputRef) {
-                            const actual = jora(parsedExample.content)(parsedExample.input, parsedExample.context);
+                            let actual;
 
                             try {
-                                assert.deepEqual(actual, parsedExample.result);
+                                actual = jora(parsedExample.content)(parsedExample.input, parsedExample.context);
+                            } catch (e) {
+                                console.log('[ERROR] Jora query example parse error:');
+                                console.log(e.message);
+                            }
+
+                            try {
+                                assert.deepEqual(parsedExample.result, actual);
                             } catch {
                                 console.log('[WARN] The result in example doesn\'t match to actual result:');
                                 console.log(ident(parsedExample.content));
+                                console.log('Example result:');
+                                console.log(' ', parsedExample.result);
                                 console.log('Actual:');
-                                console.log(ident(parsedExample.result));
-                                console.log('Expected:');
-                                console.log(ident(actual));
+                                console.log(' ', actual);
                                 console.log();
                             }
                         }

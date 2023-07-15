@@ -6,6 +6,7 @@ describe('numbers()', () => {
         assert.deepStrictEqual(query('numbers()')(), []);
         assert.deepStrictEqual(query('123.numbers()')(), []);
         assert.deepStrictEqual(query('true.numbers()')(), []);
+        assert.deepStrictEqual(query('{ foo: 1, bar: 2 }.numbers()')(), []);
     });
 
     it('should return empty array for empty arrays', () => {

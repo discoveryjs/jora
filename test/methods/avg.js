@@ -6,6 +6,7 @@ describe('avg()', () => {
         assert.strictEqual(query('avg()')(), undefined);
         assert.strictEqual(query('123.avg()')(), undefined);
         assert.strictEqual(query('true.avg()')(), undefined);
+        assert.strictEqual(query('{ foo: 1, bar: 2 }.avg()')(), undefined);
     });
 
     it('should return undefined for empty arrays', () => {

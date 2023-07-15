@@ -13,6 +13,14 @@ export function addToSet(set, value) {
     return set;
 }
 
+export function addToMapSet(map, key, value) {
+    if (map.has(key)) {
+        map.get(key).add(value);
+    } else {
+        map.set(key, new Set([value]));
+    }
+}
+
 export function getPropertyValue(value, property) {
     return value && hasOwnProperty.call(value, property) ? value[property] : undefined;
 }
@@ -26,5 +34,5 @@ export function isRegExp(value) {
 }
 
 export function isArrayLike(value) {
-    return value && hasOwnProperty.call(value, 'length');
+    return value && hasOwnProperty.call(value, 'length') && isFinite(value.length);
 }

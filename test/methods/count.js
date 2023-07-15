@@ -6,6 +6,7 @@ describe('count()', () => {
         assert.strictEqual(query('count()')(), 0);
         assert.strictEqual(query('123.count()')(), 0);
         assert.strictEqual(query('true.count()')(), 0);
+        assert.strictEqual(query('{ foo: 1, bar: 2 }.count()')(), 0);
     });
 
     it('should return 0 for empty arrays', () => {

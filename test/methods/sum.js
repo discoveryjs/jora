@@ -6,6 +6,7 @@ describe('sum()', () => {
         assert.strictEqual(query('sum()')(), undefined);
         assert.strictEqual(query('123.sum()')(), undefined);
         assert.strictEqual(query('true.sum()')(), undefined);
+        assert.strictEqual(query('{ foo: 1, bar: 2 }.sum()')(), undefined);
     });
 
     it('should return undefined for empty arrays', () => {
@@ -131,9 +132,9 @@ describe('sum()', () => {
         });
 
         it('should not convert arrays into numbers', () => {
-            assert.deepStrictEqual(query('sum(=> a, => [1, 2][:$ - 1])')(
+            assert.deepStrictEqual(query('sum(=> $, => [1, 2][:$ - 1])')(
                 [1, 2, 3]
-            ), undefined);
+            ), NaN);
         });
 
         it('formula should get all non-undefined values', () => {
