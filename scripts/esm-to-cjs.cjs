@@ -101,6 +101,7 @@ async function build(outputDir, { watch: watchMode = false, patch = false }, ...
     const inputOptions = {
         external,
         input: entryPoints,
+        treeshake: false,
         plugins: [
             replaceContent({
                 'src/version.js': removeCreateRequire
