@@ -1,4 +1,4 @@
-import { hasOwnProperty } from '../utils/misc.js';
+import { hasOwn } from '../utils/misc.js';
 import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 
@@ -152,6 +152,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     const usedBuildinMethods = new Set();
     const ctx = {
         tolerant,
+        usedAssertions: new Map(),
         usedMethods: new Map(),
         buildinFn(name) {
             usedBuildinMethods.add(name);
@@ -204,30 +205,51 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         }
     );
 
-    if (!tolerant && ctx.usedMethods.size) {
-        const { usedMethods } = ctx;
+    if (!tolerant) {
+        const { usedMethods, usedAssertions } = ctx;
 
-        buffer.unshift(' this.assertMethods(m)||');
-        initCtx.assertMethods = function(providedMethods) {
-            for (const [method, range] of usedMethods.entries()) {
-                if (!hasOwnProperty.call(providedMethods, method)) {
-                    return () => {
-                        throw Object.assign(
-                            new Error(`Method "${method}" is not defined`),
-                            { details: { loc: { range } } }
-                        );
-                    };
+        if (usedAssertions.size) {
+            buffer.unshift(' this.assertAssertions(a)||');
+            initCtx.assertAssertions = function(providedAssertions) {
+                for (const [assertion, range] of usedAssertions.entries()) {
+                    if (!hasOwn(providedAssertions, assertion)) {
+                        return () => {
+                            throw Object.assign(
+                                new Error(`Assertion "${assertion}" is not defined`),
+                                { details: { loc: { range } } }
+                            );
+                        };
+                    }
                 }
-            }
-        };
+            };
+        }
+
+        if (usedMethods.size) {
+            buffer.unshift(' this.assertMethods(m)||');
+            initCtx.assertMethods = function(providedMethods) {
+                for (const [method, range] of usedMethods.entries()) {
+                    if (!hasOwn(providedMethods, method)) {
+                        return () => {
+                            throw Object.assign(
+                                new Error(`Method "${method}" is not defined`),
+                                { details: { loc: { range } } }
+                            );
+                        };
+                    }
+                }
+            };
+        }
     }
 
     if (suggestions !== null) {
-        buffer.push(',\nstats: [' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']\n}');
+        buffer.push(
+            ',\nstats: [' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']' +
+            ',\nassertions: a' +
+        '\n}');
     }
 
     try {
-        const fn = new Function('f,m', 'return' + buffer.join('') + '})');
+        const fn = new Function('f,m,a', 'return' + buffer.join('') + '})');
 
         return Object.assign(fn.bind(initCtx), {
             toString() {

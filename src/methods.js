@@ -1,7 +1,7 @@
 import buildin from './lang/compile-buildin.js';
 import { processNumericArray, sumAndCount } from './utils/statistics.js';
 import { percentile } from './utils/percentile.js';
-import { hasOwnProperty, addToSet, addToMapSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
+import { hasOwn, addToSet, addToMapSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
 
 function noop() {}
 
@@ -98,7 +98,7 @@ export default Object.freeze({
         const values = new Set();
 
         for (const key in current) {
-            if (hasOwnProperty.call(current, key)) {
+            if (hasOwn(current, key)) {
                 addToSet(values, current[key]);
             }
         }
@@ -109,7 +109,7 @@ export default Object.freeze({
         const entries = [];
 
         for (const key in current) {
-            if (hasOwnProperty.call(current, key)) {
+            if (hasOwn(current, key)) {
                 entries.push({ key, value: current[key] });
             }
         }

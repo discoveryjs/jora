@@ -1,5 +1,6 @@
 import * as Arg1 from './Arg1.js';
 import * as Array from './Array.js';
+import * as Assertion from './Assertion.js';
 import * as Binary from './Binary.js';
 import * as Block from './Block.js';
 import * as Compare from './Compare.js';
@@ -14,6 +15,7 @@ import * as Filter from './Filter.js';
 import * as Function from './Function.js';
 import * as GetProperty from './GetProperty.js';
 import * as Identifier from './Identifier.js';
+import * as If from './If.js';
 import * as Literal from './Literal.js';
 import * as MapNode from './Map.js';
 import * as MapRecursive from './MapRecursive.js';
@@ -25,15 +27,17 @@ import * as Parentheses from './Parentheses.js';
 import * as Pick from './Pick.js';
 import * as Pipeline from './Pipeline.js';
 import * as Placeholder from './Placeholder.js';
+import * as Postfix from './Postfix.js';
+import * as Prefix from './Prefix.js';
 import * as Reference from './Reference.js';
 import * as SliceNotation from './SliceNotation.js';
 import * as Spread from './Spread.js';
 import * as Template from './Template.js';
-import * as Unary from './Unary.js';
 
 export const nodes = {
     Arg1,
     Array,
+    Assertion,
     Binary,
     Block,
     Compare,
@@ -47,6 +51,7 @@ export const nodes = {
     Function,
     GetProperty,
     Identifier,
+    If,
     Literal,
     Map: MapNode,
     MapRecursive,
@@ -58,12 +63,13 @@ export const nodes = {
     Pick,
     Pipeline,
     Placeholder,
+    Postfix,
+    Prefix,
     Reference,
     SliceNotation,
     CompareFunction,
     Spread,
-    Template,
-    Unary
+    Template
 };
 
 const extract = type => new Map(

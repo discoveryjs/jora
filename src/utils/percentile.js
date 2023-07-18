@@ -21,7 +21,7 @@ export function numbersPercentile(array, k, compare) {
     for (let i = 0; i < array.length; i++) {
         const element = array[i];
 
-        if (Object.is(element, NaN)) {
+        if (Number.isNaN(element)) {
             return NaN;
         }
 
@@ -62,7 +62,7 @@ export function percentile(array, k, getter, formula, compare) {
         : new MaxHeap(array.length - lowerRank, compare); // (array.length - 1) - (lowerRank - 1)
 
     processNumericArray(array, getter, formula, value => {
-        if (Object.is(value, NaN)) {
+        if (Number.isNaN(value)) {
             hasNaNs = true;
         }
 

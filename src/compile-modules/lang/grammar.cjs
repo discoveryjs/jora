@@ -1,6 +1,7 @@
 const {
     Arg1,
     Array: ArrayNode,
+    Assertion,
     Binary,
     Block,
     Compare,
@@ -15,6 +16,7 @@ const {
     Function,
     GetProperty,
     Identifier,
+    If,
     Literal,
     Map,
     MapRecursive,
@@ -26,25 +28,28 @@ const {
     Pick,
     Pipeline,
     Placeholder,
+    Postfix,
+    Prefix,
     Reference,
     SliceNotation,
     Spread,
-    Template,
-    Unary
+    Template
 } = require('./nodes.cjs');
 const $0 = { code: '$0' };
 const $1 = { code: '$1' };
+const $1string = { code: 'String($1)' };
 const $1name = { code: '$1.name' };
 const $$1name = { code: '"$" + $1.name' };
 const $2 = { code: '$2' };
 const $3 = { code: '$3' };
 const $4 = { code: '$4' };
 const $5 = { code: '$5' };
+const $6 = { code: '$6' };
 const $r0 = { code: '@0.range' };
 const $r1 = { code: '@1.range' };
 const $rr = { code: '[@1.range[1],@1.range[1]]' };
 const $placeholder = { code: { ...Placeholder(), range: $rr } };
-const refs = new Set([$0, $1, $1name, $$1name, $2, $3, $4, $5, $r0, $r1, $rr, $placeholder]);
+const refs = new Set([$0, $1, $1string, $1name, $$1name, $2, $3, $4, $5, $6, $r0, $r1, $rr, $placeholder]);
 const asis = '';
 
 function isPlainObject(value) {
@@ -209,8 +214,14 @@ exports.lex = {
         ['has{wb}', 'return "HAS";'],
         ['in{wb}', 'return "IN";'],
         ['not{ws}in{wb}', 'return "NOTIN";'],
-        ['not?{wb}', 'return "NOT";'],
+        ['not{wb}', 'return "NOT";'],
+        ['no{wb}', 'return "NO";'],
         ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
+
+        ['is{wb}', 'return "IS";'],
+        ['if{wb}', 'return "IF";'],
+        ['then{wb}', 'return "THEN";'],
+        ['else{wb}', 'return "ELSE";'],
 
         // primitives
         ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = Number(yytext); return "NUMBER";'],
@@ -283,6 +294,7 @@ exports.operators = [
     ['left', 'compareFunction', 'compareExpr'],
     ['left', 'ORDER'],
     ['left', '|'],
+    // ['left', 'IF', 'THEN', 'ELSE', 'if'],
     ['left', 'def'],
     ['left', ';'],
     ['left', ','],
@@ -290,7 +302,7 @@ exports.operators = [
     ['left', 'OR'],
     ['left', 'AND'],
     ['left', '??'],
-    ['left', 'NOT'],
+    ['left', 'NOT', 'NO'],
     ['left', 'IN', 'NOTIN', 'HAS', 'HASNO'],
     ['left', '=', '!=', '~='],
     ['left', '<', '<=', '>', '>='],
@@ -340,10 +352,14 @@ exports.bnf = {
         ['e | e', $$(Pipeline($1, $3))],
         ['e | definitions e', $$(Pipeline($1, Block($3, $4)))],
 
-        // unary operators
-        ['NOT e', $$(Unary($1, $2))],
-        ['- e', $$(Unary($1, $2))],
-        ['+ e', $$(Unary($1, $2))],
+        // prefix operators
+        ['NOT e', $$(Prefix($1, $2))],
+        ['NO e', $$(Prefix($1, $2))],
+        ['- e', $$(Prefix($1, $2))],
+        ['+ e', $$(Prefix($1, $2))],
+
+        // postfix operators
+        ['e if', $$(Postfix($1, $2))],
 
         // binary operators
         ['e IN e', $$(Binary($2, $1, $3))],
@@ -352,6 +368,7 @@ exports.bnf = {
         ['e HASNO e', $$(Binary($2, $1, $3))],
         ['e AND e', $$(Binary($2, $1, $3))],
         ['e OR e', $$(Binary($2, $1, $3))],
+        ['e IS assertion', $$(Binary($2, $1, $3))],
         ['e ?? e', $$(Binary($2, $1, $3))],
         ['e + e', $$(Binary($2, $1, $3))],
         ['e - e', $$(Binary($2, $1, $3))],
@@ -388,6 +405,8 @@ exports.bnf = {
         ['object', asis],
         ['array', asis],
         ['[ sliceNotation ]', $$(SliceNotation(null, $2))],
+        ['IS assertion', $$(Prefix($1, $2))],
+        ['if', asis],
         ['ident', $$(GetProperty(null, $1))],
         ['method()', $$(MethodCall(null, $1))],
         ['( e )', $$(Parentheses($2))],
@@ -470,6 +489,26 @@ exports.bnf = {
         ['[ arrayElements ]', $$(ArrayNode($2))],
         ['[ arrayElements , ]', $$(ArrayNode($2))]
     ],
+
+    if: [
+        ['IF assertion', $$(If($2, null, null))],
+        ['IF assertion THEN e', $$(If($2, $4, null))],
+        ['IF assertion ELSE e', $$(If($2, null, $4))],
+        ['IF assertion THEN e ELSE e', $$(If($2, $4, $6))]
+    ],
+    assertion: [
+        ['assertionTerm', $$(Assertion($1))],
+        ['NOT assertionTerm', $$(Assertion($2, true))],
+        ['( assertionList )', $$(Assertion($2))],
+        ['NOT ( assertionList )', $$(Assertion($3, true))]
+    ],
+    assertionTerm: [
+        ['IDENT', $$(Identifier($1))],
+        ['$', $$(Identifier($1))],
+        ['$ident', $$(Method(Reference($1), []))],
+        ['LITERAL', $$(Identifier($1string))]
+    ],
+    assertionList: createCommaList('assertionList', 'assertion'),
 
     compareFunction: createCommaList('compareFunction', 'compareExpr'),
     compareExpr: [

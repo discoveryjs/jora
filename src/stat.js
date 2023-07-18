@@ -8,7 +8,8 @@ const contextToType = {
     'value': 'value',
     'in-value': 'value',
     'value-subset': 'value',
-    'var': 'variable'
+    'var': 'variable',
+    'assertion': 'assertion'
 };
 
 function addObjectKeysToSet(object, set) {
@@ -173,7 +174,7 @@ function defaultFilterFactory(pattern) {
     return value => (typeof value === 'string' ? value : String(value)).toLowerCase().indexOf(pattern) !== -1;
 }
 
-export default (source, { value, stats }) => ({
+export default (source, { value, stats, assertions }) => ({
     get value() {
         return value;
     },
@@ -186,7 +187,7 @@ export default (source, { value, stats }) => ({
         filterFactory = normalizeFunctionOption(filterFactory, defaultFilterFactory);
 
         const storageType = sort && isFinite(limit) ? MaxHeap : Set;
-        const ranges = findSourcePosRanges(source, pos, stats);
+        const ranges = findSourcePosRanges(source, pos, stats, true);
         const typeSuggestions = new Map();
         const result = [];
 
@@ -221,7 +222,19 @@ export default (source, { value, stats }) => ({
             }
 
             const { suggestions } = typeSuggestions.get(type);
-            valuesToSuggestions(context, values, related, suggestions);
+
+            switch (context) {
+                case 'assertion':
+                    if (suggestions.size === 0 || suggestions.values?.length === 0) {
+                        for (const value of Object.keys(assertions)) {
+                            suggestions.add(value);
+                        }
+                    }
+                    break;
+
+                default:
+                    valuesToSuggestions(context, values, related, suggestions);
+            }
         }
 
         if (storageType === Set) {

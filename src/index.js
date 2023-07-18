@@ -6,6 +6,7 @@ import stringify from './lang/stringify.js';
 import compile from './lang/compile.js';
 import buildin from './lang/compile-buildin.js';
 import methods from './methods.js';
+import assertions from './assertions.js';
 import createStatApi from './stat.js';
 
 const cacheStrict = new Map();
@@ -89,6 +90,7 @@ function createQuery(source, options) {
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
     const localMethods = options.methods ? { ...methods, ...options.methods } : methods;
+    const localAssetions = options.assertions ? { ...assertions, ...options.assertions } : assertions;
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
@@ -103,26 +105,27 @@ function createQuery(source, options) {
         cache.set(source, fn);
     }
 
-    fn = fn(buildin, localMethods);
+    fn = fn(buildin, localMethods, localAssetions);
 
     return statMode
         ? Object.assign((data, context) => createStatApi(source, fn(data, context)), { query: fn })
         : fn;
 }
 
-function setup(customMethods) {
+function setup(customMethods, customAssertions) {
     const cacheStrict = new Map();
     const cacheStrictStat = new Map();
     const cacheTollerant = new Map();
     const cacheTollerantStat = new Map();
     const localMethods = { ...methods };
+    const localAssetions = { ...assertions };
 
     for (const [name, fn] of Object.entries(customMethods || {})) {
         if (typeof fn === 'string') {
             Object.defineProperty(localMethods, name, {
                 configurable: true,
                 get() {
-                    const compiledFn = compileFunction(fn)(buildin, localMethods);
+                    const compiledFn = compileFunction(fn)(buildin, localMethods, localAssetions);
                     const value = current => compiledFn(current, null);
                     Object.defineProperty(localMethods, name, { value });
                     return value;
@@ -130,6 +133,22 @@ function setup(customMethods) {
             });
         } else {
             localMethods[name] = fn;
+        }
+    }
+
+    for (const [name, fn] of Object.entries(customAssertions || {})) {
+        if (typeof fn === 'string') {
+            Object.defineProperty(localAssetions, name, {
+                configurable: true,
+                get() {
+                    const compiledFn = compileFunction(fn)(buildin, localMethods, localAssetions);
+                    const value = current => compiledFn(current, null);
+                    Object.defineProperty(localAssetions, name, { value });
+                    return value;
+                }
+            });
+        } else {
+            localAssetions[name] = fn;
         }
     }
 
@@ -148,7 +167,7 @@ function setup(customMethods) {
         if (cache.has(source) && !options.debug) {
             fn = cache.get(source);
         } else {
-            const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods);
+            const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods, localAssetions);
             fn = statMode
                 ? Object.assign((data, context) => createStatApi(source, perform(data, context)), { query: perform })
                 : perform;
@@ -163,6 +182,7 @@ export default Object.assign(createQuery, {
     version,
     buildin,
     methods,
+    assertions,
     setup,
     syntax: {
         tokenize: parser.tokenize,

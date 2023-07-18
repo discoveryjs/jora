@@ -16,6 +16,11 @@ module.exports = function buildParsers(strictParser) {
         ['FUNCTION_END', ["'>'"]],
         ['FUNCTION', ["'=>'"]],
         ['NOT', ["'not'"]],
+        ['NO', ["'no'"]],
+        ['IS', ["'is'"]],
+        ['IF', ["'if'"]],
+        ['THEN', ["'then'"]],
+        ['ELSE', ["'else'"]],
         ['IN', ["'in'"]],
         ['HAS', ["'has'"]],
         ['NOTIN', ["'not in'"]],
@@ -27,7 +32,7 @@ module.exports = function buildParsers(strictParser) {
         ['TEMPLATE', ['template']],
         ['NUMBER', ['number']],
         ['REGEXP', ['regexp']],
-        ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'"]],
+        ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'"]],
         ['ORDER', ["'asc'", "'desc'", "'ascN'", "'descN'"]]
     ]);
     const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
@@ -90,6 +95,7 @@ module.exports = function buildParsers(strictParser) {
     // add new helpers to lexer
     const lineTerminator = new Set(['\n', '\r', '\u2028', '\u2029']);
     const literals = new Map([
+        ['undefined', undefined],
         ['null', null],
         ['false', false],
         ['true', true],
@@ -243,9 +249,10 @@ module.exports = function buildParsers(strictParser) {
 
     // patch tolerant parser lexer
     const keywords = [
-        'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO'
+        'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO',
+        'IS', 'IF', 'THEN', 'ELSE'
     ];
-    const words = [...keywords, 'NOT', 'ORDER'];
+    const words = [...keywords, 'NOT', 'NO', 'ORDER'];
     const operators = [
         '+', '-', '*', '/', '%', '|',
         '=', '!=', '~=', '>=', '<=', '<', '>'
@@ -258,7 +265,7 @@ module.exports = function buildParsers(strictParser) {
         'FUNCTION',
         ...operators,
         ...keywords,
-        'NOT'
+        'NOT', 'NO'
     ];
     const defaultNext = [
         ',', '?', ':', ';', 'EOF',

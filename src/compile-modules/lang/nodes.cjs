@@ -9,6 +9,13 @@ exports.Array = function(elements) {
         elements
     };
 };
+exports.Assertion = function(assertion, negation = false) {
+    return {
+        type: 'Assertion',
+        negation,
+        assertion
+    };
+};
 exports.Binary = function(operator, left, right) {
     return {
         type: 'Binary',
@@ -101,6 +108,14 @@ exports.Identifier = function(name) {
         name
     };
 };
+exports.If = function(assertion, thenExpr, elseExpr) {
+    return {
+        type: 'If',
+        assertion,
+        then: thenExpr,
+        else: elseExpr
+    };
+};
 exports.Literal = function(value) {
     return {
         type: 'Literal',
@@ -173,6 +188,20 @@ exports.Placeholder = function() {
         type: 'Placeholder'
     };
 };
+exports.Postfix = function(argument, operator) {
+    return {
+        type: 'Postfix',
+        operator,
+        argument
+    };
+};
+exports.Prefix = function(operator, argument) {
+    return {
+        type: 'Prefix',
+        operator,
+        argument
+    };
+};
 exports.Reference = function(name) {
     return {
         type: 'Reference',
@@ -197,12 +226,5 @@ exports.Template = function(values) {
     return {
         type: 'Template',
         values
-    };
-};
-exports.Unary = function(operator, argument) {
-    return {
-        type: 'Unary',
-        operator,
-        argument
     };
 };

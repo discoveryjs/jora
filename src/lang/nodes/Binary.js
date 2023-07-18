@@ -6,6 +6,7 @@ const binary = {
     'and': 'and',
     'or': 'or',
     '??': 'nullish',
+    'is': true,
     '+': 'add',
     '-': 'sub',
     '*': 'mul',
@@ -117,6 +118,14 @@ export function compile(node, ctx) {
             ctx.put('(');
             ctx.node(node.right);
             ctx.put(',');
+            ctx.node(node.left);
+            ctx.put(')');
+            break;
+
+        case 'is':
+            ctx.put('($=>!!(');
+            ctx.node(node.right);
+            ctx.put('))(');
             ctx.node(node.left);
             ctx.put(')');
             break;

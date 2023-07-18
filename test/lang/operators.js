@@ -476,7 +476,7 @@ describe('lang/operators', () => {
             );
         });
 
-        it('a has not b', () => {
+        it('a has no b', () => {
             assert.deepEqual(
                 query('.[# has no $]')(['foo', 'bar', 'baz'], ['foo', 'baz', 'qux']),
                 ['bar']
@@ -710,6 +710,170 @@ describe('lang/operators', () => {
                 data
                     .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
             );
+        });
+    });
+
+    describe('is', () => {
+        describe('without expr', () => {
+            it('should work', () => {
+                assert.strictEqual(query('is number')(123), true);
+                assert.strictEqual(query('is (number)')(123), true);
+                assert.strictEqual(query('is number')('123'), false);
+                assert.strictEqual(query('is (number)')('123'), false);
+            });
+
+            it('should work with not', () => {
+                assert.strictEqual(query('is not number')(123), false);
+                assert.strictEqual(query('is not (number)')(123), false);
+                assert.strictEqual(query('is not number')('123'), true);
+                assert.strictEqual(query('is not (number)')('123'), true);
+            });
+
+            it('should work with var', () => {
+                assert.strictEqual(query('$odd: => $ % 2; is $odd')(123), true);
+                assert.strictEqual(query('$odd: => $ % 2; is $odd')(124), false);
+            });
+
+            it('should work with list of assertions', () => {
+                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')(123), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')(124), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')('123'), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')('124'), false);
+            });
+
+            it('should throw on unknown assertion', () => {
+                assert.throws(
+                    () => query('is xxx')(123),
+                    /Assertion "xxx" is not defined/
+                );
+            });
+
+            it('should throw on unknown var', () => {
+                assert.throws(
+                    () => query('is $xxx')(),
+                    /\$xxx is not defined/
+                );
+            });
+        });
+
+        describe('with expression', () => {
+            it('should work', () => {
+                assert.strictEqual(query('123 is number')(), true);
+                assert.strictEqual(query('123 is (number)')(), true);
+                assert.strictEqual(query('"123" is number')(), false);
+                assert.strictEqual(query('"123" is (number)')(), false);
+            });
+
+            it('should work with not', () => {
+                assert.strictEqual(query('123 is not number')(), false);
+                assert.strictEqual(query('123 is not (number)')(), false);
+                assert.strictEqual(query('"123" is not number')(), true);
+                assert.strictEqual(query('"123"is not (number)')(), true);
+            });
+
+            it('should work with var', () => {
+                assert.strictEqual(query('$odd: => $ % 2; 123 is $odd')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; 124 is $odd')(), false);
+            });
+
+            it('should work with list of assertions', () => {
+                assert.strictEqual(query('$odd: => $ % 2; 123 is (number, $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; 124 is (number, $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; "123" is (number, $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; "124" is (number, $odd)')(), false);
+            });
+
+            it('should throw on unknown assertion', () => {
+                assert.throws(
+                    () => query('123 is xxx')(),
+                    /Assertion "xxx" is not defined/
+                );
+            });
+
+            it('should throw on unknown var', () => {
+                assert.throws(
+                    () => query('123 is $xxx')(),
+                    /\$xxx is not defined/
+                );
+            });
+        });
+    });
+
+    describe('if', () => {
+        describe('without expr', () => {
+            it('assertions only', () => {
+                assert.strictEqual(query('if number')(123), 123);
+                assert.strictEqual(query('if (number)')(123), 123);
+                assert.strictEqual(query('if number')('123'), undefined);
+                assert.strictEqual(query('if (number)')('123'), undefined);
+            });
+
+            it('with then', () => {
+                assert.strictEqual(query('if not number then $ * 2')(123), undefined);
+                assert.strictEqual(query('if not (number) then $ * 2')(123), undefined);
+                assert.strictEqual(query('if not number then $ + 2')('123'), '1232');
+                assert.strictEqual(query('if not (number) then $ + 2')('123'), '1232');
+            });
+
+            it('with else', () => {
+                assert.strictEqual(query('$odd: => $ % 2; if $odd else $ + "asd"')(123), 123);
+                assert.strictEqual(query('$odd: => $ % 2; if $odd else $ + "asd"')(124), '124asd');
+            });
+
+            it('with then and else', () => {
+                assert.strictEqual(query('if number then $ + 100 else 0')(123), 223);
+                assert.strictEqual(query('if number then $ + 100 else 0')('123'), 0);
+            });
+
+            it('should throw on unknown assertion', () => {
+                assert.throws(
+                    () => query('if xxx')(123),
+                    /Assertion "xxx" is not defined/
+                );
+            });
+
+            it('should throw on unknown var', () => {
+                assert.throws(
+                    () => query('if $xxx')(123),
+                    /\$xxx is not defined/
+                );
+            });
+        });
+
+        describe('with expression', () => {
+            it('assertions only', () => {
+                assert.strictEqual(query('123 if number')(), 123);
+                assert.strictEqual(query('"123" if number')(), undefined);
+            });
+
+            it('with then', () => {
+                assert.strictEqual(query('123 if number then $ * 2')(), 246);
+                assert.strictEqual(query('"123" if number then $ * 2')(), undefined);
+            });
+
+            it('with else', () => {
+                assert.strictEqual(query('$odd: => $ % 2; 123 if $odd else $ + "asd"')(), 123);
+                assert.strictEqual(query('$odd: => $ % 2; 124 if $odd else $ + "asd"')(), '124asd');
+            });
+
+            it('with then and else', () => {
+                assert.strictEqual(query('123 if number then $ + 100 else 0')(), 223);
+                assert.strictEqual(query('"123" if number then $ + 100 else 0')(), 0);
+            });
+
+            it('should throw on unknown assertion', () => {
+                assert.throws(
+                    () => query('123 if xxx')(),
+                    /Assertion "xxx" is not defined/
+                );
+            });
+
+            it('should throw on unknown var', () => {
+                assert.throws(
+                    () => query('123 if $xxx')(),
+                    /\$xxx is not defined/
+                );
+            });
         });
     });
 

@@ -15,6 +15,12 @@ export function compile(node, ctx) {
             ctx.node(node.argument);
             break;
 
+        case 'is':
+            ctx.put('!!(');
+            ctx.node(node.argument);
+            ctx.put(')');
+            break;
+
         default: {
             ctx.error('Unknown operator "' + node.operator + '"', node);
         }

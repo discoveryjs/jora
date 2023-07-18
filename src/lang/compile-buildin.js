@@ -1,5 +1,5 @@
 import { naturalCompare, naturalAnalyticalCompare } from '@discoveryjs/natural-compare';
-import { hasOwnProperty, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike } from '../utils/misc.js';
+import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy } from '../utils/misc.js';
 
 const TYPE_BOOLEAN = 1;
 const TYPE_NAN = 2;
@@ -29,9 +29,9 @@ function cmpType(value) {
 
 export default Object.freeze({
     ensureArray,
-    bool,
-    and: (a, b) => bool(a) ? b : a,
-    or: (a, b) => bool(a) ? a : b,
+    bool: isTruthy,
+    and: (a, b) => isTruthy(a) ? b : a,
+    or: (a, b) => isTruthy(a) ? a : b,
     add,
     sub,
     mul,
@@ -64,24 +64,6 @@ export default Object.freeze({
 
 function ensureArray(value) {
     return Array.isArray(value) ? value : [value];
-}
-
-function bool(value) {
-    if (Array.isArray(value)) {
-        return value.length > 0;
-    }
-
-    if (isPlainObject(value)) {
-        for (const key in value) {
-            if (hasOwnProperty.call(value, key)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    return Boolean(value);
 }
 
 function add(a, b) {
@@ -147,7 +129,7 @@ function gte(a, b) {
 
 function in_(a, b) {
     if (isPlainObject(b)) {
-        return hasOwnProperty.call(b, a);
+        return hasOwn(b, a);
     }
 
     return b
@@ -238,7 +220,7 @@ function pick(current, ref = () => true) {
         }
 
         for (const key in current) {
-            if (hasOwnProperty.call(current, key)) {
+            if (hasOwn(current, key)) {
                 if (ref(current[key], key)) {
                     return current[key];
                 }
@@ -254,7 +236,7 @@ function pick(current, ref = () => true) {
             : undefined;
     }
 
-    return hasOwnProperty.call(current, ref) ? current[ref] : undefined;
+    return hasOwn(current, ref) ? current[ref] : undefined;
 }
 
 function indexOf(dict, value, fromIndex) {
@@ -264,10 +246,10 @@ function indexOf(dict, value, fromIndex) {
 }
 
 function internalIndexOf(dict, value, fromIndex = 0) {
-    if (Object.is(value, NaN)) {
+    if (Number.isNaN(value)) {
         if (isArrayLike(dict)) {
             for (let i = parseInt(fromIndex, 10) || 0; i < dict.length; i++) {
-                if (Object.is(dict[i], value)) {
+                if (Number.isNaN(dict[i])) {
                     return i;
                 }
             }
@@ -288,10 +270,10 @@ function lastIndexOf(dict, value, fromIndex) {
 }
 
 function internalLastIndexOf(dict, value, fromIndex) {
-    if (Object.is(value, NaN)) {
+    if (Number.isNaN(value)) {
         if (isArrayLike(dict)) {
             for (let i = parseInt(fromIndex, 10) || dict.length - 1; i >= 0; i--) {
-                if (Object.is(dict[i], value)) {
+                if (Number.isNaN(dict[i])) {
                     return i;
                 }
             }
@@ -336,16 +318,16 @@ function mapRecursive(value, getter) {
 
 function some(value, fn) {
     return Array.isArray(value)
-        ? value.some(current => bool(fn(current)))
-        : bool(fn(value));
+        ? value.some(current => isTruthy(fn(current)))
+        : isTruthy(fn(value));
 }
 
 function filter(value, fn) {
     if (Array.isArray(value)) {
-        return value.filter(current => bool(fn(current)));
+        return value.filter(current => isTruthy(fn(current)));
     }
 
-    return bool(fn(value)) ? value : undefined;
+    return isTruthy(fn(value)) ? value : undefined;
 }
 
 function slice(value, from = 0, to = value && value.length, step = 1) {

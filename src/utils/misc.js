@@ -1,4 +1,4 @@
-export const hasOwnProperty = Object.hasOwnProperty;
+export const hasOwn = Object.hasOwn || ((subject, key) => Object.hasOwnProperty.call(subject, key));
 export const toString = Object.prototype.toString;
 
 export function addToSet(set, value) {
@@ -22,7 +22,7 @@ export function addToMapSet(map, key, value) {
 }
 
 export function getPropertyValue(value, property) {
-    return value && hasOwnProperty.call(value, property) ? value[property] : undefined;
+    return value && hasOwn(value, property) ? value[property] : undefined;
 }
 
 export function isPlainObject(value) {
@@ -34,5 +34,23 @@ export function isRegExp(value) {
 }
 
 export function isArrayLike(value) {
-    return value && hasOwnProperty.call(value, 'length') && isFinite(value.length);
+    return value && hasOwn(value, 'length') && isFinite(value.length);
+}
+
+export function isTruthy(value) {
+    if (Array.isArray(value)) {
+        return value.length > 0;
+    }
+
+    if (isPlainObject(value)) {
+        for (const key in value) {
+            if (hasOwn(value, key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    return Boolean(value);
 }

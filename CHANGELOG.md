@@ -1,8 +1,13 @@
 ## next
 
 - Extended query result object in stat mode to provide a result value of the query execution as `value` property (i.e. `jora(query, { stat: true })().value`)
+- Added `assertions` option for `jora()` and second argument for `setup()` method to specify additional assertion functions
 - Renamed `SortingFunction` AST node type into `CompareFunction`
+- Renamed `Unary` AST node type into `Prefix`
+- Added `Assertion`, `If` and `Postfix` AST node types
 - Added nullish coalescing operator (`??`)
+- Added `is` operator
+- Added `if .. then .. else ..` operator
 - Added `replace()` method
 - Added `min()` and `max()` methods
 - Added `numbers()`, `sum()`, `avg()`, `count()`, `percentile()` (with alias `p()`) and `median()` methods
