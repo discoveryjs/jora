@@ -1,5 +1,6 @@
 ## next
 
+- Reduced parser size by 15Kb
 - Extended query result object in stat mode to provide a result value of the query execution as `value` property (i.e. `jora(query, { stat: true })().value`)
 - Added `assertions` option for `jora()` and second argument for `setup()` method to specify additional assertion functions
 - Renamed `SortingFunction` AST node type into `CompareFunction`

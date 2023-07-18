@@ -7,9 +7,8 @@ const strictParser = new jison.Parser(grammar);
 
 module.exports = function generateModule() {
     return strictParser
-        .generateModule('esm')
+        .generateModule('esm', { packTable: 'advanced' })
         .replace(/\\r\\n\?\|\\n/g, '\\n|\\r\\n?|\\u2028|\\u2029')
         .replace(/\\r\?\\n\?/g, '\\n|\\r|\\u2028|\\u2029|$')
-        .replace('export let', 'let')
         .replace('new Parser()', '(' + parserPatch + ')(new Parser)');
 };
