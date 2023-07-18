@@ -225,7 +225,7 @@ export default (source, { value, stats, assertions }) => ({
 
             switch (context) {
                 case 'assertion':
-                    if (suggestions.size === 0 || suggestions.values?.length === 0) {
+                    if (suggestions.size === 0 || (suggestions.values && suggestions.values.length === 0)) {
                         for (const value of Object.keys(assertions)) {
                             suggestions.add(value);
                         }
