@@ -1,6 +1,6 @@
 export default [
     '$foo:true;$a:false;$c;$;$d:d.e;$f:$["f"];',
-    'bar([#,@,null,undefined,Infinity,NaN,not $,1,"2\'\\"",/3/i,/asd/],{a:3,$b,$,c,$d:1,"asd":3,["asd"+x]:3,...,...$,...foo,...(a+5)},<foo+4>,',
+    'bar([#,@,null,undefined,Infinity,NaN,not $,no $,1,"2\'\\"",/3/i,/asd/],{a:3,$b,$,c,$d:1,"asd":3,["asd"+x]:3,...,...$,...foo,...(a+5)},<foo+4>,',
     '`template`,`temp${1}late`,`te${1+1}mp${{a:3}["a"]+`xxx${42}xxx`}late`,`${1}${2} ${3}${4} ${5}${6}`,`${} ${} ${}`,',
     '[...,...$,...1+1],',
     'x?1 in xx():2,sort((($x;$x+b)*7) asc,b desc)).(a.[foo]).x($[a+"asd"],$[foo])',
@@ -10,5 +10,7 @@ export default [
     '.map(=>$["abc"] or $[abc] or $[])',
     '.map().().[]..()..a..a()[]',
     '.map([foo,$.foo,method(),$.method(),.(),$.(),.[],$.[],..(),..a,..a(),..$a(),$..(),$..a,$..a(),..($),..($+[]),..(a() or b())])',
+    '.assert(is test,is not test,is (test),is not (test),is (test,bar),is not (not test,not (bar),not baz))',
+    '.assert(if test,if not test,if (test) then $,if not (test) then $,if (test,bar) else $,if not (not test,not (bar),not baz) else $)',
     '.reduce(=>$$+$)'
 ].join('');
