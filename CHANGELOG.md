@@ -11,7 +11,7 @@
 - Added `if .. then .. else ..` operator
 - Added `replace()` method
 - Added `min()` and `max()` methods
-- Added `numbers()`, `sum()`, `avg()`, `count()`, `percentile()` (with alias `p()`) and `median()` methods
+- Added `numbers()`, `sum()`, `avg()`, `count()`, `variance()`, `stdev()`, `percentile()` (with alias `p()`) and `median()` methods
 - Added `indexOf()` and `lastIndexOf()` methods
 - Added `toLowerCase()`, `toUpperCase()` and `trim()` methods
 - Added math methods `abs()`, `acos()`, `acosh()`, `asin()`, `asinh()`, `atan()`, `atan2()`, `atanh()`, `cbrt()`, `ceil()`, `clz32()`, `cos()`, `cosh()`, `exp()`, `expm1()`, `floor()`, `fround()`, `hypot()`, `imul()`, `ln()` (`Math.log()` in JavaScript), `log10()`, `ln1p()` (`Math.log1p()` in JavaScript), `log2()`, `pow()`, `round()`, `sign()`, `sin()`, `sinh()`, `sqrt()`, `tan()`, `tanh()` and `trunc()` (see details in [docs](http://localhost:8123/#article:jora-syntax-methods-builtin&!anchor=math-methods))

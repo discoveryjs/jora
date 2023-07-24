@@ -499,6 +499,19 @@ Sort an array by a value fetched with getter (`fn`). Can use sorting function de
 
 The same as `String#split()` in JavaScript. `pattern` may be a string or regex.
 
+## stdev(getter, formula)
+
+Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) (`𝜎`) of a population, is the square root of the variance.
+
+```jora
+[2, 4, 6, 4].stdev()
+// Result: 1.4142135623730951
+```
+```jora
+[{ a: 2 }, {}, undefined, { a: 4 }].stdev(=> a)
+// Result: 1
+```
+
 ## sum(getter, formula)
 
 Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter-formula) method with the same `getter` and `formula` parameters returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
@@ -578,6 +591,19 @@ The same as `String#trim()` in JavaScript.
 ## values()
 
 The same as `Object.values()` in JavaScript.
+
+## variance(getter, formula)
+
+Returns the [variance](http://en.wikipedia.org/wiki/Variance) (`𝜎²`) of a [population](https://en.wikipedia.org/wiki/Variance#Population_variance) (the squared deviation from the mean).
+
+```jora
+[2, 4, 6, 4].variance()
+// Result: 2
+```
+```jora
+[{ a: 2 }, {}, undefined, { a: 4 }].variance(=> a)
+// Result: 1
+```
 
 ## Math methods
 

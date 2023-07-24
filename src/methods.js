@@ -78,6 +78,25 @@ function getterToCmp(getter, cmp) {
         : getter;
 }
 
+function varianceMethod(current, getter, formula) {
+    let count = 0;
+    let mean = 0;
+    let M2 = 0;
+
+    // Welford's online algorithm
+    // https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford%27s_online_algorithm
+    processNumericArray(current, getter, formula, num => {
+        count += 1;
+        let delta = num - mean;
+        mean += delta / count;
+        M2 += delta * (num - mean);
+    });
+
+    if (count > 0) {
+        return M2 / count;
+    }
+}
+
 function percentileMethod(current, p, getter, formula) {
     if (isArrayLike(current)) {
         return percentile(current, p, getter, formula);
@@ -356,6 +375,14 @@ export default Object.freeze({
     p: percentileMethod, // alias for percentile()
     median(current, getter, formula) {
         return percentileMethod(current, 50, getter, formula);
+    },
+    variance: varianceMethod,
+    stdev(current, getter, formula) {
+        const variance = varianceMethod(current, getter, formula);
+
+        if (variance !== undefined) {
+            return Math.sqrt(variance);
+        }
     },
     min(current, cmp = buildin.cmpNatural) {
         let min;
