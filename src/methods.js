@@ -1,7 +1,7 @@
 import buildin from './lang/compile-buildin.js';
-import { processNumericArray, sumAndCount } from './utils/statistics.js';
-import { percentile } from './utils/percentile.js';
-import { hasOwn, addToSet, addToMapSet, isPlainObject, isRegExp, isArrayLike } from './utils/misc.js';
+import { cmp } from './utils/compare.js';
+import { numbers, count, sum, mean, variance, stdev, min, max, percentile, median } from './utils/statistics.js';
+import { hasOwn, addToSet, addToMapSet, isPlainObject, isRegExp } from './utils/misc.js';
 
 function noop() {}
 
@@ -72,36 +72,6 @@ function stableSort(array, cmp) {
         .map(item => item.value);
 }
 
-function getterToCmp(getter, cmp) {
-    return getter.length === 1
-        ? (a, b) => cmp(getter(a), getter(b))
-        : getter;
-}
-
-function varianceMethod(current, getter, formula) {
-    let count = 0;
-    let mean = 0;
-    let M2 = 0;
-
-    // Welford's online algorithm
-    // https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford%27s_online_algorithm
-    processNumericArray(current, getter, formula, num => {
-        count += 1;
-        let delta = num - mean;
-        mean += delta / count;
-        M2 += delta * (num - mean);
-    });
-
-    if (count > 0) {
-        return M2 / count;
-    }
-}
-
-function percentileMethod(current, p, getter, formula) {
-    if (isArrayLike(current)) {
-        return percentile(current, p, getter, formula);
-    }
-}
 
 export default Object.freeze({
     bool: buildin.bool,
@@ -155,17 +125,17 @@ export default Object.freeze({
 
         return (current && current.length) || 0;
     },
-    sort(current, cmpOrMap = buildin.cmp) {
-        let cmp;
-
+    sort(current, comparator = cmp) {
         if (!Array.isArray(current)) {
             return current;
         }
 
-        if (typeof cmpOrMap === 'function') {
-            cmp = cmpOrMap.length === 2 ? cmpOrMap : (a, b) => {
-                a = cmpOrMap(a);
-                b = cmpOrMap(b);
+        if (typeof comparator === 'function' && comparator.length !== 2) {
+            const getter = comparator;
+
+            comparator = (a, b) => {
+                a = getter(a);
+                b = getter(b);
 
                 if (Array.isArray(a) && Array.isArray(b)) {
                     if (a.length !== b.length) {
@@ -173,7 +143,7 @@ export default Object.freeze({
                     }
 
                     for (let i = 0; i < a.length; i++) {
-                        const ret = buildin.cmp(a[i], b[i]);
+                        const ret = cmp(a[i], b[i]);
 
                         if (ret !== 0) {
                             return ret;
@@ -183,13 +153,11 @@ export default Object.freeze({
                     return 0;
                 }
 
-                return buildin.cmp(a, b);
+                return cmp(a, b);
             };
-        } else {
-            cmp = cmpOrMap;
         }
 
-        return stableSort(current, cmp);
+        return stableSort(current, comparator);
     },
     reverse(current) {
         return Array.isArray(current)
@@ -337,87 +305,17 @@ export default Object.freeze({
     ln1p: Math.log1p,
 
     // statistics
-    numbers(current, getter, formula) {
-        const result = [];
-
-        processNumericArray(current, getter, formula, result.push.bind(result));
-
-        return result;
-    },
-    sum(current, getter, formula) {
-        return sumAndCount(current, getter, formula).sum;
-    },
-    avg(current, getter, formula) {
-        const { sum, count } = sumAndCount(current, getter, formula);
-
-        if (count > 0) {
-            return sum / count;
-        }
-    },
-    count(current, getter) {
-        let count = 0;
-
-        if (isArrayLike(current)) {
-            if (typeof getter !== 'function') {
-                getter = self;
-            }
-
-            for (const value of current) {
-                if (getter(value) !== undefined) {
-                    count++;
-                }
-            }
-        }
-
-        return count;
-    },
-    percentile: percentileMethod,
-    p: percentileMethod, // alias for percentile()
-    median(current, getter, formula) {
-        return percentileMethod(current, 50, getter, formula);
-    },
-    variance: varianceMethod,
-    stdev(current, getter, formula) {
-        const variance = varianceMethod(current, getter, formula);
-
-        if (variance !== undefined) {
-            return Math.sqrt(variance);
-        }
-    },
-    min(current, cmp = buildin.cmpNatural) {
-        let min;
-
-        if (current && isFinite(current.length) && typeof cmp === 'function') {
-            cmp = getterToCmp(cmp, buildin.cmpNatural);
-
-            for (let i = 0; i < current.length; i++) {
-                const value = current[i];
-
-                if ((min === undefined || cmp(value, min) < 0) && cmp(value, undefined) !== 0) {
-                    min = value;
-                }
-            }
-        }
-
-        return min;
-    },
-    max(current, cmp = buildin.cmpNatural) {
-        let max;
-
-        if (current && isFinite(current.length) && typeof cmp === 'function') {
-            cmp = getterToCmp(cmp, buildin.cmpNatural);
-
-            for (let i = 0; i < current.length; i++) {
-                const value = current[i];
-
-                if ((max === undefined || cmp(value, max) >= 0) && cmp(value, undefined) !== 0) {
-                    max = value;
-                }
-            }
-        }
-
-        return max;
-    }
+    numbers,
+    count,
+    sum,
+    avg: mean,
+    variance,
+    stdev,
+    min,
+    max,
+    percentile,
+    p: percentile, // alias for percentile()
+    median
 });
 
 // function top(current, n = 10, cmp = buildin.cmp) {
