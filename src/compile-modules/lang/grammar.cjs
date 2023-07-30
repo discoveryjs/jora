@@ -360,6 +360,7 @@ exports.bnf = {
 
         // postfix operators
         ['e if', $$(Postfix($1, $2))],
+        ['e IS assertion', $$(Postfix($1, $3))],
 
         // binary operators
         ['e IN e', $$(Binary($2, $1, $3))],
@@ -368,7 +369,6 @@ exports.bnf = {
         ['e HASNO e', $$(Binary($2, $1, $3))],
         ['e AND e', $$(Binary($2, $1, $3))],
         ['e OR e', $$(Binary($2, $1, $3))],
-        ['e IS assertion', $$(Binary($2, $1, $3))],
         ['e ?? e', $$(Binary($2, $1, $3))],
         ['e + e', $$(Binary($2, $1, $3))],
         ['e - e', $$(Binary($2, $1, $3))],

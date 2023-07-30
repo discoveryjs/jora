@@ -24,6 +24,10 @@ export function compile(node, ctx) {
 }
 export function walk(node, ctx) {
     ctx.node(node.argument);
+
+    if (node.operator && node.operator.type) {
+        ctx.node(node.operator);
+    }
 }
 export function stringify(node, ctx) {
     ctx.node(node.argument);

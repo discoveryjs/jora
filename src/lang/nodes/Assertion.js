@@ -17,6 +17,8 @@ export function compile(node, ctx) {
         switch (node.assertion.type) {
             case 'Identifier':
                 if (node.assertion.name) {
+                    ctx.put('!!');
+
                     if (ctx.tolerant) {
                         ctx.put('(typeof ');
                     }
@@ -49,6 +51,7 @@ export function compile(node, ctx) {
                 break;
 
             case 'Method':
+                ctx.put('!!');
                 ctx.node(node.assertion);
                 break;
 
