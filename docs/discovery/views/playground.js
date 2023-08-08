@@ -228,7 +228,7 @@ discovery.view.define('playground', function(el, config, data, context) {
     });
     discovery.view.render(queryEditorSectionToolbarEl, [
         { view: 'block', content: 'text:"Jora query"' },
-        { view: 'checkbox', checked: '=#.params.tolerant', content: 'text:"Tolerant parsing"', onChange(tolerant) {
+        { view: 'checkbox', checked: '=#.params.tolerant', content: 'text:"Tolerant mode"', onChange(tolerant) {
             applySource({ tolerant });
         } }
     ], {}, context);

@@ -2,6 +2,7 @@ module.exports = {
     name: 'Jora docs',
     data: './data.js',
     prepare: './prepare.js',
+    viewport: 'width=device-width, initial-scale=1',
     view: {
         noscript: './noscript.js',
         assets: [
@@ -14,8 +15,8 @@ module.exports = {
             './views/example.js',
             './views/playground.js',
             './views/playground.css',
-            './sidebar.js',
-            './sidebar.css'
+            './views/sidebar.js',
+            './views/sidebar.css'
         ]
     }
 };
