@@ -114,44 +114,4 @@ describe('numbers()', () => {
             ), [3, 4]);
         });
     });
-
-    describe('custom formula', () => {
-        it('should use custom formula when passed', () => {
-            assert.deepStrictEqual(query('[1, 2, 3].numbers(=>$, =>$ * 10)')(), [10, 20, 30]);
-        });
-
-        it('should ignore formula when formula is not a function', () => {
-            assert.deepStrictEqual(query('[1, 2, 3].numbers(=>$, 123)')(), [1, 2, 3]);
-        });
-
-        it('should not convert arrays into numbers', () => {
-            assert.deepStrictEqual(query('numbers(=> $, => [1, 2][:$ - 1])')(
-                [1, 2, 3]
-            ), [NaN, NaN, NaN]);
-        });
-
-        it('formula should get all non-undefined values', () => {
-            assert.deepStrictEqual(query('numbers(=>$ in [Infinity, NaN] ? undefined : a or $, => $ = NaN ? 42 : ($ + 1 | $ * $))')(
-                [1, null, undefined, Infinity, false, true, NaN, 3, { a: [1] }]
-            ), [4, 1, 1, 4, 16, 42]);
-        });
-
-        it('should ignore undefined values', () => {
-            assert.deepStrictEqual(query('numbers(=>a, =>$ * $)')(
-                [{}, { a: 1 }, undefined, {}, { a: 3 }]
-            ), [1, 9]);
-        });
-
-        it('should ignore undefined values from getter only but pass undefined in getter', () => {
-            assert.deepStrictEqual(query('numbers(=>$ = undefined ? 2 : a, => $ * $)')(
-                [{}, undefined, { a: 3 }]
-            ), [4, 9]);
-        });
-
-        it('should not ignore duplicates', () => {
-            assert.deepStrictEqual(query('numbers(=> a, => $ * $)')(
-                [{ a: 2 }, { a: 2 }, { a: 2 }]
-            ), [4, 4, 4]);
-        });
-    });
 });

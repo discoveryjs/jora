@@ -102,46 +102,4 @@ describe('median()', () => {
             ), NaN);
         });
     });
-
-    describe('custom formula', () => {
-        it('should use custom formula when passed', () => {
-            assert.strictEqual(query('[1, 3, 2].median(=>$, =>$ * 10)')(), 20);
-        });
-
-        it('should ignore formula when formula is not a function', () => {
-            assert.strictEqual(query('[3, 1, 2].median(=>$, 123)')(), 2);
-        });
-
-        it('should not convert arrays into numbers', () => {
-            assert.deepStrictEqual(query('median(=> $, => [1, 2][:$ - 1])')(
-                [1, 2, 3]
-            ), NaN);
-        });
-
-        it('formula should get all non-undefined values', () => {
-            assert.strictEqual(query('median(=>($ in [Infinity, NaN] ? undefined : $), => ($ + 1 | $ * $))')(
-                [1, null, undefined, Infinity, false, true, NaN, 3]
-                // [4, 1, 1, 4, 16]
-                // sorted: [1, 1, 4, 4, 16]
-            ), 4);
-        });
-
-        it('should ignore undefined values', () => {
-            assert.strictEqual(query('median(=>a, =>$ * $)')(
-                [{}, { a: 1 }, undefined, {}, { a: 3 }, { a: 2 }]
-            ), 4);
-        });
-
-        it('should ignore undefined values from getter only but pass undefined in getter', () => {
-            assert.strictEqual(query('median(=>$ = undefined ? 2 : a, => $ * $)')(
-                [{}, undefined, { a: 3 }, { a: 1 }]
-            ), 4);
-        });
-
-        it('should not ignore duplicates', () => {
-            assert.strictEqual(query('median(=> a, => $ * $)')(
-                [{ a: 2 }, { a: 2 }, { a: 2 }, { a: 3 }, { a: 3 }]
-            ), 4);
-        });
-    });
 });

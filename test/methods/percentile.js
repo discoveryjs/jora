@@ -113,46 +113,4 @@ describe('percentile()', () => {
             ), NaN);
         });
     });
-
-    describe('custom formula', () => {
-        it('should use custom formula when passed', () => {
-            assert.strictEqual(query('[1, 3, 2].percentile(75, =>$, =>$ * 10)')(), 25);
-        });
-
-        it('should ignore formula when formula is not a function', () => {
-            assert.strictEqual(query('[3, 1, 2].percentile(75, =>$, 123)')(), 2.5);
-        });
-
-        it('should not convert arrays into numbers', () => {
-            assert.deepStrictEqual(query('percentile(50, => $, => [1, 2][:$ - 1])')(
-                [1, 2, 3]
-            ), NaN);
-        });
-
-        it('formula should get all non-undefined values', () => {
-            assert.strictEqual(query('percentile(75, =>($ in [Infinity, NaN] ? undefined : $), => ($ + 1 | $ * $))')(
-                [1, null, undefined, Infinity, false, true, NaN, 3]
-                // [4, 1, 1, 4, 16]
-                // sorted: [1, 1, 4, 4, 16]
-            ), 4);
-        });
-
-        it('should ignore undefined values', () => {
-            assert.strictEqual(query('percentile(25, =>a, =>$ * $)')(
-                [{}, { a: 1 }, undefined, {}, { a: 3 }, { a: 2 }]
-            ), 2.5);
-        });
-
-        it('should ignore undefined values from getter only but pass undefined in getter', () => {
-            assert.strictEqual(query('percentile(75, =>$ = undefined ? 2 : a, => $ * $)')(
-                [{}, undefined, { a: 3 }, { a: 1 }]
-            ), 6.5);
-        });
-
-        it('should not ignore duplicates', () => {
-            assert.strictEqual(query('percentile(75, => a, => $ * $)')(
-                [{ a: 2 }, { a: 2 }, { a: 2 }, { a: 3 }, { a: 3 }]
-            ), 9);
-        });
-    });
 });

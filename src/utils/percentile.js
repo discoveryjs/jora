@@ -61,7 +61,7 @@ export function percentile(array, k, getter, formula, compare) {
         ? new MinHeap(upperRank + 1, compare)
         : new MaxHeap(array.length - lowerRank, compare); // (array.length - 1) - (lowerRank - 1)
 
-    processNumericArray(array, getter, formula, value => {
+    processNumericArray(array, getter, value => {
         if (Number.isNaN(value)) {
             hasNaNs = true;
         }

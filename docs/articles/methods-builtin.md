@@ -1,8 +1,8 @@
 # Built-in methods
 
-## avg(getter, formula)
+## avg(getter)
 
-The `avg(getter, formula)` method calculates the [arithmetic mean](https://en.wikipedia.org/wiki/Arithmetic_mean), also known as the average, of a collection of numbers. The arithmetic mean is computed by adding all the numbers in the collection and then dividing by the total count of numbers. This method is equivalent to the expressions `numbers() | sum() / size()` or `sum() / count()`.
+The `avg(getter)` method calculates the [arithmetic mean](https://en.wikipedia.org/wiki/Arithmetic_mean), also known as the average, of a collection of numbers. The arithmetic mean is computed by adding all the numbers in the collection and then dividing by the total count of numbers. This method is equivalent to the expressions `numbers() | sum() / size()` or `sum() / count()`.
 
 ```jora
 [1, 2, 3, 4].avg()
@@ -11,10 +11,6 @@ The `avg(getter, formula)` method calculates the [arithmetic mean](https://en.wi
 ```jora
 [{}, { a: 2 }, undefined, { a: 4 }].avg(=> a)
 // Result: 3
-```
-```jora
-[{ a: 2 }, { a: 4 }].avg(=> a, => $ * $)
-// Result: 10
 ```
 
 ## bool()
@@ -297,9 +293,9 @@ $input.max(a desc)
 // Result: 'w'
 ```
 
-## median(getter, formula)
+## median(getter)
 
-Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentilevalue-getter-formula)).
+Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentilevalue-getter)).
 
 ```jora
 [4, 2, 1, 3, 5].median()
@@ -339,9 +335,9 @@ $input.min(a desc)
 // Result: ' '
 ```
 
-## numbers(getter, formula)
+## numbers(getter)
 
-The `numbers()` method returns an array of numbers derived from the input values. It ignores `undefined` values returned by the `getter` function (the default `getter` function is `=> $`, which returns the value itself). All other values are converted to numbers and passed to the `formula` function (including `NaN` and ±`Infinity`). The result of the `formula` function (which is also converted to a number if necessary) is stored in the resulting array. When converting a value to a number, any objects and arrays are converted to `NaN`.
+The `numbers()` method returns an array of numbers derived from the input values. It ignores `undefined` values returned by the `getter` function (the default `getter` function is `=> $`, which returns the value itself). All other values are converted to numbers including `NaN` and `Infinity`. When converting a value to a number, any objects and arrays are converted to `NaN`.
 
 The `numbers()` method is utilized internally by statistical methods such as `sum()`, `avg()`, and `count()`. As such, it can be used to reveal the numbers that are being used to compute the result of these methods.
 
@@ -360,20 +356,13 @@ The `numbers()` method is utilized internally by statistical methods such as `su
 
 > Note: When applying a statistical computation to an array of objects, it is recommended to use a custom `getter` with the method rather than using dot notation or mapping. This is because dot notation and mapping ignore duplicate values. For instance, the query `[…].age.numbers()` might return `[10, 20]` for the last example instead of the expected `[10, 20, 10]`, which would be correctly returned by the query `[…].numbers(=> age)`.
 
-Using custom formula:
+## p(k, getter)
 
-```jora
-[{ foo: 3 }, { foo: 5 }, { foo: 2 }].numbers(=> foo, => $ * $)
-// Result: [9, 25, 4]
-```
+Alias for [`percentile()`](#percentilek-getter) method.
 
-## p(k, getter, formula)
+## percentile(k, getter)
 
-Alias for [`percentile()`](#percentilek-getter-formula) method.
-
-## percentile(k, getter, formula)
-
-This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbersgetter-formula) method, given the same `getter` and `formula` parameters. If the input (after processing through `getter` and `formula`) contains a `NaN`, the function will always return `NaN`.
+This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbersgetter) method, given the same `getter` parameter. If the input (after processing through `getter`) contains a `NaN`, the function will always return `NaN`.
 
 ```jora
 [4, 3, 5, 2, 1].percentile(75)
@@ -392,15 +381,11 @@ This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile
 // Result: NaN
 ```
 
-Using custom `getter` and `formula`:
+Using custom `getter`:
 
 ```jora
 [{ a: 1 }, { a: 3 }, undefined, { a: 2 }].percentile(75, => a)
 // Result: 2.5
-```
-```jora
-[{ a: 1 }, { a: 3 }, undefined, { a: 2 }].percentile(75, => a, => $ * $)
-// Result: 6.5
 ```
 
 ## pick()
@@ -499,7 +484,7 @@ Sort an array by a value fetched with getter (`fn`). Can use sorting function de
 
 The same as `String#split()` in JavaScript. `pattern` may be a string or regex.
 
-## stdev(getter, formula)
+## stdev(getter)
 
 Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) (`𝜎`) of a population, is the square root of the variance.
 
@@ -512,9 +497,9 @@ Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviatio
 // Result: 1
 ```
 
-## sum(getter, formula)
+## sum(getter)
 
-Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter-formula) method with the same `getter` and `formula` parameters returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
+Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter) method with the same `getter` parameter returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
 
 ```jora
 [].sum()
@@ -592,7 +577,7 @@ The same as `String#trim()` in JavaScript.
 
 The same as `Object.values()` in JavaScript.
 
-## variance(getter, formula)
+## variance(getter)
 
 Returns the [variance](http://en.wikipedia.org/wiki/Variance) (`𝜎²`) of a [population](https://en.wikipedia.org/wiki/Variance#Population_variance) (the squared deviation from the mean).
 

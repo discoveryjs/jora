@@ -107,38 +107,4 @@ describe('stdev()', () => {
             ), 1);
         });
     });
-
-    describe('custom formula', () => {
-        it('should use custom formula when passed', () => {
-            assert.strictEqual(query('[1, 2, 3].stdev(=>$, =>$ * 2)')(), Math.sqrt(8 / 3));
-        });
-
-        it('should ignore formula when formula is not a function', () => {
-            assert.strictEqual(query('[1, 2, 3].stdev(=>$, 123)')(), Math.sqrt(2 / 3));
-        });
-
-        it('formula should get all non-undefined values', () => {
-            assert.strictEqual(query('stdev(=>($ in [Infinity, NaN] ? undefined : $), => ($ + 1 | $ * $))')(
-                [1, null, undefined, Infinity, false, true, NaN, '1', 3]
-            ), Math.sqrt(26));
-        });
-
-        it('should ignore undefined values', () => {
-            assert.strictEqual(query('stdev(=>a, =>$ * 2)')(
-                [{}, { a: 1 }, undefined, {}, { a: 3 }]
-            ), 2);
-        });
-
-        it('should ignore undefined values from getter only but pass undefined in getter', () => {
-            assert.strictEqual(query('stdev(=>$ = undefined ? 2 : a, => $ * 2)')(
-                [{}, undefined, { a: 4 }]
-            ), 2);
-        });
-
-        it('should not ignore duplicates', () => {
-            assert.strictEqual(query('stdev(=> a, => $ * $)')(
-                [{ a: 2 }, { a: 2 }, { a: 2 }]
-            ), 0);
-        });
-    });
 });

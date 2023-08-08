@@ -10,32 +10,28 @@ export function toNumber(value) {
         : Number(value);
 }
 
-export function processNumericArray(current, getter, formula, apply) {
+export function processNumericArray(current, getter, apply) {
     if (isArrayLike(current)) {
         if (typeof getter !== 'function') {
             getter = self;
-        }
-
-        if (typeof formula !== 'function') {
-            formula = self;
         }
 
         for (const value of current) {
             const mappedValue = getter(value);
 
             if (mappedValue !== undefined) {
-                apply(toNumber(formula(toNumber(mappedValue))));
+                apply(toNumber(mappedValue));
             }
         }
     }
 }
 
-export function sumAndCount(current, getter, formula) {
+export function sumAndCount(current, getter) {
     let sum = undefined;
     let correction = 0;
     let count = 0;
 
-    processNumericArray(current, getter, formula, num => {
+    processNumericArray(current, getter, num => {
         count++;
 
         if (sum === undefined) {
@@ -66,14 +62,14 @@ export function sumAndCount(current, getter, formula) {
     return { sum, count };
 }
 
-export function numbers(current, getter, formula) {
+export function numbers(current, getter) {
     // if (current && hasOwn(current, STAT_MARKER)) {
     //     return current.input;
     // }
 
     const result = [];
 
-    processNumericArray(current, getter, formula, result.push.bind(result));
+    processNumericArray(current, getter, result.push.bind(result));
 
     return result;
 }
@@ -96,8 +92,8 @@ export function count(current, getter) {
     return count;
 }
 
-export function sum(current, getter, formula) {
-    return sumAndCount(current, getter, formula).sum;
+export function sum(current, getter) {
+    return sumAndCount(current, getter).sum;
 }
 
 export function numbersSum(numbers) {
@@ -131,22 +127,22 @@ export function numbersSum(numbers) {
     return sum + correction;
 }
 
-export function mean(current, getter, formula) {
-    const { sum, count } = sumAndCount(current, getter, formula);
+export function mean(current, getter) {
+    const { sum, count } = sumAndCount(current, getter);
 
     if (count > 0) {
         return sum / count;
     }
 }
 
-export function variance(current, getter, formula) {
+export function variance(current, getter) {
     let count = 0;
     let mean = 0;
     let M2 = 0;
 
     // Welford's online algorithm
     // https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford%27s_online_algorithm
-    processNumericArray(current, getter, formula, num => {
+    processNumericArray(current, getter, num => {
         count += 1;
         let delta = num - mean;
         mean += delta / count;
@@ -158,8 +154,8 @@ export function variance(current, getter, formula) {
     }
 }
 
-export function stdev(current, getter, formula) {
-    const v = variance(current, getter, formula);
+export function stdev(current, getter) {
+    const v = variance(current, getter);
 
     if (v !== undefined) {
         return Math.sqrt(v);
@@ -202,15 +198,15 @@ export function max(current, cmp = cmpNatural) {
     return max;
 }
 
-export function percentile(current, p, getter, formula) {
+export function percentile(current, p, getter) {
     // if (current && hasOwn(current, STAT_MARKER)) {
-    //     return numbersPercentile(current.input, p, getter, formula);
+    //     return numbersPercentile(current.input, p, getter);
     // }
     if (isArrayLike(current)) {
-        return percentileMethod(current, p, getter, formula);
+        return percentileMethod(current, p, getter);
     }
 }
 
-export function median(current, getter, formula) {
-    return percentile(current, 50, getter, formula);
+export function median(current, getter) {
+    return percentile(current, 50, getter);
 }
