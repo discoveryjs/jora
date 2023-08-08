@@ -34,24 +34,53 @@ const querySuggestionRangeTooltip = [
     // 'struct{ expanded: 2 }'
 ];
 
-function compileQuery(compiledCodeEl, statSectionEl, astSectionEl, query, { stat, tolerant, raw }) {
+function compileQuery(
+    compiledCodeEl,
+    statSectionEl,
+    parseResultSectionEl,
+    query,
+    { stat, tolerant, raw, tokens }
+) {
     const data = {};
     const context = {};
     let parseResult = null;
+    let parseTokens = null;
     let queryFn = null;
 
     try {
         parseResult = jora.syntax.parse(query, tolerant);
+    } catch (_) {}
 
-        astSectionEl.classList.remove('not-available');
-        astSectionEl.innerHTML = '';
-        discovery.view.render(astSectionEl, {
-            view: 'struct',
-            expanded: 20
-        }, parseResult.ast);
-    } catch (error) {
-        astSectionEl.classList.add('not-available');
-        astSectionEl.textContent = 'Not available due to a parse error';
+    try {
+        if (tokens) {
+            parseTokens = [...jora.syntax.tokenize(query, tolerant, true)];
+        }
+    } catch (_) {}
+
+    if (parseResult || parseTokens) {
+        parseResultSectionEl.classList.remove('not-available');
+        parseResultSectionEl.innerHTML = '';
+
+        if (parseTokens) {
+            discovery.view.render(parseResultSectionEl, {
+                view: 'table',
+                limit: false,
+                cols: [
+                    'offset',
+                    'loc',
+                    { header: 'type', content: 'badge:type' },
+                    { header: 'value', content: 'struct:value' }
+                ]
+            }, parseTokens);
+        } else {
+            discovery.view.render(parseResultSectionEl, {
+                view: 'struct',
+                expanded: 20
+            }, parseResult.ast);
+        }
+    } else {
+        parseResultSectionEl.classList.add('not-available');
+        parseResultSectionEl.textContent = `Not available due to a ${tokens ? 'tokenization' : 'parse'} error`;
     }
 
     if (queryEditorErrorMarker) {
@@ -183,9 +212,9 @@ discovery.view.define('playground', function(el, config, data, context) {
     const statSectionEl = document.createElement('div');
     const statSectionToolbarEl = document.createElement('div');
     const statSectionContentEl = document.createElement('div');
-    const astSectionEl = document.createElement('div');
-    const astSectionToolbarEl = document.createElement('div');
-    const astSectionContentEl = document.createElement('div');
+    const parseResultSectionEl = document.createElement('div');
+    const parseResultSectionToolbarEl = document.createElement('div');
+    const parseResultSectionContentEl = document.createElement('div');
     const changeHandler = () => applySource();
 
     function applySource(newOptions) {
@@ -205,7 +234,7 @@ discovery.view.define('playground', function(el, config, data, context) {
         compileQuery(
             compiledCodeSectionContentEl,
             statSectionContentEl,
-            astSectionContentEl,
+            parseResultSectionContentEl,
             query,
             newPageParams
         );
@@ -254,17 +283,26 @@ discovery.view.define('playground', function(el, config, data, context) {
     statSectionContentEl.className = 'stat__content';
 
     // AST
-    astSectionEl.className = 'ast';
-    astSectionToolbarEl.className = 'ast__toolbar';
-    astSectionToolbarEl.append('AST');
-    astSectionContentEl.className = 'ast__content';
+    parseResultSectionEl.className = 'parse-result';
+    parseResultSectionToolbarEl.className = 'parse-result__toolbar';
+    discovery.view.render(parseResultSectionToolbarEl, {
+        view: 'toggle-group',
+        value: '=#.params.tokens ? "tokens" : "ast"',
+        onChange(value) {
+            applySource({ tokens: value === 'tokens' });
+        }
+    }, [
+        { text: 'AST', value: 'ast' },
+        { text: 'Tokens', value: 'tokens' }
+    ], context);
+    parseResultSectionContentEl.className = 'parse-result__content';
 
     // LAYOUT
     queryEditorSectionEl.append(queryEditorSectionToolbarEl, destroyEl);
     compiledCodeSectionEl.append(compiledCodeSectionToolbarEl, compiledCodeSectionContentEl);
     statSectionEl.append(statSectionToolbarEl, statSectionContentEl);
-    astSectionEl.append(astSectionToolbarEl, astSectionContentEl);
-    el.append(queryEditorSectionEl, compiledCodeSectionEl, statSectionEl, astSectionEl);
+    parseResultSectionEl.append(parseResultSectionToolbarEl, parseResultSectionContentEl);
+    el.append(queryEditorSectionEl, compiledCodeSectionEl, statSectionEl, parseResultSectionEl);
 
     // TEARDOWN
     destroyEl.onDestroy = () => {

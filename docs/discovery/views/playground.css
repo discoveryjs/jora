@@ -7,7 +7,7 @@
     display: grid;
     grid-template:
         'query-editor stat'
-        'compiled-code ast';
+        'compiled-code parse-result';
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr 1fr;
     gap: 10px 20px;
@@ -57,6 +57,7 @@
     box-sizing: border-box;
 }
 .view-playground > .compiled-code > .compiled-code__content.error {
+    overflow: auto;
     padding: 8px 12px;
     border-left: 3px solid rgba(255, 0, 0, .8);
     background: rgba(225,75,75,.2);
@@ -95,21 +96,44 @@
 }
 
 /* AST */
-.view-playground > .ast {
-    grid-area: ast;
+.view-playground > .parse-result {
+    grid-area: parse-result;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
-.view-playground > .ast > .ast__content {
+.view-playground > .parse-result > .parse-result__toolbar .view-toggle {
+    font-size: 11px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    position: relative;
+    top: -2px;
+}
+.view-playground > .parse-result > .parse-result__content {
     flex: 1;
     overflow: auto;
     background-color: rgba(205, 205, 205, .1);
 }
-.view-playground > .ast > .ast__content.not-available {
+.view-playground > .parse-result > .parse-result__content.not-available {
     padding: 8px;
     color: #888;
 }
-.view-playground > .ast > .ast__content > .view-struct.struct-expanded-value {
+.view-playground > .parse-result > .parse-result__content > .view-struct.struct-expanded-value {
     background-color: transparent;
+}
+.view-playground > .parse-result > .parse-result__content > .view-table {
+    width: 100%;
+}
+.view-playground > .parse-result > .parse-result__content > .view-table > thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--discovery-background-color);
+}
+.view-playground > .parse-result > .parse-result__content > .view-table th {
+    border-top: none;
+    position: relative;
+}
+.view-playground > .parse-result > .parse-result__content > .view-table th:last-child {
+    width: 100%;
 }
