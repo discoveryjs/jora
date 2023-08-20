@@ -1,30 +1,9 @@
 import { cmpNatural, getterToCmp } from './compare.js';
 import { percentile as percentileMethod } from './percentile.js';
+import { processNumericArray } from './process-numeric-array.js';
 import { isArrayLike } from './misc.js';
 
 const self = value => value;
-
-export function toNumber(value) {
-    return value !== null && typeof value === 'object'
-        ? NaN
-        : Number(value);
-}
-
-export function processNumericArray(current, getter, apply) {
-    if (isArrayLike(current)) {
-        if (typeof getter !== 'function') {
-            getter = self;
-        }
-
-        for (const value of current) {
-            const mappedValue = getter(value);
-
-            if (mappedValue !== undefined) {
-                apply(toNumber(mappedValue));
-            }
-        }
-    }
-}
 
 export function sumAndCount(current, getter) {
     let sum = undefined;

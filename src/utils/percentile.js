@@ -1,5 +1,5 @@
 import { MaxHeap, MinHeap } from './heap.js';
-import { processNumericArray } from './statistics.js';
+import { processNumericArray } from './process-numeric-array.js';
 
 export function numbersPercentile(array, k, compare) {
     if (array.length === 0 || !isFinite(k) || k < 0 || k > 100) {
