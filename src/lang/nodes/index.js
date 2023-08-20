@@ -15,7 +15,6 @@ import * as Filter from './Filter.js';
 import * as Function from './Function.js';
 import * as GetProperty from './GetProperty.js';
 import * as Identifier from './Identifier.js';
-import * as If from './If.js';
 import * as Literal from './Literal.js';
 import * as MapNode from './Map.js';
 import * as MapRecursive from './MapRecursive.js';
@@ -51,7 +50,6 @@ export const nodes = {
     Function,
     GetProperty,
     Identifier,
-    If,
     Literal,
     Map: MapNode,
     MapRecursive,

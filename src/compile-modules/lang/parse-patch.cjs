@@ -18,7 +18,6 @@ module.exports = function buildParsers(strictParser) {
         ['NOT', ["'not'"]],
         ['NO', ["'no'"]],
         ['IS', ["'is'"]],
-        ['IF', ["'if'"]],
         ['THEN', ["'then'"]],
         ['ELSE', ["'else'"]],
         ['IN', ["'in'"]],
@@ -250,7 +249,7 @@ module.exports = function buildParsers(strictParser) {
     // patch tolerant parser lexer
     const keywords = [
         'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO',
-        'IS', 'IF', 'THEN', 'ELSE'
+        'IS', 'THEN', 'ELSE'
     ];
     const words = [...keywords, 'NOT', 'NO', 'ORDER'];
     const operators = [

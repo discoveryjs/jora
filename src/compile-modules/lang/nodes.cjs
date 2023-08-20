@@ -108,14 +108,6 @@ exports.Identifier = function(name) {
         name
     };
 };
-exports.If = function(assertion, thenExpr, elseExpr) {
-    return {
-        type: 'If',
-        assertion,
-        then: thenExpr,
-        else: elseExpr
-    };
-};
 exports.Literal = function(value) {
     return {
         type: 'Literal',

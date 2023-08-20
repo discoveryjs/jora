@@ -11,6 +11,5 @@ export default [
     '.map().().[]..()..a..a()[]',
     '.map([foo,$.foo,method(),$.method(),.(),$.(),.[],$.[],..(),..a,..a(),..$a(),$..(),$..a,$..a(),..($),..($+[]),..(a() or b())])',
     '.assert(is test,is not test,is (test),is not (test),is (test,bar),is not (not test,not (bar),not baz))',
-    '.assert(if test,if not test,if (test) then $,if not (test) then $,if (test,bar) else $,if not (not test,not (bar),not baz) else $)',
     '.reduce(=>$$+$)'
 ].join('');

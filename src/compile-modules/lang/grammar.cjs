@@ -16,7 +16,6 @@ const {
     Function,
     GetProperty,
     Identifier,
-    If,
     Literal,
     Map,
     MapRecursive,
@@ -359,7 +358,6 @@ exports.bnf = {
         ['+ e', $$(Prefix($1, $2))],
 
         // postfix operators
-        ['e if', $$(Postfix($1, $2))],
         ['e IS assertion', $$(Postfix($1, $3))],
 
         // binary operators
@@ -406,7 +404,6 @@ exports.bnf = {
         ['array', asis],
         ['[ sliceNotation ]', $$(SliceNotation(null, $2))],
         ['IS assertion', $$(Prefix($1, $2))],
-        ['if', asis],
         ['ident', $$(GetProperty(null, $1))],
         ['method()', $$(MethodCall(null, $1))],
         ['( e )', $$(Parentheses($2))],
@@ -490,12 +487,6 @@ exports.bnf = {
         ['[ arrayElements , ]', $$(ArrayNode($2))]
     ],
 
-    if: [
-        ['IF assertion', $$(If($2, null, null))],
-        ['IF assertion THEN e', $$(If($2, $4, null))],
-        ['IF assertion ELSE e', $$(If($2, null, $4))],
-        ['IF assertion THEN e ELSE e', $$(If($2, $4, $6))]
-    ],
     assertion: [
         ['assertionTerm', $$(Assertion($1))],
         ['NOT assertionTerm', $$(Assertion($2, true))],

@@ -5,10 +5,9 @@
 - Added `assertions` option for `jora()` and second argument for `setup()` method to specify additional assertion functions
 - Renamed `SortingFunction` AST node type into `CompareFunction`
 - Renamed `Unary` AST node type into `Prefix`
-- Added `Assertion`, `If` and `Postfix` AST node types
+- Added `Assertion` and `Postfix` AST node types
 - Added nullish coalescing operator (`??`)
 - Added `is` operator
-- Added `if .. then .. else ..` operator
 - Added `replace()` method
 - Added `min()` and `max()` methods
 - Added `numbers()`, `sum()`, `avg()`, `count()`, `variance()`, `stdev()`, `percentile()` (with alias `p()`) and `median()` methods

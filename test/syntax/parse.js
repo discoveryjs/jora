@@ -45,10 +45,10 @@ describe('syntax/parse', () => {
                 () => parse('foo\n .[bar =]'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: "Parse error on line 2:\nfoo\\n .[bar =]\n-------------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', 'NO', '-', '+', 'IS', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'TEMPLATE', 'TPL_START', '{', 'IF', got ']'",
+                        rawMessage: "Parse error on line 2:\nfoo\\n .[bar =]\n-------------^\nExpecting '$', 'IDENT', '$IDENT', 'FUNCTION_START', 'FUNCTION', 'NOT', 'NO', '-', '+', 'IS', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'TEMPLATE', 'TPL_START', '{', got ']'",
                         text: ']',
                         token: ']',
-                        expected: ["'$'", 'ident', '$ident', "'<'", "'=>'", "'not'", "'no'", "'-'", "'+'", "'is'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", 'template', "'{'", "'if'"],
+                        expected: ["'$'", 'ident', '$ident', "'<'", "'=>'", "'not'", "'no'", "'-'", "'+'", "'is'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", 'template', "'{'"],
                         loc: {
                             range: [12, 13],
                             start: {
