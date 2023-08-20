@@ -7,7 +7,24 @@ export function suggest(node, ctx) {
 export function compile(node, ctx) {
     if (Array.isArray(node.assertion)) {
         ctx.put(node.negation ? '!(' : '(');
-        ctx.list(node.assertion, '||');
+
+        for (let i = 0; i < node.assertion.length; i++) {
+            if (i % 2 === 0) {
+                ctx.node(node.assertion[i]);
+            } else {
+                switch (node.assertion[i]) {
+                    case 'and':
+                        ctx.put('&&');
+                        break;
+                    case 'or':
+                        ctx.put('||');
+                        break;
+                    default:
+                        ctx.error('Bad conjuction operator in assertion', node);
+                }
+            }
+        }
+
         ctx.put(')');
     } else {
         if (node.negation) {
@@ -62,7 +79,11 @@ export function compile(node, ctx) {
 }
 export function walk(node, ctx) {
     if (Array.isArray(node.assertion)) {
-        ctx.list(node.assertion);
+        for (let i = 0; i < node.assertion.length; i++) {
+            if (i % 2 === 0) {
+                ctx.node(node.assertion[i]);
+            }
+        }
     } else {
         ctx.node(node.assertion);
     }
@@ -74,7 +95,17 @@ export function stringify(node, ctx) {
 
     if (Array.isArray(node.assertion)) {
         ctx.put('(');
-        ctx.list(node.assertion, ',');
+
+        for (let i = 0; i < node.assertion.length; i++) {
+            if (i % 2 === 0) {
+                ctx.node(node.assertion[i]);
+            } else {
+                ctx.put(' ');
+                ctx.put(node.assertion[i]);
+                ctx.put(' ');
+            }
+        }
+
         ctx.put(')');
     } else {
         ctx.node(node.assertion);

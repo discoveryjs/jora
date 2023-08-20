@@ -735,10 +735,10 @@ describe('lang/operators', () => {
             });
 
             it('should work with list of assertions', () => {
-                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')(123), true);
-                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')(124), true);
-                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')('123'), true);
-                assert.strictEqual(query('$odd: => $ % 2; is (number, $odd)')('124'), false);
+                assert.strictEqual(query('$odd: => $ % 2; is (number or $odd)')(123), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number or $odd)')(124), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number or $odd)')('123'), true);
+                assert.strictEqual(query('$odd: => $ % 2; is (number or $odd)')('124'), false);
             });
 
             it('should throw on unknown assertion', () => {
@@ -777,10 +777,10 @@ describe('lang/operators', () => {
             });
 
             it('should work with list of assertions', () => {
-                assert.strictEqual(query('$odd: => $ % 2; 123 is (number, $odd)')(), true);
-                assert.strictEqual(query('$odd: => $ % 2; 124 is (number, $odd)')(), true);
-                assert.strictEqual(query('$odd: => $ % 2; "123" is (number, $odd)')(), true);
-                assert.strictEqual(query('$odd: => $ % 2; "124" is (number, $odd)')(), false);
+                assert.strictEqual(query('$odd: => $ % 2; 123 is (number or $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; 124 is (number or $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; "123" is (number or $odd)')(), true);
+                assert.strictEqual(query('$odd: => $ % 2; "124" is (number or $odd)')(), false);
             });
 
             it('should throw on unknown assertion', () => {

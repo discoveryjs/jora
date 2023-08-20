@@ -102,7 +102,7 @@ function DeclaratorWithRange(name) {
 
 function createCommaList(name, element) {
     return [
-        [`${element}`, $$([$1])],
+        [element, $$([$1])],
         [`${name} , ${element}`, '$1.push($3)']
     ];
 }
@@ -499,7 +499,11 @@ exports.bnf = {
         ['$ident', $$(Method(Reference($1), []))],
         ['LITERAL', $$(Identifier($1string))]
     ],
-    assertionList: createCommaList('assertionList', 'assertion'),
+    assertionList: [
+        ['assertion', $$([$1])],
+        ['assertionList AND assertion', '$1.push($2, $3)'],
+        ['assertionList OR assertion', '$1.push($2, $3)']
+    ],
 
     compareFunction: createCommaList('compareFunction', 'compareExpr'),
     compareExpr: [
