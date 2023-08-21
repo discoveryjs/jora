@@ -1049,6 +1049,15 @@ describe('query/suggestions (tolerant mode)', () => {
         });
     });
 
+    describeCasesTolerant('ternary operator', {
+        '1?|': [
+            suggestion('', ['foo', 'bar'], 2, 2)
+        ],
+        '1?:|': [
+            suggestion('', ['foo', 'bar'], 3, 3)
+        ]
+    });
+
     describeCasesTolerant('variables', {
         '|$|;|': [
             suggestion('$', ['foo', 'bar'], 0, 1),

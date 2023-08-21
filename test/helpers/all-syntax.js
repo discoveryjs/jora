@@ -4,6 +4,7 @@ export default [
     '`template`,`temp${1}late`,`te${1+1}mp${{a:3}["a"]+`xxx${42}xxx`}late`,`${1}${2} ${3}${4} ${5}${6}`,`${} ${} ${}`,',
     '[...,...$,...1+1],',
     'x?1 in xx():2,sort((($x;$x+b)*7) asc,b desc)).(a.[foo]).x($[a+"asd"],$[foo])',
+    '.conditional(1?2:3,1?2:,1?2,1?:3,1?:,1?,?)',
     '..foo..bar()..baz(1,2,3)..(foo+bar)..(foo.bar())',
     '.(foo[1:2][::2][1:][:][1::-2]).([:2]).($[:2])',
     '.({foo:a|b,bar:a|$x;y})',

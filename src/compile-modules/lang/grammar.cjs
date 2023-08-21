@@ -339,6 +339,16 @@ exports.bnf = {
         ['$IDENT', $$(Identifier($1))]
     ],
 
+    condConsequent: [
+        ['? e', $$($2)],
+        ['?', $$(null)]
+    ],
+    condAlternate: [
+        [': e', $$($2)],
+        [':', $$(null)],
+        ['', $$(null)]
+    ],
+
     e: [
         ['query', asis],
 
@@ -382,7 +392,7 @@ exports.bnf = {
         ['e ~= e', $$(Binary($2, $1, $3))],
 
         // conditional
-        ['e ? e : e', $$(Conditional($1, $3, $5))]
+        ['e condConsequent condAlternate', $$(Conditional($1, $2, $3))]
     ],
 
     query: [
@@ -404,6 +414,7 @@ exports.bnf = {
         ['array', asis],
         ['[ sliceNotation ]', $$(SliceNotation(null, $2))],
         ['IS assertion', $$(Prefix($1, $2))],
+        ['condConsequent condAlternate', $$(Conditional(null, $1, $2))],
         ['ident', $$(GetProperty(null, $1))],
         ['method()', $$(MethodCall(null, $1))],
         ['( e )', $$(Parentheses($2))],

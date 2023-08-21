@@ -711,6 +711,28 @@ describe('lang/operators', () => {
                     .filter(item => !(item.errors && item.errors.length) && item.type === 'js')
             );
         });
+
+        describe('omit parts', () => {
+            const data = { foo: 1, bar: 2 };
+            const testcases = [
+                { query: '?', expected: data },
+                { query: 'true?', expected: data },
+                { query: 'true?:', expected: data },
+                { query: 'true?:2', expected: data },
+                { query: 'true?bar:', expected: 2 },
+                { query: 'false?', expected: undefined },
+                { query: 'false?:', expected: undefined },
+                { query: 'false?1:', expected: undefined },
+                { query: 'false?:42', expected: 42 },
+                { query: 'false?:foo', expected: 1 }
+            ];
+
+            for (const testcase of testcases) {
+                it(testcase.query, () => {
+                    assert.deepEqual(query(testcase.query)(data), testcase.expected);
+                });
+            }
+        });
     });
 
     describe('is', () => {

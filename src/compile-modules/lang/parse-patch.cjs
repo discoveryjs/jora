@@ -257,7 +257,7 @@ module.exports = function buildParsers(strictParser) {
         '=', '!=', '~=', '>=', '<=', '<', '>'
     ];
     const prev = [
-        null, ':', ';',
+        null, '?', ':', ';',
         ',', '.', '..',
         '(', '[',
         '.(', '..(', '.[',
