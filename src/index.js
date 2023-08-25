@@ -5,7 +5,7 @@ import walk from './lang/walk.js';
 import stringify from './lang/stringify.js';
 import compile from './lang/compile.js';
 import buildin from './lang/compile-buildin.js';
-import methods from './methods.js';
+import methods, {methodsInfo, makeMethodInfoFacade, createMethodInfoArg, createMethodInfo} from './methods.js';
 import assertions from './assertions.js';
 import createStatApi from './stat.js';
 
@@ -90,10 +90,12 @@ function createQuery(source, options) {
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
     const localMethods = options.methods ? { ...methods, ...options.methods } : methods;
-    const localAssetions = options.assertions ? { ...assertions, ...options.assertions } : assertions;
+    const localAssertions = options.assertions ? { ...assertions, ...options.assertions } : assertions;
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
+    const methodInfoFacade = makeMethodInfoFacade(methodsInfo, options?.methodsInfo);
+
     let fn;
 
     source = String(source);
@@ -105,20 +107,24 @@ function createQuery(source, options) {
         cache.set(source, fn);
     }
 
-    fn = fn(buildin, localMethods, localAssetions);
+    fn = fn(buildin, localMethods, localAssertions);
 
     return statMode
-        ? Object.assign((data, context) => createStatApi(source, fn(data, context)), { query: fn })
+        ? Object.assign((data, context) => createStatApi(source, fn(data, context), {
+            localMethods: {...methods, ...options.methods},
+            getMethodInfo: methodInfoFacade.get
+        }), {query: fn, setMethodInfo: methodInfoFacade.set})
         : fn;
 }
 
-function setup(customMethods, customAssertions) {
+function setup(customMethods, customAssertions, {methodsInfo} = {}) {
     const cacheStrict = new Map();
     const cacheStrictStat = new Map();
     const cacheTollerant = new Map();
     const cacheTollerantStat = new Map();
     const localMethods = { ...methods };
     const localAssetions = { ...assertions };
+    const methodInfoFacade = makeMethodInfoFacade(methodsInfo);
 
     for (const [name, fn] of Object.entries(customMethods || {})) {
         if (typeof fn === 'string') {
@@ -169,7 +175,10 @@ function setup(customMethods, customAssertions) {
         } else {
             const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods, localAssetions);
             fn = statMode
-                ? Object.assign((data, context) => createStatApi(source, perform(data, context)), { query: perform })
+                ? Object.assign((data, context) => createStatApi(source, perform(data, context), {
+                    localMethods: {...methods, ...customMethods},
+                    getMethodInfo: methodInfoFacade.get
+                }), {query: perform, setMethodInfo: methodInfoFacade.set})
                 : perform;
             cache.set(source, fn);
         }
@@ -182,6 +191,9 @@ export default Object.assign(createQuery, {
     version,
     buildin,
     methods,
+    methodsInfo,
+    createMethodInfo,
+    createMethodInfoArg,
     assertions,
     setup,
     syntax: {

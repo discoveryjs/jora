@@ -1,5 +1,8 @@
 import assert from 'assert';
 import query from 'jora';
+import localMethods from '../src/methods.js';
+
+const localMethodNames = Object.keys(localMethods).map(n=>`${n}:method`);
 
 const data = {
     foo: [
@@ -100,20 +103,29 @@ describe('query/suggestions', () => {
         assert.deepEqual(
             suggestQuery('|', data),
             [
-                suggestion('', ['foo', 'bar'], 0, 0)
+                suggestion('', ['foo', 'bar', ...localMethodNames], 0, 0)
             ]
         );
     });
 
     it('simple path', () => {
-        const foo = suggestion('foo', ['foo', 'bar'], 0, 3);
-        const bar = suggestion('bar', ['a', 'b', 'c', 'd'], 4, 7);
+        const foo = suggestion('foo', ['foo', 'bar', ...localMethodNames], 0, 3);
+        const bar = suggestion('bar', ['a', 'b', 'c', 'd', ...localMethodNames], 4, 7);
 
         assert.deepEqual(
             suggestQuery('|f|o|o|.|b|a|r|', data),
             [
                 ...Array(4).fill(foo),
                 ...Array(4).fill(bar)
+            ]
+        );
+    });
+
+    it('custom helpers', () => {
+        assert.deepEqual(
+            suggestQuery('|', data, {methods: {h1: Boolean, h2: Boolean}}),
+            [
+                suggestion('', ['foo', 'bar', ...localMethodNames, 'h1:method', 'h2:method'], 0, 0)
             ]
         );
     });
@@ -132,8 +144,8 @@ describe('query/suggestions', () => {
 
         describe(name, () => {
             Object.entries({
-                '': ['foo', 'bar'],
-                foo: ['a', 'b', 'c', 'd']
+                '': ['foo', 'bar', ...localMethodNames],
+                foo: ['a', 'b', 'c', 'd', ...localMethodNames]
             }).forEach(([prefix, list]) => {
                 describe('with prefix `' + prefix + '`', () => {
                     const emptyQuery = `${prefix}${sbegin}${send}`;
@@ -189,11 +201,11 @@ describe('query/suggestions', () => {
             suggestQuery('{| |a|,| |b| |}', data),
             [
                 null,
-                suggestion('a', ['foo', 'bar'], 2, 3),
-                suggestion('a', ['foo', 'bar'], 2, 3),
+                suggestion('a', ['foo', 'bar', ...localMethodNames], 2, 3),
+                suggestion('a', ['foo', 'bar', ...localMethodNames], 2, 3),
                 null,
-                suggestion('b', ['foo', 'bar'], 5, 6),
-                suggestion('b', ['foo', 'bar'], 5, 6),
+                suggestion('b', ['foo', 'bar', ...localMethodNames], 5, 6),
+                suggestion('b', ['foo', 'bar', ...localMethodNames], 5, 6),
                 null
             ]
         );
@@ -204,11 +216,11 @@ describe('query/suggestions', () => {
             suggestQuery('[| |a|,| |b| |]', data),
             [
                 null,
-                suggestion('a', ['foo', 'bar'], 2, 3),
-                suggestion('a', ['foo', 'bar'], 2, 3),
+                suggestion('a', ['foo', 'bar', ...localMethodNames], 2, 3),
+                suggestion('a', ['foo', 'bar', ...localMethodNames], 2, 3),
                 null,
-                suggestion('b', ['foo', 'bar'], 5, 6),
-                suggestion('b', ['foo', 'bar'], 5, 6),
+                suggestion('b', ['foo', 'bar', ...localMethodNames], 5, 6),
+                suggestion('b', ['foo', 'bar', ...localMethodNames], 5, 6),
                 null
             ]
         );
@@ -219,7 +231,7 @@ describe('query/suggestions', () => {
             suggestQuery('map(|<|>|)', data),
             [
                 null,
-                suggestion('', ['foo', 'bar'], 5, 5),
+                suggestion('', ['foo', 'bar', ...localMethodNames], 5, 5),
                 null
             ]
         );
@@ -231,15 +243,15 @@ describe('query/suggestions', () => {
             [
                 null,
                 null,
-                suggestion('', ['foo', 'bar'], 6, 6)
+                suggestion('', ['foo', 'bar', ...localMethodNames], 6, 6)
             ]
         );
     });
 
     describeCases('pick', {
         '$[| |]': [
-            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 2, 2),
-            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 3)
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 2, 2),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3, 3)
         ],
         '$[| |"|"| |]': [
             null,
@@ -279,8 +291,8 @@ describe('query/suggestions', () => {
         ],
         '$[| |a| |]': [
             null,
-            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
-            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3, 4),
             null
         ],
         '$a;$[| |$|a| |]': [
@@ -301,18 +313,18 @@ describe('query/suggestions', () => {
 
     describeCases('string templates', {
         '`${| |}`': [
-            suggestion('', ['foo', 'bar'], 3, 3),
-            suggestion('', ['foo', 'bar'], 4, 4)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3, 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4, 4)
         ],
         '`${| |}${| |}`': [
-            suggestion('', ['foo', 'bar'], 3, 3),
-            suggestion('', ['foo', 'bar'], 4, 4),
-            suggestion('', ['foo', 'bar'], 7, 7),
-            suggestion('', ['foo', 'bar'], 8, 8)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3, 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4, 4),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 7, 7),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 8, 8)
         ],
         '`${}${| |}`': [
-            suggestion('', ['foo', 'bar'], 6, 6),
-            suggestion('', ['foo', 'bar'], 7, 7)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6, 6),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 7, 7)
         ]
     });
 
@@ -321,7 +333,7 @@ describe('query/suggestions', () => {
         const actual = suggestQuery('.[$=|]', values)[0];
         const expected = suggestion('', values.slice(0, 20).map(v => JSON.stringify(v) + ':value'), 4, 4);
 
-        assert.equal(actual.length, values.length);
+        assert.equal(actual.length, values.length + localMethodNames.length);
 
         // compare first N items only for performance reasons (deepEqual is too slow for such big arrays)
         assert.deepEqual(
@@ -337,9 +349,9 @@ describe('query/suggestions', () => {
                     assert.deepEqual(
                         suggestQuery(prefix + 'size(| | |)', data),
                         [
-                            suggestion('', ['foo', 'bar'], prefix.length + 5),
-                            suggestion('', ['foo', 'bar'], prefix.length + 6),
-                            suggestion('', ['foo', 'bar'], prefix.length + 7)
+                            suggestion('', ['foo', 'bar', ...localMethodNames], prefix.length + 5),
+                            suggestion('', ['foo', 'bar', ...localMethodNames], prefix.length + 6),
+                            suggestion('', ['foo', 'bar', ...localMethodNames], prefix.length + 7)
                         ]
                     );
                 });
@@ -349,8 +361,8 @@ describe('query/suggestions', () => {
                         suggestQuery(prefix + 'size(| |a| |)', data),
                         [
                             null,
-                            suggestion('a', ['foo', 'bar'], prefix.length + 6, prefix.length + 7),
-                            suggestion('a', ['foo', 'bar'], prefix.length + 6, prefix.length + 7),
+                            suggestion('a', ['foo', 'bar', ...localMethodNames], prefix.length + 6, prefix.length + 7),
+                            suggestion('a', ['foo', 'bar', ...localMethodNames], prefix.length + 6, prefix.length + 7),
                             null
                         ]
                     );
@@ -361,18 +373,18 @@ describe('query/suggestions', () => {
                         suggestQuery(prefix + 'size(| |a|,| |b|,| |c| |,| |d| |)', data),
                         [
                             null,
-                            suggestion('a', ['foo', 'bar'], prefix.length + 6, prefix.length + 7),
-                            suggestion('a', ['foo', 'bar'], prefix.length + 6, prefix.length + 7),
+                            suggestion('a', ['foo', 'bar', ...localMethodNames], prefix.length + 6, prefix.length + 7),
+                            suggestion('a', ['foo', 'bar', ...localMethodNames], prefix.length + 6, prefix.length + 7),
                             null,
-                            suggestion('b', ['foo', 'bar'], prefix.length + 9, prefix.length + 10),
-                            suggestion('b', ['foo', 'bar'], prefix.length + 9, prefix.length + 10),
+                            suggestion('b', ['foo', 'bar', ...localMethodNames], prefix.length + 9, prefix.length + 10),
+                            suggestion('b', ['foo', 'bar', ...localMethodNames], prefix.length + 9, prefix.length + 10),
                             null,
-                            suggestion('c', ['foo', 'bar'], prefix.length + 12, prefix.length + 13),
-                            suggestion('c', ['foo', 'bar'], prefix.length + 12, prefix.length + 13),
+                            suggestion('c', ['foo', 'bar', ...localMethodNames], prefix.length + 12, prefix.length + 13),
+                            suggestion('c', ['foo', 'bar', ...localMethodNames], prefix.length + 12, prefix.length + 13),
                             null,
                             null,
-                            suggestion('d', ['foo', 'bar'], prefix.length + 16, prefix.length + 17),
-                            suggestion('d', ['foo', 'bar'], prefix.length + 16, prefix.length + 17),
+                            suggestion('d', ['foo', 'bar', ...localMethodNames], prefix.length + 16, prefix.length + 17),
+                            suggestion('d', ['foo', 'bar', ...localMethodNames], prefix.length + 16, prefix.length + 17),
                             null
                         ]
                     );
@@ -383,19 +395,19 @@ describe('query/suggestions', () => {
 
     describeCases('variables', {
         '|$|f|;|': [
-            suggestion('$f', ['foo', 'bar'], 0, 2),
-            suggestion('$f', ['foo', 'bar'], 0, 2),
-            suggestion('$f', ['foo', 'bar'], 0, 2),
-            suggestion('', ['$f:variable', 'foo', 'bar'], 3)
+            suggestion('$f', ['foo', 'bar', ...localMethodNames], 0, 2),
+            suggestion('$f', ['foo', 'bar', ...localMethodNames], 0, 2),
+            suggestion('$f', ['foo', 'bar', ...localMethodNames], 0, 2),
+            suggestion('', ['$f:variable', 'foo', 'bar', ...localMethodNames], 3, 3)
         ],
         '|$|f|o|o|;| |': [
-            suggestion('$foo', ['foo', 'bar'], 0, 4),
-            suggestion('$foo', ['foo', 'bar'], 0, 4),
-            suggestion('$foo', ['foo', 'bar'], 0, 4),
-            suggestion('$foo', ['foo', 'bar'], 0, 4),
-            suggestion('$foo', ['foo', 'bar'], 0, 4),
-            suggestion('', ['$foo:variable', 'foo', 'bar'], 5),
-            suggestion('', ['$foo:variable', 'foo', 'bar'], 6)
+            suggestion('$foo', ['foo', 'bar', ...localMethodNames], 0, 4),
+            suggestion('$foo', ['foo', 'bar', ...localMethodNames], 0, 4),
+            suggestion('$foo', ['foo', 'bar', ...localMethodNames], 0, 4),
+            suggestion('$foo', ['foo', 'bar', ...localMethodNames], 0, 4),
+            suggestion('$foo', ['foo', 'bar', ...localMethodNames], 0, 4),
+            suggestion('', ['$foo:variable', 'foo', 'bar', ...localMethodNames], 5),
+            suggestion('', ['$foo:variable', 'foo', 'bar', ...localMethodNames], 6)
         ],
         '$a;foo.(|$|)': [
             suggestion('$', ['$a:variable'], 8, 9),
@@ -413,37 +425,37 @@ describe('query/suggestions', () => {
     describeCases('mixed', {
         '.entries|(|).sort|(|)': [
             null,
-            suggestion('', ['foo', 'bar'], 9, 9),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 9, 9),
             null,
-            suggestion('', ['foo', 'bar'], 16, 16)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 16, 16)
         ],
         '.entries|(|a|,| |b|).sort|(|a|,| |b|)': [
             null,
-            suggestion('a', ['foo', 'bar'], 9, 10),
-            suggestion('a', ['foo', 'bar'], 9, 10),
+            suggestion('a', ['foo', 'bar', ...localMethodNames], 9, 10),
+            suggestion('a', ['foo', 'bar', ...localMethodNames], 9, 10),
             null,
-            suggestion('b', ['foo', 'bar'], 12, 13),
-            suggestion('b', ['foo', 'bar'], 12, 13),
+            suggestion('b', ['foo', 'bar', ...localMethodNames], 12, 13),
+            suggestion('b', ['foo', 'bar', ...localMethodNames], 12, 13),
             null,
-            suggestion('a', ['foo', 'bar'], 20, 21),
-            suggestion('a', ['foo', 'bar'], 20, 21),
+            suggestion('a', ['foo', 'bar', ...localMethodNames], 20, 21),
+            suggestion('a', ['foo', 'bar', ...localMethodNames], 20, 21),
             null,
-            suggestion('b', ['foo', 'bar'], 23, 24),
-            suggestion('b', ['foo', 'bar'], 23, 24)
+            suggestion('b', ['foo', 'bar', ...localMethodNames], 23, 24),
+            suggestion('b', ['foo', 'bar', ...localMethodNames], 23, 24)
         ],
         '{foo:[{},{bar:5}]}.foo.(|b|)': [
-            suggestion('b', ['bar'], 24, 25),
-            suggestion('b', ['bar'], 24, 25)
+            suggestion('b', ['bar', ...localMethodNames], 24, 25),
+            suggestion('b', ['bar', ...localMethodNames], 24, 25)
         ],
         '$[| | |]': [
-            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 2),
-            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 3),
-            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 4)
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 2),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3),
+            suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 4)
         ],
         '$[| |a| |]': [
             null,
-            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
-            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3, 4),
+            suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar', ...localMethodNames], 3, 4),
             null
         ]
     });
@@ -452,10 +464,10 @@ describe('query/suggestions', () => {
 describe('query/suggestions (tolerant mode)', () => {
     describeCasesTolerant('trailing full stop', {
         '.|': [
-            suggestion('', ['foo', 'bar'], 1, 1)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1, 1)
         ],
         '.foo.|': [
-            suggestion('', ['a', 'b', 'c', 'd'], 5, 5)
+            suggestion('', ['a', 'b', 'c', 'd', ...localMethodNames], 5, 5)
         ]
     });
 
@@ -469,7 +481,7 @@ describe('query/suggestions (tolerant mode)', () => {
             (it)(operator, () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data), [
-                        suggestion('', ['foo', 'bar'], 1)
+                        suggestion('', ['foo', 'bar', ...localMethodNames], 1)
                     ]
                 );
             });
@@ -479,11 +491,11 @@ describe('query/suggestions (tolerant mode)', () => {
     describeCasesTolerant('trailing double full stop', {
         '.|.|': [
             null,
-            suggestion('', ['foo', 'bar'], 2, 2)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2, 2)
         ],
         '.foo.|.|': [
             null,
-            suggestion('', ['a', 'b', 'c', 'd'], 6, 6)
+            suggestion('', ['a', 'b', 'c', 'd', ...localMethodNames], 6, 6)
         ]
     });
 
@@ -491,59 +503,59 @@ describe('query/suggestions (tolerant mode)', () => {
         assert.deepEqual(
             suggestQuery('.foo.[.|].|', data),
             [
-                suggestion('', ['a', 'b', 'c', 'd'], 7),
-                null
+                suggestion('', ['a', 'b', 'c', 'd', ...localMethodNames], 7, 7),
+                suggestion('', [...localMethodNames], 9, 9)
             ]
         );
     });
 
     describeCasesTolerant('trailing full stop with trailing whitespaces', {
         '.| |': [
-            suggestion('', ['foo', 'bar'], 1),
-            suggestion('', ['foo', 'bar'], 2)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2)
         ],
         '.|\n  ': [
-            suggestion('', ['foo', 'bar'], 1)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1)
         ]
     });
 
     describeCasesTolerant('trailing full stop with trailing comment', {
         '.|/|/|': [
-            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
             null,
             null
         ],
         '.|/|/|\n|': [
-            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 4)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4)
         ],
         '.|  //|': [
-            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
             null
         ],
         '.|  //1\n|  |//2\n//3\n|  |': [
-            suggestion('', ['foo', 'bar'], 1),
-            suggestion('', ['foo', 'bar'], 7),
-            suggestion('', ['foo', 'bar'], 9),
-            suggestion('', ['foo', 'bar'], 17),
-            suggestion('', ['foo', 'bar'], 19)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 7),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 9),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 17),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 19)
         ],
         '.|  |/*1*/|\n  |/*2\n3*/\n|  |': [
-            suggestion('', ['foo', 'bar'], 1),
-            suggestion('', ['foo', 'bar'], 3),
-            suggestion('', ['foo', 'bar'], 8),
-            suggestion('', ['foo', 'bar'], 11),
-            suggestion('', ['foo', 'bar'], 19),
-            suggestion('', ['foo', 'bar'], 21)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 8),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 11),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 19),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 21)
         ],
         '.foo.|//|': [
-            suggestion('', ['a', 'b', 'c', 'd'], 5),
+            suggestion('', ['a', 'b', 'c', 'd', ...localMethodNames], 5),
             null
         ],
         '.foo.|/*|*/|': [
-            suggestion('', ['a', 'b', 'c', 'd'], 5),
+            suggestion('', ['a', 'b', 'c', 'd', ...localMethodNames], 5),
             null,
             null
         ]
@@ -553,7 +565,7 @@ describe('query/suggestions (tolerant mode)', () => {
         assert.deepEqual(
             suggestQuery('[foo,|]', data),
             [
-                suggestion('', ['foo', 'bar'], 5)
+                suggestion('', ['foo', 'bar', ...localMethodNames], 5)
             ]
         );
     });
@@ -567,10 +579,10 @@ describe('query/suggestions (tolerant mode)', () => {
                 assert.deepEqual(
                     suggestQuery('| |' + operator + '| |', data),
                     [
-                        suggestion('', ['foo', 'bar'], 0),
-                        suggestion('', ['foo', 'bar'], 1),
-                        suggestion('', ['foo', 'bar'], operator.length + 1),
-                        suggestion('', ['foo', 'bar'], operator.length + 2)
+                        suggestion('', ['foo', 'bar', ...localMethodNames], 0),
+                        suggestion('', ['foo', 'bar', ...localMethodNames], 1),
+                        suggestion('', ['foo', 'bar', ...localMethodNames], operator.length + 1),
+                        suggestion('', ['foo', 'bar', ...localMethodNames], operator.length + 2)
                     ]
                 );
             });
@@ -581,8 +593,8 @@ describe('query/suggestions (tolerant mode)', () => {
             assert.deepEqual(
                 suggestQuery('foo <| |', data),
                 [
-                    suggestion('', ['foo', 'bar'], 5),
-                    suggestion('', ['foo', 'bar'], 6)
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 5),
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 6)
                 ]
             );
         });
@@ -593,8 +605,8 @@ describe('query/suggestions (tolerant mode)', () => {
             assert.deepEqual(
                 suggestQuery('| |<pipeline-op>', data),
                 [
-                    suggestion('', ['foo', 'bar'], 0),
-                    suggestion('', ['foo', 'bar'], 1)
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 0),
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 1)
                 ]
             );
         });
@@ -602,8 +614,8 @@ describe('query/suggestions (tolerant mode)', () => {
             assert.deepEqual(
                 suggestQuery('$ <pipeline-op>| |', data),
                 [
-                    suggestion('', ['foo', 'bar'], 3),
-                    suggestion('', ['foo', 'bar'], 4)
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 3),
+                    suggestion('', ['foo', 'bar', ...localMethodNames], 4)
                 ]
             );
         });
@@ -653,7 +665,7 @@ describe('query/suggestions (tolerant mode)', () => {
                                 null
                             ]
                             : [
-                                suggestion('', ['foo', 'bar'], 0),
+                                suggestion('', ['foo', 'bar', ...localMethodNames], 0),
                                 null
                             ]
                     );
@@ -674,7 +686,7 @@ describe('query/suggestions (tolerant mode)', () => {
                                 null
                             ]
                             : [
-                                suggestion('', ['foo', 'bar'], 0),
+                                suggestion('', ['foo', 'bar', ...localMethodNames], 0),
                                 null
                             ]
                     );
@@ -698,7 +710,7 @@ describe('query/suggestions (tolerant mode)', () => {
                         suggestQuery(queryString, data),
                         [
                             null,
-                            suggestion('', ['foo', 'bar'], 1),
+                            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
                             null
                         ]
                     );
@@ -722,10 +734,10 @@ describe('query/suggestions (tolerant mode)', () => {
                                 null
                             ]
                             : [
-                                suggestion('', ['foo', 'bar'], 0),
-                                suggestion('', ['foo', 'bar'], 1),
+                                suggestion('', ['foo', 'bar', ...localMethodNames], 0),
+                                suggestion('', ['foo', 'bar', ...localMethodNames], 1),
                                 null,
-                                suggestion('', ['foo', 'bar'], 8),
+                                suggestion('', ['foo', 'bar', ...localMethodNames], 8),
                                 null
                             ]
                     );
@@ -747,7 +759,7 @@ describe('query/suggestions (tolerant mode)', () => {
                             ]
                             : [
                                 null,
-                                suggestion('', ['foo', 'bar'], operator.length + 1)
+                                suggestion('', ['foo', 'bar', ...localMethodNames], operator.length + 1)
                             ]
                     );
                 });
@@ -768,7 +780,7 @@ describe('query/suggestions (tolerant mode)', () => {
                             ]
                             : [
                                 null,
-                                suggestion('', ['foo', 'bar'], operator.length + 1)
+                                suggestion('', ['foo', 'bar', ...localMethodNames], operator.length + 1)
                             ]
                     );
                 });
@@ -786,7 +798,7 @@ describe('query/suggestions (tolerant mode)', () => {
                         suggestQuery(operator + '|[|]', data),
                         [
                             null,
-                            suggestion('', ['foo', 'bar'], operator.length + 1)
+                            suggestion('', ['foo', 'bar', ...localMethodNames], operator.length + 1)
                         ]
                     );
                 });
@@ -796,34 +808,34 @@ describe('query/suggestions (tolerant mode)', () => {
 
     describeCasesTolerant('suggestion before and after operators in blocks', {
         '[| |or| |]': [
-            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 5)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5)
         ],
         '(| |or| |)': [
-            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 1),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 5)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5)
         ],
         '.(| |or| |)': [
-            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 6)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6)
         ],
         '.[| |or| |]': [
-            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 6)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6)
         ],
         '..(| |or| |)': [
-            suggestion('', ['foo', 'bar'], 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3),
             null,
             null,
-            suggestion('', ['foo', 'bar'], 7)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 7)
         ]
     });
 
@@ -831,26 +843,26 @@ describe('query/suggestions (tolerant mode)', () => {
         describe('in', () => {
             Object.entries({
                 '|_| |i|n| ["a", "b", 3]': [
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar', ...localMethodNames], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar', ...localMethodNames], 0, 1),
                     null,
                     null,
                     null
                 ],
                 '|_| |i|n| { "a": 1, "b": 2 }': [
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar', ...localMethodNames], 0, 1),
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar', ...localMethodNames], 0, 1),
                     null,
                     null,
                     null
                 ],
                 'keys().[$ in [| |]]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 14),
-                    suggestion('', ['"foo":value', '"bar":value'], 15)
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 14),
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 15)
                 ],
                 'foo.[b in [| |]]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 11),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 12)
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 11),
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 12)
                 ],
                 // FIXME: split in several test cases
                 '["a", "b", "c", "d", 1, 2].[$a:"a"; $ in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
@@ -860,8 +872,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
                     null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 48, 49),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 48, 49),
                     null,
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
@@ -869,8 +881,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('$a', ['$a:variable'], 54, 56),
                     suggestion('$a', ['$a:variable'], 54, 56),
                     suggestion('$a', ['$a:variable'], 54, 56),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 57),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 58)
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 57),
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 58)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>
@@ -885,12 +897,12 @@ describe('query/suggestions (tolerant mode)', () => {
         describe('not in', () => {
             Object.entries({
                 'keys().[$ not in [| |]]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 18),
-                    suggestion('', ['"foo":value', '"bar":value'], 19)
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 18),
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 19)
                 ],
                 'foo.[b not in [| |]]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 15),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 16)
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 15),
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 16)
                 ],
                 // FIXME: split in several test cases
                 '["a", "b", "c", "d", 1, 2].[$a:"a"; $ not in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
@@ -900,8 +912,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
                     null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 52, 53),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 52, 53),
                     null,
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
@@ -909,8 +921,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('$a', ['$a:variable'], 58, 60),
                     suggestion('$a', ['$a:variable'], 58, 60),
                     suggestion('$a', ['$a:variable'], 58, 60),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 61),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 62)
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 61),
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 62)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>
@@ -929,24 +941,24 @@ describe('query/suggestions (tolerant mode)', () => {
                     null,
                     null,
                     null,
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar', ...localMethodNames], 18, 19),
+                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar', ...localMethodNames], 18, 19)
                 ],
                 '{ "a": 1, "b": 2 } |h|a|s| |_|': [
                     null,
                     null,
                     null,
                     null,
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24),
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24)
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar', ...localMethodNames], 23, 24),
+                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar', ...localMethodNames], 23, 24)
                 ],
                 'keys().[[| |] has $]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 9),
-                    suggestion('', ['"foo":value', '"bar":value'], 10)
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 9),
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 10)
                 ],
                 'foo.[[| |] has b]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 6),
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 7)
                 ],
                 // FIXME: split in several test cases
                 '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has $]': [
@@ -956,8 +968,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
                     null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 42, 43),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 42, 43),
                     null,
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
@@ -965,8 +977,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('$a', ['$a:variable'], 48, 50),
                     suggestion('$a', ['$a:variable'], 48, 50),
                     suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 51),
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 52)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>
@@ -981,12 +993,12 @@ describe('query/suggestions (tolerant mode)', () => {
         describe('has no', () => {
             Object.entries({
                 'keys().[[| |] has no $]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 9),
-                    suggestion('', ['"foo":value', '"bar":value'], 10)
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 9),
+                    suggestion('', ['"foo":value', '"bar":value', ...localMethodNames], 10)
                 ],
                 'foo.[[| |] has no b]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 6),
+                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], 7)
                 ],
                 // FIXME: split in several test cases
                 '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has no $]': [
@@ -996,8 +1008,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
                     suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
                     null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 42, 43),
+                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 42, 43),
                     null,
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
                     suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
@@ -1005,8 +1017,8 @@ describe('query/suggestions (tolerant mode)', () => {
                     suggestion('$a', ['$a:variable'], 48, 50),
                     suggestion('$a', ['$a:variable'], 48, 50),
                     suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 51),
+                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable', ...localMethodNames], 52)
                 ]
             }).forEach(([queryString, expected]) =>
                 it(queryString, () =>
@@ -1024,8 +1036,8 @@ describe('query/suggestions (tolerant mode)', () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data),
                     [
-                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], queryString.length - 4),
-                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], queryString.length - 3)
+                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], queryString.length - 4),
+                        suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd', ...localMethodNames], queryString.length - 3)
                     ]
                 );
             });
@@ -1042,7 +1054,7 @@ describe('query/suggestions (tolerant mode)', () => {
                 assert.deepEqual(
                     suggestQuery(queryString, { foo: 32, bar: { baz: 32 } }),
                     [
-                        suggestion('', ['foo', 'bar'], queryString.indexOf('|'))
+                        suggestion('', ['foo', 'bar', ...localMethodNames], queryString.indexOf('|'))
                     ]
                 );
             });
@@ -1051,38 +1063,38 @@ describe('query/suggestions (tolerant mode)', () => {
 
     describeCasesTolerant('ternary operator', {
         '1?|': [
-            suggestion('', ['foo', 'bar'], 2, 2)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2, 2)
         ],
         '1?:|': [
-            suggestion('', ['foo', 'bar'], 3, 3)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3, 3)
         ]
     });
 
     describeCasesTolerant('variables', {
         '|$|;|': [
-            suggestion('$', ['foo', 'bar'], 0, 1),
-            suggestion('$', ['foo', 'bar'], 0, 1),
-            suggestion('', ['foo', 'bar'], 2)
+            suggestion('$', ['foo', 'bar', ...localMethodNames], 0, 1),
+            suggestion('$', ['foo', 'bar', ...localMethodNames], 0, 1),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 2)
         ],
         '| |$| |;| |': [
             null,
-            suggestion('$', ['foo', 'bar'], 1, 2),
-            suggestion('$', ['foo', 'bar'], 1, 2),
+            suggestion('$', ['foo', 'bar', ...localMethodNames], 1, 2),
+            suggestion('$', ['foo', 'bar', ...localMethodNames], 1, 2),
             null,
-            suggestion('', ['foo', 'bar'], 4),
-            suggestion('', ['foo', 'bar'], 5)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5)
         ],
         '$|v|a|r|:|;|': [
             null,
             null,
             null,
             null,
-            suggestion('', ['foo', 'bar'], 5),
-            suggestion('', ['$var:variable', 'foo', 'bar'], 6)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5),
+            suggestion('', ['$var:variable', 'foo', 'bar', ...localMethodNames], 6)
         ],
         '$foo;$var:|;|': [
-            suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
-            suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
+            suggestion('', ['$foo:variable', 'foo', 'bar', ...localMethodNames], 10),
+            suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar', ...localMethodNames], 11)
         ],
         '$|x|:|$|;|$|x|.|': [
             null,
@@ -1092,7 +1104,7 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('$x', ['$x:variable'], 5, 7),
             suggestion('$x', ['$x:variable'], 5, 7),
             suggestion('$x', ['$x:variable'], 5, 7),
-            suggestion('', ['foo', 'bar'], 8, 8)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 8, 8)
         ],
         '$|x|:[{ qux: 1 }]+|$|-|$|;|$|x|.|': [
             null,
@@ -1104,16 +1116,16 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('$x', ['$x:variable'], 20, 22),
             suggestion('$x', ['$x:variable'], 20, 22),
             suggestion('$x', ['$x:variable'], 20, 22),
-            suggestion('', ['qux'], 23, 23)
+            suggestion('', ['qux', ...localMethodNames], 23, 23)
         ],
         '{x:|$|}.x.|': [
             null,
             null,
-            suggestion('', ['foo', 'bar'], 8)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 8)
         ],
         '$_:{ a: 1, b: 2 };{$|}.|': [
             suggestion('$', ['$_:variable'], 19, 20),
-            null
+            suggestion('', [...localMethodNames], 22, 22)
         ],
         '$foo;{| |$|f|,| |f| |}': [
             null,
@@ -1121,8 +1133,8 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('$f', ['$foo:variable'], 7, 9),
             suggestion('$f', ['$foo:variable'], 7, 9),
             null,
-            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
-            suggestion('f', ['$foo:variable', 'foo', 'bar'], 11, 12),
+            suggestion('f', ['$foo:variable', 'foo', 'bar', ...localMethodNames], 11, 12),
+            suggestion('f', ['$foo:variable', 'foo', 'bar', ...localMethodNames], 11, 12),
             null
         ],
         '$[| |$|a| |]': [
@@ -1133,26 +1145,26 @@ describe('query/suggestions (tolerant mode)', () => {
             null
         ],
         '$[=> $$ =| |]': [
-            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd'], 9, 9),
-            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd'], 10, 10)
+            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd', ...localMethodNames], 9, 9),
+            suggestion('', ['"foo":value', '"bar":value', 'a', 'b', 'c', 'd', ...localMethodNames], 10, 10)
         ],
         '`${| |.| |}`': [
-            suggestion('', ['foo', 'bar'], 3, 3),
-            suggestion('', ['foo', 'bar'], 4, 4),
-            suggestion('', ['foo', 'bar'], 5, 5),
-            suggestion('', ['foo', 'bar'], 6, 6)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3, 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4, 4),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5, 5),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6, 6)
         ],
         '`${| |.| |}${}`': [
-            suggestion('', ['foo', 'bar'], 3, 3),
-            suggestion('', ['foo', 'bar'], 4, 4),
-            suggestion('', ['foo', 'bar'], 5, 5),
-            suggestion('', ['foo', 'bar'], 6, 6)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 3, 3),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 4, 4),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 5, 5),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6, 6)
         ],
         '`${}${| |.| |}`': [
-            suggestion('', ['foo', 'bar'], 6, 6),
-            suggestion('', ['foo', 'bar'], 7, 7),
-            suggestion('', ['foo', 'bar'], 8, 8),
-            suggestion('', ['foo', 'bar'], 9, 9)
+            suggestion('', ['foo', 'bar', ...localMethodNames], 6, 6),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 7, 7),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 8, 8),
+            suggestion('', ['foo', 'bar', ...localMethodNames], 9, 9)
         ]
     });
 });

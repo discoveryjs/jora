@@ -21,3 +21,35 @@ describe('query/misc', () => {
         });
     }
 });
+
+describe('method info helpers', () => {
+    it('createMethodInfo', () => {
+        assert.deepEqual(query.createMethodInfo([], 'some return type', {description: 'some description'}), {
+            args: [],
+            description: 'some description',
+            returns: 'some return type'
+        });
+    });
+
+    it('createMethodInfoArg', () => {
+        assert.deepEqual(query.createMethodInfoArg('arg1', 'some arg type', {description: 'some description'}), {
+            name: 'arg1',
+            description: 'some description',
+            options: {
+                defaultValue: undefined,
+                isOptional: false
+            },
+            type: 'some arg type'
+        });
+
+        assert.deepEqual(query.createMethodInfoArg('arg1', 'some arg type', {description: 'some description', defaultValue: '123'}), {
+            name: 'arg1',
+            description: 'some description',
+            options: {
+                defaultValue: '123',
+                isOptional: true
+            },
+            type: 'some arg type'
+        });
+    });
+});
