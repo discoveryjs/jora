@@ -1,8 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
-import localMethods from '../src/methods.js';
 
-const localMethodNames = Object.keys(localMethods).map(n=>`${n}:method`);
+const localMethodNames = Object.keys(query.methods).map(n=>`${n}:method`);
 
 const data = {
     foo: [

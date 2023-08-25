@@ -1,9 +1,8 @@
 import assert from 'assert';
 import jora from 'jora';
 import { naturalCompare } from '@discoveryjs/natural-compare';
-import localMethods from '../src/methods.js';
 
-const localMethodNames = Object.keys(localMethods);
+const localMethodNames = Object.keys(jora.methods);
 
 describe('query/stat mode', () => {
     describe('default', () => {
