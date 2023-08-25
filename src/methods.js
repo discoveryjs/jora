@@ -107,7 +107,9 @@ export function makeMethodInfoFacade(...methodsInfoList) {
 }
 
 export const methodsInfo = Object.freeze({
-    bool: createMethodInfo([createMethodInfoArg('arg')], 'bool')
+    bool: createMethodInfo([createMethodInfoArg('arg')], 'bool', {
+        description: 'Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy'
+    })
 });
 
 export default Object.freeze({
