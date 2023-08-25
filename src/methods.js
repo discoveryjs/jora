@@ -76,7 +76,7 @@ export function createMethodInfo(args = [], returns = 'any', options = {}) {
     return {
         args,
         returns,
-        description: options.description ?? ''
+        description: options.description || ''
     };
 }
 
@@ -84,7 +84,7 @@ export function createMethodInfoArg(name, type = 'any', options = {}) {
     return {
         name,
         type,
-        description: options.description ?? '',
+        description: options.description || '',
         options: {
             isOptional: options.isOptional || options.defaultValue !== undefined,
             defaultValue: options.defaultValue
@@ -100,7 +100,7 @@ export function makeMethodInfoFacade(...methodsInfoList) {
     }
 
     function get(name) {
-        return map.get(name) ?? null;
+        return map.get(name) || null;
     }
 
     return {map, set, get, create: createMethodInfo, createArg: createMethodInfoArg};

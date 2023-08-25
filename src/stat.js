@@ -112,8 +112,8 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
 function findSourcePosRanges(source, pos, points, includeEmpty = false) {
     const ranges = [];
 
-    for (let [from, to, context, values, related = null] of points) {
-        if (pos >= from && pos <= to && (includeEmpty || values?.size || values?.length)) {
+    for (let [from, to, context, values = [], related = null] of points) {
+        if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
             let text = source.substring(from, to);
 
             if (!/\S/.test(text)) {

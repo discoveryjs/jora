@@ -94,7 +94,7 @@ function createQuery(source, options) {
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
-    const methodInfoFacade = makeMethodInfoFacade(methodsInfo, options?.methodsInfo);
+    const methodInfoFacade = makeMethodInfoFacade(methodsInfo, options.methodsInfo);
 
     let fn;
 
