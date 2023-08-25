@@ -44,6 +44,10 @@ export default function compile(ast, tolerant = false, suggestions = null) {
 
         normalizedSuggestRanges.push(range);
 
+        if (type === 'path') {
+            normalizedSuggestRanges.push([start, end, JSON.stringify('localMethods')]);
+        }
+
         return spName;
     }
 

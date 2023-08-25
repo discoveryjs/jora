@@ -72,6 +72,45 @@ function stableSort(array, cmp) {
         .map(item => item.value);
 }
 
+export function createMethodInfo(args = [], returns = 'any', options = {}) {
+    return {
+        args,
+        returns,
+        description: options.description || ''
+    };
+}
+
+export function createMethodInfoArg(name, type = 'any', options = {}) {
+    return {
+        name,
+        type,
+        description: options.description || '',
+        options: {
+            isOptional: options.isOptional || options.defaultValue !== undefined,
+            defaultValue: options.defaultValue
+        }
+    };
+}
+
+export function makeMethodInfoFacade(...methodsInfoList) {
+    const map = new Map(Object.entries(methodsInfoList.reduce((all, item) => Object.assign(all, item), {})));
+
+    function set(name, info) {
+        map.set(name, info);
+    }
+
+    function get(name) {
+        return map.get(name) || null;
+    }
+
+    return {map, set, get, create: createMethodInfo, createArg: createMethodInfoArg};
+}
+
+export const methodsInfo = Object.freeze({
+    bool: createMethodInfo([createMethodInfoArg('arg')], 'bool', {
+        description: 'Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects with no keys* as falsy'
+    })
+});
 
 export default Object.freeze({
     bool: buildin.bool,

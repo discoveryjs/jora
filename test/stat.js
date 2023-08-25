@@ -2,6 +2,8 @@ import assert from 'assert';
 import jora from 'jora';
 import { naturalCompare } from '@discoveryjs/natural-compare';
 
+const localMethodNames = Object.keys(jora.methods);
+
 describe('query/stat mode', () => {
     describe('default', () => {
         const options = { stat: true };
@@ -29,6 +31,18 @@ describe('query/stat mode', () => {
             }]);
         });
 
+        describe('getMethodInfo() method', () => {
+            it('basic', () =>{
+                const methodsInfo = {
+                    foo: jora.createMethodInfo([])
+                };
+                const res = jora('.[]', {...options, methodsInfo})([]);
+                assert.deepEqual(res.getMethodInfo('foo'), methodsInfo.foo);
+                assert.deepEqual(res.getMethodInfo('bar'), null);
+                assert.deepEqual(res.getMethodInfo('bool'), jora.methodsInfo.bool);
+            });
+        });
+
         describe('suggestion() method', () => {
             it('default behaviour (no options)', () => {
                 const data = [{ id: 1, foo: 1 }, { id: 2, foo: 42 }];
@@ -40,6 +54,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'foo',
                     suggestions: ['id', 'foo']
+                }, {
+                    type: 'method',
+                    from: 2,
+                    to: 5,
+                    text: 'foo',
+                    suggestions: localMethodNames
                 }]);
                 assert.deepEqual(res.suggestion(6), [{
                     type: 'value',
@@ -53,6 +73,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['id', 'foo']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames
                 }]);
             });
 
@@ -73,6 +99,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['id']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames.filter(n => n.match(/i/i))
                 }]);
             });
 
@@ -146,6 +178,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'foo',
                     suggestions: ['id', 'foo', 'bar']
+                }, {
+                    type: 'method',
+                    from: 2,
+                    to: 5,
+                    text: 'foo',
+                    suggestions: localMethodNames.slice(0, 3)
                 }]);
                 assert.deepEqual(res.suggestion(6, { limit: 3 }), [{
                     type: 'value',
@@ -159,6 +197,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['id', 'foo', 'bar']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames.slice(0, 3)
                 }]);
             });
 
@@ -190,6 +234,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['id', 'fix']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames.filter(n => n.match(/i/i)).slice(0, 2)
                 }]);
             });
 
@@ -208,6 +258,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'Foo',
                     suggestions: ['ABC', 'Foo', 'bar', 'id', 'qux']
+                }, {
+                    type: 'method',
+                    from: 2,
+                    to: 5,
+                    text: 'Foo',
+                    suggestions: [...localMethodNames].sort()
                 }]);
                 assert.deepEqual(res.suggestion(6, { sort: true }), [{
                     type: 'value',
@@ -221,6 +277,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['ABC', 'Foo', 'bar', 'id', 'qux']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: [...localMethodNames].sort()
                 }]);
             });
 
@@ -240,6 +302,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'Foo',
                     suggestions: ['ABC', 'bar', 'Foo', 'id', 'qux']
+                }, {
+                    type: 'method',
+                    from: 2,
+                    to: 5,
+                    text: 'Foo',
+                    suggestions: [...localMethodNames].sort(naturalCompare)
                 }]);
                 assert.deepEqual(res.suggestion(6, { sort }), [{
                     type: 'value',
@@ -253,6 +321,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['ABC', 'bar', 'Foo', 'id', 'qux']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: [...localMethodNames].sort(naturalCompare)
                 }]);
             });
 
@@ -284,6 +358,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['fix', 'id', 'index']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames.filter(n => n.match(/i/i)).sort()
                 }]);
             });
 
@@ -302,6 +382,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'foo',
                     suggestions: ['bar', 'foo', 'id']
+                }, {
+                    type: 'method',
+                    from: 2,
+                    to: 5,
+                    text: 'foo',
+                    suggestions: [...localMethodNames].sort().slice(0, 3)
                 }]);
                 assert.deepEqual(res.suggestion(6, { sort: true, limit: 3 }), [{
                     type: 'value',
@@ -315,6 +401,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['bar', 'foo', 'id']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: [...localMethodNames].sort().slice(0, 3)
                 }]);
             });
 
@@ -347,6 +439,12 @@ describe('query/stat mode', () => {
                     to: 7,
                     text: 'i',
                     suggestions: ['aid', 'fix', 'id', 'index']
+                }, {
+                    type: 'method',
+                    from: 6,
+                    to: 7,
+                    text: 'i',
+                    suggestions: localMethodNames.filter(n => n.match(/i/i)).sort().slice(0, 4)
                 }]);
             });
         });
@@ -400,6 +498,12 @@ describe('query/stat mode', () => {
                     to: 5,
                     text: 'foo',
                     suggestions: ['id', 'foo']
+                }, {
+                    from: 2,
+                    text: 'foo',
+                    to: 5,
+                    type: 'method',
+                    suggestions: [...localMethodNames]
                 }]);
                 assert.deepEqual(res.suggestion(6), [{
                     type: 'value',
@@ -413,6 +517,12 @@ describe('query/stat mode', () => {
                     to: 6,
                     text: '',
                     suggestions: ['id', 'foo']
+                }, {
+                    text: '',
+                    from: 6,
+                    to: 6,
+                    type: 'method',
+                    suggestions: [...localMethodNames]
                 }]);
             });
         });

@@ -9,7 +9,8 @@ const contextToType = {
     'in-value': 'value',
     'value-subset': 'value',
     'var': 'variable',
-    'assertion': 'assertion'
+    'assertion': 'assertion',
+    'localMethods': 'method'
 };
 
 function addObjectKeysToSet(object, set) {
@@ -111,7 +112,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
 function findSourcePosRanges(source, pos, points, includeEmpty = false) {
     const ranges = [];
 
-    for (let [from, to, context, values, related = null] of points) {
+    for (let [from, to, context, values = [], related = null] of points) {
         if (pos >= from && pos <= to && (includeEmpty || values.size || values.length)) {
             let text = source.substring(from, to);
 
@@ -174,7 +175,7 @@ function defaultFilterFactory(pattern) {
     return value => (typeof value === 'string' ? value : String(value)).toLowerCase().indexOf(pattern) !== -1;
 }
 
-export default (source, { value, stats, assertions }) => ({
+export default (source, { value, stats, assertions }, {localMethods, getMethodInfo}) => ({
     get value() {
         return value;
     },
@@ -231,6 +232,11 @@ export default (source, { value, stats, assertions }) => ({
                         }
                     }
                     break;
+                case 'localMethods':
+                    for (const method of Object.keys(localMethods)) {
+                        suggestions.add(method);
+                    }
+                    break;
 
                 default:
                     valuesToSuggestions(context, values, related, suggestions);
@@ -275,5 +281,6 @@ export default (source, { value, stats, assertions }) => ({
         }
 
         return result.length ? result : null;
-    }
+    },
+    getMethodInfo: getMethodInfo
 });
