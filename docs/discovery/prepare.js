@@ -49,7 +49,6 @@ module.exports = function(data, { addQueryHelpers, defineObjectMarker }) {
     }
 
     addQueryHelpers({
-        replace: jora.methods.replace,
         parseExample,
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';

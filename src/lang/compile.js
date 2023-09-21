@@ -231,7 +231,10 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                     if (!hasOwn(providedMethods, method)) {
                         return () => {
                             throw Object.assign(
-                                new Error(`Method "${method}" is not defined`),
+                                new Error(
+                                    `Method "${method}" is not defined. If that's a custom method ` +
+                                    'make sure you added it with "methods" section in options'
+                                ),
                                 { details: { loc: { range } } }
                             );
                         };

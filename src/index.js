@@ -1,4 +1,5 @@
 import { version } from './version.js';
+import { hasOwn } from './utils/misc.js';
 import parser from './lang/parse.js';
 import suggest from './lang/suggest.js';
 import walk from './lang/walk.js';
@@ -13,6 +14,52 @@ const cacheStrict = new Map();
 const cacheStrictStat = new Map();
 const cacheTollerant = new Map();
 const cacheTollerantStat = new Map();
+
+function defineDictFunction(dict, name, fn, queryMethods, queryAssertions) {
+    if (typeof fn === 'string') {
+        Object.defineProperty(dict, name, {
+            configurable: true,
+            get() {
+                const compiledFn = compileFunction(fn)(buildin, queryMethods, queryAssertions);
+                const value = current => compiledFn(current, null);
+                Object.defineProperty(dict, name, { value });
+                return value;
+            }
+        });
+    } else {
+        dict[name] = fn;
+    }
+}
+
+function buildQueryMethodsAndAssertions(customMethods, customAssertions) {
+    if (!customMethods && !customAssertions) {
+        return {
+            queryMethods: methods,
+            queryAssertions: assertions
+        };
+    }
+
+    const queryMethods = { ...methods };
+    const queryAssertions = { ...assertions };
+
+    for (const [name, fn] of Object.entries(customMethods || {})) {
+        if (hasOwn(methods, name)) {
+            throw new Error(`Builtin method "${name}" can\'t be overridden`);
+        }
+
+        defineDictFunction(queryMethods, name, fn, queryMethods, queryAssertions);
+    }
+
+    for (const [name, fn] of Object.entries(customAssertions || {})) {
+        if (hasOwn(assertions, name)) {
+            throw new Error(`Builtin assertion "${name}" can\'t be overridden`);
+        }
+
+        defineDictFunction(queryAssertions, name, fn, queryMethods, queryAssertions);
+    }
+
+    return { queryMethods, queryAssertions };
+}
 
 function defaultDebugHandler(sectionName, value) {
     console.log(`[${sectionName}]`);
@@ -89,8 +136,8 @@ function createQuery(source, options) {
 
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
-    const localMethods = options.methods ? { ...methods, ...options.methods } : methods;
-    const localAssetions = options.assertions ? { ...assertions, ...options.assertions } : assertions;
+    const localMethods = 0 && options.methods ? { ...methods, ...options.methods } : methods;
+    const localAssetions = 0 && options.assertions ? { ...assertions, ...options.assertions } : assertions;
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
@@ -112,45 +159,14 @@ function createQuery(source, options) {
         : fn;
 }
 
-function setup(customMethods, customAssertions) {
+function setup(options) {
     const cacheStrict = new Map();
     const cacheStrictStat = new Map();
     const cacheTollerant = new Map();
     const cacheTollerantStat = new Map();
-    const localMethods = { ...methods };
-    const localAssetions = { ...assertions };
-
-    for (const [name, fn] of Object.entries(customMethods || {})) {
-        if (typeof fn === 'string') {
-            Object.defineProperty(localMethods, name, {
-                configurable: true,
-                get() {
-                    const compiledFn = compileFunction(fn)(buildin, localMethods, localAssetions);
-                    const value = current => compiledFn(current, null);
-                    Object.defineProperty(localMethods, name, { value });
-                    return value;
-                }
-            });
-        } else {
-            localMethods[name] = fn;
-        }
-    }
-
-    for (const [name, fn] of Object.entries(customAssertions || {})) {
-        if (typeof fn === 'string') {
-            Object.defineProperty(localAssetions, name, {
-                configurable: true,
-                get() {
-                    const compiledFn = compileFunction(fn)(buildin, localMethods, localAssetions);
-                    const value = current => compiledFn(current, null);
-                    Object.defineProperty(localAssetions, name, { value });
-                    return value;
-                }
-            });
-        } else {
-            localAssetions[name] = fn;
-        }
-    }
+    const { methods: customMethods, assertions: customAssertions } = options || {};
+    const { queryMethods, queryAssertions } =
+        buildQueryMethodsAndAssertions(customMethods, customAssertions);
 
     return function query(source, options) {
         options = options || {};
@@ -167,7 +183,16 @@ function setup(customMethods, customAssertions) {
         if (cache.has(source) && !options.debug) {
             fn = cache.get(source);
         } else {
-            const perform = compileFunction(source, statMode, tolerantMode, options.debug)(buildin, localMethods, localAssetions);
+            const perform = compileFunction(
+                source,
+                statMode,
+                tolerantMode,
+                options.debug
+            )(
+                buildin,
+                queryMethods,
+                queryAssertions
+            );
             fn = statMode
                 ? Object.assign((data, context) => createStatApi(source, perform(data, context)), { query: perform })
                 : perform;

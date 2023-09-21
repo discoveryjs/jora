@@ -1,8 +1,10 @@
 ## next
 
 - Reduced parser size by 15Kb
+- Changed `setup()` function to take `options` parameter instead of custom methods dictionary, i.e. `setup(methods)` → `setup({ methods })`
+- Added `assertions` option for `jora()` and `setup()` functions to specify additional assertion functions, i.e. `jora(..., { assetions })` and `setup({ assertions })`
+- Forbidden to override built-in methods and assertions, now `setup()` and `query()` functions throws when a custom method or assertion has the same name as built-in one
 - Extended query result object in stat mode to provide a result value of the query execution as `value` property (i.e. `jora(query, { stat: true })().value`)
-- Added `assertions` option for `jora()` and second argument for `setup()` method to specify additional assertion functions
 - Renamed `SortingFunction` AST node type into `CompareFunction`
 - Renamed `Unary` AST node type into `Prefix`
 - Added `Assertion` and `Postfix` AST node types

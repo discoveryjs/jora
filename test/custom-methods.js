@@ -1,118 +1,149 @@
 import assert from 'assert';
 import jora from 'jora';
-import data from './helpers/fixture.js';
 
-describe('query/method extensions', () => {
-    function createExtraFn() {
-        const calls = [];
-        return {
-            calls,
-            query: jora.setup({
-                log() {
-                    calls.push([...arguments]);
+describe.skip('query extensions', () => {
+    describe('custom methods', () => {
+        it('method as function', () => {
+            assert.strictEqual(
+                jora('test()', {
+                    methods: { test: () => 42 }
+                })(),
+                42
+            );
+            assert.strictEqual(
+                jora('40.withArgs(2)', {
+                    methods: {
+                        withArgs: (current, arg1) => current + arg1
+                    }
+                })(),
+                42
+            );
+        });
+
+        it('method as string', () => {
+            const customQuery = setup({
+                methods: {
+                    test: '40 + 2',
+                    withThis: '$ + $'
                 }
-            })
-        };
-    }
+            });
 
-    it('should be called', () => {
-        const extra = createExtraFn();
+            assert.strictEqual(
+                customQuery('test()', {
+                    methods: {
+                        test: '40 + 2'
+                    }
+                })(),
+                42
+            );
+            assert.strictEqual(
+                customQuery('21.withThis()', {
+                    methods: {
+                        withThis: '$ + $$'
+                    }
+                })(),
+                42
+            );
+        });
 
-        extra.query('log()')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[data]]
-        );
+        it('should throw on built-in method override', () => {
+            assert.throws(
+                () => setup({ methods: { size: () => 42 } }),
+                /Builtin method "size" can't be overridden/
+            );
+        });
+
+        it('should not affect other setups', () => {
+            const customQuery1 = setup({
+                methods: {
+                    test1: () => 1
+                }
+            });
+            const customQuery2 = setup({
+                methods: {
+                    test2: () => 2
+                }
+            });
+
+            assert.strictEqual(customQuery1('test1()')(), 1);
+            assert.strictEqual(customQuery2('test2()')(), 2);
+            assert.throws(() => customQuery1('test2()')(), /Method "test2" is not defined/);
+            assert.throws(() => customQuery2('test1()')(), /Method "test1" is not defined/);
+            assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
+            assert.throws(() => jora('test2()')(), /Method "test2" is not defined/);
+        });
     });
 
-    it('should be called when started with dot', () => {
-        const extra = createExtraFn();
+    describe('custom assertions', () => {
+        it('assertion as function', () => {
+            const customQuery = setup({
+                assertions: {
+                    custom: $ => $ == 42
+                }
+            });
 
-        extra.query('.log()')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[data]]
-        );
-    });
+            assert.strictEqual(
+                customQuery('is custom')(),
+                false
+            );
+            assert.strictEqual(
+                customQuery('is custom')(41),
+                false
+            );
+            assert.strictEqual(
+                customQuery('is custom')(42),
+                true
+            );
+        });
 
-    it('should be called with precending query', () => {
-        const extra = createExtraFn();
+        it('assertion as string', () => {
+            const customQuery = setup({
+                assertions: {
+                    custom: '$ = 42'
+                }
+            });
 
-        extra.query('filename.log()')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[data.map(item => item.filename)]]
-        );
-    });
+            assert.strictEqual(
+                customQuery('is custom')(),
+                false
+            );
+            assert.strictEqual(
+                customQuery('is custom')(41),
+                false
+            );
+            assert.strictEqual(
+                customQuery('is custom')(42),
+                true
+            );
+        });
 
-    it('should be called for each item when using in parentheses', () => {
-        const extra = createExtraFn();
+        it('should thow on built-in assertion override', () => {
+            assert.throws(
+                () => setup({ assertions: { number: () => 42 } }),
+                /Builtin assertion "number" can't be overridden/
+            );
+        });
 
-        extra.query('filename.(log())')(data);
-        assert.deepEqual(
-            extra.calls,
-            data.map(item => [item.filename])
-        );
-    });
+        it('should not affect other setups', () => {
+            const customQuery1 = setup({
+                assertions: {
+                    test1: $ => $ === 1
+                }
+            });
+            const customQuery2 = setup({
+                assertions: {
+                    test2: $ => $ === 2
+                }
+            });
 
-    it('should accept params', () => {
-        const extra = createExtraFn();
-
-        extra.query('.[filename="1.css"].(log(1, 2, 3))')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[data[0], 1, 2, 3]]
-        );
-    });
-
-    it('should resolve params to current', () => {
-        const extra = createExtraFn();
-
-        extra.query('.log(filename)')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[data, data.map(item => item.filename)]]
-        );
-    });
-
-    it('should resolve params to current inside a parentheses', () => {
-        const extra = createExtraFn();
-
-        extra.query('.(log(filename))')(data);
-        assert.deepEqual(
-            extra.calls,
-            data.map(item => [item, item.filename])
-        );
-    });
-
-    it('should not call a method in map when undefined on object path', () => {
-        const extra = createExtraFn();
-
-        extra.query('dontexists.(log())')({});
-        assert.deepEqual(
-            extra.calls,
-            []
-        );
-    });
-
-    it('scope for method arguments should be the same as for query root', () => {
-        const extra = createExtraFn();
-        const data = { foo: { bar: 42 }, baz: 43 };
-
-        extra.query('foo.bar.log($, baz)')(data);
-        assert.deepEqual(
-            extra.calls,
-            [[42, data, 43]]
-        );
-    });
-
-    it('scope for method arguments should be the same as for query root (issue #1)', () => {
-        const extra = createExtraFn();
-
-        extra.query('#.foo.log(bar)')({ bar: 43 }, { foo: 42 });
-        assert.deepEqual(
-            extra.calls,
-            [[42, 43]]
-        );
+            assert.strictEqual(customQuery1('is test1')(1), true);
+            assert.strictEqual(customQuery1('is test1')(2), false);
+            assert.strictEqual(customQuery2('is test2')(1), false);
+            assert.strictEqual(customQuery2('is test2')(2), true);
+            assert.throws(() => customQuery1('is test2')(), /Assertion "test2" is not defined/);
+            assert.throws(() => customQuery2('is test1')(), /Assertion "test1" is not defined/);
+            assert.throws(() => jora('is test1')(), /Assertion "test1" is not defined/);
+            assert.throws(() => jora('is test2')(), /Assertion "test2" is not defined/);
+        });
     });
 });

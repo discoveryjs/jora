@@ -6,11 +6,13 @@ describe('lang/method', () => {
         let queryWithExtraMethods;
 
         beforeEach(() => queryWithExtraMethods = query.setup({
-            args(...args) {
-                return args;
-            },
-            hasArgsInThis() {
-                return Object.hasOwnProperty.call(this, 'args');
+            methods: {
+                args(...args) {
+                    return args;
+                },
+                hasArgsInThis() {
+                    return Object.hasOwnProperty.call(this, 'args');
+                }
             }
         }));
 
