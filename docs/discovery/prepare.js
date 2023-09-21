@@ -1,6 +1,5 @@
 const CodeMirror = require('codemirror');
 require('codemirror/addon/mode/simple');
-const jora = require('jora');
 const { Slugger } = require('marked');
 const { parseExample } = require('./parse-example.js');
 const { utils: { base64 } } = require('@discoveryjs/discovery');

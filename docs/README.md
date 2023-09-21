@@ -4,6 +4,7 @@
 - [Syntax overview](./articles/syntax-overview.md)
 - [Literals](./articles/literals.md)
 - [Operators](./articles/operators.md)
+- [Assertions](./articles/assertions.md)
 - [Variables](./articles/variables.md)
 - [Object literals](./articles/object-literal.md)
 - [Array literals](./articles/array-literal.md)

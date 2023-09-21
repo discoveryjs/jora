@@ -3,7 +3,7 @@ import { isPlainObject, isRegExp, isTruthy } from './utils/misc.js';
 export default Object.freeze({
     number: value => typeof value === 'number',
     int: Number.isInteger,
-    finite: value => isFinite(Number(value)),
+    finite: value => isFinite(value),
     NaN: value => isNaN(value),
     Infinity: value => value === Infinity || value === -Infinity,
     string: value => typeof value === 'string',

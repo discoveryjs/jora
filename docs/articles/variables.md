@@ -1,4 +1,4 @@
-# Variables <!-- omit in toc -->
+# Variables
 
 Jora allows defining and using variables within queries. A value can be assigned to a variable only on its definition. Once a variable is defined, its value cannot be changed throughout the query. Variables are useful for storing intermediate results, improving readability, reusing expressions and preserving values across scopes.
 

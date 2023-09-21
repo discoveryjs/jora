@@ -24,15 +24,17 @@ See [Built-in methods](./methods-builtin.md).
 
 ## Custom methods
 
-To provide custom methods in Jora use the following API:
+To define custom methods in Jora use the following API:
 
 ```js
 import jora from 'jora';
 
 // Setup query factory with custom methods
 const createQueryWithCustomMethods = jora.setup({
-    myMethod($) {
-        /* do something and return a new value */
+    methods: {
+        myMethod($) {
+            /* do something and return a new value */
+        }
     }
 });
 

@@ -5,6 +5,7 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 - [Arithmetic operators](#arithmetic-operators)
 - [Comparison operators](#comparison-operators)
 - [Logical operators](#logical-operators)
+- [Ternary operator](#ternary-operator)
 - [Grouping operator](#grouping-operator)
 - [Pipeline operator](#pipeline-operator)
 - [Operator precedence](#operator-precedence)
@@ -13,8 +14,8 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 
 | Jora | Description |
 |------|-------------|
-| `x + y` | Add. In case one of the operands is an array, it produces a new array with elements from `x` and `y`, excluding duplicates.
-| `x - y` | Subtract. In case left operand is an array, it produces a new array with elements from `x`, excluding elements from `y`.
+| `x + y` | Add. In case one of the operands is an array, it produces a new array with elements from `x` and `y`, excluding duplicates
+| `x - y` | Subtract. In case left operand is an array, it produces a new array with elements from `x`, excluding elements from `y`
 | `x * y` | Multiply
 | `x / y` | Divide
 | `x % y` | Modulo
@@ -49,13 +50,13 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 
 | Jora | Description |
 |------|-------------|
-| `x = y`  | Equals (as `Object.is(x, y)` in JavaScript).
-| `x != y` | Not equals (as `!Object.is(x, y)` in JavaScript).
-| `x < y`  | Less than.
-| `x <= y` | Less than or equal to.
-| `x > y`  | Greater than.
-| `x >= y` | Greater than or equal to.
-| `x ~= y` | Match operator. Behavior depends on `y` type:<br>- RegExp – test against regexp<br>- function – test like `filter()`<br>- `null` or `undefined` – always truthy<br>- anything else – always falsy.
+| `x = y`  | Equals (as `Object.is(x, y)` in JavaScript)
+| `x != y` | Not equals (as `!Object.is(x, y)` in JavaScript)
+| `x < y`  | Less than
+| `x <= y` | Less than or equal to
+| `x > y`  | Greater than
+| `x >= y` | Greater than or equal to
+| `x ~= y` | Match operator. Behavior depends on `y` type:<br>- RegExp – test against regexp<br>- function – test like `filter()`<br>- `null` or `undefined` – always truthy<br>- anything else – always falsy
 
 ```jora
 // Equals
@@ -93,13 +94,14 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 
 | Jora | Description |
 |------|-------------|
-| `x or y` | Logical OR. Equivalent to `\|\|` in JavaScript, but `x` is testing for truthy with the `bool()` method.
-| `x and y` | Logical AND. Equivalent to `&&` in JavaScript, but `x` is testing for truthy with the `bool()` method.
-| `not x`<br>`no x` | Logical NOT. Equivalent to `!` in JavaScript, but `x` is testing for truthy with the `bool()` method.
-| `x ? y : z` | Ternary operator. If `x` is truthy, return `y`, else return `z`. `x` is testing for truthy with the `bool()` method.
-| `x ?? y` | The [nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing), equivalent to `??` in JavaScript.
-| `x in [a, b, c]`<br>`[a, b, c] has x` | Equivalent to `x = a or x = b or x = c`.
-| `x not in [a, b, c]`<br>`[a, b, c] has no x` | Equivalent to `x != a and x != b and x != c`.
+| `x or y` | Logical OR. Equivalent to `\|\|` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
+| `x and y` | Logical AND. Equivalent to `&&` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
+| `not x`<br>`no x` | Logical NOT. Equivalent to `!` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
+| `x ?? y` | The [nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/
+Nullish_coalescing), equivalent to `??` in JavaScript
+| `x is assertion` | Tests a value against an assertion, see [Assertions](./assertions.md)
+| `x in [a, b, c]`<br>`[a, b, c] has x` | Equivalent to `x = a or x = b or x = c`
+| `x not in [a, b, c]`<br>`[a, b, c] has no x` | Equivalent to `x != a and x != b and x != c`
 
 
 ```jora
@@ -119,9 +121,11 @@ no false // true
 not []   // true
 not [1]  // false
 
-// Ternary operator
-true ? 'yes' : 'no' // 'yes'
-false ? 'yes' : 'no' // 'no'
+// Nullish coalescing
+null ?? 1      // 1
+undefined ?? 1 // 1
+false ?? 1     // false
+1234 ?? 1      // 1234
 
 // IN operator
 1 in [1, 2, 3] // true
@@ -138,6 +142,37 @@ false ? 'yes' : 'no' // 'no'
 // HAS NO operator
 [1, 2, 3] has no 1 // false
 [1, 2, 3] has no 4 // true
+```
+
+## Ternary Operator
+
+The ternary operator requires three operands: a condition, followed by a question mark (`?`), an expression for a truthy condition, a colon (`:`), and an expression for a falsy condition. The condition is evaluated using the [bool()](./methods-builtin.md#bool) method.
+
+```jora
+true ? 'yes' : 'no'  // Result: 'yes'
+```
+```
+false ? 'yes' : 'no' // Result: 'no'
+```
+
+Operands can be omitted. When omitted, `$` is used as a default for the condition and the truthy expression, and `undefined` for the falsy expression.
+
+```jora
+?: // Equivalents to `$ ? $ : undefined`
+```
+
+A query to truncate strings in array longer than 10 characters: 
+
+```jora
+['short', 'and a very long string']
+.(size() < 10 ?: `${slice(0, 10)}...`)
+// Result: ["short", "and a very..."]
+```
+
+If the falsy operand is omitted, the colon (`:`) can also be omitted. This is useful in conjunction with [assertions](./assertions.md) and statistical or mathematical methods:
+
+```jora
+numbers.sum(=> is number ? $ * $)
 ```
 
 ## Grouping operator
