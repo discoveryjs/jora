@@ -125,7 +125,6 @@ function processChangelog(changelog, methods) {
                         prelude.match(/(?<=methods?\s*(?::\s*)?(?:`[a-z\d]+\([^\)]*?\)`\s*(?:and|,)\s*)*)`[a-z\d]+\([^\)]*?\)`/ig);
 
                     if (methodRefs) {
-                        console.log(methodRefs)
                         for (const methodRef of methodRefs) {
                             const methodName = methodRef.slice(1).match(/^[^\(]+/);
 
