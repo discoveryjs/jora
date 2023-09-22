@@ -136,11 +136,12 @@ function createQuery(source, options) {
 
     const statMode = Boolean(options.stat);
     const tolerantMode = Boolean(options.tolerant);
-    const localMethods = 0 && options.methods ? { ...methods, ...options.methods } : methods;
-    const localAssetions = 0 && options.assertions ? { ...assertions, ...options.assertions } : assertions;
     const cache = statMode
         ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
         : (tolerantMode ? cacheTollerant : cacheStrict);
+    const { methods: customMethods, assertions: customAssertions } = options || {};
+    const { queryMethods, queryAssertions } =
+        buildQueryMethodsAndAssertions(customMethods, customAssertions);
     let fn;
 
     source = String(source);
@@ -152,7 +153,7 @@ function createQuery(source, options) {
         cache.set(source, fn);
     }
 
-    fn = fn(buildin, localMethods, localAssetions);
+    fn = fn(buildin, queryMethods, queryAssertions);
 
     return statMode
         ? Object.assign((data, context) => createStatApi(source, fn(data, context)), { query: fn })

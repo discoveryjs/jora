@@ -1,7 +1,7 @@
 import assert from 'assert';
 import jora from 'jora';
 
-describe.skip('query extensions', () => {
+describe('query extensions', () => {
     describe('custom methods', () => {
         it('method as function', () => {
             assert.strictEqual(
@@ -21,15 +21,8 @@ describe.skip('query extensions', () => {
         });
 
         it('method as string', () => {
-            const customQuery = setup({
-                methods: {
-                    test: '40 + 2',
-                    withThis: '$ + $'
-                }
-            });
-
             assert.strictEqual(
-                customQuery('test()', {
+                jora('test()', {
                     methods: {
                         test: '40 + 2'
                     }
@@ -37,113 +30,110 @@ describe.skip('query extensions', () => {
                 42
             );
             assert.strictEqual(
-                customQuery('21.withThis()', {
+                jora('40.withThis(2)', {
                     methods: {
-                        withThis: '$ + $$'
+                        withThis: '$$' // $ + $$
                     }
                 })(),
-                42
+                undefined
             );
         });
 
         it('should throw on built-in method override', () => {
             assert.throws(
-                () => setup({ methods: { size: () => 42 } }),
+                () => jora('', { methods: { size: () => 42 } }),
                 /Builtin method "size" can't be overridden/
             );
         });
 
         it('should not affect other setups', () => {
-            const customQuery1 = setup({
-                methods: {
-                    test1: () => 1
-                }
-            });
-            const customQuery2 = setup({
-                methods: {
-                    test2: () => 2
-                }
-            });
-
-            assert.strictEqual(customQuery1('test1()')(), 1);
-            assert.strictEqual(customQuery2('test2()')(), 2);
-            assert.throws(() => customQuery1('test2()')(), /Method "test2" is not defined/);
-            assert.throws(() => customQuery2('test1()')(), /Method "test1" is not defined/);
-            assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
+            assert.strictEqual(jora('test1()', { methods: { test1: () => 1 } })(), 1);
+            assert.strictEqual(jora('test2()', { methods: { test2: () => 2 } })(), 2);
             assert.throws(() => jora('test2()')(), /Method "test2" is not defined/);
+            assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
         });
     });
 
     describe('custom assertions', () => {
         it('assertion as function', () => {
-            const customQuery = setup({
-                assertions: {
-                    custom: $ => $ == 42
-                }
-            });
-
             assert.strictEqual(
-                customQuery('is custom')(),
+                jora('is custom', {
+                    assertions: {
+                        custom: $ => $ == 42
+                    }
+                })(),
                 false
             );
             assert.strictEqual(
-                customQuery('is custom')(41),
+                jora('is custom', {
+                    assertions: {
+                        custom: $ => $ == 42
+                    }
+                })(41),
                 false
             );
             assert.strictEqual(
-                customQuery('is custom')(42),
+                jora('is custom', {
+                    assertions: {
+                        custom: $ => $ == 42
+                    }
+                })(42),
                 true
             );
         });
 
         it('assertion as string', () => {
-            const customQuery = setup({
-                assertions: {
-                    custom: '$ = 42'
-                }
-            });
-
             assert.strictEqual(
-                customQuery('is custom')(),
+                jora('is custom', {
+                    assertions: {
+                        custom: '$ = 42'
+                    }
+                })(),
                 false
             );
             assert.strictEqual(
-                customQuery('is custom')(41),
+                jora('is custom', {
+                    assertions: {
+                        custom: '$ = 42'
+                    }
+                })(41),
                 false
             );
             assert.strictEqual(
-                customQuery('is custom')(42),
+                jora('is custom', {
+                    assertions: {
+                        custom: '$ = 42'
+                    }
+                })(42),
                 true
             );
         });
 
         it('should thow on built-in assertion override', () => {
             assert.throws(
-                () => setup({ assertions: { number: () => 42 } }),
+                () => jora('1', { assertions: { number: () => 42 } }),
                 /Builtin assertion "number" can't be overridden/
             );
         });
 
         it('should not affect other setups', () => {
-            const customQuery1 = setup({
+            const s1 = {
                 assertions: {
                     test1: $ => $ === 1
                 }
-            });
-            const customQuery2 = setup({
+            };
+            const s2 = {
                 assertions: {
                     test2: $ => $ === 2
                 }
-            });
+            };
 
-            assert.strictEqual(customQuery1('is test1')(1), true);
-            assert.strictEqual(customQuery1('is test1')(2), false);
-            assert.strictEqual(customQuery2('is test2')(1), false);
-            assert.strictEqual(customQuery2('is test2')(2), true);
-            assert.throws(() => customQuery1('is test2')(), /Assertion "test2" is not defined/);
-            assert.throws(() => customQuery2('is test1')(), /Assertion "test1" is not defined/);
-            assert.throws(() => jora('is test1')(), /Assertion "test1" is not defined/);
-            assert.throws(() => jora('is test2')(), /Assertion "test2" is not defined/);
+            assert.strictEqual(jora('is test1', s1)(1), true);
+            assert.strictEqual(jora('is test1', s1)(2), false);
+            assert.strictEqual(jora('is test2', s2)(1), false);
+            assert.strictEqual(jora('is test2', s2)(2), true);
+            assert.throws(() => jora('is test2', s1)(), /Assertion "test2" is not defined/);
+            assert.throws(() => jora('is test1', s2)(), /Assertion "test1" is not defined/);
         });
     });
 });
