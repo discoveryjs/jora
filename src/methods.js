@@ -72,7 +72,6 @@ function stableSort(array, cmp) {
         .map(item => item.value);
 }
 
-
 export default Object.freeze({
     bool: buildin.bool,
     filter: buildin.filter,
@@ -317,15 +316,3 @@ export default Object.freeze({
     p: percentile, // alias for percentile()
     median
 });
-
-// function top(current, n = 10, cmp = buildin.cmp) {
-//     if (isArrayLike(current) && isFinite(n) && n > 0) {
-//         const heap = new MinHeap(n, cmp);
-
-//         heap.add(current);
-
-//         return [...heap];
-//     }
-
-//     return [];
-// }
