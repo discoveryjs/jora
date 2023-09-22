@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.8 (September 21, 2023)
 
 - Reduced parser size by 15Kb
 - Changed `setup()` function to take `options` parameter instead of custom methods dictionary, i.e. `setup(methods)` → `setup({ methods })`
