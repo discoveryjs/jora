@@ -1,6 +1,7 @@
 ## next
 
 - Fixed listing suggestions inside empty parentheses
+- Fixed listing suggestions for `is` operator in tolerant mode when right part is empty
 - Removed missed experimental keywords `if`, `then` and `else`
 
 ## 1.0.0-beta.8 (September 21, 2023)

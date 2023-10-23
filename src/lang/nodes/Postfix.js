@@ -2,12 +2,12 @@ export function compile(node, ctx) {
     if (node.operator && node.operator.type) {
         ctx.createScope(
             () => {
-                ctx.put('($=>');
+                ctx.put('($=>(');
                 ctx.node(node.operator);
-                ctx.put(')');
+                ctx.put('))');
             },
             (scopeStart, sp) => {
-                return scopeStart + sp + ';';
+                return scopeStart + sp + ',';
             }
         );
         ctx.put('(');

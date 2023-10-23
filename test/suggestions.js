@@ -1,6 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
 
+const assertions = Object.keys(query.assertions).map(value => value + ':assertion');
 const data = {
     foo: [
         { a: 1, b: 2},
@@ -852,6 +853,23 @@ describe('query/suggestions (tolerant mode)', () => {
             null,
             null,
             suggestion('', ['foo', 'bar'], 7)
+        ]
+    });
+
+    describeCasesTolerant('assertions', {
+        'is| |': [
+            null,
+            suggestion('', assertions, 3)
+        ],
+        '$a:1;is| |': [
+            null,
+            suggestion('', ['$a:variable', ...assertions], 8)
+        ],
+        'is| |(| |)': [
+            null,
+            null,
+            suggestion('', assertions, 4),
+            suggestion('', assertions, 5)
         ]
     });
 
