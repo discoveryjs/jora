@@ -794,6 +794,34 @@ describe('query/suggestions (tolerant mode)', () => {
         );
     });
 
+    describeCasesTolerant('blocks', {
+        '[| | |]': [
+            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar'], 3)
+        ],
+        '(| | |)': [
+            suggestion('', ['foo', 'bar'], 1),
+            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar'], 3)
+        ],
+        '.(| | |)': [
+            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar'], 3),
+            suggestion('', ['foo', 'bar'], 4)
+        ],
+        '.[| | |]': [
+            suggestion('', ['foo', 'bar'], 2),
+            suggestion('', ['foo', 'bar'], 3),
+            suggestion('', ['foo', 'bar'], 4)
+        ],
+        '..(| | |)': [
+            suggestion('', ['foo', 'bar'], 3),
+            suggestion('', ['foo', 'bar'], 4),
+            suggestion('', ['foo', 'bar'], 5)
+        ]
+    });
+
     describeCasesTolerant('suggestion before and after operators in blocks', {
         '[| |or| |]': [
             suggestion('', ['foo', 'bar'], 1),

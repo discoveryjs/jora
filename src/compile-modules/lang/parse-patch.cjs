@@ -275,8 +275,8 @@ module.exports = function buildParsers(strictParser) {
         'ORDER'
     ];
     const tokenPair = new Map(prev.map(token => [token, new Set(defaultNext)]));
-    // special cases
-    for (const token of ['(', '.(', '..(']) {
+    // special cases: empty blocks which are valid doen't need to be modified
+    for (const token of ['.(', '..(']) {
         tokenPair.get(token).delete(')');
     }
     for (const token of ['[', '.[']) {

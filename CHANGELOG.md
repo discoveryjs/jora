@@ -1,5 +1,6 @@
 ## next
 
+- Fixed listing suggestions inside empty parentheses
 - Removed missed experimental keywords `if`, `then` and `else`
 
 ## 1.0.0-beta.8 (September 21, 2023)
