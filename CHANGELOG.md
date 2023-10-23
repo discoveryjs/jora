@@ -1,3 +1,7 @@
+## next
+
+- Removed missed experimental keywords `if`, `then` and `else`
+
 ## 1.0.0-beta.8 (September 21, 2023)
 
 - Reduced parser size by 10Kb

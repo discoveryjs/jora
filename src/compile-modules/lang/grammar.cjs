@@ -218,9 +218,6 @@ exports.lex = {
         ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
         ['is{wb}', 'return "IS";'],
-        ['if{wb}', 'return "IF";'],
-        ['then{wb}', 'return "THEN";'],
-        ['else{wb}', 'return "ELSE";'],
 
         // primitives
         ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = Number(yytext); return "NUMBER";'],
@@ -293,7 +290,6 @@ exports.operators = [
     ['left', 'compareFunction', 'compareExpr'],
     ['left', 'ORDER'],
     ['left', '|'],
-    // ['left', 'IF', 'THEN', 'ELSE', 'if'],
     ['left', 'def'],
     ['left', ';'],
     ['left', ','],
