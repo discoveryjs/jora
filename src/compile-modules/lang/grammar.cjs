@@ -468,14 +468,18 @@ exports.bnf = {
         ['{ definitions objectEntries , }', $$(Block($2, ObjectNode($3)))]
     ],
     objectEntries: createCommaList('objectEntries', 'objectEntry'),
+    objectEntryKeyLiteral: [
+        ['STRING', $$(Literal($1))],
+        ['NUMBER', $$(Literal($1))],
+        ['LITERAL', $$(Literal($1))]
+    ],
     objectEntry: [
         ['$', $$(ObjectEntry(Current(), null))],
         ['$ident', $$(ObjectEntry(Reference($1), null))],
         ['ident', $$(ObjectEntry($1, null))],
+        ['objectEntryKeyLiteral', $$(ObjectEntry($1, null))],
         ['ident : e', $$(ObjectEntry($1, $3))],
-        ['STRING : e', $$(ObjectEntry(Literal($1), $3))],
-        ['NUMBER : e', $$(ObjectEntry(Literal($1), $3))],
-        ['LITERAL : e', $$(ObjectEntry(Literal($1), $3))],
+        ['objectEntryKeyLiteral : e', $$(ObjectEntry($1, $3))],
         ['$ident : e', $$(ObjectEntry(Identifier($$1name), $3))],
         ['[ e ] : e', $$(ObjectEntry($2, $5))],
         ['...', $$(Spread(null))],

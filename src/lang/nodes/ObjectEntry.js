@@ -10,6 +10,7 @@ const noBracketKeyType = new Set([
 export function suggest(node, ctx) {
     if (node.value === null) {
         switch (node.key.type) {
+            case 'Literal':
             case 'Identifier':
                 ctx.range(node.range, 'path');
                 ctx.range(node.range, 'var');
@@ -31,6 +32,7 @@ export function compile(node, ctx) {
 
         case 'Literal':
             ctx.node(node.key);
+            value = value || GetProperty(null, Identifier(String(node.key.value)));
             break;
 
         case 'Identifier':

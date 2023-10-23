@@ -185,19 +185,39 @@ describe('query/suggestions', () => {
         });
     });
 
-    it('object context', () => {
-        assert.deepEqual(
-            suggestQuery('{| |a|,| |b| |}', data),
-            [
-                null,
-                suggestion('a', ['foo', 'bar'], 2, 3),
-                suggestion('a', ['foo', 'bar'], 2, 3),
-                null,
-                suggestion('b', ['foo', 'bar'], 5, 6),
-                suggestion('b', ['foo', 'bar'], 5, 6),
-                null
-            ]
-        );
+    describeCases('object context', {
+        '{| |a|,| |b| |}': [
+            null,
+            suggestion('a', ['foo', 'bar'], 2, 3),
+            suggestion('a', ['foo', 'bar'], 2, 3),
+            null,
+            suggestion('b', ['foo', 'bar'], 5, 6),
+            suggestion('b', ['foo', 'bar'], 5, 6),
+            null
+        ],
+        '$a123:1;{ 1234: 2 } <pipeline-op> {| |12|3| |}': [
+            null,
+            suggestion('123', ['$a123:variable', '1234'], 24, 27),
+            suggestion('123', ['$a123:variable', '1234'], 24, 27),
+            suggestion('123', ['$a123:variable', '1234'], 24, 27),
+            null
+        ],
+        '$stra:1;{ strb: 123 } <pipeline-op> {| |"|st|r|"| |}': [
+            null,
+            suggestion('"str"', ['$stra:variable', 'strb'], 26, 31),
+            suggestion('"str"', ['$stra:variable', 'strb'], 26, 31),
+            suggestion('"str"', ['$stra:variable', 'strb'], 26, 31),
+            suggestion('"str"', ['$stra:variable', 'strb'], 26, 31),
+            suggestion('"str"', ['$stra:variable', 'strb'], 26, 31),
+            null
+        ],
+        '$nulla:1;{ nullb: 123 } <pipeline-op> {| |nul|l| |}': [
+            null,
+            suggestion('null', ['$nulla:variable', 'nullb'], 28, 32),
+            suggestion('null', ['$nulla:variable', 'nullb'], 28, 32),
+            suggestion('null', ['$nulla:variable', 'nullb'], 28, 32),
+            null
+        ]
     });
 
     it('array context', () => {

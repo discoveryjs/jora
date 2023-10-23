@@ -27,23 +27,32 @@ describe('lang/object', () => {
 
     it('a string as property name', () => {
         assert.deepEqual(
-            query('{ "foo": 1, "a b": 2, \'bar\': 3, \'c d\': 4 }')(),
-            { foo: 1, 'a b': 2, bar: 3, 'c d': 4 }
+            query('{ "foo": 1, "a b": 2, \'bar\': 3, \'c d\': 4, "novalue" }')({ novalue: 'ok' }),
+            { foo: 1, 'a b': 2, bar: 3, 'c d': 4, novalue: 'ok' }
         );
     });
 
     it('a number as property name', () => {
         assert.deepEqual(
-            query('{ 1: 2, 0.3: 4, .5: 6, 7.5: 8 }')(),
-            { 1: 2, 0.3: 4, .5: 6, 7.5: 8 }
+            query('{ 1: 2, 0.3: 4, .5: 6, 7.5: 8, 42 }')({ 42: 'ok' }),
+            { 1: 2, 0.3: 4, .5: 6, 7.5: 8, 42: 'ok' }
         );
     });
 
-    it('a literal as property name', () => {
-        assert.deepEqual(
-            query('{ true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }')(),
-            { true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }
-        );
+    describe('a literal as property name', () => {
+        it('with no a value', () => {
+            const input = { true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 };
+            assert.deepEqual(
+                query('{ ok: true, true, false, null, undefined, NaN, Infinity }')(input),
+                { ok: true, ...input }
+            );
+        });
+        it('with a value', () => {
+            assert.deepEqual(
+                query('{ true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }')(),
+                { true: 1, false: 2, null: 3, undefined: 4, NaN: 5, Infinity: 6 }
+            );
+        });
     });
 
     it('a property name starting with $', () => {

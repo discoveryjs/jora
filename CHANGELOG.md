@@ -1,7 +1,9 @@
 ## next
 
-- Fixed listing suggestions inside empty parentheses
-- Fixed listing suggestions for `is` operator in tolerant mode when right part is empty
+- Added support for keyword literals (`null`, `undefined`, `true`, `false`, `NaN` and `Infinity`), numbers and strings as property name in an object literal when a value is not specified, i.e. `{ null }` is the same as `{ "null": $["null"] }`
+- Added suggestions listing for keyword literals as property name in an object literal
+- Fixed suggestions listing inside empty parentheses
+- Fixed suggestions listing for `is` operator in tolerant mode when right part is empty
 - Removed missed experimental keywords `if`, `then` and `else`
 
 ## 1.0.0-beta.8 (September 21, 2023)
