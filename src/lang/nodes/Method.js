@@ -14,7 +14,7 @@ export function compile(node, ctx, relatedNode) {
         if (ctx.usedMethods.has(node.reference.name)) {
             ctx.usedMethods.get(node.reference.name).push(node.reference.range);
         } else {
-            ctx.usedMethods.set(node.reference.name, node.reference.range);
+            ctx.usedMethods.set(node.reference.name, [node.reference.range]);
         }
 
         ctx.put('m.');

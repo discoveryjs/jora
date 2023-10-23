@@ -18,8 +18,6 @@ module.exports = function buildParsers(strictParser) {
         ['NOT', ["'not'"]],
         ['NO', ["'no'"]],
         ['IS', ["'is'"]],
-        ['THEN', ["'then'"]],
-        ['ELSE', ["'else'"]],
         ['IN', ["'in'"]],
         ['HAS', ["'has'"]],
         ['NOTIN', ["'not in'"]],
@@ -32,7 +30,9 @@ module.exports = function buildParsers(strictParser) {
         ['NUMBER', ['number']],
         ['REGEXP', ['regexp']],
         ['LITERAL', ["'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'"]],
-        ['ORDER', ["'asc'", "'desc'", "'ascN'", "'descN'"]]
+        ['ORDER', ["'asc'", "'desc'", "'ascN'", "'descN'"]],
+        ['METHOD(', ["'method('"]],
+        ['$METHOD(', ["'$method('"]]
     ]);
     const tokenForHumans = token => humanTokens.get(token) || `'${token}'`;
     const parseError = function(rawMessage, details = {}, yy) {
@@ -249,7 +249,7 @@ module.exports = function buildParsers(strictParser) {
     // patch tolerant parser lexer
     const keywords = [
         'AND', 'OR', 'IN', 'NOTIN', 'HAS', 'HASNO',
-        'IS', 'THEN', 'ELSE'
+        'IS'
     ];
     const words = [...keywords, 'NOT', 'NO', 'ORDER'];
     const operators = [
@@ -259,8 +259,9 @@ module.exports = function buildParsers(strictParser) {
     const prev = [
         null, '?', ':', ';',
         ',', '.', '..',
-        '(', '[',
-        '.(', '..(', '.[',
+        '(', '.(', '..(',
+        'METHOD(', '$METHOD(',
+        '[', '.[',
         'FUNCTION',
         ...operators,
         ...keywords,
@@ -276,7 +277,7 @@ module.exports = function buildParsers(strictParser) {
     ];
     const tokenPair = new Map(prev.map(token => [token, new Set(defaultNext)]));
     // special cases: empty blocks which are valid doen't need to be modified
-    for (const token of ['.(', '..(']) {
+    for (const token of ['.(', '..(', 'METHOD(', '$METHOD(']) {
         tokenPair.get(token).delete(')');
     }
     for (const token of ['[', '.[']) {
@@ -361,6 +362,8 @@ module.exports = function buildParsers(strictParser) {
         ['(', ')'],
         ['.(', ')'],
         ['..(', ')'],
+        ['METHOD(', ')'],
+        ['$METHOD(', ')'],
         ['[', ']'],
         ['.[', ']'],
         ['{', '}'],

@@ -46,9 +46,10 @@ const $5 = { code: '$5' };
 const $6 = { code: '$6' };
 const $r0 = { code: '@0.range' };
 const $r1 = { code: '@1.range' };
+const $rm1 = { code: '[@1.range[0],@1.range[1]-1]' };
 const $rr = { code: '[@1.range[1],@1.range[1]]' };
 const $placeholder = { code: { ...Placeholder(), range: $rr } };
-const refs = new Set([$0, $1, $1string, $1name, $$1name, $2, $3, $4, $5, $6, $r0, $r1, $rr, $placeholder]);
+const refs = new Set([$0, $1, $1string, $1name, $$1name, $2, $3, $4, $5, $6, $r0, $r1, $rm1, $rr, $placeholder]);
 const asis = '';
 
 function isPlainObject(value) {
@@ -98,6 +99,14 @@ function $$(node) {
 // with `queryRule` when declarator specified aside
 function DeclaratorWithRange(name) {
     return Object.assign(Declarator(name), { range: $r1 });
+}
+
+function MethodIdentifier(name) {
+    return Object.assign(Identifier(name), { range: $rm1 });
+}
+
+function MethodReference(name) {
+    return Object.assign(Reference(name), { range: $rm1 });
 }
 
 function createCommaList(name, element) {
@@ -209,6 +218,7 @@ exports.lex = {
         // keyword operators (should goes before IDENT)
         ['and{wb}', 'return "AND";'],
         ['or{wb}', 'return "OR";'],
+        ['is{wb}', 'return "IS";'],
         ['has{ws}no{wb}', 'return "HASNO";'],
         ['has{wb}', 'return "HAS";'],
         ['in{wb}', 'return "IN";'],
@@ -217,7 +227,9 @@ exports.lex = {
         ['no{wb}', 'return "NO";'],
         ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
-        ['is{wb}', 'return "IS";'],
+        // methods
+        ['{ident}\\(', 'yytext = this.ident(yytext.slice(0, -1)); return "METHOD(";'],
+        ['\\${ident}\\(', 'yytext = this.ident(yytext.slice(1, -1)); return "$METHOD(";'],
 
         // primitives
         ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = Number(yytext); return "NUMBER";'],
@@ -437,10 +449,10 @@ exports.bnf = {
     ],
 
     'method()': [
-        ['ident ( )', $$(Method($1, []))],
-        ['ident ( arguments )', $$(Method($1, $3))],
-        ['$ident ( )', $$(Method(Reference($1), []))],
-        ['$ident ( arguments )', $$(Method(Reference($1), $3))]
+        ['METHOD( )', $$(Method(MethodIdentifier($1), []))],
+        ['METHOD( arguments )', $$(Method(MethodIdentifier($1), $2))],
+        ['$METHOD( )', $$(Method(MethodReference(MethodIdentifier($1)), []))],
+        ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2))]
     ],
     arguments: createCommaList('arguments', 'e'),
 

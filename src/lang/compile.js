@@ -227,7 +227,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         if (usedMethods.size) {
             buffer.unshift(' this.assertMethods(m)||');
             initCtx.assertMethods = function(providedMethods) {
-                for (const [method, range] of usedMethods.entries()) {
+                for (const [method, ranges] of usedMethods.entries()) {
                     if (!hasOwn(providedMethods, method)) {
                         return () => {
                             throw Object.assign(
@@ -235,7 +235,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                                     `Method "${method}" is not defined. If that's a custom method ` +
                                     'make sure you added it with "methods" section in options'
                                 ),
-                                { details: { loc: { range } } }
+                                { details: { loc: { range: ranges[0] } } }
                             );
                         };
                     }

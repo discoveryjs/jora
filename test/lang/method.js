@@ -5,7 +5,7 @@ describe('lang/method', () => {
     describe('regular method', () => {
         let queryWithExtraMethods;
 
-        beforeEach(() => queryWithExtraMethods = query.setup({
+        before(() => queryWithExtraMethods = query.setup({
             methods: {
                 args(...args) {
                     return args;
@@ -20,6 +20,13 @@ describe('lang/method', () => {
             assert.deepEqual(
                 queryWithExtraMethods('args()')(42),
                 [42]
+            );
+        });
+
+        it('a whitespace between method name and open parenthesis is disallowed', () => {
+            assert.throws(
+                () => queryWithExtraMethods('args ()')(42),
+                /Parse error/
             );
         });
 

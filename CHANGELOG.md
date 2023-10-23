@@ -1,5 +1,6 @@
 ## next
 
+- Disallowed whitespace between a method name and open parenthesis
 - Added support for keyword literals (`null`, `undefined`, `true`, `false`, `NaN` and `Infinity`), numbers and strings as property name in an object literal when a value is not specified, i.e. `{ null }` is the same as `{ "null": $["null"] }`
 - Added suggestions listing for keyword literals as property name in an object literal
 - Fixed suggestions listing inside empty parentheses
