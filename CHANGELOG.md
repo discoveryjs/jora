@@ -6,7 +6,8 @@
 - Added suggestions listing for keyword literals as property name in an object literal
 - Fixed suggestions listing inside empty parentheses
 - Fixed suggestions listing for `is` operator in tolerant mode when right part is empty
-- Removed missed experimental keywords `if`, `then` and `else`
+- Fixed duplicates in `has` operator suggestions
+- Removed missed experimental `if`, `then` and `else` keyword tokens in parser
 
 ## 1.0.0-beta.8 (September 21, 2023)
 

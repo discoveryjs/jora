@@ -36,7 +36,7 @@ function linearSuggestions(suggestionsByType) {
     return suggestions;
 }
 
-function suggestQuery(str, data, options) {
+function suggestQuery(str, data, options, limitSort = false) {
     let offset = 0;
     const suggestPoints = [];
     const clearedStr = str
@@ -58,7 +58,9 @@ function suggestQuery(str, data, options) {
         .join('');
     const stat = query(clearedStr, { tolerant: true, ...options, stat: true })(data, context);
 
-    return suggestPoints.map(idx => linearSuggestions(stat.suggestion(idx)));
+    return suggestPoints.map(idx => linearSuggestions(
+        stat.suggestion(idx, limitSort ? { limit: 50, sort: true } : undefined)
+    ));
 }
 
 function suggestion(text, list, from, to = from) {
@@ -82,6 +84,18 @@ function describeCasesWithOptions(title, options, cases) {
                 assert.deepEqual(
                     suggestQuery(queryString, data, options),
                     expected
+                );
+            });
+            (queryString[0] === '!' ? it.skip : it)(queryString + ' // limit & sort', () => {
+                assert.deepEqual(
+                    suggestQuery(queryString, data, options, true),
+                    expected.slice().map(s =>
+                        s && s.slice().sort((a, b) => a.type !== b.type
+                            ? 0
+                            : a.type === 'value'
+                                ? query.buildin.cmp(JSON.parse(a.value), JSON.parse(b.value))
+                                : query.buildin.cmp(a.value, b.value))
+                    )
                 );
             });
         });
@@ -894,194 +908,162 @@ describe('query/suggestions (tolerant mode)', () => {
     });
 
     describe('value suggestion', () => {
-        describe('in', () => {
-            Object.entries({
-                '|_| |i|n| ["a", "b", 3]': [
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
-                    null,
-                    null,
-                    null
-                ],
-                '|_| |i|n| { "a": 1, "b": 2 }': [
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
-                    null,
-                    null,
-                    null
-                ],
-                'keys().[$ in [| |]]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 14),
-                    suggestion('', ['"foo":value', '"bar":value'], 15)
-                ],
-                'foo.[b in [| |]]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 11),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 12)
-                ],
-                // FIXME: split in several test cases
-                '["a", "b", "c", "d", 1, 2].[$a:"a"; $ in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
-                    null,
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
-                    null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
-                    null,
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
-                    null,
-                    suggestion('$a', ['$a:variable'], 54, 56),
-                    suggestion('$a', ['$a:variable'], 54, 56),
-                    suggestion('$a', ['$a:variable'], 54, 56),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 57),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 58)
-                ]
-            }).forEach(([queryString, expected]) =>
-                it(queryString, () =>
-                    assert.deepEqual(
-                        suggestQuery(queryString, data),
-                        expected
-                    )
-                )
-            );
+        describeCasesTolerant('in', {
+            '|_| |i|n| ["a", "b", 3]': [
+                suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 0, 1),
+                null,
+                null,
+                null
+            ],
+            '|_| |i|n| { "a": 1, "b": 2 }': [
+                suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
+                suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 0, 1),
+                null,
+                null,
+                null
+            ],
+            'keys().[$ in [| |]]': [
+                suggestion('', ['"foo":value', '"bar":value'], 14),
+                suggestion('', ['"foo":value', '"bar":value'], 15)
+            ],
+            'foo.[b in [| |]]': [
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 11),
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 12)
+            ],
+            // FIXME: split in several test cases
+            '["a", "b", "c", "d", 1, 2].[$a:"a"; $ in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
+                null,
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 43, 46),
+                null,
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 48, 49),
+                null,
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 51, 52),
+                null,
+                suggestion('$a', ['$a:variable'], 54, 56),
+                suggestion('$a', ['$a:variable'], 54, 56),
+                suggestion('$a', ['$a:variable'], 54, 56),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 57),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 58)
+            ]
         });
 
-        describe('not in', () => {
-            Object.entries({
-                'keys().[$ not in [| |]]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 18),
-                    suggestion('', ['"foo":value', '"bar":value'], 19)
-                ],
-                'foo.[b not in [| |]]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 15),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 16)
-                ],
-                // FIXME: split in several test cases
-                '["a", "b", "c", "d", 1, 2].[$a:"a"; $ not in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
-                    null,
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
-                    null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
-                    null,
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
-                    null,
-                    suggestion('$a', ['$a:variable'], 58, 60),
-                    suggestion('$a', ['$a:variable'], 58, 60),
-                    suggestion('$a', ['$a:variable'], 58, 60),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 61),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 62)
-                ]
-            }).forEach(([queryString, expected]) =>
-                it(queryString, () =>
-                    assert.deepEqual(
-                        suggestQuery(queryString, data),
-                        expected
-                    )
-                )
-            );
+        describeCasesTolerant('not in', {
+            'keys().[$ not in [| |]]': [
+                suggestion('', ['"foo":value', '"bar":value'], 18),
+                suggestion('', ['"foo":value', '"bar":value'], 19)
+            ],
+            'foo.[b not in [| |]]': [
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 15),
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 16)
+            ],
+            // FIXME: split in several test cases
+            '["a", "b", "c", "d", 1, 2].[$a:"a"; $ not in [| |"|b|"|,| |d|,| |1|,| |$|a|,| |]]': [
+                null,
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 47, 50),
+                null,
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52, 53),
+                null,
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 55, 56),
+                null,
+                suggestion('$a', ['$a:variable'], 58, 60),
+                suggestion('$a', ['$a:variable'], 58, 60),
+                suggestion('$a', ['$a:variable'], 58, 60),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 61),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 62)
+            ]
         });
 
-        describe('has', () => {
-            Object.entries({
-                '["a", "b", 3] |h|a|s| |_|': [
-                    null,
-                    null,
-                    null,
-                    null,
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
-                    suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
-                ],
-                '{ "a": 1, "b": 2 } |h|a|s| |_|': [
-                    null,
-                    null,
-                    null,
-                    null,
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24),
-                    suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24)
-                ],
-                'keys().[[| |] has $]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 9),
-                    suggestion('', ['"foo":value', '"bar":value'], 10)
-                ],
-                'foo.[[| |] has b]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
-                ],
-                // FIXME: split in several test cases
-                '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has $]': [
-                    null,
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    null,
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
-                    null,
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
-                ]
-            }).forEach(([queryString, expected]) =>
-                it(queryString, () =>
-                    assert.deepEqual(
-                        suggestQuery(queryString, data),
-                        expected
-                    )
-                )
-            );
+        describeCasesTolerant('has', {
+            '["a", "b", 3] |h|a|s| |_|': [
+                null,
+                null,
+                null,
+                null,
+                suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19),
+                suggestion('_', ['"a":value', '"b":value', '3:value', 'foo', 'bar'], 18, 19)
+            ],
+            '{ "a": 1, "b": 2 } |h|a|s| |_|': [
+                null,
+                null,
+                null,
+                null,
+                suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24),
+                suggestion('_', ['"a":value', '"b":value', 'foo', 'bar'], 23, 24)
+            ],
+            'keys().[[| |] has $]': [
+                suggestion('', ['"foo":value', '"bar":value'], 9),
+                suggestion('', ['"foo":value', '"bar":value'], 10)
+            ],
+            'foo.[[| |] has b]': [
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
+            ],
+            // duplicate values
+            '[1, 2, 3].[["abc"] has |]': [
+                suggestion('', ['"abc":value'], 23)
+            ],
+            // FIXME: split in several test cases
+            '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has $]': [
+                null,
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                null,
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                null,
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
+                null,
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
+            ]
         });
 
-        describe('has no', () => {
-            Object.entries({
-                'keys().[[| |] has no $]': [
-                    suggestion('', ['"foo":value', '"bar":value'], 9),
-                    suggestion('', ['"foo":value', '"bar":value'], 10)
-                ],
-                'foo.[[| |] has no b]': [
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
-                    suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
-                ],
-                // FIXME: split in several test cases
-                '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has no $]': [
-                    null,
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
-                    null,
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
-                    null,
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
-                    suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
-                    null,
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('$a', ['$a:variable'], 48, 50),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
-                    suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
-                ]
-            }).forEach(([queryString, expected]) =>
-                it(queryString, () =>
-                    assert.deepEqual(
-                        suggestQuery(queryString, data),
-                        expected
-                    )
-                )
-            );
+        describeCasesTolerant('has no', {
+            'keys().[[| |] has no $]': [
+                suggestion('', ['"foo":value', '"bar":value'], 9),
+                suggestion('', ['"foo":value', '"bar":value'], 10)
+            ],
+            'foo.[[| |] has no b]': [
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 6),
+                suggestion('', ['2:value', '3:value', 'a', 'b', 'c', 'd'], 7)
+            ],
+            // FIXME: split in several test cases
+            '["a", "b", "c", "d", 1, 2].[$a:"a";[| |"|b|"|,| |d|,| |1|,| |$|a|,| |] has no $]': [
+                null,
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                suggestion('"b"', ['"a":value', '"c":value', '"d":value', '2:value'], 37, 40),
+                null,
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                suggestion('d', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 42, 43),
+                null,
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
+                suggestion('1', ['"a":value', '"c":value', '"d":value', '2:value'], 45, 46),
+                null,
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('$a', ['$a:variable'], 48, 50),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 51),
+                suggestion('', ['"a":value', '"c":value', '"d":value', '2:value', '$a:variable'], 52)
+            ]
         });
 
         ['=', '!='].forEach(operator => {

@@ -2,12 +2,13 @@ const defaultMinCompare = (a, b) => a - b;
 const defaultMaxCompare = (a, b) => b - a;
 
 export class Heap {
-    constructor(maxSize, compare, accept) {
+    constructor(maxSize, compare, accept, disallowDuplicates = false) {
         this.maxSize = maxSize || Infinity;
         this.compare = compare || defaultMaxCompare;
         this.accept = accept || null;
 
         this.values = [];
+        this.valuesSet = disallowDuplicates ? new Set() : null;
     }
 
     add(value) {
@@ -15,10 +16,23 @@ export class Heap {
             return;
         }
 
+        if (this.valuesSet !== null && this.valuesSet.has(value)) {
+            return;
+        }
+
         if (this.values.length < this.maxSize) {
+            if (this.valuesSet !== null) {
+                this.valuesSet.add(value);
+            }
+
             this.values.push(value);
             this.heapifyUp(this.values.length - 1);
         } else if (this.compare(this.values[0], value) > 0) {
+            if (this.valuesSet !== null) {
+                this.valuesSet.delete(this.values[0]);
+                this.valuesSet.add(value);
+            }
+
             this.values[0] = value;
             this.heapifyDown();
         }
@@ -37,6 +51,10 @@ export class Heap {
         if (this.values.length > 0) {
             this.values[0] = lastValue;
             this.heapifyDown();
+        }
+
+        if (this.valuesSet !== null) {
+            this.valuesSet.delete(topValue);
         }
 
         return topValue;
@@ -116,11 +134,12 @@ export class Heap {
 
 export class MaxHeap extends Heap {};
 export class MinHeap extends Heap {
-    constructor(maxSize, compare, accept) {
+    constructor(maxSize, compare, accept, allowDuplicates) {
         super(
             maxSize,
             compare ? (a, b) => -compare(a, b) : defaultMinCompare,
-            accept
+            accept,
+            allowDuplicates
         );
     }
 };

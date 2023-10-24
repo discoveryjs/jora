@@ -203,7 +203,8 @@ export default (source, { value, stats, assertions }) => ({
                         storage = new MaxHeap(
                             limit,
                             sort,
-                            filterFactory && filterFactory(normalizeFilterPattern(text))
+                            filterFactory && filterFactory(normalizeFilterPattern(text)),
+                            true
                         );
                         break;
 
