@@ -134,6 +134,7 @@ function compileQuery(
                     .sort((a, b) => a[1] - b[1]));
                 const groupedRanges = [];
                 let prevGroupedRange = null;
+                const queryStat = queryFn(data, context);
 
                 for (let i = 0; i < ranges.length; i++) {
                     const [node, start, end, type, related] = ranges[i];
@@ -169,8 +170,7 @@ function compileQuery(
                                     return null;
                                 }
 
-                                const res = queryFn(data, context);
-                                return res.suggestion(start);
+                                return queryStat.suggestion(start);
                             },
                             defs,
                             tooltip: querySuggestionRangeTooltip
@@ -178,6 +178,7 @@ function compileQuery(
                     })
                 });
             } catch (error) {
+                statSectionEl.classList.add('not-available');
                 statSectionEl.textContent = String(error);
             }
         } else {
