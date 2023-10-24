@@ -152,7 +152,8 @@ exports.lex = {
     },
     startConditions: {
         preventPrimitive: 0,
-        template: 1
+        preventKeyword: 1,
+        template: 2
     },
     rules: [
         // ignore comments and whitespaces
@@ -166,6 +167,21 @@ exports.lex = {
         // when no input left and doesn't take into account current state;
         // should be fixed in `regexp-lexer`
         [['preventPrimitive'], '', function() {
+            this.done = false;
+            this.popState();
+        }],
+
+        [['preventKeyword'], '{ident}\\(?', function(yy, yytext) {
+            this.popState();
+            if (yytext.endsWith('(')) {
+                this.unput(yytext);
+                return;
+            }
+            yy.pps();
+            yytext = this.ident(yytext);
+            return 'IDENT';
+        }],
+        [['preventKeyword'], '', function() {
             this.done = false;
             this.popState();
         }],
@@ -271,8 +287,8 @@ exports.lex = {
         ['\\.\\(', 'return ".(";'],
         ['\\.\\[', 'return ".[";'],
         ['\\.\\.\\.', 'return "...";'],
-        ['\\.\\.', 'yy.pps(); return "..";'],
-        ['\\.', 'yy.pps(); return ".";'],
+        ['\\.\\.', 'yy.pps(); yy.pks(); return "..";'],
+        ['\\.', 'yy.pps(); yy.pks(); return ".";'],
         ['\\?\\?', 'return "??";'],
         ['\\?', 'return "?";'],
         [',', 'return ",";'],

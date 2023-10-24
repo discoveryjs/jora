@@ -1,6 +1,7 @@
 ## next
 
 - Disallowed whitespace between a method name and open parenthesis
+- Allowed keywords as a property getter in query chains when a dot is before the keyword. For example, `.has.and.is` is now a valid query, while `has.and` is not valid due to the missing dot before `has`.
 - Added support for keyword literals (`null`, `undefined`, `true`, `false`, `NaN` and `Infinity`), numbers and strings as property name in an object literal when a value is not specified, i.e. `{ null }` is the same as `{ "null": $["null"] }`
 - Added suggestions listing for keyword literals as property name in an object literal
 - Fixed suggestions listing inside empty parentheses

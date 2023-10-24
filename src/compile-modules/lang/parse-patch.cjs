@@ -217,6 +217,13 @@ module.exports = function buildParsers(strictParser) {
                 // parser doesn't expose sharedState and it's unavailable in parseError
                 return parseError.call(this, ...args, yy);
             };
+            // preventKeyword state
+            yy.pks = () => {
+                if (!this.eof()) {
+                    this.begin('preventKeyword');
+                }
+            };
+            // preventPrimitive state
             yy.pps = () => {
                 if (!this.eof()) {
                     this.begin('preventPrimitive');
