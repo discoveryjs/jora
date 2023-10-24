@@ -87,12 +87,11 @@ exports.Filter = function(value, query) {
         query
     };
 };
-exports.Function = function(args, body, legacy) {
+exports.Function = function(args, body) {
     return {
         type: 'Function',
         arguments: args,
-        body,
-        legacy: Boolean(legacy)
+        body
     };
 };
 exports.GetProperty = function(value, property) {

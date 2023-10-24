@@ -12,8 +12,6 @@ module.exports = function buildParsers(strictParser) {
         ['EOF', ['<end of input>']],
         ['IDENT', ['ident']],
         ['$IDENT', ['$ident']],
-        ['FUNCTION_START', ["'<'"]],
-        ['FUNCTION_END', ["'>'"]],
         ['FUNCTION', ["'=>'"]],
         ['NOT', ["'not'"]],
         ['NO', ["'no'"]],
@@ -230,8 +228,6 @@ module.exports = function buildParsers(strictParser) {
                 }
             };
 
-            this.fnOpened = 0;
-            this.fnOpenedStack = [];
             this.bracketStack = [];
             this.prevToken = null;
             this.prevYylloc = {
@@ -386,14 +382,10 @@ module.exports = function buildParsers(strictParser) {
             if (expected !== token) {
                 this.parseError(`Expected "${expected}" got "${token}"`);
             }
-
-            this.fnOpened = this.fnOpenedStack.pop() || 0;
         }
 
         if (openBalance.has(token)) {
             this.bracketStack.push(openBalance.get(token));
-            this.fnOpenedStack.push(this.fnOpened);
-            this.fnOpened = 0;
         }
 
         return token;

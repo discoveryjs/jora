@@ -264,10 +264,6 @@ exports.lex = {
 
         // functions
         ['=>', 'return "FUNCTION";'],
-        ['<(?!=)', function() {
-            this.fnOpened++;
-            return 'FUNCTION_START';
-        }],
 
         // operators
         ['=', 'return "=";'],
@@ -276,13 +272,7 @@ exports.lex = {
         ['>=', 'return ">=";'],
         ['<=', 'return "<=";'],
         ['<', 'return "<";'],
-        ['>', function() {
-            if (this.fnOpened) {
-                this.fnOpened--;
-                return 'FUNCTION_END';
-            }
-            return '>';
-        }],
+        ['>', 'return ">";'],
         ['\\.\\.\\(', 'return "..(";'],
         ['\\.\\(', 'return ".(";'],
         ['\\.\\[', 'return ".[";'],
@@ -377,7 +367,6 @@ exports.bnf = {
         ['query', asis],
 
         // functions
-        ['FUNCTION_START block FUNCTION_END', $$(Function([], $2, true))],
         ['FUNCTION e', $$(Function([], $2))],
         ['compareFunction', $$(CompareFunction($1))],
 
