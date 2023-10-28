@@ -89,8 +89,9 @@ function describeCasesWithOptions(title, options, cases) {
             (queryString[0] === '!' ? it.skip : it)(queryString + ' // limit & sort', () => {
                 assert.deepEqual(
                     suggestQuery(queryString, data, options, true),
-                    expected.slice().map(s =>
-                        s && s.slice().sort((a, b) => a.type !== b.type
+                    expected.slice().map(variants =>
+                        // use methods.sort() since it provides stable sorting for old engines
+                        variants && query.methods.sort(variants, (a, b) => a.type !== b.type
                             ? 0
                             : a.type === 'value'
                                 ? query.buildin.cmp(JSON.parse(a.value), JSON.parse(b.value))
