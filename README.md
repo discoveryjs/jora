@@ -71,7 +71,7 @@ Jora expressions are the building blocks of Jora queries. Expressions can includ
 Jora supports literals, which include:
 
 - Numbers: `42`, `-3.14`, `6.022e23`
-- Strings: `"hello"`, `'world'`, `"\u{1F600}"`
+- Strings: `"hello"`, `'world'`, `\`template${yes}\``, `"\u{1F600}"`
 - Booleans: `true`, `false`
 - Regular expressions: `/regexp/flags`
 - Object literals: `{ hello: 'world' }` (see [Object literals](https://discoveryjs.github.io/jora/#article:jora-syntax-object-literal))
@@ -87,7 +87,7 @@ Jora supports most JavaScript operators, including:
 
 - Arithmetic: `+`, `-`, `*`, `/`, `%`
 - Comparison: `=`, `!=`, `<`, `<=`, `>`, `>=`, `~=`
-- Logical: `and`, `or`, `not` (alias `no`), `??`, `in`, `not in`, `has`, `has no`
+- Logical: `and`, `or`, `not` (alias `no`), `??`, `is`, `in`, `not in`, `has`, `has no`
 - Ternary: `?:`
 - Grouing: `( )`
 - Pipeline: `|`
