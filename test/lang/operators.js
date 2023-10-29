@@ -712,6 +712,39 @@ describe('lang/operators', () => {
             );
         });
 
+        describe('should has the same precedence as the pipeline operator', () => {
+            // with higher precedence the query might not be parsed
+            const cases = [
+                { query: '? 1 | 2 : 0', expected: 2, data: true },
+                { query: '? 1 | 2 : 0', expected: 0, data: false },
+                { query: '? 1 | 2 : 0 | 3', expected: 2, data: true },
+                { query: '? 1 | 2 : 0 | 3', expected: 3, data: false },
+
+                { query: 'true ? 1 | 2 : 0', expected: 2 },
+                { query: 'false ? 1 | 2 : 0', expected: 0 },
+                { query: 'true ? 1 | 2 : 0 | 3', expected: 2 },
+                { query: 'false ? 1 | 2 : 0 | 3', expected: 3 },
+
+                { query: 'true | ? 1 | 2 : 0', expected: 2 },
+                { query: 'false | ? 1 | 2 : 0', expected: 0 },
+                { query: 'true | ? 1 | 2 : 0 | 3', expected: 2 },
+                { query: 'false | ? 1 | 2 : 0 | 3', expected: 3 },
+
+                // should be treated as { a: 1 } | (2 ? a : 0)
+                // for "({ a: 1 } | 2) ? a : 0" returns undefined
+                { query: '{ a: 1 } | 2 ? a : 0', expected: 1 }
+            ];
+
+            for (const { query: squery, data, expected } of cases) {
+                it(squery, () => {
+                    assert.deepEqual(
+                        query(squery)(data),
+                        expected
+                    );
+                });
+            }
+        });
+
         describe('omit parts', () => {
             const data = { foo: 1, bar: 2 };
             const testcases = [

@@ -127,6 +127,11 @@ undefined ?? 1 // 1
 false ?? 1     // false
 1234 ?? 1      // 1234
 
+// IS operator
+[] is array    // true
+[] is number   // false
+{} is (boolean or string) // false
+
 // IN operator
 1 in [1, 2, 3] // true
 4 in [1, 2, 3] // false
@@ -269,9 +274,9 @@ The following table shows the operators' precedence from lowest to highest:
 
 | Precedence | Operator |
 |-----:|---|
-| (lowest) 1 | `\|`
-| 2 | `,`
-| 3 | `?:`
+| (lowest) 1 | `,`
+| 2 | `?:` `\|`
+| 3 | `is`
 | 4 | `or`
 | 5 | `and`
 | 6 | `??`
@@ -279,6 +284,6 @@ The following table shows the operators' precedence from lowest to highest:
 | 8 | `in` `not in` `has` `has no`
 | 9 | `=` `!=` `~=`
 | 10 | `<` `<=` `>` `>=`
-| 12 | `+` `-`
-| 13 | `*` `/` `%`
-| (highest) 14 | `( … )`
+| 11 | `+` `-`
+| 12 | `*` `/` `%`
+| (highest) 13 | `( … )`

@@ -49,4 +49,18 @@ describe('lang/pipeline', () => {
             [3, 2, 1]
         );
     });
+
+    it('complex pipeline #2', () => {
+        assert.deepEqual(
+            query('foo ? 1 | $a: $; 2 + $a : 0')(data),
+            3
+        );
+    });
+
+    it('complex pipeline #3', () => {
+        assert.deepEqual(
+            query('"str" | 0 or 1 | $ ? $ : "fail"')(data),
+            1
+        );
+    });
 });
