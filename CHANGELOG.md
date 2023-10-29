@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.9 (October 29, 2023)
 
 - Removed support for a legacy syntax for functions, i.e. `<expr>`
 - Changed the precedence of the pipeline operator to match that of the ternary operator to prevent parsing errors in certain cases
