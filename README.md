@@ -3,8 +3,6 @@
 [![NPM version](https://img.shields.io/npm/v/jora.svg)](https://www.npmjs.com/package/jora)
 [![Build Status](https://github.com/discoveryjs/jora/actions/workflows/build.yml/badge.svg)](https://github.com/discoveryjs/jora/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/discoveryjs/jora/badge.svg?branch=master)](https://coveralls.io/github/discoveryjs/jora?branch=master)
-[![Minified size](https://badgen.net/bundlephobia/min/jora)](https://bundlephobia.com/result?p=jora)
-[![Minified + gzip size](https://badgen.net/bundlephobia/minzip/jora)](https://bundlephobia.com/result?p=jora)
 [![Twitter](https://badgen.net/badge/follow/@js_discovery?icon=twitter)](https://twitter.com/js_discovery)
 
 JavaScript object query language, and a library to process and perform Jora queries on data.
