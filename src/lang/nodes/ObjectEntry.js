@@ -28,6 +28,7 @@ export function compile(node, ctx) {
 
     switch (node.key.type) {
         case 'Current':
+            ctx.put('...null');
             return;
 
         case 'Literal':

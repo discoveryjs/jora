@@ -60,6 +60,10 @@ describe('lang/object', () => {
             query('{ $foo: 1 }')(),
             { $foo: 1 }
         );
+        assert.deepEqual(
+            query('$foo: 42; { $, $foo }')(123),
+            { foo: 42 }
+        );
     });
 
     it('computed properties', () => {

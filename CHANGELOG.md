@@ -1,3 +1,7 @@
+## next
+
+- Fixed a query compilation error when `$` was used as an object entry, e.g. `{ $, prop: 1 }`
+
 ## 1.0.0-beta.9 (October 29, 2023)
 
 - Removed support for a legacy syntax for functions, i.e. `<expr>`
