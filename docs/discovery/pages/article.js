@@ -1,23 +1,118 @@
 /* global discovery */
+/* eslint-env browser */
+
+const toc = {
+    view: 'content-filter',
+    className: 'toc-filter',
+    content: [
+        {
+            view: 'list',
+            data: `
+                #.data.methods
+                    .[name ~= #.filter]
+                    .group(=>namespace or "")
+                    .({
+                        namespace: key,
+                        methodGroups: value.sort(name ascN)
+                            .group(=> name[0])
+                            .({ litera: key, methods: value })
+                    })
+                    .sort(namespace ascN)
+            `,
+            item: [
+                {
+                    view: 'block',
+                    when: 'namespace',
+                    className: 'toc-section-header',
+                    content: 'text:namespace'
+                },
+                {
+                    view: 'inline-list',
+                    data: 'methodGroups',
+                    limit: false,
+                    itemConfig: {
+                        className: 'toc-group-item'
+                    },
+                    item: [
+                        {
+                            view: 'block',
+                            className: 'toc-litera',
+                            when: 'litera',
+                            content: 'text:litera.toUpperCase() + " "'
+                        },
+                        {
+                            view: 'inline-list',
+                            className: 'toc-group',
+                            data: 'methods',
+                            limit: false,
+                            item: [
+                                {
+                                    view: 'link',
+                                    data: '{ href: `#${#.page}:${#.id}&!anchor=` + name, text: name, match: #.filter }',
+                                    content: 'text-match'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+};
+
 discovery.page.define('article', {
     view: 'context',
     data: 'articles | $ + ..($parent:$; children.({ ..., $parent })) | $[=>slug=#.id]',
     content: [
         {
             view: 'page-header',
-            content: {
-                view: 'h1',
-                data: '$ + ..parent | reverse().title',
-                content: {
-                    view: 'inline-list',
-                    className: 'article-path'
+            content: [
+                {
+                    view: 'h1',
+                    data: '$ + ..parent | reverse().title',
+                    content: [
+                        {
+                            view: 'inline-list',
+                            className: 'article-path'
+                        }
+                    ]
+                }, {
+                    view: 'block',
+                    when: '#.id = "jora-syntax-methods-builtin"',
+                    className: 'scroll-to-top',
+                    content: {
+                        view: 'button',
+                        className: 'scroll-to-top-button',
+                        content: 'text:"Scroll to top"',
+                        onClick(el) {
+                            el.closest('.discovery-content').scrollTop = 0;
+                            discovery.setPageParams({});
+                        }
+                    }
                 }
-            }
+            ]
         },
+
+        {
+            view: 'context',
+            when: '#.id = "jora-syntax-methods-builtin"',
+            content: toc
+        },
+
         {
             view: 'markdown',
             data: 'content',
             codeConfig: 'example',
+            postRender(el, _, __, context) {
+                if (context.id === 'jora-syntax-methods-builtin') {
+                    [...el.querySelectorAll('.view-h2')].forEach(h2 => {
+                        const comment = h2.childNodes[2];
+                        if (comment?.nodeType === 8) {
+                            h2.replaceChild(document.createTextNode(comment.nodeValue), comment);
+                        }
+                    });
+                }
+            },
             sectionPrelude: {
                 view: 'block',
                 className: 'changelog',

@@ -86,7 +86,7 @@
 .view-struct_code-postlude {
     padding-top: 1px;
     padding-bottom: 1px;
-    padding-left: 29px;
+    padding-left: 30px;
 }
 .view-struct_code-postlude:not(.struct-expanded-value, :hover) {
     background-color: transparent;

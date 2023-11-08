@@ -9,3 +9,68 @@
 .page-article .prev-next-nav {
     margin-top: 2em;
 }
+
+.page-article .view-page-header__content {
+    display: flex;
+    align-items: center;
+    gap: 1ex;
+}
+.page-article .scroll-to-top {
+    margin-top: 5px;
+    transition: .25s ease-in;
+    transition-property: opacity, visibility;
+    opacity: 0;
+    visibility: hidden;
+}
+.page-article.page_overscrolled .scroll-to-top {
+    opacity: 1;
+    visibility: visible;
+}
+.page-article .scroll-to-top-button {
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.page-article .toc-section-header {
+    text-transform: uppercase;
+    font-size: 11px;
+    opacity: .85;
+    margin: 8px 0 0 0;
+}
+.page-article .toc-group-item {
+    white-space: nowrap;
+    margin-right: 1ex;
+}
+.page-article .toc-litera {
+    display: inline-block;
+    color: #888;
+    text-transform: uppercase;
+    margin-right: 1ex;
+}
+.page-article .toc-group {
+    display: inline-flex;
+    gap: .75ex;
+}
+
+.page-article .toc-filter {
+    margin-top: -20px;
+    margin-left: -10px;
+    margin-right: -10px;
+    max-width: 870px;
+}
+.page-article .toc-filter > .view-input {
+    margin-bottom: .5em;
+}
+.page-article .toc-filter > .content .view-list {
+    margin-left: 10px;
+}
+.page-article .toc-filter > .content .view-list::before {
+    padding: 0;
+}
+
+.page-article .toc-filter .view-text-match {
+    background: #68624685;
+    text-decoration-color: #8b7b42;
+    border: none;
+    color: #b6aa6a;
+}

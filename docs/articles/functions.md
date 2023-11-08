@@ -33,7 +33,7 @@ $example: => [$, $$];
 // Result: [1, 2]
 ```
 
-The following example demonstrates how to sum up an array using [`reduce()`](./methods-builtin.md#reducefn-initvalue) method and a function, where `$` is an array element and `$$` is an accumulator value:
+The following example demonstrates how to sum up an array using [`reduce()`](./methods-builtin.md#reduce) method and a function, where `$` is an array element and `$$` is an accumulator value:
 
 ```jora
 [1, 2, 3, 4].reduce(=> $$ + $, 0)
@@ -80,7 +80,7 @@ foo asc, bar.size() desc
 //     0
 ```
 
-These functions are useful for built-in methods like [`sort()`](./sort.md), [`min()`](./methods-builtin.md#mincompare), [`max()`](./methods-builtin.md#maxcompare) and others.
+These functions are useful for built-in methods like [`sort()`](./sort.md), [`min()`](./methods-builtin.md#min), [`max()`](./methods-builtin.md#max) and others.
 
 ```jora
 $input: [{ foo: 3 }, { foo: 1 }, { foo: 5 }];

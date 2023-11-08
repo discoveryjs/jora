@@ -4,6 +4,12 @@ const assert = require('assert');
 const marked = require('marked');
 const jora = require('jora');
 const { parseExample } = require('./parse-example.js');
+const mathMethods = new Set([
+    'abs', 'acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
+    'cbrt', 'ceil', 'clz32', 'cos', 'cosh', 'exp', 'expm1', 'floor',
+    'fround', 'hypot', 'imul', 'ln', 'log10', 'ln1p', 'log2', 'pow',
+    'round', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc'
+]);
 
 function md(filename) {
     return fs.readFileSync(path.join(__dirname, filename) + '.md', 'utf8');
@@ -152,7 +158,11 @@ function processChangelog(changelog, methods) {
 
 module.exports = function() {
     const examples = [];
-    const methods = Object.keys(jora.methods).sort().map(name => ({ name, examples: [] }));
+    const methods = Object.keys(jora.methods).sort().map(name => ({
+        name,
+        namespace: mathMethods.has(name) ? 'math' : undefined,
+        examples: []
+    }));
     const changelog = { slug: 'changelog', title: 'Changelog', headers: true, content: md('../../CHANGELOG') };
     const articles = [
         { slug: 'getting-started', title: 'Getting started', expanded: true, headers: true },

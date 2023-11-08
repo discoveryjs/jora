@@ -1,6 +1,6 @@
 # Built-in methods
 
-## avg(getter)
+## avg(<!--getter-->)
 
 The `avg(getter)` method calculates the [arithmetic mean](https://en.wikipedia.org/wiki/Arithmetic_mean), also known as the average, of a collection of numbers. The arithmetic mean is computed by adding all the numbers in the collection and then dividing by the total count of numbers. This method is equivalent to the expressions `numbers() | sum() / size()` or `sum() / count()`.
 
@@ -42,7 +42,7 @@ Similar to `Boolean()` in JavaScript, but treats *empty arrays* and *objects wit
 // Result: true
 ```
 
-## count(getter)
+## count(<!--getter-->)
 
 The `count()` method calculates the number of non-undefined values present in the input array. It processes each value in the array through a `getter` function (default function is `=> $`). If the processed value is not `undefined`, it increments the count by 1. If the input is not an array, the method returns `0`. This method is functionally equivalent to the expression `numbers().size()`.
 
@@ -89,7 +89,7 @@ Similar to `Object.entries()` in JavaScript, using `{ key, value }` objects for 
 // Result: []
 ```
 
-## filter(fn)
+## filter(<!--fn-->)
 
 The same as `Array#filter()` in JavaScript, `filter(fn)` is equivalent to `.[fn()]` (see [Filtering](./filter.md)).
 
@@ -112,11 +112,11 @@ Similar to `Object.fromEntries()` in JavaScript, expects array `{ key, value }` 
 // Result: { a: 42, b: 123 }
 ```
 
-## group(fn, fn)
+## group(<!--fn, fn-->)
 
 Group array items by a value fetched with the first getter and return an array of `{ key, value }` entries (see [Grouping](./group.md)).
 
-## indexOf(value, fromIndex)
+## indexOf(<!--value, fromIndex-->)
 
 Returns the first index of the specified value, starting the search at `fromIndex`. If `fromIndex` is not provided or cannot be converted to a number, the search starts from index `0`. The method returns `-1` if the value is not found or if the input doesn't implement the `indexOf()` method. Unlike JavaScript, this method supports index searching for `NaN` values.
 
@@ -137,7 +137,7 @@ Returns the first index of the specified value, starting the search at `fromInde
 // Result: 1
 ```
 
-## join(separator)
+## join(<!--separator-->)
 
 The same as `Array#join()` in JavaScript. When `separator` is not specified, `","` is used.
 
@@ -167,7 +167,7 @@ The same as `Object.keys()` in JavaScript.
 // Result: []
 ```
 
-## lastIndexOf(value, fromIndex)
+## lastIndexOf(<!--value, fromIndex-->)
 
 Returns the first index of the specified value starting from the end at `fromIndex`. If `fromIndex` is not specified or cannot be converted to a number, it defaults to array or string length. The method returns `-1` if the value is not found or if the input doesn't implement the `lastIndexOf()` method. Unlike JavaScript, this method supports index searching for `NaN` values.
 
@@ -188,7 +188,7 @@ Returns the first index of the specified value starting from the end at `fromInd
 // Result: 3
 ```
 
-## map(fn)
+## map(<!--fn-->)
 
 The same as `Array#map()` in JavaScript, is equivalent to `.(fn())` (see [Mapping](./map.md)).
 
@@ -202,7 +202,7 @@ $getA: => a;
 // Result: [1, 2]
 ```
 
-## match(pattern, matchAll)
+## match(<!--pattern, matchAll-->)
 
 Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchAll` is truthy, returns an array of all occurrences of the `pattern`. Expressions `match(/…/g)` and `match(/…/, true)` are equivalent.
 
@@ -259,7 +259,7 @@ Similar to `String#match()`. `pattern` might be a RegExp or string. When `matchA
 // }]
 ```
 
-## max(compare)
+## max(<!--compare-->)
 
 The `max(compare)` method returns the maximum value from an array or a string, excluding `undefined`. It uses natural comparison for string values by default. When applied to an array, the method returns `undefined` if the array is empty or if a comparator function returns `0` for all values when compared with `undefined`.
 
@@ -293,7 +293,7 @@ $input.max(a desc)
 // Result: 'w'
 ```
 
-## median(getter)
+## median(<!--getter-->)
 
 Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentilevalue-getter)).
 
@@ -306,7 +306,7 @@ Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartil
 // Result: 3.5
 ```
 
-## min(compare)
+## min(<!--compare-->)
 
 The `min()` method returns the minimum value from an array or a string. It uses natural comparison for string values by default. When applied to an array, the method returns `undefined` if the array is empty or if a comparator function returns `0` for all values when compared with `undefined`.
 
@@ -335,7 +335,7 @@ $input.min(a desc)
 // Result: ' '
 ```
 
-## numbers(getter)
+## numbers(<!--getter-->)
 
 The `numbers()` method returns an array of numbers derived from the input values. It ignores `undefined` values returned by the `getter` function (the default `getter` function is `=> $`, which returns the value itself). All other values are converted to numbers including `NaN` and `Infinity`. When converting a value to a number, any objects and arrays are converted to `NaN`.
 
@@ -356,11 +356,11 @@ The `numbers()` method is utilized internally by statistical methods such as `su
 
 > Note: When applying a statistical computation to an array of objects, it is recommended to use a custom `getter` with the method rather than using dot notation or mapping. This is because dot notation and mapping ignore duplicate values. For instance, the query `[…].age.numbers()` might return `[10, 20]` for the last example instead of the expected `[10, 20, 10]`, which would be correctly returned by the query `[…].numbers(=> age)`.
 
-## p(k, getter)
+## p(<!--k, getter-->)
 
 Alias for [`percentile()`](#percentilek-getter) method.
 
-## percentile(k, getter)
+## percentile(<!--k, getter-->)
 
 This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbersgetter) method, given the same `getter` parameter. If the input (after processing through `getter`) contains a `NaN`, the function will always return `NaN`.
 
@@ -401,7 +401,7 @@ Get a value by a key, index, or function. The method repeats behaviour of [Brack
 // Result: 2
 ```
 
-## reduce(fn, initValue)
+## reduce(<!--fn, initValue-->)
 
 The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value:
 
@@ -410,7 +410,7 @@ The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` f
 // Result: 5
 ```
 
-## replace(pattern, replacement)
+## replace(<!--pattern, replacement-->)
 
 The same as `String#replaceAll()` in JavaScript, but also works for arrays. When `pattern` is RegExp, a `g` flags adds automatically if omitted. When applying to arrays it's similar to `.($ = pattern ? replacement : $)`, but without dropping duplicate values and inlining arrays.
 
@@ -472,19 +472,19 @@ Returns count of entries in an object, otherwise returns `length` property value
 // Result: 0
 ```
 
-## slice(from, to)
+## slice(<!--from, to-->)
 
 The same as `Array#slice()` and `String#slice()` in JavaScript (see also [Slice notation](./slice-notation.md)).
 
-## sort(compare)
+## sort(<!--compare-->)
 
 Sort an array by a value fetched with getter (`fn`). Can use sorting function definition syntax with `asc` and `desc` (see [Sorting](./sort.md))
 
-## split(pattern)
+## split(<!--pattern-->)
 
 The same as `String#split()` in JavaScript. `pattern` may be a string or regex.
 
-## stdev(getter)
+## stdev(<!--getter-->)
 
 Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) (`𝜎`) of a population, is the square root of the variance.
 
@@ -497,7 +497,7 @@ Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviatio
 // Result: 1
 ```
 
-## sum(getter)
+## sum(<!--getter-->)
 
 Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter) method with the same `getter` parameter returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
 
@@ -546,7 +546,7 @@ Since arrays are always converting to `NaN`. To summing array of arrays, a summa
 // Result: 7
 ```
 
-## toLowerCase(locales)
+## toLowerCase(<!--locales-->)
 
 The same as `String#toLocaleLowerCase()` in JavaScript.
 
@@ -555,7 +555,7 @@ The same as `String#toLocaleLowerCase()` in JavaScript.
 // Result: "hello world!"
 ```
 
-## toUpperCase(locales)
+## toUpperCase(<!--locales-->)
 
 The same as `String#toLocaleUpperCase()` in JavaScript.
 
@@ -577,7 +577,7 @@ The same as `String#trim()` in JavaScript.
 
 The same as `Object.values()` in JavaScript.
 
-## variance(getter)
+## variance(<!--getter-->)
 
 Returns the [variance](http://en.wikipedia.org/wiki/Variance) (`𝜎²`) of a [population](https://en.wikipedia.org/wiki/Variance#Population_variance) (the squared deviation from the mean).
 
