@@ -222,6 +222,27 @@ describe('lang/pick', () => {
                 undefined
             );
         });
+
+        it('should treat empty arrays as false', () => {
+            assert.deepStrictEqual(
+                query('$[=> foo]')([{ foo: [] }, { foo: [1] }]),
+                { foo: [1] }
+            );
+            assert.deepStrictEqual(
+                query('$[=> foo]')({ a: { foo: [] }, b: { foo: [1] } }),
+                { foo: [1] }
+            );
+        });
+        it('should treat empty objects as false', () => {
+            assert.deepStrictEqual(
+                query('$[=> foo]')([{ foo: {} }, { foo: { ok: 1 } }]),
+                { foo: { ok: 1 } }
+            );
+            assert.deepStrictEqual(
+                query('$[=> foo]')({ a: { foo: {} }, b: { foo: { ok: 1 } } }),
+                { foo: { ok: 1 } }
+            );
+        });
     });
 
     describe('escaped symbols in paths', () => {
