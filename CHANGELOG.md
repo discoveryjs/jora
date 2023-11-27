@@ -1,6 +1,7 @@
 ## next
 
 - Fixed a query compilation error when `$` was used as an object entry, e.g. `{ $, prop: 1 }`
+- Fixed bracket notation and `pick()` method when used with a function to apply `bool()` to the result of the function
 
 ## 1.0.0-beta.9 (October 29, 2023)
 

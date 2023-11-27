@@ -135,7 +135,7 @@ function pick(current, ref = () => true) {
     if (typeof ref === 'function') {
         if (Array.isArray(current) || typeof current === 'string') {
             for (let i = 0; i < current.length; i++) {
-                if (ref(current[i], i)) {
+                if (isTruthy(ref(current[i], i))) {
                     return current[i];
                 }
             }
@@ -143,7 +143,7 @@ function pick(current, ref = () => true) {
 
         for (const key in current) {
             if (hasOwn(current, key)) {
-                if (ref(current[key], key)) {
+                if (isTruthy(ref(current[key], key))) {
                     return current[key];
                 }
             }
