@@ -370,10 +370,6 @@ exports.bnf = {
         ['FUNCTION e', $$(Function([], $2))],
         ['compareFunction', $$(CompareFunction($1))],
 
-        // pipeline
-        ['e | e', $$(Pipeline($1, $3))],
-        ['e | definitions e', $$(Pipeline($1, Block($3, $4)))],
-
         // prefix operators
         ['NOT e', $$(Prefix($1, $2))],
         ['NO e', $$(Prefix($1, $2))],
@@ -438,7 +434,9 @@ exports.bnf = {
         ['.[ block ]', $$(Filter(null, $2))],
         ['.. ident', $$(MapRecursive(null, GetProperty(null, $2)))],
         ['.. method()', $$(MapRecursive(null, MethodCall(null, $2)))],
-        ['..( block )', $$(MapRecursive(null, $2))]
+        ['..( block )', $$(MapRecursive(null, $2))],
+        ['| e', $$(Pipeline(null, $2))],
+        ['| definitions e', $$(Pipeline(null, Block($2, $3)))]
     ],
     relativePath: [
         ['query [ ]', $$(Pick($1, null))],
@@ -450,7 +448,9 @@ exports.bnf = {
         ['query .[ block ]', $$(Filter($1, $3))],
         ['query .. ident', $$(MapRecursive($1, GetProperty(null, $3)))],
         ['query .. method()', $$(MapRecursive($1, MethodCall(null, $3)))],
-        ['query ..( block )', $$(MapRecursive($1, $3))]
+        ['query ..( block )', $$(MapRecursive($1, $3))],
+        ['query | e', $$(Pipeline($1, $3))],
+        ['query | definitions e', $$(Pipeline($1, Block($3, $4)))]
     ],
 
     'method()': [

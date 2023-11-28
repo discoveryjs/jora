@@ -15,6 +15,20 @@ describe('lang/pipeline', () => {
         );
     });
 
+    it('can start a query', () => {
+        assert.deepEqual(
+            query('| 42')(),
+            42
+        );
+    });
+
+    it('can start a query', () => {
+        assert.deepEqual(
+            query('| foo')({ foo: 42 }),
+            42
+        );
+    });
+
     it('array as current', () => {
         assert.deepEqual(
             query('foo | { len: size(), bar }')(data),

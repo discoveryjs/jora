@@ -11,7 +11,7 @@ export function compile(node, ctx) {
     );
 
     ctx.put('(');
-    ctx.node(node.left);
+    ctx.nodeOrCurrent(node.left);
     ctx.put(')');
 }
 export function walk(node, ctx) {

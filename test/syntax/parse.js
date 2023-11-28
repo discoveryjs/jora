@@ -45,10 +45,10 @@ describe('syntax/parse', () => {
                 () => parse('foo\n .[bar =]'),
                 function(e) {
                     assert.deepEqual(e.details, {
-                        rawMessage: "Parse error on line 2:\nfoo\\n .[bar =]\n-------------^\nExpecting '$', 'IDENT', '$IDENT', '?', 'FUNCTION', 'NOT', 'NO', '-', '+', 'IS', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', 'METHOD(', '$METHOD(', 'TEMPLATE', 'TPL_START', '{', got ']'",
+                        rawMessage: "Parse error on line 2:\nfoo\\n .[bar =]\n-------------^\nExpecting '$', 'IDENT', '$IDENT', '?', 'FUNCTION', 'NOT', 'NO', '-', '+', 'IS', '@', '#', '$$', 'STRING', 'NUMBER', 'REGEXP', 'LITERAL', '[', '(', '.', '.(', '.[', '..', '..(', '|', 'METHOD(', '$METHOD(', 'TEMPLATE', 'TPL_START', '{', got ']'",
                         text: ']',
                         token: ']',
-                        expected: ["'$'", 'ident', '$ident', "'?'",  "'=>'", "'not'", "'no'", "'-'", "'+'", "'is'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", "'method('", "'$method('", 'template', "'{'"],
+                        expected: ["'$'", 'ident', '$ident', "'?'",  "'=>'", "'not'", "'no'", "'-'", "'+'", "'is'", "'@'", "'#'", "'$$'", 'string', 'number', 'regexp', "'true'", "'false'", "'null'", "'undefined'", "'NaN'", "'Infinity'", "'['", "'('", "'.'", "'.('", "'.['", "'..'", "'..('", "'|'", "'method('", "'$method('", 'template', "'{'"],
                         loc: {
                             range: [12, 13],
                             start: {
