@@ -4,6 +4,16 @@
 const jora = require('../jora').default;
 const { utils: { base64 } } = require('@discoveryjs/discovery');
 const beautify = require('js-beautify/js').js;
+const allHasDict = new Proxy({}, {
+    getOwnPropertyDescriptor() {
+        return {
+            configurable: true,
+            enumerable: false,
+            value: () => {},
+            writable: false
+        };
+    }
+});
 
 const querySuggestionRangeTooltip = [
     { view: 'block', content: 'text:`Range: [${range[0]}, ${range[1]}]`' },
@@ -45,7 +55,6 @@ function compileQuery(
     const context = {};
     let parseResult = null;
     let parseTokens = null;
-    let queryFn = null;
 
     try {
         parseResult = jora.syntax.parse(query, tolerant);
@@ -89,8 +98,11 @@ function compileQuery(
     }
 
     try {
-        queryFn = jora(query, { stat, tolerant });
-
+        const suggestions = stat
+            ? jora.syntax.suggest(query, parseResult)
+            : null;
+        const factoryFn = jora.syntax.compile(parseResult.ast, tolerant, suggestions);
+        const queryFn = factoryFn(allHasDict, allHasDict, allHasDict);
         const code = (queryFn.query || queryFn).toString();
 
         compiledCodeEl.innerHTML = '';
@@ -134,6 +146,7 @@ function compileQuery(
                     .sort((a, b) => a[1] - b[1]));
                 const groupedRanges = [];
                 let prevGroupedRange = null;
+                const queryFn = jora(query, { stat, tolerant });
                 const queryStat = queryFn(data, context);
 
                 for (let i = 0; i < ranges.length; i++) {
