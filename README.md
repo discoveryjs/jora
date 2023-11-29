@@ -261,13 +261,16 @@ import jora from 'jora';
 
 // create a query
 const query = jora('foo.bar');
-// or with custom methods
-const queryWithCustomMethods = jora.setup({
-    myMethod(current) { /* do something and return a new value */ }
-});
 
 // perform a query
 const result = query(data, context);
+
+// a custom setup
+const queryWithCustomMethods = jora.setup({
+    methods: {
+        myMethod(current) { /* do something and return a new value */ }
+    }
+});
 const result = queryWithCustomMethods('foo.myMethod()')(data, context);
 ```
 
@@ -275,31 +278,38 @@ Options:
 
 - methods
 
-  Type: `Object`  
+  Type: `Object<string, function | string>`  
   Default: `undefined`
 
-  Additional methods for using in query passed as an object, where a key is a method name and a value is a function to perform an action. It can override build-in methods.
+  Describes additional methods for use in queries. Accepts an object where each key represents a method name, and its value can be a function or a string (jora query) defining the action. Note: Overriding [built-in methods](https://discoveryjs.github.io/jora/#article:jora-syntax-methods-builtin) is not permitted and will result in an exception.
+
+- assertions
+
+  Type: `<string, function | string>`  
+  Default: `undefined`
+
+  Specifies additional assertions for use in queries. It requires an object where each key is an assertion name, and its value is either a function or a string (jora query) for the assertion. Similar to methods, overriding [built-in assertions](https://discoveryjs.github.io/jora/#article:jora-syntax-assertions&!anchor=built-in-assertions) will trigger an exception.
 
 - debug
 
   Type: `Boolean` or `function(name, value)`  
   Default: `false`
 
-  Enables debug output. When set a function, this function will recieve a section name and its value.
+  Activates debug output. By default, it uses console.log(). If a function is provided, it will be used instead of console.log(), taking a section name and its value as arguments.
 
 - tolerant
 
   Type: `Boolean`  
   Default: `false`
 
-  Enables tolerant parsing mode. This mode supresses parsing errors when possible.
+  Enables a tolerant parsing mode that attempts to suppress parsing errors when feasible.
 
 - stat
 
   Type: `Boolean`  
   Default: `false`
 
-  Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
+  Turns on stat mode. In this mode, instead of returning the query results, a query statistics interface is provided.
 
 ### Query introspection
 
