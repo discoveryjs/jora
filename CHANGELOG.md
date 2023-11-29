@@ -3,6 +3,7 @@
 - Updated the pipeline operator grammar to allow starting a query with it, e.g. `| expr` is now a valid query
 - Fixed a query compilation error when `$` was used as an object entry, e.g. `{ $, prop: 1 }`
 - Fixed bracket notation and `pick()` method when used with a function to apply `bool()` to the result of the function
+- Reverted the precedence of the pipeline operator to be lower than that of the ternary operator for consistency with other operators
 
 ## 1.0.0-beta.9 (October 29, 2023)
 

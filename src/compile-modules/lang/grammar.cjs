@@ -310,7 +310,8 @@ exports.operators = [
     ['left', 'def'],
     ['left', ';'],
     ['left', ','],
-    ['right', '?', ':', '|'],
+    ['left', '|'],
+    ['right', '?', ':'],
     ['left', 'IS'],
     ['left', 'OR'],
     ['left', 'AND'],
@@ -375,6 +376,10 @@ exports.bnf = {
         ['NO e', $$(Prefix($1, $2))],
         ['- e', $$(Prefix($1, $2))],
         ['+ e', $$(Prefix($1, $2))],
+
+        // pipeline operator
+        ['e | e', $$(Pipeline($1, $3))],
+        ['e | definitions e', $$(Pipeline($1, Block($3, $4)))],
 
         // postfix operators
         ['e IS assertion', $$(Postfix($1, $3))],
@@ -448,9 +453,7 @@ exports.bnf = {
         ['query .[ block ]', $$(Filter($1, $3))],
         ['query .. ident', $$(MapRecursive($1, GetProperty(null, $3)))],
         ['query .. method()', $$(MapRecursive($1, MethodCall(null, $3)))],
-        ['query ..( block )', $$(MapRecursive($1, $3))],
-        ['query | e', $$(Pipeline($1, $3))],
-        ['query | definitions e', $$(Pipeline($1, Block($3, $4)))]
+        ['query ..( block )', $$(MapRecursive($1, $3))]
     ],
 
     'method()': [

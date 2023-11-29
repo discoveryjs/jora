@@ -66,7 +66,7 @@ describe('lang/pipeline', () => {
 
     it('complex pipeline #2', () => {
         assert.deepEqual(
-            query('foo ? 1 | $a: $; 2 + $a : 0')(data),
+            query('foo ? (1 | $a: $; 2 + $a) : 0')(data),
             3
         );
     });
@@ -75,6 +75,20 @@ describe('lang/pipeline', () => {
         assert.deepEqual(
             query('"str" | 0 or 1 | $ ? $ : "fail"')(data),
             1
+        );
+    });
+
+    it('complex pipeline #4', () => {
+        assert.deepEqual(
+            query('{ id: 1, next: { id: 2, next: { id: 3 }} } | $ + ..next | $[=>id = 3]')(),
+            { id: 3 }
+        );
+    });
+
+    it('complex pipeline #5', () => {
+        assert.strictEqual(
+            query('| 1 ? 2 : 3 | $')(),
+            2
         );
     });
 });

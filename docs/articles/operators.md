@@ -275,15 +275,16 @@ The following table shows the operators' precedence from lowest to highest:
 | Precedence | Operator |
 |-----:|---|
 | (lowest) 1 | `,`
-| 2 | `?:` `\|`
-| 3 | `is`
-| 4 | `or`
-| 5 | `and`
-| 6 | `??`
-| 7 | `not` `no`
-| 8 | `in` `not in` `has` `has no`
-| 9 | `=` `!=` `~=`
-| 10 | `<` `<=` `>` `>=`
-| 11 | `+` `-`
-| 12 | `*` `/` `%`
-| (highest) 13 | `( … )`
+| 2 | `\|`
+| 3 | `?:`
+| 4 | `is`
+| 5 | `or`
+| 6 | `and`
+| 7 | `??`
+| 8 | `not` `no`
+| 9 | `in` `not in` `has` `has no`
+| 10 | `=` `!=` `~=`
+| 11 | `<` `<=` `>` `>=`
+| 12 | `+` `-`
+| 13 | `*` `/` `%`
+| (highest) 14 | `( … )`

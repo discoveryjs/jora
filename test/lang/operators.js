@@ -712,23 +712,23 @@ describe('lang/operators', () => {
             );
         });
 
-        describe('should has the same precedence as the pipeline operator', () => {
+        describe('should has a higher precedence compared to the pipeline operator', () => {
             // with higher precedence the query might not be parsed
             const cases = [
-                { query: '? 1 | 2 : 0', expected: 2, data: true },
-                { query: '? 1 | 2 : 0', expected: 0, data: false },
-                { query: '? 1 | 2 : 0 | 3', expected: 2, data: true },
-                { query: '? 1 | 2 : 0 | 3', expected: 3, data: false },
+                { query: '? (1 | 2) : 0', expected: 2, data: true },
+                { query: '? (1 | 2) : 0', expected: 0, data: false },
+                { query: '? (1 | 2) : (0 | 3)', expected: 2, data: true },
+                { query: '? (1 | 2) : (0 | 3)', expected: 3, data: false },
 
-                { query: 'true ? 1 | 2 : 0', expected: 2 },
-                { query: 'false ? 1 | 2 : 0', expected: 0 },
-                { query: 'true ? 1 | 2 : 0 | 3', expected: 2 },
-                { query: 'false ? 1 | 2 : 0 | 3', expected: 3 },
+                { query: 'true  ? (1 | 2) : 0', expected: 2 },
+                { query: 'false ? (1 | 2) : 0', expected: 0 },
+                { query: 'true  ? (1 | 2) : (0 | 3)', expected: 2 },
+                { query: 'false ? (1 | 2) : (0 | 3)', expected: 3 },
 
-                { query: 'true | ? 1 | 2 : 0', expected: 2 },
-                { query: 'false | ? 1 | 2 : 0', expected: 0 },
-                { query: 'true | ? 1 | 2 : 0 | 3', expected: 2 },
-                { query: 'false | ? 1 | 2 : 0 | 3', expected: 3 },
+                { query: 'true  | ? (1 | 2) : 0', expected: 2 },
+                { query: 'false | ? (1 | 2) : 0', expected: 0 },
+                { query: 'true  | ? (1 | 2) : (0 | 3)', expected: 2 },
+                { query: 'false | ? (1 | 2) : (0 | 3)', expected: 3 },
 
                 // should be treated as { a: 1 } | (2 ? a : 0)
                 // for "({ a: 1 } | 2) ? a : 0" returns undefined
@@ -742,6 +742,13 @@ describe('lang/operators', () => {
                         expected
                     );
                 });
+
+                const fquery = squery.replace(/\((\d+\s+\|\s+\d+)\)/g, '$1');
+                if (fquery !== squery) {
+                    it(squery, () => {
+                        assert.throws(() => query(fquery)(data));
+                    });
+                }
             }
         });
 
