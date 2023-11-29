@@ -24,11 +24,14 @@
 .view-playground > .query-editor > .query-editor__toolbar > :first-child {
     flex: 1;
 }
+.view-playground > .query-editor .discovery-editor {
+    margin: 0;
+}
+.view-playground > .query-editor .discovery-editor .CodeMirror {
+    border-radius: 2px;
+}
 .view-playground > .query-editor .discovery-editor .CodeMirror-scroll {
     max-height: calc((100vh - 170px) / 2);
-}
-.view-playground > .query-editor .CodeMirror {
-    margin: 0;
 }
 .view-playground > .query-editor .discovery-editor-error {
     border-bottom: 1px solid rgba(255, 0, 0, .6);
@@ -76,6 +79,7 @@
 .view-playground > .stat > .stat__content {
     flex: 1;
     overflow: hidden;
+    border-radius: 3px;
 }
 .view-playground > .stat > .stat__content.not-available {
     padding: 8px;
@@ -113,6 +117,7 @@
     flex: 1;
     overflow: auto;
     background-color: rgba(205, 205, 205, .1);
+    border-radius: 3px;
 }
 .view-playground > .parse-result > .parse-result__content.not-available {
     padding: 8px;
