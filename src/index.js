@@ -15,19 +15,19 @@ const cacheStrictStat = new Map();
 const cacheTollerant = new Map();
 const cacheTollerantStat = new Map();
 
-function defineDictFunction(dict, name, fn, queryMethods, queryAssertions) {
-    if (typeof fn === 'string') {
+function defineDictFunction(dict, name, value, queryMethods, queryAssertions) {
+    if (typeof value === 'string') {
         Object.defineProperty(dict, name, {
             configurable: true,
             get() {
-                const compiledFn = compileFunction(fn)(buildin, queryMethods, queryAssertions);
-                const value = current => compiledFn(current, null);
-                Object.defineProperty(dict, name, { value });
-                return value;
+                const compiledFn = compileFunction(value)(buildin, queryMethods, queryAssertions);
+                const fn = current => compiledFn(current, null);
+                Object.defineProperty(dict, name, { enumerable: true, value: fn });
+                return fn;
             }
         });
-    } else {
-        dict[name] = fn;
+    } else if (typeof value === 'function') {
+        Object.defineProperty(dict, name, { enumerable: true, value });
     }
 }
 
@@ -42,20 +42,20 @@ function buildQueryMethodsAndAssertions(customMethods, customAssertions) {
     const queryMethods = { ...methods };
     const queryAssertions = { ...assertions };
 
-    for (const [name, fn] of Object.entries(customMethods || {})) {
+    for (const [name, value] of Object.entries(customMethods || {})) {
         if (hasOwn(methods, name)) {
             throw new Error(`Builtin method "${name}" can\'t be overridden`);
         }
 
-        defineDictFunction(queryMethods, name, fn, queryMethods, queryAssertions);
+        defineDictFunction(queryMethods, name, value, queryMethods, queryAssertions);
     }
 
-    for (const [name, fn] of Object.entries(customAssertions || {})) {
+    for (const [name, value] of Object.entries(customAssertions || {})) {
         if (hasOwn(assertions, name)) {
             throw new Error(`Builtin assertion "${name}" can\'t be overridden`);
         }
 
-        defineDictFunction(queryAssertions, name, fn, queryMethods, queryAssertions);
+        defineDictFunction(queryAssertions, name, value, queryMethods, queryAssertions);
     }
 
     return { queryMethods, queryAssertions };
@@ -169,11 +169,11 @@ function setup(options) {
     const { queryMethods, queryAssertions } =
         buildQueryMethodsAndAssertions(customMethods, customAssertions);
 
-    return function query(source, options) {
-        options = options || {};
+    return function query(source, queryOptions) {
+        queryOptions = queryOptions || {};
 
-        const statMode = Boolean(options.stat);
-        const tolerantMode = Boolean(options.tolerant);
+        const statMode = Boolean(queryOptions.stat);
+        const tolerantMode = Boolean(queryOptions.tolerant);
         const cache = statMode
             ? (tolerantMode ? cacheTollerantStat : cacheStrictStat)
             : (tolerantMode ? cacheTollerant : cacheStrict);
@@ -181,14 +181,14 @@ function setup(options) {
 
         source = String(source);
 
-        if (cache.has(source) && !options.debug) {
+        if (cache.has(source) && !queryOptions.debug) {
             fn = cache.get(source);
         } else {
             const perform = compileFunction(
                 source,
                 statMode,
                 tolerantMode,
-                options.debug
+                queryOptions.debug
             )(
                 buildin,
                 queryMethods,
