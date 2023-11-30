@@ -1,8 +1,17 @@
 export function compile(node, ctx) {
     ctx.createScope(
         () => {
+            const args = node.arguments.map(arg => '$' + arg.name);
+
             ctx.scope.arg1 = true;
-            ctx.put('function($){return ');
+            ctx.scope.$ref = args[0] || '$';
+            for (const arg of node.arguments) {
+                ctx.scope.push(arg.name);
+            }
+
+            ctx.put('function(');
+            ctx.put(String(args) || '$');
+            ctx.put('){return ');
             ctx.node(node.body);
             ctx.put('}');
         },
@@ -15,12 +24,6 @@ export function walk(node, ctx) {
     ctx.node(node.body);
 }
 export function stringify(node, ctx) {
-    if (node.legacy) {
-        ctx.put('<');
-        ctx.node(node.body);
-        ctx.put('>');
-    } else {
-        ctx.put('=>');
-        ctx.node(node.body);
-    }
+    ctx.put('=>');
+    ctx.node(node.body);
 }

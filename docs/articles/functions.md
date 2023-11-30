@@ -4,20 +4,40 @@ There are two ways to define a function in Jora: a regular function and a compar
 
 ## Regular functions
 
-A function defintion looks like an arrow function in JavaScript but without arguments:
+Jora's function syntax is akin to JavaScript's arrow functions but with distinct characteristics:
+
+- **Optional arguments**: The inclusion of arguments is not mandatory.
+- **Argument naming**: All argument names must begin with `$`, such as `$foo` or `$bar`.
+- **No default argument values**: Jora does not support default values for function arguments.
+- **No rest parameters**: Syntax like `(...$args) => expression` is prohibited.
+- **Special variables `$` and `$$`**: Regardless of whether arguments are defined, `$` always represents the first argument, and `$$` the second. For instance, in `($a, $b) => $ = $a and $$ = $b`, `$` equals `$a` (until a scope change) and `$$` equals `$b`.
+
+Supported function forms in Jora include:
 
 ```jora
 => expr
 ```
+```jora
+$arg => expr
+```
+```jora
+() => expr
+```
+```jora
+($arg) => expr
+```
+```jora
+($arg1, $arg2) => expr
+```
 
-Usually functions are used in place as an argument of methods:
+Functions are often used in place as method arguments:
 
 ```jora
 [1, 2, 3, 4].group(=> $ % 2)
 // Result: [{ key: 1, value: [1, 3] }, { key: 0, value: [2, 4]}]
 ```
 
-A function can be stored in a local variable and then used it the same way as a regular method:
+Functions can also be stored as local variables and used as regular methods:
 
 ```jora
 $countOdd: => .[$ % 2].size();
@@ -25,7 +45,7 @@ $countOdd: => .[$ % 2].size();
 // Result: 2
 ```
 
-Despite the fact that a function definition has no arguments, two special variables are available in the scope of the function: `$` (first parameter) and `$$` (second parameter).
+The special variables `$` (first parameter) and `$$` (second parameter) are always accessible in function scope:
 
 ```jora
 $example: => [$, $$];
@@ -33,25 +53,47 @@ $example: => [$, $$];
 // Result: [1, 2]
 ```
 
-The following example demonstrates how to sum up an array using [`reduce()`](./methods-builtin.md#reduce) method and a function, where `$` is an array element and `$$` is an accumulator value:
+Declaring arguments does not alter the behavior of `$` and `$$`:
+
+```jora
+$example: ($a, $b) => [$a, $, $b, $$];
+1.$example(2)
+// Result: [1, 1, 2, 2]
+```
+
+Explicit argument declaration is beneficial when an argument is used in nested scopes within the function body:
+
+```jora
+$books: [
+    { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee" },
+    { id: 2, title: "1984", author: "George Orwell" },
+    { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
+];
+$getBook: $id => $books[=> id = $id];
+3 | $getBook()
+// Result: { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
+```
+
+Here's how to sum up an array using the `reduce()` method and a function, where `$` is the array element and `$$` is the accumulator:
 
 ```jora
 [1, 2, 3, 4].reduce(=> $$ + $, 0)
 // Result: 10
 ```
 
-An equivalent JavaScript for the query:
+> Note: In Jora, function arguments order is always `$, $$`, but in JavaScript's reduce(), the order is reversed.
+With explicit arguments a function for Jora's reduce will be `($current, $sum) => $sum + $current`.
+
+The JavaScript equivalent:
 
 ```js
-// Take into account that in Jora, the order of arguments in functions is always `$, $$`,
-// but in JavaScript's reduce() method has reversed order of arguments
 [1, 2, 3, 4].reduce(($$, $) => $$ + $, 0)
 ```
 
-There is no syntax to directly call a function passed via context or data. However, a function in a local variable and then use it as a method:
+To use a function passed via context (`#`) or data (`@`), store it in a local variable and then use it as a method:
 
 ```jora
-$functionFromContext: #.example;
+$functionFromContext: #.someFunction;
 someValue.$functionFromContext()
 ```
 

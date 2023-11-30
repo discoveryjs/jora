@@ -65,6 +65,27 @@ describe('lang/function', () => {
         );
     });
 
+    describe('with harguments syntax', () => {
+        const cases = [
+            { query: '$fn: $a => $a + $$; 2.$fn(3)', expected: 5 },
+            { query: '$fn: $a => .($ + $a.size()); [1, 3].$fn()', expected: [3, 5] },
+            { query: '$fn: $a => ($b:2; $a + $b); 5.$fn()', expected: 7 },
+            { query: '$fn: () => $ + $$; 20.$fn(22)', expected: 42 },
+            { query: '$fn: ($a) => $a + $; 3.$fn()', expected: 6 },
+            { query: '$fn: ($a) => ($b:2; $a + $b); 3.$fn()', expected: 5 },
+            { query: '$fn: ($a, $b) => $a + $ + $b + $$; 2.$fn(3)', expected: 10 }
+        ];
+
+        for (const testcase of cases) {
+            it(testcase.query, () => {
+                assert.deepStrictEqual(
+                    query(testcase.query)(),
+                    testcase.expected
+                );
+            });
+        }
+    });
+
     describe('should has lower precedence than a compare function definition', () => {
         it('single compare', () => {
             const actual = query('=> foo desc')();

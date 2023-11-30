@@ -263,7 +263,7 @@ exports.lex = {
         ['\\$', 'yy.pps(); return "$";'],
 
         // functions
-        ['=>', 'return "FUNCTION";'],
+        ['=>', 'return "=>";'],
 
         // operators
         ['=', 'return "=";'],
@@ -304,7 +304,7 @@ exports.lex = {
     ]
 };
 exports.operators = [
-    ['left', 'FUNCTION'],
+    ['left', '=>'],
     ['left', 'compareFunction', 'compareExpr'],
     ['left', 'ORDER'],
     ['left', 'def'],
@@ -368,7 +368,10 @@ exports.bnf = {
         ['query', asis],
 
         // functions
-        ['FUNCTION e', $$(Function([], $2))],
+        ['=> e', $$(Function([], $2))],
+        ['$IDENT => e', $$(Function([Identifier($1)], $3))],
+        ['( ) => e', $$(Function([], $4))],
+        ['( functionArgs ) => e', $$(Function($2, $5))],
         ['compareFunction', $$(CompareFunction($1))],
 
         // prefix operators
@@ -463,6 +466,11 @@ exports.bnf = {
         ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2))]
     ],
     arguments: createCommaList('arguments', 'e'),
+
+    functionArg: [
+        ['$IDENT', $$(Identifier($1))]
+    ],
+    functionArgs: createCommaList('functionArgs', 'functionArg'),
 
     template: [
         ['templateString', $$([$1])],

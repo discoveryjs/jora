@@ -12,7 +12,6 @@ module.exports = function buildParsers(strictParser) {
         ['EOF', ['<end of input>']],
         ['IDENT', ['ident']],
         ['$IDENT', ['$ident']],
-        ['FUNCTION', ["'=>'"]],
         ['NOT', ["'not'"]],
         ['NO', ["'no'"]],
         ['IS', ["'is'"]],
@@ -265,7 +264,7 @@ module.exports = function buildParsers(strictParser) {
         '(', '.(', '..(',
         'METHOD(', '$METHOD(',
         '[', '.[',
-        'FUNCTION',
+        '=>',
         ...operators,
         ...keywords,
         'NOT', 'NO'
