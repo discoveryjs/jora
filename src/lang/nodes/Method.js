@@ -4,13 +4,14 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx, relatedNode) {
+    const dictMethod = node.reference.type === 'Identifier';
     //  default mode: method(relatedNode, ...args...)
     // tolerant mode: (typeof method === 'function' ? method(relatedNode, ...args...) : undefined)
     if (ctx.tolerant) {
         ctx.put('(typeof ');
     }
 
-    if (node.reference.type === 'Identifier') {
+    if (dictMethod) {
         if (ctx.usedMethods.has(node.reference.name)) {
             ctx.usedMethods.get(node.reference.name).push(node.reference.range);
         } else {
@@ -25,14 +26,14 @@ export function compile(node, ctx, relatedNode) {
     if (ctx.tolerant) {
         ctx.put('==="function"?');
 
-        if (node.reference.type === 'Identifier') {
+        if (dictMethod) {
             ctx.put('m.');
         }
 
         ctx.node(node.reference);
     }
 
-    ctx.put('(');
+    ctx.put(dictMethod ? '.call(mctx,' : '(');
     ctx.nodeOrCurrent(relatedNode);
 
     if (node.arguments.length) {

@@ -24,20 +24,18 @@ See [Built-in methods](./methods-builtin.md).
 
 ## Custom methods
 
-To define custom methods in Jora use the following API:
+Jora queries can be enchanced by defining custom methods (see [Enhancing queries with custom methods and assertions](./api.md#enhancing-queries-with-custom-methods-and-assertions)):
 
 ```js
 import jora from 'jora';
 
-// Setup query factory with custom methods
-const createQueryWithCustomMethods = jora.setup({
+// Create a custom setup for queries
+const queryWithCustomMethods = jora.setup({
     methods: {
-        myMethod($) {
-            /* do something and return a new value */
-        }
+        customMethod($) { /* implement custom logic here */ }
     }
 });
 
-// Create a query
-const queryWithMyMethod = createQueryWithCustomMethods('foo.myMethod()');
+// Use the custom query factory
+queryWithCustomMethods('foo.customMethod()')(data, context);
 ```

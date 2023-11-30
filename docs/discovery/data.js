@@ -11,8 +11,14 @@ const mathMethods = new Set([
     'round', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc'
 ]);
 
-function md(filename) {
-    return fs.readFileSync(path.join(__dirname, filename) + '.md', 'utf8');
+function md(filename, removeMainHeader) {
+    let content = fs.readFileSync(path.join(__dirname, filename) + '.md', 'utf8');
+
+    if (removeMainHeader) {
+        content = content.replace(/^# [^\r\n]+/m, '');
+    }
+
+    return content;
 }
 
 function ident(text, prefix = '  ') {
@@ -166,6 +172,7 @@ module.exports = function() {
     const changelog = { slug: 'changelog', title: 'Changelog', headers: true, content: md('../../CHANGELOG') };
     const articles = [
         { slug: 'getting-started', title: 'Getting started', expanded: true, headers: true },
+        { slug: 'api', title: 'Jora library API', headers: true, content: md('../articles/api', true) },
         changelog
     ];
     const readmeTOC = md('../README').match(/- \[.+?\]\(.+?\).*?\n/g)
@@ -175,6 +182,7 @@ module.exports = function() {
             const content = md(`.${href}`)
                 .replace(/^#.+?\n+/, '')
                 .replace(/\(#(.+?)\)/g, `(#article:jora-syntax-${slug}&!anchor=$1)`)
+                .replace(/\(\.\/(api)\.md#([a-z0-9\-]+)\)/g, '(#article:$1&!anchor=$2)')
                 .replace(/\(\.\/syntax-overview\.md\)/g, '(#article:jora-syntax)')
                 .replace(/\(\.\/([^\)]+?)\.md#([a-z0-9\-]+)\)/g, '(#article:jora-syntax-$1&!anchor=$2)')
                 .replace(/\(\.\/([^\)]+?)\.md\)/g, '(#article:jora-syntax-$1)');
@@ -208,7 +216,7 @@ module.exports = function() {
 
     articles.unshift(readmeTOC.shift());
     articles[0].slug = 'intro';
-    articles.splice(2, 0, {
+    articles.splice(3, 0, {
         ...readmeTOC.shift(),
         slug: 'jora-syntax',
         title: 'Jora query syntax',

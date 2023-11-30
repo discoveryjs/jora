@@ -48,7 +48,7 @@ export function compile(node, ctx) {
                         ctx.put(node.assertion.name);
                     }
 
-                    ctx.put('(');
+                    ctx.put('.call(mctx,');
                     ctx.nodeOrCurrent();
                     ctx.put(')');
 

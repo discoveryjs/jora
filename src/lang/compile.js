@@ -2,7 +2,14 @@ import { hasOwn } from '../utils/misc.js';
 import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 
-export default function compile(ast, tolerant = false, suggestions = null) {
+export function compile(ast, tolerant, suggestions) {
+    return compileInternal(ast, 'query', tolerant, suggestions);
+}
+export function compileMethod(ast, tolerant, suggestions) {
+    return compileInternal(ast, 'method', tolerant, suggestions);
+}
+
+function compileInternal(ast, kind, tolerant = false, suggestions = null) {
     function newStatPoint(values) {
         const spName = 's' + spNames.length;
 
@@ -47,7 +54,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         return spName;
     }
 
-    function createScope(fn, defCurrent) {
+    function createScope(fn, defCurrent, $ref = '$') {
         const prevScope = ctx.scope;
         const scopeStart = buffer.length;
 
@@ -55,7 +62,8 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         ctx.scope.own = [];
         ctx.scope.firstCurrent = null;
         ctx.scope.captureCurrent = [];
-        ctx.scope.arg1 = prevScope.arg1 || false;
+        ctx.scope.arg1 = prevScope.arg1 || kind === 'method';
+        ctx.scope.$ref = $ref;
 
         fn();
 
@@ -64,7 +72,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
                 (spName, range) => addSuggestPoint(...range, spName),
                 undefined
             );
-            const stat = 'stat(' + spName + ',$)';
+            const stat = 'stat(' + spName + ',' + ctx.scope.$ref + ')';
 
             if (ctx.scope.firstCurrent) {
                 buffer[ctx.scope.firstCurrent] = stat;
@@ -122,8 +130,28 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     const allocatedVars = [];
     const normalizedSuggestRanges = [];
     const buffer = [
-        '((data,context)=>{',
-        'const $=data;',
+        { toString() {
+            if (kind === 'query') {
+                return [
+                    '((data,context)=>{',
+                    ...ctx.usedMethods.size || ctx.usedAssertions.size ? [
+                        'const method = (name,...args)=>m[name].apply(mctx,args);',
+                        'const assertion = (name,...args)=>a[name].apply(mctx,args);',
+                        'const mctx = Object.freeze({context,method,assertion});'
+                    ] : []
+                ].join('\n') + '\n';
+            }
+
+            if (kind === 'method') {
+                return [
+                    '(function(data){',
+                    'const mctx = this;',
+                    'const context = mctx.context;'
+                ].join('\n') + '\n';
+            }
+
+            throw new Error('Unknown kind: ' + kind);
+        } },
         { toString() {
             return allocatedVars.length > 0 ? 'let ' + allocatedVars + ';\n' : '';
         } },
@@ -154,6 +182,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         tolerant,
         usedAssertions: new Map(),
         usedMethods: new Map(),
+        suggestions: suggestions !== null,
         buildinFn(name) {
             usedBuildinMethods.add(name);
             return 'f.' + name;
@@ -202,7 +231,8 @@ export default function compile(ast, tolerant = false, suggestions = null) {
         (scopeStart, sp) => {
             buffer.push(')');
             return '(' + sp + ',' + scopeStart;
-        }
+        },
+        'data'
     );
 
     if (!tolerant) {
@@ -247,6 +277,7 @@ export default function compile(ast, tolerant = false, suggestions = null) {
     if (suggestions !== null) {
         buffer.push(
             ',\nstats: [' + normalizedSuggestRanges.map(s => '[' + s + ']') + ']' +
+            ',\nmethods: m' +
             ',\nassertions: a' +
         '\n}');
     }

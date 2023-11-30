@@ -10,8 +10,8 @@ describe('lang/method', () => {
                 args(...args) {
                     return args;
                 },
-                hasArgsInThis() {
-                    return Object.hasOwnProperty.call(this, 'args');
+                getThis() {
+                    return this;
                 }
             }
         }));
@@ -93,18 +93,13 @@ describe('lang/method', () => {
             );
         });
 
-        it('this should refer to methods map', () => {
-            assert.deepEqual(
-                queryWithExtraMethods('hasArgsInThis()')({ foo: 1, bar: 2 }),
-                true
-            );
-        });
+        it('"this" should be a context for call methods and having a reference to the query context', () => {
+            const ctx = { ok: true };
+            const actualThis = queryWithExtraMethods('getThis()')(null, ctx);
 
-        it('this should refer to methods map in tolerant mode', () => {
-            assert.deepEqual(
-                queryWithExtraMethods('hasArgsInThis()', { tolerant: true })({ foo: 1, bar: 2 }),
-                true
-            );
+            assert.strictEqual(actualThis.context, ctx);
+            assert.strictEqual(typeof actualThis.method, 'function');
+            assert.strictEqual(typeof actualThis.assertion, 'function');
         });
     });
 

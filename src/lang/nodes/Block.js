@@ -15,7 +15,8 @@ export function compile(node, ctx) {
             },
             (scopeStart, sp) => {
                 return scopeStart + sp + ';';
-            }
+            },
+            ctx.scope.$ref
         );
     } else if (node.body && node.body.type === 'Object') {
         ctx.put('(');

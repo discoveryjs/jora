@@ -1,26 +1,61 @@
 import assert from 'assert';
 import jora from 'jora';
 
-describe('query extensions', () => {
-    describe('custom methods', () => {
-        it('method as function', () => {
+describe('custom methods', () => {
+    describe('method as function', () => {
+        it('basic', () => {
             assert.strictEqual(
                 jora('test()', {
                     methods: { test: () => 42 }
                 })(),
                 42
             );
+        });
+
+        it('with arguments', () => {
             assert.strictEqual(
-                jora('40.withArgs(2)', {
+                jora('40.test(2)', {
                     methods: {
-                        withArgs: (current, arg1) => current + arg1
+                        test(current, arg1) {
+                            return current + arg1;
+                        }
                     }
                 })(),
                 42
             );
         });
 
-        it('method as string', () => {
+        it('should contain a reference to the query context', () => {
+            assert.strictEqual(
+                jora('40.test()', {
+                    methods: {
+                        test(current) {
+                            return this.context.foo + current;
+                        }
+                    }
+                })(null, { foo: 2 }),
+                42
+            );
+        });
+
+        it('other builtin and custom methods should be available', () => {
+            assert.strictEqual(
+                jora('40.test()', {
+                    methods: {
+                        test() {
+                            return this.method('m1') + this.method('m2') + this.method('size', [1, 2]);
+                        },
+                        m1: () => 30,
+                        m2: '10'
+                    }
+                })(),
+                42
+            );
+        });
+    });
+
+    describe('method as string', () => {
+        it('basic', () => {
             assert.strictEqual(
                 jora('test()', {
                     methods: {
@@ -29,111 +64,50 @@ describe('query extensions', () => {
                 })(),
                 42
             );
-            assert.strictEqual(
-                jora('40.withThis(2)', {
+        });
+
+        it('all special references should be defined', () => {
+            const ctx = { context: true };
+            assert.deepStrictEqual(
+                jora('40.test(2)', {
                     methods: {
-                        withThis: '$$' // $ + $$
+                        test: '{ "$": $, "$$": $$, "@": @, "#": # }'
+                    }
+                })({}, ctx),
+                {
+                    '$': 40,
+                    '$$': 2,
+                    '@': 40,
+                    '#': ctx
+                }
+            );
+        });
+
+        it('other builtin and custom methods should be available', () => {
+            assert.deepStrictEqual(
+                jora('40.test(2)', {
+                    methods: {
+                        test: 'm1() + m2() + [1, 2].size()',
+                        m1: () => 30,
+                        m2: '10'
                     }
                 })(),
-                undefined
+                42
             );
-        });
-
-        it('should throw on built-in method override', () => {
-            assert.throws(
-                () => jora('', { methods: { size: () => 42 } }),
-                /Builtin method "size" can't be overridden/
-            );
-        });
-
-        it('should not affect other setups', () => {
-            assert.strictEqual(jora('test1()', { methods: { test1: () => 1 } })(), 1);
-            assert.strictEqual(jora('test2()', { methods: { test2: () => 2 } })(), 2);
-            assert.throws(() => jora('test2()')(), /Method "test2" is not defined/);
-            assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
         });
     });
 
-    describe('custom assertions', () => {
-        it('assertion as function', () => {
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: $ => $ == 42
-                    }
-                })(),
-                false
-            );
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: $ => $ == 42
-                    }
-                })(41),
-                false
-            );
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: $ => $ == 42
-                    }
-                })(42),
-                true
-            );
-        });
+    it('should throw on built-in method override', () => {
+        assert.throws(
+            () => jora('', { methods: { size: () => 42 } }),
+            /Builtin method "size" can't be overridden/
+        );
+    });
 
-        it('assertion as string', () => {
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: '$ = 42'
-                    }
-                })(),
-                false
-            );
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: '$ = 42'
-                    }
-                })(41),
-                false
-            );
-            assert.strictEqual(
-                jora('is custom', {
-                    assertions: {
-                        custom: '$ = 42'
-                    }
-                })(42),
-                true
-            );
-        });
-
-        it('should thow on built-in assertion override', () => {
-            assert.throws(
-                () => jora('1', { assertions: { number: () => 42 } }),
-                /Builtin assertion "number" can't be overridden/
-            );
-        });
-
-        it('should not affect other setups', () => {
-            const s1 = {
-                assertions: {
-                    test1: $ => $ === 1
-                }
-            };
-            const s2 = {
-                assertions: {
-                    test2: $ => $ === 2
-                }
-            };
-
-            assert.strictEqual(jora('is test1', s1)(1), true);
-            assert.strictEqual(jora('is test1', s1)(2), false);
-            assert.strictEqual(jora('is test2', s2)(1), false);
-            assert.strictEqual(jora('is test2', s2)(2), true);
-            assert.throws(() => jora('is test2', s1)(), /Assertion "test2" is not defined/);
-            assert.throws(() => jora('is test1', s2)(), /Assertion "test1" is not defined/);
-        });
+    it('should not affect other setups', () => {
+        assert.strictEqual(jora('test1()', { methods: { test1: () => 1 } })(), 1);
+        assert.strictEqual(jora('test2()', { methods: { test2: () => 2 } })(), 2);
+        assert.throws(() => jora('test2()')(), /Method "test2" is not defined/);
+        assert.throws(() => jora('test1()')(), /Method "test1" is not defined/);
     });
 });

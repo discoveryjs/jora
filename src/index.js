@@ -4,7 +4,7 @@ import parser from './lang/parse.js';
 import suggest from './lang/suggest.js';
 import walk from './lang/walk.js';
 import stringify from './lang/stringify.js';
-import compile from './lang/compile.js';
+import { compile, compileMethod } from './lang/compile.js';
 import buildin from './lang/compile-buildin.js';
 import methods from './methods.js';
 import assertions from './assertions.js';
@@ -20,9 +20,11 @@ function defineDictFunction(dict, name, value, queryMethods, queryAssertions) {
         Object.defineProperty(dict, name, {
             configurable: true,
             get() {
-                const compiledFn = compileFunction(value)(buildin, queryMethods, queryAssertions);
-                const fn = current => compiledFn(current, null);
+                const compiledFn = compileFunction(value, 'method')(buildin, queryMethods, queryAssertions);
+                const fn = compiledFn;
+
                 Object.defineProperty(dict, name, { enumerable: true, value: fn });
+
                 return fn;
             }
         });
@@ -71,7 +73,7 @@ function defaultDebugHandler(sectionName, value) {
     console.log();
 }
 
-function compileFunction(source, statMode, tolerantMode, debug) {
+function compileFunction(source, kind, statMode, tolerantMode, debug) {
     debug = typeof debug === 'function' ? debug : Boolean(debug) ? defaultDebugHandler : false;
 
     if (debug) {
@@ -122,7 +124,9 @@ function compileFunction(source, statMode, tolerantMode, debug) {
         }).join('\n'));
     }
 
-    const fn = compile(parseResult.ast, tolerantMode, suggestions);
+    const fn = kind === 'method'
+        ? compileMethod(parseResult.ast, tolerantMode, suggestions)
+        : compile(parseResult.ast, tolerantMode, suggestions);
 
     if (debug) {
         debug('Compiled code', fn.toString());
@@ -149,7 +153,7 @@ function createQuery(source, options) {
     if (cache.has(source) && !options.debug) {
         fn = cache.get(source);
     } else {
-        fn = compileFunction(source, statMode, tolerantMode, options.debug);
+        fn = compileFunction(source, 'query', statMode, tolerantMode, options.debug);
         cache.set(source, fn);
     }
 
@@ -186,6 +190,7 @@ function setup(options) {
         } else {
             const perform = compileFunction(
                 source,
+                'query',
                 statMode,
                 tolerantMode,
                 queryOptions.debug
@@ -216,6 +221,7 @@ export default Object.assign(createQuery, {
         suggest,
         walk,
         stringify,
-        compile
+        compile,
+        compileMethod
     }
 });

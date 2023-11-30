@@ -73,7 +73,7 @@ $odd: => $ % 2;
 
 ## Custom assertions
 
-To define custom assertions, use the following API:
+Jora queries can be enchanced by defining custom methods (see [Enhancing queries with custom methods and assertions](./api.md#enhancing-queries-with-custom-methods-and-assertions)):
 
 ```js
 import jora from 'jora';

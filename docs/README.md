@@ -1,6 +1,10 @@
 # Docs
 
 - [Introduction](./articles/intro.md)
+- [Jora library API](./articles/api.md)
+
+## Query syntax
+
 - [Syntax overview](./articles/syntax-overview.md)
 - [Literals](./articles/literals.md)
 - [Operators](./articles/operators.md)

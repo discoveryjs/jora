@@ -37,7 +37,7 @@ describe('query/setup', () => {
             const customQuery = setup({
                 methods: {
                     test: '40 + 2',
-                    withThis: '$$' // '$ + $$'
+                    withThis: '$ + $$'
                 }
             });
 
@@ -47,7 +47,7 @@ describe('query/setup', () => {
             );
             assert.strictEqual(
                 customQuery('40.withThis(2)')(),
-                undefined
+                42
             );
         });
 

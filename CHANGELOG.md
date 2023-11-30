@@ -1,5 +1,7 @@
 ## next
 
+- Changed the behavior of `this` in custom methods and assertions defined as functions to include a `context` reference to the query context. Additionally, introduced `this.method(name, ...args)` and `this.assertion(name, ...args)` methods to call a custom method or use an assertion.
+- Added support for special variables `$$` and `#` in custom methods and assertions defined as strings (Jora queries).
 - Updated the pipeline operator grammar to allow starting a query with it, e.g. `| expr` is now a valid query
 - Fixed a query compilation error when `$` was used as an object entry, e.g. `{ $, prop: 1 }`
 - Fixed bracket notation and `pick()` method when used with a function to apply `bool()` to the result of the function
