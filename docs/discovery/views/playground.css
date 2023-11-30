@@ -27,6 +27,9 @@
 .view-playground > .query-editor .discovery-editor {
     margin: 0;
 }
+.view-playground > .query-editor .discovery-editor:focus-within {
+    box-shadow: none !important;
+}
 .view-playground > .query-editor .discovery-editor .CodeMirror {
     border-radius: 2px;
 }

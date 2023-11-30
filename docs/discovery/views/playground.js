@@ -54,11 +54,14 @@ function compileQuery(
     const data = {};
     const context = {};
     let parseResult = null;
+    let parseError = null;
     let parseTokens = null;
 
     try {
         parseResult = jora.syntax.parse(query, tolerant);
-    } catch (_) {}
+    } catch (e) {
+        parseError = e;
+    }
 
     try {
         if (tokens) {
@@ -98,6 +101,10 @@ function compileQuery(
     }
 
     try {
+        if (parseError) {
+            throw parseError;
+        }
+
         const suggestions = stat
             ? jora.syntax.suggest(query, parseResult)
             : null;
