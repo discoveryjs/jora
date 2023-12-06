@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.10 (December 6, 2023)
 
 - Introduced basic support for function arguments in the syntax, allowing `$arg => expr` and `($a, $b) => expr` forms to be supported
 - Changed the behavior of `this` in custom methods and assertions defined as functions to include a `context` reference to the query context. Additionally, introduced `this.method(name, ...args)` and `this.assertion(name, ...args)` methods to call a custom method or use an assertion.
