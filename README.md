@@ -103,6 +103,7 @@ Jora provides notations for accessing properties and elements: dot, bracket and 
 
 Jora provides a rich set of built-in methods for manipulating data, such as `map()`, `filter()`, `group()`, `sort()`, `reduce()`, and many others. You can also define custom functions using the `=>` arrow function syntax, and use them as a method.
 
+- [Functions](https://discoveryjs.github.io/jora/#article:jora-syntax-functions)
 - [Methods](https://discoveryjs.github.io/jora/#article:jora-syntax-methods)
 - [Built-in methods](https://discoveryjs.github.io/jora/#article:jora-syntax-methods-builtin)
 - [Grouping](https://discoveryjs.github.io/jora/#article:jora-syntax-group): `group()` method
@@ -112,9 +113,9 @@ Jora provides a rich set of built-in methods for manipulating data, such as `map
 
 Jora has a concise syntax for mapping and filtering. The `map(fn)` method is equivalent to `.(fn())`, while the `filter(fn)` method is equivalent to `.[fn()]`.
 
+- [Filtering](https://discoveryjs.github.io/jora/#article:jora-syntax-filter): `.[…]` and `filter()` method
 - [Mapping](https://discoveryjs.github.io/jora/#article:jora-syntax-map): `.(…)` and `map()` method
 - [Recursive mapping](https://discoveryjs.github.io/jora/#article:jora-syntax-recursive-map): `..(…)`
-- [Filtering](https://discoveryjs.github.io/jora/#article:jora-syntax-filter): `.[…]` and `filter()` method
 
 ### Variables
 
