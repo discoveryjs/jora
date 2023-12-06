@@ -216,31 +216,31 @@ statApi.suggestion(6); // .[foo=|]
     Output format:
 
     ```ts
-        suggestion(): Array<{
-            context: 'path' | 'key' | 'value' | 'in-value' | 'value-subset' | 'var',
-            from: number,
-            to: number,
-            text: string,
-            values: Set<any>,
-            related: Set<any> | null
-        }> | null
+    stat(): Array<{
+        context: 'path' | 'key' | 'value' | 'in-value' | 'value-subset' | 'var' | 'assertion',
+        from: number,
+        to: number,
+        text: string,
+        values: Set<any>,
+        related: Set<any> | null
+    }> | null
     ```
 
 - `suggestion(pos: number, options?)`
 
-    Returns suggesion values grouped by a type or `null` if there is no any suggestions. The following options are supported (all are optional):
-    - `limit` (default: `Infinity`) – a max number of the values that should be returned for each value type (`"property"`, `"value"` or `"variable"`)
+    Returns suggesion values grouped by a type or `null` if there is no any suggestions. The following `options` are supported (all are optional):
+    - `limit` (default: `Infinity`) – a max number of the values that should be returned for each value type (`"property"`, `"value"`, `"variable"`, `"assertion"`)
     - `sort` (default: `false`) – a comparator function (should take 2 arguments and return a negative number, `0` or a positive number) for value list sorting, makes sence when `limit` is used
     - `filter` (default: `function`) – a filter function factory (`pattern => value => <expr>`) to discard values from the result when returns a falsy value (default is equivalent to `patttern => value => String(value).toLowerCase().includes(pattern)`)
 
     Output format:
 
     ```ts
-        suggestion(): Array<{
-            type: 'property' | 'value' | 'variable',
-            from: number,
-            to: number,
-            text: string,
-            suggestions: Array<string | number>
-        }> | null
+    suggestion(): Array<{
+        type: 'property' | 'value' | 'variable' | 'assertion',
+        from: number,
+        to: number,
+        text: string,
+        suggestions: Array<string | number>
+    }> | null
     ```
