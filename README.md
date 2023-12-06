@@ -40,9 +40,8 @@ Table of content:
     - [Variables](#variables)
 - [NPM package](#npm-package)
     - [Install & import](#install--import)
-    - [Quick demo](#quick-demo)
     - [API](#api)
-    - [Query introspection](#query-introspection)
+    - [Quick demo](#quick-demo)
 
 <!-- /TOC -->
 
