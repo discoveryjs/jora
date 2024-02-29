@@ -6,6 +6,7 @@ module.exports = {
     view: {
         noscript: './noscript.js',
         assets: [
+            './common.js',
             './common.css',
             './pages/default.css',
             './pages/default.js',
