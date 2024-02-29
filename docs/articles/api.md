@@ -21,7 +21,7 @@ Options:
 
 - assertions
 
-  Type: `<string, function | string>`  
+  Type: `Object<string, function | string>`  
   Default: `undefined`
 
   Specifies additional assertions for use in queries. It requires an object where each key is an assertion name, and its value is either a function or a string (jora query) for the assertion (see [Custom methods and assertions](#сustom-methods-and-assertions)). Similar to methods, overriding [built-in assertions](https://discoveryjs.github.io/jora/#article:jora-syntax-assertions&!anchor=built-in-assertions) will trigger an exception.
