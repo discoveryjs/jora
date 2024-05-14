@@ -48,7 +48,7 @@ const toc = {
                             item: [
                                 {
                                     view: 'link',
-                                    data: '{ href: `#${#.page}:${#.id}&!anchor=` + name, text: name, match: #.filter }',
+                                    data: '{ href: `#${#.page}:${#.id}&!anchor=` + name.toLowerCase(), text: name, match: #.filter }',
                                     content: 'text-match'
                                 }
                             ]
