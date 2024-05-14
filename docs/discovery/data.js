@@ -99,7 +99,7 @@ function processMarkdown(article, href, { examples, methods }) {
 
                         examples.push({
                             article,
-                            header: lastHeader,
+                            header: lastHeader.replace(/<!--.+?-->/g, ''),
                             methodRefs,
                             source: token.text,
                             ast

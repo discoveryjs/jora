@@ -295,7 +295,7 @@ $input.max(a desc)
 
 ## median(<!--getter-->)
 
-Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentilevalue-getter)).
+Computes the [median](https://en.wikipedia.org/wiki/Median) (the second [quartile](https://en.wikipedia.org/wiki/Quartile)) of the values in an array. It's a shortcut for `percentile(50)` or `p(50)` (see [percentile()](#percentile)).
 
 ```jora
 [4, 2, 1, 3, 5].median()
@@ -358,11 +358,11 @@ The `numbers()` method is utilized internally by statistical methods such as `su
 
 ## p(<!--k, getter-->)
 
-Alias for [`percentile()`](#percentilek-getter) method.
+Alias for [`percentile()`](#percentile) method.
 
 ## percentile(<!--k, getter-->)
 
-This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbersgetter) method, given the same `getter` parameter. If the input (after processing through `getter`) contains a `NaN`, the function will always return `NaN`.
+This function computes the [percentile](https://en.wikipedia.org/wiki/Percentile) of values in an array. It returns `undefined` if the input is an empty array, not an array, or if the `k` parameter is not specified or falls outside the range of `[0..100]`. The function utilizes the same numbers as the [`numbers()`](#numbers) method, given the same `getter` parameter. If the input (after processing through `getter`) contains a `NaN`, the function will always return `NaN`.
 
 ```jora
 [4, 3, 5, 2, 1].percentile(75)
@@ -499,7 +499,7 @@ Returns the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviatio
 
 ## sum(<!--getter-->)
 
-Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbersgetter) method with the same `getter` parameter returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
+Computes the sum of the values in an array. It returns `undefined` for non-array values and empty arrays. The method uses the same numbers as [`numbers()`](#numbers) method with the same `getter` parameter returns. The method employs the [Kahan–Babuška summation algorithm](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) to minimize numerical errors in the result.
 
 ```jora
 [].sum()
@@ -596,7 +596,7 @@ JavaScript's [`Math`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Re
 
 Modifications from the standard JavaScript `Math` object include:
 - The `log()` and `log1p()` methods have been renamed to `ln()` and `ln1p()`, respectively. This change was made to prevent confusion with the common usage of `log()` for logging purposes.
-- The [`min()`](#mincompare) and [`max()`](#maxcompare) methods have been uniquely implemented in Jora to provide additional functionality.
+- The [`min()`](#min) and [`max()`](#max) methods have been uniquely implemented in Jora to provide additional functionality.
 - The `random()` method is not included in Jora's Math methods, as it does not align with the deterministic nature of Jora.
 
 > Note: Keep in mind that the unary `-` operator has lower precedence than other operators. To apply a method to a negative scalar number, use the [grouping operator](./operators.md#grouping-operator), the [pipeline operator](./operators.md#pipeline-operator), or store the number in a [variable](./variables.md) and then apply the method to it. For example, instead of `-123.abs()`, which is interpreted as `-(123.abs())`, you should use one of the following:
