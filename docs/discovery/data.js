@@ -216,6 +216,7 @@ module.exports = function() {
 
     articles.unshift(readmeTOC.shift());
     articles[0].slug = 'intro';
+    readmeTOC.shift();
     articles.splice(3, 0, {
         ...readmeTOC.shift(),
         slug: 'jora-syntax',

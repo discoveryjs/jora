@@ -16,17 +16,29 @@ import jora from 'jora';
 const jora = require('jora');
 ```
 
-For a browser unminified (`dist/jora.js`) and minified (`dist/jora.min.js`) bundles are available. You may include `jora` by one of the following way:
+For a browser two bundles are available:
+
+- `dist/jora.js`
+- `dist/jora.esm.js`
+
+You may include `jora` by one of the following way:
 
 ```html
 <script src="node_modules/jora/dist/jora.js"></script>
-<script src="node_modules/jora/dist/jora.min.js"></script>
+<script type="module">
+  import jora from 'node_modules/jora/dist/jora.esm.js';
+</script>
+
 <!-- or use one of CDN -->
-<script src="https://unpkg.com/jora/dist/jora.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jora/dist/jora.js"></script>
+<script type="module">
+  import jora from 'https://cdn.jsdelivr.net/npm/jora';
+</script>
+
+<script src="https://unpkg.com/jora/dist/jora.js"></script>
 ```
 
-In this case, a global variable `jora` will become available.
+In case a non ESM version is used, a global variable `jora` will become available.
 
 ## Usage
 
@@ -44,57 +56,7 @@ Such function takes a value and returns new value – a result of query performi
 jora('query')(data) // query result
 ```
 
-Query builder function takes `options` optional parameter:
-
-```js
-// used default values for options
-jora('query', {
-    methods: undefined,
-    debug: false,
-    tolerant: false,
-    stat: false
-});
-```
-
-Options:
-
-- methods
-
-  Type: `Object`  
-  Default: `undefined`
-
-  > NOTE: Use `jora.setup()` (see bellow) to specify custom methods when possible, due to performance reasons.
-
-  Custom methods for using in query passed as an object, where a key is a method name and a value is a function to perform an action. It overrides build-in methods. See [...]() for detail.
-
-- debug
-
-  Type: `Boolean` or `function(name, value)`  
-  Default: `false`
-
-  Enables debug output. When set a function, this function will recieve a section name and its value.
-
-- tolerant
-
-  Type: `Boolean`  
-  Default: `false`
-
-  Enables tolerant parsing mode. This mode supresses parsing errors when possible.
-
-- stat
-
-  Type: `Boolean`  
-  Default: `false`
-
-  Enables stat mode. When mode is enabled a query stat interface is returning instead of resulting data.
-
-To create a new query factory function with predefined custom methods `jora.setup()` is using. Such factory function is not respect (ignores) `methods` option in `options`:
-
-```js
-const myQuery = jora.setup(methods);
-
-myQuery(query)(data) // result of query
-```
+See [Jora library API](#article:api) for details.
 
 ## Your first query
 
