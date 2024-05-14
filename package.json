@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@discoveryjs/cli": "^2.6.0",
-    "@discoveryjs/discovery": "^1.0.0-beta.79",
+    "@discoveryjs/discovery": "^1.0.0-beta.83",
     "@lahmatiy/jison": "^0.4.18-remastered.7",
     "c8": "^8.0.1",
     "esbuild": "~0.19.5",
