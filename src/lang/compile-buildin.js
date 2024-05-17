@@ -1,5 +1,5 @@
 import { cmp, cmpAnalytical, cmpNatural, cmpNaturalAnalytical } from '../utils/compare.js';
-import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy } from '../utils/misc.js';
+import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy, parseIntDefault } from '../utils/misc.js';
 
 export default Object.freeze({
     ensureArray,
@@ -161,16 +161,20 @@ function pick(current, ref = () => true) {
     return hasOwn(current, ref) ? current[ref] : undefined;
 }
 
-function indexOf(dict, value, fromIndex) {
+function indexOf(dict, searchElement, fromIndex) {
     return dict
-        ? internalIndexOf(dict, value, fromIndex)
+        ? internalIndexOf(dict, searchElement, fromIndex)
         : -1;
 }
 
-function internalIndexOf(dict, value, fromIndex = 0) {
-    if (Number.isNaN(value)) {
+function internalIndexOf(dict, searchElement, fromIndex = 0) {
+    // Allow searching for NaN values in arrays unlike JavaScript
+    // JavaScript: NaN values are never compared as equal, so indexOf() always returns -1 when `searchElement` is NaN.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf#description
+    if (Number.isNaN(searchElement)) {
         if (isArrayLike(dict)) {
-            for (let i = parseInt(fromIndex, 10) || 0; i < dict.length; i++) {
+            // Used a loop instead of findIndex() since it doesn't support for fromIndex
+            for (let i = parseIntDefault(fromIndex, 0); i < dict.length; i++) {
                 if (Number.isNaN(dict[i])) {
                     return i;
                 }
@@ -179,22 +183,26 @@ function internalIndexOf(dict, value, fromIndex = 0) {
     }
 
     if (typeof dict.indexOf === 'function') {
-        return dict.indexOf(value, fromIndex);
+        return dict.indexOf(searchElement, fromIndex);
     }
 
     return -1;
 }
 
-function lastIndexOf(dict, value, fromIndex) {
+function lastIndexOf(dict, searchElement, fromIndex) {
     return dict
-        ? internalLastIndexOf(dict, value, fromIndex)
+        ? internalLastIndexOf(dict, searchElement, fromIndex)
         : -1;
 }
 
-function internalLastIndexOf(dict, value, fromIndex) {
-    if (Number.isNaN(value)) {
+function internalLastIndexOf(dict, searchElement, fromIndex) {
+    // Allow searching for NaN values in arrays unlike JavaScript
+    // JavaScript: NaN values are never compared as equal, so indexOf() always returns -1 when `searchElement` is NaN.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf#description
+    if (Number.isNaN(searchElement)) {
         if (isArrayLike(dict)) {
-            for (let i = parseInt(fromIndex, 10) || dict.length - 1; i >= 0; i--) {
+            // Used a loop instead of findLastIndex() since it doesn't support for fromIndex
+            for (let i = parseIntDefault(fromIndex, dict.length - 1); i >= 0; i--) {
                 if (Number.isNaN(dict[i])) {
                     return i;
                 }
@@ -203,7 +211,8 @@ function internalLastIndexOf(dict, value, fromIndex) {
     }
 
     if (typeof dict.lastIndexOf === 'function') {
-        return dict.lastIndexOf(value, parseInt(fromIndex, 10) || dict.length - 1);
+        // Use `dict.length - 1` as the default because `undefined` is treated as 0
+        return dict.lastIndexOf(searchElement, parseIntDefault(fromIndex, dict.length - 1));
     }
 
     return -1;

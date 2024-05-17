@@ -30,6 +30,32 @@ describe('lastIndexOf()', () => {
             assert.strictEqual(query('[1, 2, 3, 1, 2, 3].lastIndexOf(2, undefined)')(), 4);
         });
 
+        it('zero index, no occurrences', () => {
+            assert.strictEqual(query('[1, 2, 3, 1, 2, 3].lastIndexOf(5, 0)')(), -1);
+        });
+
+        it('zero index, with occurrences', () => {
+            assert.strictEqual(query('[1, 2, 3, 1, 2, 3].lastIndexOf(2, 0)')(), -1);
+        });
+
+        describe('should support NaN', () => {
+            it('zero index, no occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, 1, 2, 3].lastIndexOf(NaN, 0)')(), -1);
+            });
+
+            it('zero index, with occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, NaN, 2, 3].lastIndexOf(NaN, 0)')(), -1);
+            });
+
+            it('zero index, with occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, NaN, 2, 3].lastIndexOf(NaN, 4)')(), 3);
+            });
+
+            it('zero index, with occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, NaN, 2, NaN, 3].lastIndexOf(NaN, 4)')(), 3);
+            });
+        });
+
         it('positive int', () => {
             assert.strictEqual(query('[1, 2, 3, 1, 2, 3].lastIndexOf(2, 3)')(), 1);
         });

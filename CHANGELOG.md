@@ -1,3 +1,7 @@
+## next
+
+- Fixed `lastIndexOf()` behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
+
 ## 1.0.0-beta.10 (December 6, 2023)
 
 - Introduced basic support for function arguments in the syntax, allowing `$arg => expr` and `($a, $b) => expr` forms to be supported

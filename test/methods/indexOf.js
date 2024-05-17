@@ -30,6 +30,20 @@ describe('indexOf()', () => {
             assert.strictEqual(query('[1, 2, 3, 1, 2, 3].indexOf(2, undefined)')(), 1);
         });
 
+        describe('should support NaN', () => {
+            it('zero index, no occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, 1, 2, 3].indexOf(NaN, 0)')(), -1);
+            });
+
+            it('zero index, with occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, NaN, 2, 3].indexOf(NaN, 0)')(), 3);
+            });
+
+            it('non-zero index, with occurrences', () => {
+                assert.strictEqual(query('[1, 2, 3, NaN, 2, NaN, 3].indexOf(NaN, 4)')(), 5);
+            });
+        });
+
         it('positive int', () => {
             assert.strictEqual(query('[1, 2, 3, 1, 2, 3].indexOf(2, 2)')(), 4);
         });
