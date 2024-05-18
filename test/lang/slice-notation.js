@@ -76,7 +76,11 @@ describe('lang/slice notation', () => {
                 '[2:]': data.slice(2),
                 '[:]': data,
                 '[10:20]': [],
-                '[-10:-20]': []
+                '[-10:-20]': [],
+                // from > to
+                '[3:0]': data.slice(0, 3).reverse(),
+                '[3:1]': data.slice(1, 3).reverse(),
+                '[-3:2]': data.slice(2, -3).reverse()
             },
             'subquery': {
                 'id[0:3]': ids.slice(0, 3),
@@ -84,7 +88,26 @@ describe('lang/slice notation', () => {
                 'id[2:]': ids.slice(2),
                 'id[:]': ids.slice(),
                 'id[10:20]': [],
-                'id[-10:-20]': []
+                'id[-10:-20]': [],
+                // from > to
+                'id[3:0]': ids.slice(0, 3).reverse(),
+                'id[3:1]': ids.slice(1, 3).reverse(),
+                'id[-3:2]': ids.slice(2, -3).reverse()
+            }
+        });
+    });
+
+    describe('[from:to] string', () => {
+        generateTests('hello world', {
+            'root': {
+                '[0:3]': 'hel',
+                '[:3]': 'hel',
+                '[2:]': 'llo world',
+                '[:]': 'hello world',
+                '[3:8]': 'lo wo',
+                '[10:20]': 'd',
+                '[-10:-20]': 'h',
+                '[-10:]': 'ello world'
             }
         });
     });
@@ -109,7 +132,12 @@ describe('lang/slice notation', () => {
                 '[0:3:-2]': [data[2], data[0]],
                 '[::-2]': [data[7], data[5], data[3], data[1]],
                 '[::-3]': [data[7], data[4], data[1]],
-                '[::]': data
+                '[::]': data,
+                // from > to
+                '[3:0:2]': [data[2], data[0]], // [0:3:-2]
+                '[3:0:-2]': [data[0], data[2]], // [0:3:2]
+                '[4:1:1]': [data[3], data[2], data[1]], // [1:3:-1]
+                '[4:1:-1]': [data[1], data[2], data[3]] // [1:3:1]
             },
             'subquery': {
                 'id[0:3:2]': [ids[0], ids[2]],
@@ -123,7 +151,36 @@ describe('lang/slice notation', () => {
                 'id[0:3:-2]': [ids[2], ids[0]],
                 'id[::-2]': [ids[7], ids[5], ids[3], ids[1]],
                 'id[::-3]': [ids[7], ids[4], ids[1]],
-                'id[::]': ids
+                'id[::]': ids,
+                // from > to
+                'id[3:0:2]': [ids[2], ids[0]], // [0:3:-2]
+                'id[3:0:-2]': [ids[0], ids[2]], // [0:3:2]
+                'id[4:1:1]': [ids[3], ids[2], ids[1]], // [1:3:-1]
+                'id[4:1:-1]': [ids[1], ids[2], ids[3]] // [1:3:1]
+            }
+        });
+    });
+
+    describe('[from:to:step] string', () => {
+        generateTests('hello world', {
+            'root': {
+                '[0:3:2]': 'hl',
+                '[0:3:1]': 'hel',
+                '[0:3:0]': 'hel',
+                '[0:3:-1]': 'leh',
+                '[3:0]': 'leh',
+                '[3:0:-1]': 'hel',
+                '[3:0:1]': 'leh',
+                '[3:0:2]': 'lh',
+                '[-4:-1:2]': 'ol',
+                '[-4:-1:-2]': 'lo',
+                '[-10:4:1]': 'ell',
+                '[-10:7:2]': 'el ',
+                '[-3:1:-2]': 'el o',
+                '[0:5:-2]': 'olh',
+                '[::-2]': 'drwolh',
+                '[::-3]': 'dooe',
+                '[::]': 'hello world'
             }
         });
     });

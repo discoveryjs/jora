@@ -1,6 +1,10 @@
 ## next
 
 - Fixed `lastIndexOf()` behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
+- Modified the behavior of slice notation:
+    - When the value is a string, the result remains a string (was an array of chars)
+    - When `from` is greater than `to` and `step` is not specified, `step` defaults to `-1` (i.e. `$[3:1]` is the same as `$[1:3:-1]`)
+    - When `from` is greater than `to` and `step` is specified, the sign of the `step` is inverted (i.e. `$[5:1:-2]` is the same as `$[1:5:2]`)
 
 ## 1.0.0-beta.10 (December 6, 2023)
 

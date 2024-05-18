@@ -261,35 +261,52 @@ function filter(value, fn) {
     return isTruthy(fn(value)) ? value : undefined;
 }
 
-function slice(value, from = 0, to = value && value.length, step = 1) {
+function slice(value, from, to, step = 1) {
     if (!isArrayLike(value)) {
         return [];
     }
 
-    from = parseInt(from, 10) || 0;
-    to = parseInt(to, 10) || value.length;
-    step = parseInt(step, 10) || 1;
+    from = parseIntDefault(from, 0);
+    to = parseIntDefault(to, value.length);
+    step = parseIntDefault(step, 1) || 1;
 
-    if (step !== 1) {
-        const result = [];
+    // Convert negative values to offsets from the end of the array and clamp offsets by the array length
+    from = from < 0
+        ? Math.max(0, value.length + from)
+        : Math.min(value.length, from);
+    to = to < 0
+        ? Math.max(0, value.length + to)
+        : Math.min(value.length, to);
 
-        from = from < 0
-            ? Math.max(0, value.length + from)
-            : Math.min(value.length, from);
-        to = to < 0
-            ? Math.max(0, value.length + to)
-            : Math.min(value.length, to);
+    if (from >= 0 && to >= 0 && from <= to && step === 1) {
+        return typeof value === 'string'
+            ? value.slice(from, to)
+            : Array.prototype.slice.call(value, from, to);
+    }
 
-        for (let i = step > 0 ? from : to - 1; i >= from && i < to; i += step) {
+    // Invert `from`, `to`, and `step` if `from` is greater than `to`
+    // 2..5 step 1  -> 2 3 4 5
+    // 2..5 step -1 -> 5 4 3 2
+    // 5..2 step 1  == 2..5 step -1
+    // 5..2 step -1 == 2..5 step 1
+    if (from > to) {
+        [from, to] = [to, from];
+        step = -step;
+    }
+
+    const result = [];
+
+    if (step > 0) {
+        for (let i = from; i < to; i += step) {
             result.push(value[i]);
         }
-
-        return result;
+    } else {
+        for (let i = to - 1; i >= from; i += step) {
+            result.push(value[i]);
+        }
     }
 
-    if (typeof value === 'string') {
-        return value.slice(from, to);
-    }
-
-    return Array.prototype.slice.call(value, from, to);
+    return typeof value === 'string'
+        ? result.join('')
+        : result;
 }

@@ -137,7 +137,9 @@ export default Object.freeze({
             : current;
     },
     slice(current, from, to) {
-        return buildin.slice(current, from, to);
+        return typeof current === 'string'
+            ? current.slice(from, to)
+            : Array.prototype.slice.call(current, from, to);
     },
     group(current, keyGetter, valueGetter) {
         const map = new Map();
