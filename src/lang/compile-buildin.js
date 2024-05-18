@@ -1,5 +1,5 @@
 import { cmp, cmpAnalytical, cmpNatural, cmpNaturalAnalytical } from '../utils/compare.js';
-import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy, parseIntDefault } from '../utils/misc.js';
+import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy, parseIntDefault, isArray } from '../utils/misc.js';
 
 export default Object.freeze({
     ensureArray,
@@ -133,7 +133,7 @@ function pick(current, ref = () => true) {
     }
 
     if (typeof ref === 'function') {
-        if (Array.isArray(current) || typeof current === 'string') {
+        if (isArray(current) || typeof current === 'string') {
             for (let i = 0; i < current.length; i++) {
                 if (isTruthy(ref(current[i], i))) {
                     return current[i];
@@ -152,7 +152,7 @@ function pick(current, ref = () => true) {
         return undefined;
     }
 
-    if (Array.isArray(current) || typeof current === 'string') {
+    if (isArray(current) || typeof current === 'string') {
         return isFinite(ref)
             ? current[ref < 0 ? current.length + Number(ref) : Number(ref) || 0]
             : undefined;

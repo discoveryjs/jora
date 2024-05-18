@@ -37,6 +37,10 @@ export function isArrayLike(value) {
     return value && hasOwn(value, 'length') && isFinite(value.length);
 }
 
+export function isArray(value) {
+    return Array.isArray(value) || ArrayBuffer.isView(value);
+}
+
 export function parseIntDefault(value, defaultValue = 0) {
     const int = parseInt(value, 10);
     return !isNaN(int) ? int : defaultValue;

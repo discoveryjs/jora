@@ -245,6 +245,22 @@ describe('lang/pick', () => {
         });
     });
 
+    describe('TypedArray support', () => {
+        const array = Uint32Array.from({ length: 20 }, (_, idx) => idx);
+
+        it('$[idx]', () => {
+            assert.deepStrictEqual(query('$[4]')(array), 4);
+        });
+
+        it('$[idx] negative index', () => {
+            assert.deepStrictEqual(query('$[-4]')(array), 16);
+        });
+
+        it('$[fn]', () => {
+            assert.deepStrictEqual(query('$[=> $ = 5]')(array), 5);
+        });
+    });
+
     describe('escaped symbols in paths', () => {
         it('single quote string as a key', () => {
             assert.deepEqual(

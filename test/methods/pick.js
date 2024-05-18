@@ -245,6 +245,22 @@ describe('pick()', () => {
         });
     });
 
+    describe('TypedArray support', () => {
+        const array = Uint32Array.from({ length: 20 }, (_, idx) => idx);
+
+        it('pick(idx)', () => {
+            assert.deepStrictEqual(query('pick(4)')(array), 4);
+        });
+
+        it('pick(idx) negative index', () => {
+            assert.deepStrictEqual(query('pick(-4)')(array), 16);
+        });
+
+        it('pick(fn)', () => {
+            assert.deepStrictEqual(query('pick(=> $ = 5)')(array), 5);
+        });
+    });
+
     describe('special cases', () => {
         it('should not return a value for array by key', () => {
             assert.strictEqual(
