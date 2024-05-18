@@ -33,4 +33,11 @@ describe('reverse()', () => {
             [3, 2, 1]
         );
     });
+
+    it('should works with TypedArray', () => {
+        assert.deepEqual(
+            query('reverse()')(new Uint8Array([1, 2, 3, 4])),
+            new Uint8Array([4, 3, 2, 1])
+        );
+    });
 });

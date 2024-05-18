@@ -2,7 +2,7 @@ import buildin from './lang/compile-buildin.js';
 import { cmp } from './utils/compare.js';
 import { stableSort } from './utils/stable-sort.js';
 import { numbers, count, sum, mean, variance, stdev, min, max, percentile, median } from './utils/statistics.js';
-import { hasOwn, addToSet, addToMapSet, isPlainObject, isRegExp } from './utils/misc.js';
+import { hasOwn, addToSet, addToMapSet, isPlainObject, isRegExp, isArray } from './utils/misc.js';
 
 function noop() {}
 
@@ -132,7 +132,7 @@ export default Object.freeze({
         return stableSort(current, comparator);
     },
     reverse(current) {
-        return Array.isArray(current)
+        return isArray(current)
             ? current.slice().reverse()
             : current;
     },
