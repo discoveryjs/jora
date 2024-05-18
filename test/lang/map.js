@@ -61,12 +61,24 @@ describe('lang/map', () => {
         );
     });
 
-    it('TypedArray support', () => {
-        const array = Uint32Array.from({ length: 10 }, (_, idx) => idx);
-        assert.deepEqual(
-            query('.($ + 2)')(array),
-            [...array.map($ => $ + 2)]
-        );
+    describe('TypedArray support', () => {
+        it('mapping of TypedArray', () => {
+            const array = new Uint32Array([1, 2, 3, 4, 5]);
+            assert.deepEqual(
+                query('.($ + 2)')(array),
+                [...array.map($ => $ + 2)]
+            );
+        });
+        it('TypedArray as return value', () => {
+            const array = [
+                { prop: new Uint32Array([1, 2, 3]) },
+                { prop: new Uint32Array([2, 3, 4]) }
+            ];
+            assert.deepEqual(
+                query('.(prop)')(array),
+                [1, 2, 3, 4]
+            );
+        });
     });
 
     it('a whitespace between dot and parenthesis is prohibited', () => {

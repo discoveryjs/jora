@@ -3,7 +3,7 @@ export const toString = Object.prototype.toString;
 
 export function addToSet(set, value) {
     if (value !== undefined) {
-        if (Array.isArray(value)) {
+        if (isArray(value)) {
             value.forEach(item => set.add(item));
         } else {
             set.add(value);
