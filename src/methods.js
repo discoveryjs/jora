@@ -210,7 +210,7 @@ export default Object.freeze({
 
     // array/string
     split(current, pattern) {
-        if (Array.isArray(current)) {
+        if (isArray(current)) {
             const patternFn = typeof pattern === 'function' ? pattern : Object.is.bind(null, pattern);
             const result = [];
             let start = 0;

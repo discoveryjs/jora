@@ -83,4 +83,11 @@ describe('split()', () => {
             );
         });
     });
+
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('split(3)')(new Uint8Array([1, 2, 3, 4, 3, 2, 1])),
+            [new Uint8Array([1, 2]), new Uint8Array([4]), new Uint8Array([2, 1])]
+        );
+    });
 });
