@@ -42,13 +42,39 @@ describe('group()', () => {
     });
 
     it('should group by an element when key value is an array', () => {
+        const data = [
+            { id: 1, tags: ['foo', 'bar'] },
+            { id: 2, tags: ['baz'] },
+            { id: 3, tags: ['bar', 'baz'] },
+            { id: 4, tags: ['bar'] }
+        ];
+
         assert.deepEqual(
-            query('.group(=>refs.type)')(data),
-            ['svg', 'css', 'js']
-                .map(type => ({
-                    key: type,
-                    value: data.filter(item => item.refs.find(ref => ref.type === type))
-                }))
+            query('group(=>tags)')(data),
+            [
+                { key: 'foo', value: [data[0]] },
+                { key: 'bar', value: [data[0], data[2], data[3]] },
+                { key: 'baz', value: [data[1], data[2]] }
+            ]
+        );
+    });
+
+    it('should not loose elements with empty array', () => {
+        const data = [
+            { id: 1, tags: ['foo', 'bar'] },
+            { id: 2, tags: ['baz'] },
+            { id: 3, tags: ['bar', 'baz'] },
+            { id: 4, tags: [] }
+        ];
+
+        assert.deepEqual(
+            query('group(=>tags)')(data),
+            [
+                { key: 'foo', value: [data[0]] },
+                { key: 'bar', value: [data[0], data[2]] },
+                { key: 'baz', value: [data[1], data[2]] },
+                { key: undefined, value: [data[3]] }
+            ]
         );
     });
 });

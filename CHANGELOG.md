@@ -2,7 +2,8 @@
 
 - Added support for TypedArray in bracket notation, filtering, mapping, matching, spread operator, +/- operators
 - Changed `is array` assertion to return `true` for TypedArray values
-- Fixed `lastIndexOf()` behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
+- Fixed `lastIndexOf()` method behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
+- Fixed `group()` method to include elements with an empty array as a key in the group with `key: undefined`; previously, such elements were omitted from the result
 - Modified the behavior of slice notation:
     - When the value is a string, the result remains a string (was an array of chars)
     - When `from` is greater than `to` and `step` is not specified, `step` defaults to `-1` (i.e. `$[3:1]` is the same as `$[1:3:-1]`)

@@ -161,8 +161,14 @@ export default Object.freeze({
             const keys = keyGetter(item);
 
             if (Array.isArray(keys)) {
-                for (const key of keys) {
-                    addToMapSet(map, key, valueGetter(item));
+                if (keys.length > 0) {
+                    const value = valueGetter(item);
+
+                    for (const key of keys) {
+                        addToMapSet(map, key, value);
+                    }
+                } else {
+                    addToMapSet(map, undefined, valueGetter(item));
                 }
             } else {
                 addToMapSet(map, keys, valueGetter(item));
