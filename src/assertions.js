@@ -1,4 +1,4 @@
-import { isPlainObject, isRegExp, isTruthy } from './utils/misc.js';
+import { isArray, isPlainObject, isRegExp, isTruthy } from './utils/misc.js';
 
 export default Object.freeze({
     function: value => typeof value === 'function',
@@ -15,7 +15,7 @@ export default Object.freeze({
     undefined: value => value === undefined,
     nullish: value => value === null || value === undefined,
     object: isPlainObject,
-    array: Array.isArray,
+    array: isArray,
     regexp: isRegExp,
     truthy: isTruthy,
     falsy: value => !isTruthy(value)

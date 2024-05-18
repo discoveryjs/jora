@@ -1,6 +1,6 @@
 ## next
 
-- Added support for TypedArray in bracket notation/`pick()` method
+- Added support for TypedArray in bracket notation/`pick()` method, `is array`
 - Fixed `lastIndexOf()` behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
 - Modified the behavior of slice notation:
     - When the value is a string, the result remains a string (was an array of chars)
