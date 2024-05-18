@@ -1025,6 +1025,22 @@ describe('query/suggestions (tolerant mode)', () => {
             ]
         });
 
+        it('has with TypedArray', () => {
+            assert.deepEqual(
+                suggestQuery('$ has |', new Uint8Array([1, 2, 5, 9])),
+                [
+                    suggestion('', ['1:value', '2:value', '5:value', '9:value'], 6)
+                ]
+            );
+
+            assert.deepEqual(
+                suggestQuery('| in $', new Uint8Array([1, 2, 5, 9])),
+                [
+                    suggestion('', ['1:value', '2:value', '5:value', '9:value'], 0)
+                ]
+            );
+        });
+
         describeCasesTolerant('has no', {
             'keys().[[| |] has no $]': [
                 suggestion('', ['"foo":value', '"bar":value'], 9),

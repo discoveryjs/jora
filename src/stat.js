@@ -1,6 +1,6 @@
 import buildin from './lang/compile-buildin.js';
 import { MaxHeap } from './utils/heap.js';
-import { isPlainObject } from './utils/misc.js';
+import { isArray, isPlainObject } from './utils/misc.js';
 
 const contextToType = {
     'path': 'property',
@@ -74,7 +74,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
             const keys = new Set();
 
             for (const value of values) {
-                if (Array.isArray(value)) {
+                if (isArray(value)) {
                     value.forEach(addValue);
                 } else if (isPlainObject(value)) {
                     addObjectKeysToSet(value, keys);
