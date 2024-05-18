@@ -1,6 +1,6 @@
 ## next
 
-- Added support for TypedArray in bracket notation, filtering, mapping, matching
+- Added support for TypedArray in bracket notation, filtering, mapping, matching, spread operator
 - Changed `is array` assertion to return `true` for TypedArray values
 - Fixed `lastIndexOf()` behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
 - Modified the behavior of slice notation:

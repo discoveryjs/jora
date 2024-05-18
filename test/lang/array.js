@@ -69,6 +69,15 @@ describe('lang/array', () => {
         });
     });
 
+    describe('spread TypedArray', () => {
+        it('[...TypedArray]', () =>
+            assert.deepEqual(
+                query('[...]')(new Uint8Array([1, 2, 3, 4])),
+                [1, 2, 3, 4]
+            )
+        );
+    });
+
     describe('should allow a single trailing comma', () => {
         const valid = [
             ['[1,]', [1]],

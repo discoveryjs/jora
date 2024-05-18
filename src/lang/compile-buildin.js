@@ -37,7 +37,7 @@ export default Object.freeze({
 });
 
 function ensureArray(value) {
-    return Array.isArray(value) ? value : [value];
+    return isArray(value) ? value : [value];
 }
 
 function add(a, b) {
