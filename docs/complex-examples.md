@@ -25,7 +25,7 @@ people
   .group(=> occupation)
   .({
     occupation: key,
-    averageAge: value.reduce(=> $$ + age, 0) / value.size()
+    averageAge: value.avg(=> age)
   })
   .sort(averageAge desc)
 ```
@@ -65,14 +65,14 @@ The Jora query would be:
 people
   .group(=> occupation)
   .({
-    $valueWithSkill: value.[skills has #.skill].size();
+    $skillCount: value.count(=> skills has #.skill?);
     $totalCount: value.size();
 
     occupation: key,
     skill: #.skill,
-    totalCount: $totalCount,
-    skillCount: $valueWithSkill,
-    skillPercentage: $valueWithSkill / $totalCount * 100
+    $skillCount,
+    $totalCount,
+    skillPercentage: $skillCount / $totalCount * 100
   })
   .sort(skillPercentage desc)
 ```
@@ -82,9 +82,9 @@ Given the data and context, this query will produce the following output:
 ```js
 // jora('...query...')(data, { skill: 'A' })
 [
-    { occupation: 'Doctor', skill: 'A', totalCount: 2, skillCount: 2, skillPercentage: 100 },
-    { occupation: 'Engineer', skill: 'A', totalCount: 2, skillCount: 1, skillPercentage: 50 },
-    { occupation: 'Student', skill: 'A', totalCount: 2, skillCount: 1, skillPercentage: 50 }
+    { occupation: 'Doctor', skill: 'A', skillCount: 2, totalCount: 2, skillPercentage: 100 },
+    { occupation: 'Engineer', skill: 'A', skillCount: 1, totalCount: 2, skillPercentage: 50 },
+    { occupation: 'Student', skill: 'A', skillCount: 1, totalCount: 2, skillPercentage: 50 }
 ]
 ```
 
@@ -109,7 +109,7 @@ books
     tags: $tags.[id in $tagIds].name,
     topReview: $reviews
       .[bookId = $bookId]
-      .sort(rating desc, date desc)[0]
+      .min(rating desc, date desc)
       | {
         rating,
         text: `${text[0:150]}...`
@@ -267,9 +267,7 @@ Data example:
 </details>
 
 <details>
-<summary>Equivalent implementations</summary>
-
-`JavaScript`
+<summary>Equivalent JavaScript</summary>
 
 ```js
 function getMappedBooks(inputData, tagFilter) {
@@ -313,7 +311,10 @@ function getMappedBooks(inputData, tagFilter) {
 }
 ```
 
-`jq`
+</details>
+
+<details>
+<summary>Equivalent jq</summary>
 
 ```jq
 .books
@@ -471,9 +472,7 @@ Data example:
 </details>
 
 <details>
-<summary>Equivalent implementations</summary>
-
-`JavaScript`
+<summary>Equivalent JavaScript</summary>
 
 ```js
 function processEvents(events, users) {
@@ -514,7 +513,10 @@ function processEvents(events, users) {
 }
 ```
 
-`jq`
+</details>
+
+<details>
+<summary>Equivalent jq</summary>
 
 ```jq
 [
@@ -564,14 +566,8 @@ A jora query that calculates the average rating for each product category and so
 products
   .group(=> category)
   .({
-    $sum: => reduce(=> $$ + $, 0);
-    $totalRatingsAndCount: reduce(=> {
-        sum: $$.sum + value.ratings.$sum(),
-        count: $$.count + value.ratings.size()
-    }, { sum: 0, count: 0 });
-    
     category: key,
-    averageRating: $totalRatingsAndCount | sum / count,
+    averageRating: value.avg(=> ratings.avg()),
     productCount: value.size()
   })
   .sort(averageRating desc)
@@ -610,7 +606,7 @@ JSON:
             "id": "2",
             "name": "Product B",
             "category": "Electronics",
-            "ratings": [5, 5, 5]
+            "ratings": [4, 5, 5]
         },
         {
             "id": "3",
@@ -622,13 +618,13 @@ JSON:
             "id": "4",
             "name": "Product D",
             "category": "Books",
-            "ratings": [2, 2, 2]
+            "ratings": [4, 2, 2]
         },
         {
             "id": "5",
             "name": "Product E",
             "category": "Clothing",
-            "ratings": [4, 5, 5]
+            "ratings": [4, 4, 5]
         }
     ]
 }
@@ -642,12 +638,12 @@ JSON:
 [
     {
         "category": "Electronics",
-        "averageRating": 4.666666666666667,
+        "averageRating": 4.5,
         "productCount": 2
     },
     {
         "category": "Clothing",
-        "averageRating": 4.666666666666667,
+        "averageRating": 4.333333333333333,
         "productCount": 1
     },
     {
@@ -660,9 +656,7 @@ JSON:
 </details>
 
 <details>
-<summary>Equivalent implementations</summary>
-
-`JavaScript`
+<summary>Equivalent JavaScript</summary>
 
 ```js
 function calculateAverageRatings(inputData) {
@@ -700,7 +694,10 @@ function calculateAverageRatings(inputData) {
 }
 ```
 
-`jq`
+</details>
+
+<details>
+<summary>Equivalent jq</summary>
 
 ```jq
 .products
@@ -867,9 +864,7 @@ Data:
 </details>
 
 <details>
-<summary>Equivalent implementations</summary>
-
-`JavaScript`
+<summary>Equivalent JavaScript</summary>
 
 ```js
 function getProductsSortedByPopularTags(data) {
@@ -925,7 +920,10 @@ function getProductsSortedByPopularTags(data) {
 }
 ```
 
-`jq`
+</details>
+
+<details>
+<summary>Equivalent jq</summary>
 
 ```jq
 def popular_tags:
