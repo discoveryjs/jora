@@ -41,19 +41,22 @@ function ensureArray(value) {
 }
 
 function add(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) {
-        return [...new Set([].concat(a, b))];
+    if (isArray(a) || isArray(b)) {
+        return [...new Set([
+            ...isArray(a) ? a : [a],
+            ...isArray(b) ? b : [b]
+        ])];
     }
 
     return a + b;
 }
 
 function sub(a, b) {
-    if (Array.isArray(a)) {
+    if (isArray(a)) {
         const result = new Set(a);
 
         // filter b items from a
-        if (Array.isArray(b)) {
+        if (isArray(b)) {
             b.forEach(item => result.delete(item));
         } else {
             result.delete(b);

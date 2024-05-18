@@ -892,6 +892,21 @@ describe('lang/operators', () => {
             );
         });
 
+        it('should concat TypeArrays', () => {
+            assert.deepEqual(
+                query('a+b')({ a: [1, 2], b: new Uint32Array([3, 4]) }),
+                [1, 2, 3, 4]
+            );
+            assert.deepEqual(
+                query('a+b')({ a: new Uint32Array([1, 2]), b: [3, 4] }),
+                [1, 2, 3, 4]
+            );
+            assert.deepEqual(
+                query('a+b')({ a: new Uint32Array([1, 2]), b: new Uint32Array([3, 4]) }),
+                [1, 2, 3, 4]
+            );
+        });
+
         it('should be unique set of items in concated arrays', () => {
             assert.deepEqual(
                 query('.[type="js"]+.[type="js" and errors]')(data),
@@ -946,6 +961,27 @@ describe('lang/operators', () => {
                 query('a-b')({ a, b }),
                 [1, 3]
             );
+        });
+
+        describe('should support TypeArrays', () => {
+            it('array - TypedArray', () => {
+                assert.deepEqual(
+                    query('a-b')({ a: [1, 2, 3, 4], b: new Uint32Array([2, 4]) }),
+                    [1, 3]
+                );
+            });
+            it('TypedArray - array', () => {
+                assert.deepEqual(
+                    query('a-b')({ a: new Uint32Array([1, 2, 3, 4]), b: [3, 4] }),
+                    [1, 2]
+                );
+            });
+            it('TypedArray - TypedArray', () => {
+                assert.deepEqual(
+                    query('a-b')({ a: new Uint32Array([1, 2, 3, 4]), b: new Uint32Array([3, 2]) }),
+                    [1, 4]
+                );
+            });
         });
 
         it('should filter an object', () => {
