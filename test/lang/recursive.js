@@ -194,6 +194,14 @@ describe('lang/recursive', () => {
         );
     });
 
+    it('TypedArray support', () => {
+        const array = Uint32Array.from({ length: 10 }, (_, idx) => idx);
+        assert.deepEqual(
+            query('..($ < 5 ? $ + 2 : $)')(array),
+            [2, 3, 4, 5, 6, 7, 8, 9]
+        );
+    });
+
     it('a whitespace between dots and parenthesis is prohibited', () => {
         assert.throws(
             () => query('.. (deps)')(data),

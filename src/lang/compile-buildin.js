@@ -248,7 +248,7 @@ function mapRecursive(value, getter) {
 }
 
 function some(value, fn) {
-    return Array.isArray(value)
+    return isArray(value)
         ? value.some(current => isTruthy(fn(current)))
         : isTruthy(fn(value));
 }

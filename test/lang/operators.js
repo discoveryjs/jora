@@ -263,6 +263,22 @@ describe('lang/operators', () => {
             );
         });
 
+        it('should apply as some() for TypedArray', () => {
+            const array = Uint32Array.from({ length: 10 }, (_, idx) => idx);
+            assert.strictEqual(
+                query('$~==>$ - 5 = 4')(array),
+                true
+            );
+            assert.strictEqual(
+                query('$~=/5/')(array),
+                true
+            );
+            assert.strictEqual(
+                query('$~=/55/')(array),
+                false
+            );
+        });
+
         it('regexp from context', () => {
             assert.strictEqual(
                 query('$~=#.rx')('1.js', { rx: /\.js$/ }),
