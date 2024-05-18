@@ -62,6 +62,13 @@ describe('slice()', () => {
         );
     });
 
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('slice(1, 4)')(new Uint8Array([1, 2, 3, 4, 5, 6])),
+            new Uint8Array([2, 3, 4])
+        );
+    });
+
     describe('string', () => {
         it('with no arguments', () =>
             assert.deepEqual(

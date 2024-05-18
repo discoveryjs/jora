@@ -137,7 +137,7 @@ export default Object.freeze({
             : current;
     },
     slice(current, from, to) {
-        return typeof current === 'string'
+        return typeof current === 'string' || isArray(current)
             ? current.slice(from, to)
             : Array.prototype.slice.call(current, from, to);
     },
