@@ -99,6 +99,14 @@ describe('lang/filter', () => {
         );
     });
 
+    it('TypedArray support', () => {
+        const array = Uint32Array.from({ length: 10 }, (_, idx) => idx);
+        assert.deepEqual(
+            query('.[$ % 2]')(array),
+            array.filter($ => $ % 2)
+        );
+    });
+
     describe('should return a value itself for a non-array value when expression is truthy or undefined otherwise', () => {
         [
             ['.[]', { foo: 42 }, { foo: 42 }],

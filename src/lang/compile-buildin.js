@@ -254,7 +254,7 @@ function some(value, fn) {
 }
 
 function filter(value, fn) {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
         return value.filter(current => isTruthy(fn(current)));
     }
 
