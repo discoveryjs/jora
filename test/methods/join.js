@@ -22,4 +22,11 @@ describe('join()', () => {
             '123'
         );
     });
+
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('join("-")')(new Uint8Array([1, 2, 3, 4])),
+            '1-2-3-4'
+        );
+    });
 });

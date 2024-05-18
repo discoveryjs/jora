@@ -176,7 +176,7 @@ export default Object.freeze({
         return result;
     },
     join(current, separator) {
-        return Array.isArray(current)
+        return isArray(current)
             ? current.join(separator)
             : String(current);
     },
