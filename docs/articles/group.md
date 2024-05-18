@@ -1,14 +1,11 @@
 # Grouping: `group()` method
 
-The `group()` method in Jora allows you to group data in arrays based on specified properties or computed values. The method returns an array of objects containing a `key` and a `value` property. The `key` represents the grouping criterion, and the `value` is an array of unique input elements associated with that key. Note that keys can be any value, even an object.
+The `group()` method allows to group elements of arrays based on specified properties or computed values. The method returns an array of objects containing a `key` and a `value` property. The `key` represents the grouping criterion, and the `value` is an array of unique input elements associated with that key. Note that keys can be any value, even an object.
 
-The `group()` method can take two optional parameters: 
-1. A function that defines the grouping key. 
-2. A mapping function for the value (optional). 
+The `group()` method takes parameters: 
 
-When the second parameter is omitted, the mapping function defaults to `=> $`, which means the input element itself will be used as the value.
-
-In this article, we'll explore various examples of using the `group()` method in Jora to group data in different ways.
+- `keyGetter` – A function that defines the grouping key. 
+- `valueGetter` (optional) – A mapping function for the value. When omitted, defaults to `=> $`, which means the input element itself will be used as the value.
 
 ## Syntax
 
@@ -28,7 +25,7 @@ In this article, we'll explore various examples of using the `group()` method in
 
 ### Grouping by a property
 
-Suppose you have an array of objects representing sales data, and you want to group the data by the `"region"` property while keeping only the sales values in the resulting groups.
+Suppose you have an array of objects representing sales data, and you want to group the data by the `region` property while keeping only the sales values in the resulting groups.
 
 `Input`
 
