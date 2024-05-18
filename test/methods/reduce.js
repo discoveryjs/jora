@@ -51,4 +51,11 @@ describe('reduce()', () => {
             [2, 5, 3, 2, 1]
         );
     });
+
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('reduce(=>$$+$)')(new Uint8Array([3, 2, 1, 4])),
+            10
+        );
+    });
 });

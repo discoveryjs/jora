@@ -199,7 +199,7 @@ export default Object.freeze({
         return matchEntry(input.match(pattern));
     },
     reduce(current, fn, initValue = undefined) {
-        if (Array.isArray(current)) {
+        if (isArray(current)) {
             return initValue !== undefined
                 ? current.reduce((res, current) => fn(current, res), initValue)
                 : current.reduce((res, current) => fn(current, res));
