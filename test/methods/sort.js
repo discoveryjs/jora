@@ -23,6 +23,13 @@ describe('sort()', () => {
         );
     });
 
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('sort()')(new Uint8Array([3, 2, 1, 4])),
+            new Uint8Array([1, 2, 3, 4])
+        );
+    });
+
     it('custom sorter', () => {
         assert.deepEqual(
             query('sort(=>refs.size()).filename')(data),

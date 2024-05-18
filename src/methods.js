@@ -98,7 +98,7 @@ export default Object.freeze({
         return (current && current.length) || 0;
     },
     sort(current, comparator = cmp) {
-        if (!Array.isArray(current)) {
+        if (!isArray(current)) {
             return current;
         }
 
