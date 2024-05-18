@@ -47,7 +47,7 @@ export function parseIntDefault(value, defaultValue = 0) {
 }
 
 export function isTruthy(value) {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
         return value.length > 0;
     }
 

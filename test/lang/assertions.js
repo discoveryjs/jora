@@ -142,6 +142,8 @@ describe('lang/assertions', () => {
                 { value: 'abc', expected: true },
                 { value: [], expected: false },
                 { value: [1], expected: true },
+                { value: new Uint8Array([]), expected: false },
+                { value: new Uint8Array([1]), expected: true },
                 { value: {}, expected: false },
                 { value: { foo: 1 }, expected: true }
             ],
