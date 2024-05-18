@@ -223,7 +223,7 @@ function map(value, getter) {
         ? getter
         : current => getPropertyValue(current, getter);
 
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
         return [
             ...value.reduce(
                 (set, item) => addToSet(set, fn(item)),
