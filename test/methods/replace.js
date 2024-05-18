@@ -46,6 +46,13 @@ describe('replace()', () => {
         });
     });
 
+    it('should work with TypedArray', () => {
+        assert.deepEqual(
+            query('replace(=>$%2,=>"odd")')(new Uint8Array([3, 2, 1, 4])),
+            ['odd', 2, 'odd', 4]
+        );
+    });
+
     describe('any other values', () => {
         it('non-string value', () => {
             assert.strictEqual(

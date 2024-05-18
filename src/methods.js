@@ -231,14 +231,21 @@ export default Object.freeze({
         return String(current).split(pattern);
     },
     replace(current, pattern, replacement) {
-        if (Array.isArray(current)) {
+        if (isArray(current)) {
             const patternFn = typeof pattern === 'function' ? pattern : Object.is.bind(null, pattern);
+            const result = [...current];
 
-            return current.map(
-                typeof replacement === 'function'
-                    ? current => patternFn(current) ? replacement(current) : current
-                    : current => patternFn(current) ? replacement : current
-            );
+            for (let i = 0; i < result.length; i++) {
+                const value = result[i];
+
+                if (patternFn(value)) {
+                    result[i] = typeof replacement === 'function'
+                        ? replacement(value)
+                        : replacement;
+                }
+            }
+
+            return result;
         }
 
         if (isRegExp(pattern) && !pattern.flags.includes('g')) {
