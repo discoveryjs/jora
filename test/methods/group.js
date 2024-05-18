@@ -77,4 +77,36 @@ describe('group()', () => {
             ]
         );
     });
+
+    describe('should work with TypedArrays', () => {
+        it('group TypedArray elements', () => {
+            assert.deepEqual(
+                query('group(=>$ % 2 ? "odd" : "even")')(new Uint8Array([1, 2, 3, 4, 5])),
+                [
+                    { key: 'odd', value: [1, 3, 5] },
+                    { key: 'even', value: [2, 4] }
+                ]
+            );
+        });
+
+        it('group by TypedArray', () => {
+            const data = [
+                { id: 1, tags: new Uint8Array([1, 2]) },
+                { id: 2, tags: new Uint8Array([2, 3]) },
+                { id: 3, tags: new Uint8Array([3, 4]) },
+                { id: 4, tags: new Uint8Array([]) }
+            ];
+
+            assert.deepEqual(
+                query('group(=>tags)')(data),
+                [
+                    { key: 1, value: [data[0]] },
+                    { key: 2, value: [data[0], data[1]] },
+                    { key: 3, value: [data[1], data[2]] },
+                    { key: 4, value: [data[2]] },
+                    { key: undefined, value: [data[3]] }
+                ]
+            );
+        });
+    });
 });

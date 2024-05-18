@@ -153,14 +153,14 @@ export default Object.freeze({
             valueGetter = self;
         }
 
-        if (!Array.isArray(current)) {
+        if (!isArray(current)) {
             current = [current];
         }
 
         for (const item of current) {
             const keys = keyGetter(item);
 
-            if (Array.isArray(keys)) {
+            if (isArray(keys)) {
                 if (keys.length > 0) {
                     const value = valueGetter(item);
 
