@@ -80,7 +80,7 @@ $value[:] = $value
 ```
 ```jora
 "hello"[::2]
-// Result: ["h", "l", "o"]
+// Result: "hlo"
 ```
 ```jora
 "hello"[4:1] // the same as [1:4:-1] (see "Negative Step" below)
@@ -101,7 +101,7 @@ A negative step can be used to reverse the order of the elements in the slice:
 ```
 ```jora
 "hello"[1:4:-1]
-// Result: ["l", "l", "e"]
+// Result: "lle"
 ```
 
 ## The algorithm
