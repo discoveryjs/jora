@@ -131,7 +131,7 @@ function processChangelog(changelog, methods) {
             if (token.type === 'list') {
                 for (let item of token.items) {
                     const [typeOfChange] = item.text.match(/^\S+/);
-                    const prelude = item.text.split(/;|\b\.\B/)[0].replace(/\((?:`[^`]+`|[^)])*\)\s*/g, m => m.trim().length === 2 ? '()' : '');
+                    const prelude = item.text.split(/;|\b\.\B/)[0].replace(/\B\((?:`[^`]+`|[^)])*\)\s*/g, m => m.trim().length === 2 ? '()' : '');
                     const methodRefs =
                         prelude.match(/`[a-z\d]+\([^\)]*?\)`(?=(?:\s*(?:and|,)\s*`[a-z\d]+\([^\)]*?\)`)*\s*method)/ig) ||
                         prelude.match(/(?<=methods?\s*(?::\s*)?(?:`[a-z\d]+\([^\)]*?\)`\s*(?:and|,)\s*)*)`[a-z\d]+\([^\)]*?\)`/ig);
