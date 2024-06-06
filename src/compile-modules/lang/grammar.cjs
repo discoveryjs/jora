@@ -243,18 +243,20 @@ exports.lex = {
         ['no{wb}', 'return "NO";'],
         ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
-        // methods
+        // methods & identifiers
         ['{ident}\\(', 'yytext = this.ident(yytext.slice(0, -1)); return "METHOD(";'],
         ['\\${ident}\\(', 'yytext = this.ident(yytext.slice(1, -1)); return "$METHOD(";'],
+        ['{ident}', 'yy.pps(); yytext = this.ident(yytext); return "IDENT";'],
+        ['\\${ident}', 'yy.pps(); yytext = this.ident(yytext.slice(1)); return "$IDENT";'],
 
         // primitives
-        ['(\\d+\\.|\\.)?\\d+([eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = Number(yytext); return "NUMBER";'],
-        ['0[xX][0-9a-fA-F]+', 'yy.pps(); yytext = parseInt(yytext, 16); return "NUMBER";'],
+        ['(?:[_\\d]*\\.)?[_\\d]+(?:[eE][-+]?[_\\d]+)?{wb}', 'yy.pps(); yytext = this.toNumberLiteral(yytext, true); return "NUMBER";'],
+        ['(?:\\d*\\.)?\\d+(?:[eE][-+]?\\d+)?{wb}', 'yy.pps(); yytext = this.toNumberLiteral(yytext); return "NUMBER";'],
+        ['0[xX][_0-9a-fA-F]+', 'yy.pps(); yytext = this.toNumberLiteral(yytext, true, true); return "NUMBER";'],
+        ['0[xX][0-9a-fA-F]+', 'yy.pps(); yytext = this.toNumberLiteral(yytext, false, true); return "NUMBER";'],
         ['"(?:\\\\[\\\\"]|[^"])*"', 'yy.pps(); yytext = this.toStringLiteral(yytext); return "STRING";'],
         ["'(?:\\\\[\\\\']|[^'])*'", 'yy.pps(); yytext = this.toStringLiteral(yytext); return "STRING";'],
         ['{rx}', 'yy.pps(); yytext = this.toRegExp(yytext); return "REGEXP";'],
-        ['{ident}', 'yy.pps(); yytext = this.ident(yytext); return "IDENT";'],
-        ['\\${ident}', 'yy.pps(); yytext = this.ident(yytext.slice(1)); return "$IDENT";'],
 
         // special vars
         ['@', 'yy.pps(); return "@";'],

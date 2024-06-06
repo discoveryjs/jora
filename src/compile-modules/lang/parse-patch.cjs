@@ -103,6 +103,31 @@ module.exports = function buildParsers(strictParser) {
 
         toLiteral: value => literals.get(value),
 
+        toNumberLiteral(value, underscoped, hex = false) {
+            if (underscoped) {
+                const errorMatch = value.match(hex
+                    ? /(?:^|[^0-9a-fA-F])_|_(?:[^0-9a-fA-F]|$)/
+                    : /(?:^|\D)_|_(?:\D|$)/
+                );
+
+                if (errorMatch) {
+                    const m = errorMatch[0];
+                    const index = errorMatch.index + Number(m[1] === '_');
+                    const message = m === '__'
+                        ? 'Only one underscore is allowed'
+                        : 'Wrong underscore';
+
+                    this.parseError(message + ' as numeric separator', { inside: [index, index + 1] });
+                }
+
+                value = value.replace(/_/g, '');
+            }
+
+            return hex
+                ? parseInt(value, 16)
+                : parseFloat(value);
+        },
+
         toStringLiteral(value, multiline = false, end = 1) {
             const valueEnd = value.length - end;
             let result = '';
