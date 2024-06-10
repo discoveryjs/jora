@@ -1,7 +1,10 @@
 ## next
 
-- Added support for treating TypedArrays as regular arrays
 - Added support for `_` as numeric separator for all kinds of number, e.g. `1_000`, `0xa0b1_c2d3`
+
+## 1.0.0-beta.11 (May 19, 2024)
+
+- Added support for treating TypedArrays as regular arrays
 - Fixed `lastIndexOf()` method behavior when `fromIndex` is zero; previously, the search incorrectly started from the end of an array instead of the zero position
 - Fixed `group()` method to include elements with an empty array as a key in the group with `key: undefined`; previously, such elements were omitted from the result
 - Modified the behavior of slice notation:
