@@ -24,16 +24,16 @@
 .view-playground > .query-editor > .query-editor__toolbar > :first-child {
     flex: 1;
 }
-.view-playground > .query-editor .discovery-editor {
+.view-playground > .query-editor .discovery-view-editor {
     margin: 0;
 }
-.view-playground > .query-editor .discovery-editor:focus-within {
+.view-playground > .query-editor .discovery-view-editor:focus-within {
     box-shadow: none !important;
 }
-.view-playground > .query-editor .discovery-editor .CodeMirror {
+.view-playground > .query-editor .discovery-view-editor .CodeMirror {
     border-radius: 2px;
 }
-.view-playground > .query-editor .discovery-editor .CodeMirror-scroll {
+.view-playground > .query-editor .discovery-view-editor .CodeMirror-scroll {
     max-height: calc((100vh - 170px) / 2);
 }
 .view-playground > .query-editor .discovery-editor-error {
