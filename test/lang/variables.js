@@ -64,11 +64,63 @@ describe('lang/variables', () => {
         );
     });
 
-    it('should throw when access before initialization', () => {
-        assert.throws(
-            () => query('$a:$a;')(),
-            /Identifier "\$a" is not defined|\$a is not defined|Cannot access '\$a' before initialization/
-        );
+    describe('should throw when access before initialization', () => {
+        it('self reference', () => {
+            assert.throws(
+                () => query('$a:$a;')(),
+                /Cannot access \$a before initialization/
+            );
+        });
+
+        it('same scope', () => {
+            assert.throws(
+                () => query('$a:$b;$b;')(),
+                /Cannot access \$b before initialization/
+            );
+        });
+
+        it('inner scope to same scope', () => {
+            assert.throws(
+                () => query('$a:1;|$b:2;$c:$b;$d:$a;$a:3;4')(),
+                /Cannot access \$a before initialization/
+            );
+        });
+
+        it('inner scope to outer scope', () => {
+            assert.throws(
+                () => query('$a:1;$b:($c:$d;1);$d:1;')(),
+                /Cannot access \$d before initialization/
+            );
+        });
+
+        it('inner scope to outer scope on initing var', () => {
+            assert.throws(
+                () => query('$a:1;$b:($c:$b;1);$d:1;')(),
+                /Cannot access \$b before initialization/
+            );
+        });
+
+        it('should not break outer await', () => {
+            assert.throws(
+                () => query('$a:1;$b:($d:1;1);$c:$d;$d:1;')(),
+                /Cannot access \$d before initialization/
+            );
+        });
+    });
+
+    describe('should not leak to globals', () => {
+        before(() => {
+            global.$test = 123;
+        });
+        after(() => {
+            delete global.$test;
+        });
+        it('should throw when access before initialization', () => {
+            assert.throws(
+                () => query('$test')(),
+                /\$test is not defined/
+            );
+        });
     });
 
     it('should return a value when access after initialization', () => {

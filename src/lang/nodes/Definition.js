@@ -15,7 +15,7 @@ export function compile(node, ctx) {
         return;
     }
 
-    if (ctx.scope.own.includes(node.declarator.name)) {
+    if (ctx.scope.own.has(node.declarator.name)) {
         ctx.error(`Identifier "$${node.declarator.name}" has already been declared`, node.declarator);
         return;
     }
@@ -31,8 +31,9 @@ export function compile(node, ctx) {
     ctx.node(node.value || GetProperty(null, Identifier(node.declarator.name)));
     ctx.put(';');
 
-    ctx.scope.push(node.declarator.name);
-    ctx.scope.own.push(node.declarator.name);
+    ctx.scope.add(node.declarator.name);
+    ctx.scope.own.add(node.declarator.name);
+    ctx.scope.awaitInit.delete(node.declarator.name);
 }
 export function walk(node, ctx) {
     ctx.node(node.declarator);

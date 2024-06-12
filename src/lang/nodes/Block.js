@@ -7,6 +7,10 @@ export function compile(node, ctx) {
     if (node.definitions.length) {
         ctx.createScope(
             () => {
+                for (const definition of node.definitions) {
+                    ctx.scope.awaitInit.add(definition.declarator.name);
+                }
+
                 ctx.put('(()=>{');
                 ctx.list(node.definitions);
                 ctx.put('return ');

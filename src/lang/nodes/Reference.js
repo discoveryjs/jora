@@ -4,18 +4,36 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx) {
-    if (!ctx.scope.includes(node.name.name) && ctx.tolerant) {
-        // FIXME: use ctx.error() here
-        ctx.put('(typeof $');
-        ctx.node(node.name);
-        ctx.put('!=="undefined"?$');
-        ctx.node(node.name);
-        ctx.put(':undefined)');
+    const nameNode = node.name;
+    const inScope = ctx.scope.has(nameNode.name);
+    const awaitInit = ctx.scope.awaitInit.has(nameNode.name);
+
+    if (!inScope || awaitInit) {
+        if (awaitInit) {
+            ctx.put('f.unsafeRef(()=>$');
+            ctx.node(nameNode);
+
+            if (!ctx.tolerant) {
+                ctx.put(',');
+                ctx.put(JSON.stringify(nameNode.name));
+                ctx.put(',');
+                ctx.put(JSON.stringify(nameNode.range));
+            }
+
+            ctx.put(')');
+        } else {
+            if (ctx.tolerant) {
+                ctx.put('undefined');
+            } else {
+                ctx.error(`$${nameNode.name} is not defined`, nameNode);
+            }
+        }
+
         return;
     }
 
     ctx.put('$');
-    ctx.node(node.name);
+    ctx.node(nameNode);
 }
 export function walk(node, ctx) {
     ctx.node(node.name);

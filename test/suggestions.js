@@ -1134,6 +1134,10 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('', ['foo', 'bar'], 5),
             suggestion('', ['$var:variable', 'foo', 'bar'], 6)
         ],
+        '$var;$|v|': [
+            suggestion('$v', ['$var:variable'], 5, 7),
+            suggestion('$v', ['$var:variable'], 5, 7)
+        ],
         '$foo;$var:|;|': [
             suggestion('', ['$foo:variable', 'foo', 'bar'], 10),
             suggestion('', ['$foo:variable', '$var:variable', 'foo', 'bar'], 11)
@@ -1159,6 +1163,10 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('$x', ['$x:variable'], 20, 22),
             suggestion('$x', ['$x:variable'], 20, 22),
             suggestion('', ['qux'], 23, 23)
+        ],
+        '$asd;$a:$a|;$a|': [
+            suggestion('$a', ['$asd:variable'], 8, 10),
+            suggestion('$a', ['$asd:variable', '$a:variable'], 11, 13)
         ],
         '{x:|$|}.x.|': [
             null,

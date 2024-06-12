@@ -5,8 +5,9 @@ export function compile(node, ctx) {
 
             ctx.scope.arg1 = true;
             ctx.scope.$ref = args[0] || '$';
+
             for (const arg of node.arguments) {
-                ctx.scope.push(arg.name);
+                ctx.scope.add(arg.name);
             }
 
             ctx.put('function(');

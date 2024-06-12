@@ -9,6 +9,22 @@ export function compileMethod(ast, tolerant, suggestions) {
     return compileInternal(ast, 'method', tolerant, suggestions);
 }
 
+class Scope extends Set {
+    constructor(items, awaitInit = [], arg1 = false, $ref = '$') {
+        super(items);
+        this.own = new Set();
+        this.awaitInit = new Set(awaitInit);
+        this.firstCurrent = null;
+        this.captureCurrent = [];
+        this.arg1 = arg1;
+        this.$ref = $ref;
+    }
+
+    spawn(arg1, $ref) {
+        return new Scope(this, this.awaitInit, arg1, $ref);
+    }
+}
+
 function compileInternal(ast, kind, tolerant = false, suggestions = null) {
     function newStatPoint(values) {
         const spName = 's' + spNames.length;
@@ -32,11 +48,11 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
         let range = [start, end, JSON.stringify(type)];
 
         if (type === 'var') {
-            if (!ctx.scope.length) {
+            if (!ctx.scope.size) {
                 return;
             }
 
-            range.push(JSON.stringify(ctx.scope));
+            range.push(JSON.stringify([...ctx.scope]));
         } else {
             if (!spName) {
                 spName = newStatPoint();
@@ -58,12 +74,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
         const prevScope = ctx.scope;
         const scopeStart = buffer.length;
 
-        ctx.scope = ctx.scope.slice();
-        ctx.scope.own = [];
-        ctx.scope.firstCurrent = null;
-        ctx.scope.captureCurrent = [];
-        ctx.scope.arg1 = prevScope.arg1 || kind === 'method';
-        ctx.scope.$ref = $ref;
+        ctx.scope = prevScope.spawn(prevScope.arg1 || kind === 'method', $ref);
 
         fn();
 
@@ -187,7 +198,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
             usedBuildinMethods.add(name);
             return 'f.' + name;
         },
-        scope: [],
+        scope: new Scope(),
         createScope,
         error: (message, node) => {
             const error = new SyntaxError(message);

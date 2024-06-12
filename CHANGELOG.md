@@ -1,6 +1,8 @@
 ## next
 
 - Added support for `_` as numeric separator for all kinds of number, e.g. `1_000`, `0xa0b1_c2d3`
+- Improved error handling for variable references, including providing query's range of the problem reference in errors
+- Fixed acessing to global variables when a variable has no definition
 
 ## 1.0.0-beta.11 (May 19, 2024)
 
