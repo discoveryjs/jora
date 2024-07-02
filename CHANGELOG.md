@@ -1,6 +1,15 @@
 ## next
 
 - Added support for `_` as numeric separator for all kinds of number, e.g. `1_000`, `0xa0b1_c2d3`
+- Extended shorthand syntax to define object entries (see [Shorthand syntax for entries](https://discoveryjs.github.io/jora/#article:jora-syntax-object-literal&!anchor=shorthand-syntax-for-entries))
+    ```jora
+    {
+        sum(),              // equavalent to: `sum: sum()`
+        foo.[x > 5],        // equavalent to: `foo: foo | .[x > 5]`
+        baz is number ?: 0, // equavalent to: `baz: baz | is number ?: 0`
+        $var.size()         // equavalent to: `var: var | .size()`
+    }
+    ```
 - Improved error handling for variable references, including providing query's range of the problem reference in errors
 - Fixed acessing to global variables when a variable has no definition
 

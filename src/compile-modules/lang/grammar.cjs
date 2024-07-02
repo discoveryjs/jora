@@ -48,8 +48,9 @@ const $r0 = { code: '@0.range' };
 const $r1 = { code: '@1.range' };
 const $rm1 = { code: '[@1.range[0],@1.range[1]-1]' };
 const $rr = { code: '[@1.range[1],@1.range[1]]' };
+const $methodName = { code: 'this._mn' };
 const $placeholder = { code: { ...Placeholder(), range: $rr } };
-const refs = new Set([$0, $1, $1string, $1name, $$1name, $2, $3, $4, $5, $6, $r0, $r1, $rm1, $rr, $placeholder]);
+const refs = new Set([$0, $1, $1string, $1name, $$1name, $methodName, $2, $3, $4, $5, $6, $r0, $r1, $rm1, $rr, $placeholder]);
 const asis = '';
 
 function isPlainObject(value) {
@@ -107,6 +108,10 @@ function MethodIdentifier(name) {
 
 function MethodReference(name) {
     return Object.assign(Reference(name), { range: $rm1 });
+}
+
+function $$methodName(name) {
+    return ';this._mn=' + stringify(name);
 }
 
 function createCommaList(name, element) {
@@ -462,10 +467,10 @@ exports.bnf = {
     ],
 
     'method()': [
-        ['METHOD( )', $$(Method(MethodIdentifier($1), []))],
-        ['METHOD( arguments )', $$(Method(MethodIdentifier($1), $2))],
-        ['$METHOD( )', $$(Method(MethodReference(MethodIdentifier($1)), []))],
-        ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2))]
+        ['METHOD( )', $$(Method(MethodIdentifier($1), [])) + $$methodName($1)],
+        ['METHOD( arguments )', $$(Method(MethodIdentifier($1), $2)) + $$methodName($1)],
+        ['$METHOD( )', $$(Method(MethodReference(MethodIdentifier($1)), [])) + $$methodName($1)],
+        ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2)) + $$methodName($1)]
     ],
     arguments: createCommaList('arguments', 'e'),
 
@@ -507,10 +512,14 @@ exports.bnf = {
         ['$', $$(ObjectEntry(Current(), null))],
         ['$ident', $$(ObjectEntry(Reference($1), null))],
         ['ident', $$(ObjectEntry($1, null))],
+        ['method()', $$(ObjectEntry(Literal($methodName), $1))],
         ['objectEntryKeyLiteral', $$(ObjectEntry($1, null))],
         ['ident : e', $$(ObjectEntry($1, $3))],
         ['objectEntryKeyLiteral : e', $$(ObjectEntry($1, $3))],
         ['$ident : e', $$(ObjectEntry(Identifier($$1name), $3))],
+        ['$ident e', $$(ObjectEntry($1, Pipeline(Reference($1), $2)))],
+        ['ident e', $$(ObjectEntry($1, Pipeline(GetProperty(null, $1), $2)))],
+        ['method() e', $$(ObjectEntry(Literal($methodName), Pipeline($1, $2)))],
         ['[ e ] : e', $$(ObjectEntry($2, $5))],
         ['...', $$(Spread(null))],
         ['... query', $$(Spread($2))]
