@@ -34,6 +34,18 @@ Literals in Jora are mostly the same as in JavaScript.
 -0xC0FFEE  // hexadecimal number
 ```
 
+An underscore (`_`) can be used as a numerical separator:
+
+```jora
+1_000
+```
+```jora
+1_345.678_901
+```
+```jora
+0x12_34_56_78
+```
+
 ## Strings
 
 ```jora
