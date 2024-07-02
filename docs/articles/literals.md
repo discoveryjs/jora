@@ -16,9 +16,6 @@ Literals in Jora are mostly the same as in JavaScript.
 42         // integer number
 ```
 ```jora
--123       // negative number
-```
-```jora
 4.22       // float number
 ```
 ```jora
@@ -30,8 +27,14 @@ Literals in Jora are mostly the same as in JavaScript.
 ```jora
 0xdecaf    // hexadecimal number
 ```
+
+There is no literal for negative numbers in Jora. However, using [unary minus](./operators.md#unary-operators) with a number gives a negative number:
+
 ```jora
--0xC0FFEE  // hexadecimal number
+-123       // negative number, the same result as -(123)
+```
+```jora
+-0xC0FFEE  // hexadecimal negative number
 ```
 
 An underscore (`_`) can be used as a numerical separator:

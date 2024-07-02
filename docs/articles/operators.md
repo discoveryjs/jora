@@ -2,6 +2,7 @@
 
 Jora offers a variety of operators to perform operations, comparisons, and boolean logic on data.
 
+- [Unary operators](#unary-operators)
 - [Arithmetic operators](#arithmetic-operators)
 - [Comparison operators](#comparison-operators)
 - [Logical operators](#logical-operators)
@@ -9,6 +10,24 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 - [Grouping operator](#grouping-operator)
 - [Pipeline operator](#pipeline-operator)
 - [Operator precedence](#operator-precedence)
+
+## Unary operators
+
+| Jora | Description |
+|------|-------------|
+| `+ x` | Unary plus. Precedes its operand and evaluates to its operand but attempts to convert it into a number, if it isn't already
+| `- x` | Unary negation. Precedes its operand and negates it
+
+```jora
++123   // 123
++'42'  // 42
++'foo' // NaN
+```
+```jora
+-123   // -123
+-'42'  // -42
+-'foo' // NaN
+```
 
 ## Arithmetic operators
 
