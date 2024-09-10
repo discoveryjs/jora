@@ -1,3 +1,7 @@
+## next
+
+- Improved suggestions for the ternary operator (`?:`)
+
 ## 1.0.0-beta.12 (July 2, 2024)
 
 - Added support for `_` as numeric separator for all kinds of number, e.g. `1_000`, `0xa0b1_c2d3`

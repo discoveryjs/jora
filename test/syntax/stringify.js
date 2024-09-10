@@ -8,7 +8,7 @@ describe('syntax/stringify', () => {
     it('basic test', () => {
         const actual = stringify(parse(allSyntax).ast);
 
-        assert.strictEqual(actual, allSyntax.replace(/:,/g,',')); // ?: -> ?
+        assert.strictEqual(actual, allSyntax);
     });
 
     it('restore a query from AST after a tolerant parser', () => {

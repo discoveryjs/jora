@@ -363,11 +363,11 @@ exports.bnf = {
 
     condConsequent: [
         ['? e', $$($2)],
-        ['?', $$(null)]
+        ['?', $$($placeholder)]
     ],
     condAlternate: [
         [': e', $$($2)],
-        [':', $$(null)],
+        [':', $$($placeholder)],
         ['', $$(null)]
     ],
 

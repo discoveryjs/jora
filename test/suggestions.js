@@ -435,6 +435,20 @@ describe('query/suggestions', () => {
         ]
     });
 
+    describeCases('ternary operator', {
+        '1?|': [
+            suggestion('', ['foo', 'bar'], 2, 2)
+        ],
+        '1?|:|': [
+            suggestion('', ['foo', 'bar'], 2, 2),
+            null
+        ],
+        '0?|:|': [
+            null,
+            suggestion('', ['foo', 'bar'], 3, 3)
+        ]
+    });
+
     describeCases('mixed', {
         '.entries|(|).sort|(|)': [
             null,
@@ -1107,7 +1121,12 @@ describe('query/suggestions (tolerant mode)', () => {
         '1?|': [
             suggestion('', ['foo', 'bar'], 2, 2)
         ],
-        '1?:|': [
+        '1?|:|': [
+            suggestion('', ['foo', 'bar'], 2, 2),
+            null
+        ],
+        '0?|:|': [
+            null,
             suggestion('', ['foo', 'bar'], 3, 3)
         ]
     });
