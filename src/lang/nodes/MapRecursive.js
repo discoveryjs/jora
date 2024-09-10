@@ -2,14 +2,12 @@ export function compile(node, ctx) {
     ctx.put(ctx.buildinFn('mapRecursive'));
     ctx.put('(');
     ctx.nodeOrCurrent(node.value);
+    ctx.put(',$=>');
     ctx.createScope(
-        () => {
-            ctx.put(',$=>');
-            ctx.node(node.query);
-        },
-        (scopeStart, sp) => {
+        () => ctx.node(node.query),
+        (sp) => {
             ctx.put(')');
-            return scopeStart + '(' + sp + ',';
+            return '(' + sp + ',';
         }
     );
     ctx.put(')');

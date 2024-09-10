@@ -548,6 +548,18 @@ describe('query/suggestions', () => {
             suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
             suggestion('a', ['"foo":value', '"bar":value', 'foo', 'bar'], 3, 4),
             null
+        ],
+        '[{a:1},{a:2,b:3}].((b?true:[]) and |x|)': [
+            suggestion('x', ['a', 'b'], 35, 36),
+            suggestion('x', ['a', 'b'], 35, 36)
+        ],
+        '[{a:1},{a:2,b:3}].((b?true:[]) or |x|)': [
+            suggestion('x', ['a'], 34, 35),
+            suggestion('x', ['a'], 34, 35)
+        ],
+        '[{a:1},{a:2,b:3}].(b ?? |x|)': [
+            suggestion('x', ['a'], 24, 25),
+            suggestion('x', ['a'], 24, 25)
         ]
     });
 });

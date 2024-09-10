@@ -2,20 +2,18 @@ export function compile(node, ctx) {
     ctx.put(ctx.buildinFn('bool'));
     ctx.put('(');
     ctx.nodeOrCurrent(node.test);
+    ctx.put(')?');
     ctx.createScope(
-        () => {
-            ctx.put(')?');
-            ctx.nodeOrCurrent(node.consequent);
-        },
-        (scopeStart, sp) => {
+        () => ctx.nodeOrCurrent(node.consequent),
+        (sp) => {
             ctx.put(')');
-            return scopeStart + '(' + sp + ',';
+            return '(' + sp + ',';
         },
         ctx.scope.$ref
     );
+    ctx.put(':');
     ctx.createScope(
         () => {
-            ctx.put(':');
             if (node.alternate) {
                 if (node.alternate.type === 'Placeholder') {
                     ctx.put('(');
@@ -28,9 +26,9 @@ export function compile(node, ctx) {
                 ctx.put('undefined');
             }
         },
-        (scopeStart, sp) => {
+        (sp) => {
             ctx.put(')');
-            return scopeStart + '(' + sp + ',';
+            return '(' + sp + ',';
         },
         ctx.scope.$ref
     );

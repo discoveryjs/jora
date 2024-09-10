@@ -72,7 +72,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
 
     function createScope(fn, defCurrent, $ref = '$') {
         const prevScope = ctx.scope;
-        const scopeStart = buffer.length;
+        const scopeStart = buffer.length - 1;
 
         ctx.scope = prevScope.spawn(prevScope.arg1 || kind === 'method', $ref);
 
@@ -88,7 +88,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
             if (ctx.scope.firstCurrent) {
                 buffer[ctx.scope.firstCurrent] = stat;
             } else {
-                buffer[scopeStart] = defCurrent(buffer[scopeStart], stat);
+                buffer[scopeStart] += defCurrent(stat);
             }
         }
 
@@ -239,9 +239,9 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
 
     createScope(
         () => walk(ast),
-        (scopeStart, sp) => {
+        (sp) => {
             buffer.push(')');
-            return '(' + sp + ',' + scopeStart;
+            return '(' + sp + ',';
         },
         'data'
     );

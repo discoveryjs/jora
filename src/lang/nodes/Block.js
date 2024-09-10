@@ -5,23 +5,21 @@ export function suggest(node, ctx) {
 }
 export function compile(node, ctx) {
     if (node.definitions.length) {
+        ctx.put('(()=>{');
         ctx.createScope(
             () => {
                 for (const definition of node.definitions) {
                     ctx.scope.awaitInit.add(definition.declarator.name);
                 }
 
-                ctx.put('(()=>{');
                 ctx.list(node.definitions);
                 ctx.put('return ');
                 ctx.nodeOrCurrent(node.body);
-                ctx.put('})()');
             },
-            (scopeStart, sp) => {
-                return scopeStart + sp + ';';
-            },
+            (sp) => sp + ';',
             ctx.scope.$ref
         );
+        ctx.put('})()');
     } else if (node.body && node.body.type === 'Object') {
         ctx.put('(');
         ctx.nodeOrCurrent(node.body);

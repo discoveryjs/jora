@@ -89,9 +89,14 @@ export function compile(node, ctx) {
             ctx.put(`${ctx.buildinFn('bool')}(${tmpVar}=`);
             ctx.node(node.left);
             ctx.put(`)?${tmpVar}:`);
-            ctx.scope.captureCurrent.disabled = true;
-            ctx.node(node.right);
-            ctx.scope.captureCurrent.disabled = false;
+            ctx.createScope(
+                () => ctx.node(node.right),
+                (sp) => {
+                    ctx.put(')');
+                    return '(' + sp + ',';
+                },
+                ctx.scope.$ref
+            );
             break;
         }
 
@@ -100,12 +105,19 @@ export function compile(node, ctx) {
         case '??': {
             const tmpVar = ctx.allocateVar();
 
+            // TODO: replace for Nullish coalescing operator (??) instead of ternary operator once drop support for Node.js below 14.0
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing
             ctx.put(`(${tmpVar}=`);
             ctx.node(node.left);
             ctx.put(`,${tmpVar}!==null&&${tmpVar}!==undefined)?${tmpVar}:`);
-            ctx.scope.captureCurrent.disabled = true;
-            ctx.node(node.right);
-            ctx.scope.captureCurrent.disabled = false;
+            ctx.createScope(
+                () => ctx.node(node.right),
+                (sp) => {
+                    ctx.put(')');
+                    return '(' + sp + ',';
+                },
+                ctx.scope.$ref
+            );
             break;
         }
 

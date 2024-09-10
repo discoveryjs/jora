@@ -1,15 +1,10 @@
 export function compile(node, ctx) {
+    ctx.put('($=>(');
     ctx.createScope(
-        () => {
-            ctx.put('($=>(');
-            ctx.node(node.right);
-            ctx.put('))');
-        },
-        (scopeStart, sp) => {
-            return scopeStart + sp + ',';
-        }
+        () => ctx.node(node.right),
+        (sp) => sp + ','
     );
-
+    ctx.put('))');
     ctx.put('(');
     ctx.nodeOrCurrent(node.left);
     ctx.put(')');

@@ -12,7 +12,7 @@ export function compile(node, ctx) {
     // but Function doesn't create 2nd argument implicitly to prevent function arity changes
     ctx.put('function(');
     ctx.put(String(args) || '$');
-
+    ctx.put('){return ');
     ctx.createScope(
         () => {
             ctx.scope.arg1 = true;
@@ -22,14 +22,10 @@ export function compile(node, ctx) {
                 ctx.scope.add(arg.name);
             }
 
-            ctx.put('){return ');
             ctx.node(node.body);
         },
-        (scopeStart, sp) => {
-            return scopeStart + sp + ',';
-        }
+        (sp) => sp + ','
     );
-
     ctx.put('}');
 }
 export function walk(node, ctx) {

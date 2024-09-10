@@ -15,16 +15,12 @@ export function compile(node, ctx) {
     }
 
     ctx.put(ctx.buildinFn(cmpFn));
+    ctx.put('((_q=$=>(');
     ctx.createScope(
-        () => {
-            ctx.put('((_q=$=>(');
-            ctx.node(node.query);
-            ctx.put('))(_a),_q(_b))');
-        },
-        (scopeStart, sp) => {
-            return scopeStart + sp + ',';
-        }
+        () => ctx.node(node.query),
+        (sp) => sp + ','
     );
+    ctx.put('))(_a),_q(_b))');
 }
 export function walk(node, ctx) {
     ctx.node(node.query);
