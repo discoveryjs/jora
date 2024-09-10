@@ -250,15 +250,36 @@ describe('query/suggestions', () => {
         );
     });
 
-    it('function context', () => {
-        assert.deepEqual(
-            suggestQuery('map(|=|>|)', data),
-            [
-                null,
-                null,
-                suggestion('', ['foo', 'bar'], 6, 6)
-            ]
-        );
+    describeCases('function context', {
+        'map(|=|>|a|)': [
+            null,
+            null,
+            suggestion('a', ['foo', 'bar'], 6, 7),
+            suggestion('a', ['foo', 'bar'], 6, 7)
+        ],
+        'map(|=|>|1|)': [
+            null,
+            null,
+            null,
+            null
+        ],
+        'map(=>|1|?|:|)': [
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 8, 8),
+            null
+        ],
+        'map(=>|foo|?|:|)': [
+            suggestion('foo', ['foo', 'bar'], 6, 9),
+            suggestion('foo', ['foo', 'bar'], 6, 9),
+            suggestion('', ['foo', 'bar'], 10, 10),
+            null
+        ],
+        'foo.map(=>a|?|:|)': [
+            suggestion('a', ['a', 'b', 'c', 'd'], 10, 11),
+            suggestion('', ['a', 'b'], 12, 12),
+            suggestion('', ['b', 'c', 'd'], 13, 13)
+        ]
     });
 
     describeCases('pick', {
@@ -891,6 +912,45 @@ describe('query/suggestions (tolerant mode)', () => {
             null,
             null,
             suggestion('', ['foo', 'bar'], 7)
+        ]
+    });
+
+    describeCasesTolerant('functions', {
+        'map(|=|>|)': [
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 6, 6)
+        ],
+        'map(|=|>|a|)': [
+            null,
+            null,
+            suggestion('a', ['foo', 'bar'], 6, 7),
+            suggestion('a', ['foo', 'bar'], 6, 7)
+        ],
+        'map(|=|>|1|)': [
+            null,
+            null,
+            null,
+            null
+        ],
+        'map(|=|>|1|?|:|)': [
+            null,
+            null,
+            null,
+            null,
+            suggestion('', ['foo', 'bar'], 8, 8),
+            null
+        ],
+        'map(=>|foo|?|:|)': [
+            suggestion('foo', ['foo', 'bar'], 6, 9),
+            suggestion('foo', ['foo', 'bar'], 6, 9),
+            suggestion('', ['foo', 'bar'], 10, 10),
+            null
+        ],
+        'foo.map(=>a|?|:|)': [
+            suggestion('a', ['a', 'b', 'c', 'd'], 10, 11),
+            suggestion('', ['a', 'b'], 12, 12),
+            suggestion('', ['b', 'c', 'd'], 13, 13)
         ]
     });
 
