@@ -5,6 +5,7 @@
 - Fixed a compilation error for the generated code of `function` expressions in stat mode in some cases
 - Fixed a runtime error for a `comparator function` in some scenarios
 - Fixed support for TypedArrays with slice notation and methods such as `numbers()`, `avg()`, `count()`, `sum()`, `median()`, `variance()`, `stdev()` and `percentile()`
+- Added missing package exports for `package.json` and `dist/*`
 
 ## 1.0.0-beta.12 (July 2, 2024)
 
