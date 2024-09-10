@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.13 (September 10, 2024)
 
 - Disallowed duplicate parameter names in function definitions, i.e., `($a, $a) => expr` is now prohibited
 - Improved suggestions for the ternary operator (`?:`)

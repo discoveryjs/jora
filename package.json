@@ -1,6 +1,6 @@
 {
   "name": "jora",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "description": "JavaScript object query engine",
   "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
   "repository": "discoveryjs/jora",
