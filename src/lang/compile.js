@@ -119,8 +119,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
             }
 
             if (node.type === 'Current' &&
-                ctx.scope.firstCurrent === null &&
-                ctx.scope.captureCurrent.disabled !== true) {
+                ctx.scope.firstCurrent === null) {
                 ctx.scope.firstCurrent = buffer.length;
             }
         }
