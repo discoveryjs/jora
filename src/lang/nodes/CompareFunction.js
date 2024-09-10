@@ -1,5 +1,5 @@
 export function compile(node, ctx) {
-    ctx.put('(a, b)=>{let _q;return ');
+    ctx.put('(_a, _b)=>{let _q;return ');
     ctx.list(node.compares, '||');
     ctx.put('||0}');
 }

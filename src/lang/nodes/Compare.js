@@ -7,18 +7,19 @@ const comparator = {
 };
 
 export function compile(node, ctx) {
-    if (node.order.startsWith('desc')) {
+    const isDesc = node.order.startsWith('desc');
+    const cmpFn = comparator[node.order.slice(isDesc ? 4 : 3)] || comparator[''];
+
+    if (isDesc) {
         ctx.put('-');
     }
 
+    ctx.put(ctx.buildinFn(cmpFn));
     ctx.createScope(
         () => {
-            const cmpFn = comparator[node.order.slice(3 + node.order.startsWith('desc'))] || comparator[''];
-
-            ctx.put(ctx.buildinFn(cmpFn));
             ctx.put('((_q=$=>(');
             ctx.node(node.query);
-            ctx.put('))(a),_q(b))');
+            ctx.put('))(_a),_q(_b))');
         },
         (scopeStart, sp) => {
             return scopeStart + sp + ',';

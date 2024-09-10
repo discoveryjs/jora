@@ -77,18 +77,18 @@ function suggestion(text, list, from, to = from) {
     });
 }
 
-function describeCasesWithOptions(title, options, cases) {
+function describeCasesWithOptions(title, options, cases, queryData = data) {
     describe(title, () => {
         Object.entries(cases).forEach(([queryString, expected]) => {
             (queryString[0] === '!' ? it.skip : it)(queryString, () => {
                 assert.deepEqual(
-                    suggestQuery(queryString, data, options),
+                    suggestQuery(queryString, queryData, options),
                     expected
                 );
             });
             (queryString[0] === '!' ? it.skip : it)(queryString + ' // limit & sort', () => {
                 assert.deepEqual(
-                    suggestQuery(queryString, data, options, true),
+                    suggestQuery(queryString, queryData, options, true),
                     expected.slice().map(variants =>
                         // use methods.sort() since it provides stable sorting for old engines
                         variants && query.methods.sort(variants, (a, b) => a.type !== b.type
@@ -103,12 +103,12 @@ function describeCasesWithOptions(title, options, cases) {
     });
 }
 
-function describeCases(title, cases) {
-    return describeCasesWithOptions(title, { tolerant: false }, cases);
+function describeCases(title, cases, queryData) {
+    return describeCasesWithOptions(title, { tolerant: false }, cases, queryData);
 }
 
-function describeCasesTolerant(title, cases) {
-    return describeCasesWithOptions(title, { tolerant: true }, cases);
+function describeCasesTolerant(title, cases, queryData) {
+    return describeCasesWithOptions(title, { tolerant: true }, cases, queryData);
 }
 
 describe('query/suggestions', () => {
@@ -281,6 +281,49 @@ describe('query/suggestions', () => {
             suggestion('', ['b', 'c', 'd'], 13, 13)
         ]
     });
+
+    describeCases('comparator functions', {
+        'sort(|a| |asc)': [
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('a', ['a', 'b'], 5, 6),
+            null
+        ],
+        'sort(|a|?|:| |asc)': [
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('', ['a', 'b'], 7, 7),
+            null,
+            null
+        ],
+        'sort(|b|?|c|:|d| |asc)': [
+            suggestion('b', ['a', 'b'], 5, 6),
+            suggestion('b', ['a', 'b'], 5, 6),
+            suggestion('c', ['a', 'b'], 7, 8),
+            suggestion('c', ['a', 'b'], 7, 8),
+            suggestion('d', ['a'], 9, 10),
+            suggestion('d', ['a'], 9, 10),
+            null
+        ],
+        'sort(0?|:| |asc)': [
+            null,
+            suggestion('', ['a', 'b'], 8, 8),
+            null
+        ],
+        'sort(is array?|a|:|b| |asc)': [
+            null,
+            null,
+            suggestion('b', ['a', 'b'], 16, 17),
+            suggestion('b', ['a', 'b'], 16, 17),
+            null
+        ],
+        '[1,2].sort(is array?|a|:|b| |asc)': [
+            null,
+            null,
+            null,
+            null,
+            null
+        ]
+    }, [{ a: 1 }, { a: 5, b: 1 }, { a: 2 }]);
 
     describeCases('pick', {
         '$[| |]': [
@@ -953,6 +996,49 @@ describe('query/suggestions (tolerant mode)', () => {
             suggestion('', ['b', 'c', 'd'], 13, 13)
         ]
     });
+
+    describeCasesTolerant('comparator functions', {
+        'sort(|a| |asc)': [
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('a', ['a', 'b'], 5, 6),
+            null
+        ],
+        'sort(|a|?|:| |asc)': [
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('a', ['a', 'b'], 5, 6),
+            suggestion('', ['a', 'b'], 7, 7),
+            null,
+            null
+        ],
+        'sort(|b|?|c|:|d| |asc)': [
+            suggestion('b', ['a', 'b'], 5, 6),
+            suggestion('b', ['a', 'b'], 5, 6),
+            suggestion('c', ['a', 'b'], 7, 8),
+            suggestion('c', ['a', 'b'], 7, 8),
+            suggestion('d', ['a'], 9, 10),
+            suggestion('d', ['a'], 9, 10),
+            null
+        ],
+        'sort(0?|:| |asc)': [
+            null,
+            suggestion('', ['a', 'b'], 8, 8),
+            null
+        ],
+        'sort(is array?|a|:|b| |asc)': [
+            null,
+            null,
+            suggestion('b', ['a', 'b'], 16, 17),
+            suggestion('b', ['a', 'b'], 16, 17),
+            null
+        ],
+        '[1,2].sort(is array?|a|:|size()| |asc)': [
+            null,
+            null,
+            null,
+            null,
+            null
+        ]
+    }, [{ a: 1 }, { a: 5, b: 1 }, { a: 2 }]);
 
     describeCasesTolerant('assertions', {
         'is| |': [
