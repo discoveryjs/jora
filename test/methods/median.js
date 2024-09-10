@@ -102,4 +102,14 @@ describe('median()', () => {
             ), NaN);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('median()')(new Uint8Array([4, 1, 2, 3])), 2.5);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('median(=> $ % 2?)')(new Uint8Array([6, 1, 2, 3])), 2);
+        });
+    });
 });

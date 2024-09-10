@@ -107,4 +107,14 @@ describe('variance()', () => {
             ), 16);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('variance()')(new Uint8Array([1, 2, 3])), 2 / 3);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('variance(=> $ < 4?)')(new Uint8Array([1, 5, 2, 3])), 2 / 3);
+        });
+    });
 });

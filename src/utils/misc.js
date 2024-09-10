@@ -34,7 +34,7 @@ export function isRegExp(value) {
 }
 
 export function isArrayLike(value) {
-    return value && hasOwn(value, 'length') && isFinite(value.length);
+    return value && (isArray(value) || (hasOwn(value, 'length') && isFinite(value.length)));
 }
 
 export function isArray(value) {

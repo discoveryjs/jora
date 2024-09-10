@@ -114,4 +114,14 @@ describe('numbers()', () => {
             ), [3, 4]);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.deepStrictEqual(query('numbers()')(new Uint8Array([1, 2, 3])), [1, 2, 3]);
+        });
+
+        it('with getter', () => {
+            assert.deepStrictEqual(query('numbers(=> $ % 2?)')(new Uint8Array([1, 2, 3])), [1, 3]);
+        });
+    });
 });

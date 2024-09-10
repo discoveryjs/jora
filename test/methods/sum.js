@@ -121,4 +121,14 @@ describe('sum()', () => {
             ), 7);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('sum()')(new Uint8Array([1, 2, 3])), 6);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('sum(=> $ % 2?)')(new Uint8Array([1, 2, 3])), 4);
+        });
+    });
 });

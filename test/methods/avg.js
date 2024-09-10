@@ -121,4 +121,14 @@ describe('avg()', () => {
             ), 5.5 / 2);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('avg()')(new Uint8Array([1, 2, 3])), 2);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('avg(=> $ % 2?)')(new Uint8Array([1, 4, 7])), 4);
+        });
+    });
 });

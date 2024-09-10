@@ -74,4 +74,14 @@ describe('max()', () => {
             { a: 42 }
         );
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('max()')(new Uint8Array([5, 1, 2, 3])), 5);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('max(=> $ % 2 = 0?)')(new Uint8Array([6, 1, 7, 2, 3])), 6);
+        });
+    });
 });

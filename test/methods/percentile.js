@@ -113,4 +113,14 @@ describe('percentile()', () => {
             ), NaN);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('percentile(75)')(new Uint8Array([1, 3, 2])), 2.5);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('percentile(75, =>$ * 2)')(new Uint8Array([3, 1, 2])), 5);
+        });
+    });
 });

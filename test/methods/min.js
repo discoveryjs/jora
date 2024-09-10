@@ -74,4 +74,14 @@ describe('min()', () => {
             { a: 12 }
         );
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('min()')(new Uint8Array([5, 1, 2, 3])), 1);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('min(=> $ % 2 = 0?)')(new Uint8Array([5, 1, 2, 3])), 2);
+        });
+    });
 });

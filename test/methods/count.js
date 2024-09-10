@@ -74,4 +74,14 @@ describe('count()', () => {
             ), 3);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('count()')(new Uint8Array([1, 2, 3])), 3);
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('count(=> $ % 2?)')(new Uint8Array([1, 2, 3])), 2);
+        });
+    });
 });

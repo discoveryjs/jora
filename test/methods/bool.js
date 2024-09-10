@@ -1,40 +1,51 @@
 import assert from 'assert';
 import query from 'jora';
-import data from '../helpers/fixture.js';
 
 describe('bool()', () => {
     it('basic', () => {
-        assert.equal(
-            query('bool()')(data),
+        assert.strictEqual(
+            query('bool()')(1),
+            true
+        );
+        assert.strictEqual(
+            query('bool()')(0),
+            false
+        );
+        assert.strictEqual(
+            query('.bool()')(new Uint8Array(1)),
             true
         );
     });
 
     it('should return false for empty arrays', () => {
-        assert.equal(
-            query('.[foo].bool()')(data),
+        assert.strictEqual(
+            query('.bool()')([]),
             false
         );
-        assert.deepEqual(
-            query('[].bool()')(data),
+        assert.strictEqual(
+            query('.bool()')(new Uint8Array(0)),
+            false
+        );
+        assert.strictEqual(
+            query('[].bool()')(),
             false
         );
     });
 
     it('should return false for empty objects', () => {
-        assert.equal(
+        assert.strictEqual(
             query('bool()')({}),
             false
         );
-        assert.deepEqual(
+        assert.strictEqual(
             query('bool()')({ foo: 1}),
             true
         );
-        assert.equal(
+        assert.strictEqual(
             query('{}.bool()')(),
             false
         );
-        assert.equal(
+        assert.strictEqual(
             query('{ foo: 1 }.bool()')(),
             true
         );

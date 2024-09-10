@@ -62,6 +62,13 @@ describe('lang/slice notation', () => {
         );
     });
 
+    it('should support TypedArrays', () => {
+        assert.deepEqual(
+            query('[1:3]')(new Uint8Array([1, 2, 3, 4])),
+            [2, 3]
+        );
+    });
+
     describe('[from:to]', () => {
         const data = [
             { id: '1' }, { id: '2' }, { id: '3' }, { id: '4' },

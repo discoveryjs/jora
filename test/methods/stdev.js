@@ -107,4 +107,14 @@ describe('stdev()', () => {
             ), 1);
         });
     });
+
+    describe('TypedArray support', () => {
+        it('with no getter', () => {
+            assert.strictEqual(query('stdev()')(new Uint8Array([1, 2, 3])), Math.sqrt(2 / 3));
+        });
+
+        it('with getter', () => {
+            assert.strictEqual(query('stdev(=> $ < 4?)')(new Uint8Array([1, 5, 2, 3])), Math.sqrt(2 / 3));
+        });
+    });
 });
