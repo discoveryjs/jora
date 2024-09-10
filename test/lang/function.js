@@ -65,7 +65,7 @@ describe('lang/function', () => {
         );
     });
 
-    describe('with harguments syntax', () => {
+    describe('arguments syntax', () => {
         const cases = [
             { query: '$fn: $a => $a + $$; 2.$fn(3)', expected: 5 },
             { query: '$fn: $a => .($ + $a.size()); [1, 3].$fn()', expected: [3, 5] },
@@ -73,15 +73,18 @@ describe('lang/function', () => {
             { query: '$fn: () => $ + $$; 20.$fn(22)', expected: 42 },
             { query: '$fn: ($a) => $a + $; 3.$fn()', expected: 6 },
             { query: '$fn: ($a) => ($b:2; $a + $b); 3.$fn()', expected: 5 },
-            { query: '$fn: ($a, $b) => $a + $ + $b + $$; 2.$fn(3)', expected: 10 }
+            { query: '$fn: ($a, $b) => $a + $ + $b + $$; 2.$fn(3)', expected: 2 + 2 + 3 + 3 },
+            { query: '$fn: ($a, $a) => $; 2.$fn(3)', error: /Duplicate parameter name "\$a" is not allowed/ }
         ];
 
         for (const testcase of cases) {
             it(testcase.query, () => {
-                assert.deepStrictEqual(
-                    query(testcase.query)(),
-                    testcase.expected
-                );
+                testcase.error
+                    ? assert.throws(() => query(testcase.query)(), testcase.error)
+                    : assert.deepStrictEqual(
+                        query(testcase.query)(),
+                        testcase.expected
+                    );
             });
         }
     });
