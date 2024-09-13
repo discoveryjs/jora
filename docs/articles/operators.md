@@ -116,8 +116,7 @@ Jora offers a variety of operators to perform operations, comparisons, and boole
 | `x or y` | Logical OR. Equivalent to `\|\|` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
 | `x and y` | Logical AND. Equivalent to `&&` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
 | `not x`<br>`no x` | Logical NOT. Equivalent to `!` in JavaScript, but `x` is testing for truthy with the [bool()](./methods-builtin.md#bool) method
-| `x ?? y` | The [nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/
-Nullish_coalescing), equivalent to `??` in JavaScript
+| `x ?? y` | The [nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing), equivalent to `??` in JavaScript
 | `x is assertion` | Tests a value against an assertion, see [Assertions](./assertions.md)
 | `x in [a, b, c]`<br>`[a, b, c] has x` | Equivalent to `x = a or x = b or x = c`
 | `x not in [a, b, c]`<br>`[a, b, c] has no x` | Equivalent to `x != a and x != b and x != c`
@@ -175,7 +174,7 @@ The ternary operator requires three operands: a condition, followed by a questio
 ```jora
 true ? 'yes' : 'no'  // Result: 'yes'
 ```
-```
+```jora
 false ? 'yes' : 'no' // Result: 'no'
 ```
 
@@ -188,15 +187,19 @@ Operands can be omitted. When omitted, `$` is used as a default for the conditio
 A query to truncate strings in array longer than 10 characters: 
 
 ```jora
-['short', 'and a very long string']
-.(size() < 10 ?: `${slice(0, 10)}...`)
+['short', 'and a very long string'].(size() < 10 ?: `${slice[0:10]}...`)
 // Result: ["short", "and a very..."]
 ```
 
 If the falsy operand is omitted, the colon (`:`) can also be omitted. This is useful in conjunction with [assertions](./assertions.md) and statistical or mathematical methods:
 
 ```jora
-numbers.sum(=> is number ? $ * $)
+[{ x: 5 }, { x: 33 }, { x: 20 }].count(=> x > 10 ?)
+// Result: 2
+```
+```jora
+[2, '2', 3, { foo: 4 }].sum(=> is number ? $ * $) // 2 * 2 + 3 * 3
+// Result: 13
 ```
 
 ## Grouping operator
