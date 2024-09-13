@@ -187,7 +187,7 @@ Operands can be omitted. When omitted, `$` is used as a default for the conditio
 A query to truncate strings in array longer than 10 characters: 
 
 ```jora
-['short', 'and a very long string'].(size() < 10 ?: `${slice[0:10]}...`)
+['short', 'and a very long string'].(size() < 10 ?: `${slice(0, 10)}...`)
 // Result: ["short", "and a very..."]
 ```
 
