@@ -47,7 +47,7 @@ export function numbersMedian(array, compare) {
     return percentile(array, 50, compare);
 }
 
-export function percentile(array, k, getter, formula, compare) {
+export function percentile(array, k, getter, compare) {
     if (array.length === 0 || !isFinite(k) || k < 0 || k > 100) {
         return undefined;
     }
@@ -108,8 +108,8 @@ export function percentile(array, k, getter, formula, compare) {
     return heap.values[0];
 }
 
-export function median(array, getter, formula) {
-    return percentile(array, 50, getter, formula);
+export function median(array, getter) {
+    return percentile(array, 50, getter);
 }
 
 // console.log(percentile([1, 9, 4, 3, 2, 5, 6, 7, 8, 0, 10], 99.5));
