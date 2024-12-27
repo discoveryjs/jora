@@ -48,7 +48,7 @@ const toc = {
                             item: [
                                 {
                                     view: 'link',
-                                    data: '{ href: `#${#.page}:${#.id}&!anchor=` + name.toLowerCase(), text: name, match: #.filter }',
+                                    data: '{ href: "#!" + name.toLowerCase(), text: name, match: #.filter }',
                                     content: 'text-match'
                                 }
                             ]
@@ -86,7 +86,7 @@ discovery.page.define('article', {
                         content: 'text:"Scroll to top"',
                         onClick(el) {
                             el.closest('.discovery-content').scrollTop = 0;
-                            discovery.setPageParams({});
+                            discovery.setPageAnchor();
                         }
                     }
                 }
@@ -159,7 +159,7 @@ discovery.page.define('article', {
                                 view: 'list',
                                 className: 'examples-list',
                                 data: 'value',
-                                item: 'example:{ $method; syntax: "jora", content: source, refs: methodRefs[$method].({ range: nameRange }) }'
+                                item: 'example:{ $method; syntax: "jora", source, refs: methodRefs[$method].({ range: nameRange }) }'
                             }
                         ]
                     }

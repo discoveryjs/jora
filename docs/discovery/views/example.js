@@ -2,7 +2,7 @@
 
 discovery.view.define('example', {
     view: 'source',
-    data: '{ ..., ...content.parseExample() }',
+    data: '{ ..., ...source.parseExample() }',
     actionButtons: {
         view: 'button',
         when: 'syntax = "jora"',

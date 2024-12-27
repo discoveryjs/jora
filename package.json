@@ -51,8 +51,8 @@
     "@discoveryjs/natural-compare": "^1.1.0"
   },
   "devDependencies": {
-    "@discoveryjs/cli": "^2.9.1",
-    "@discoveryjs/discovery": "^1.0.0-beta.85",
+    "@discoveryjs/cli": "^2.12.0",
+    "@discoveryjs/discovery": "^1.0.0-beta.92",
     "@lahmatiy/jison": "^0.4.18-remastered.7",
     "c8": "^8.0.1",
     "esbuild": "~0.23.0",
