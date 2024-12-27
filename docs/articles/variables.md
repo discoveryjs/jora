@@ -61,53 +61,53 @@ Constructions that allow defining variables include:
 
 1. Top-level of a query:
 
-```jora
-$foo: 'bar';
-$foo
-// Result: 'bar'
-```
+    ```jora
+    $foo: 'bar';
+    $foo
+    // Result: 'bar'
+    ```
 
-2. [Mapping](./map.md) `.(…)`:
+1. [Mapping](./map.md) `.(…)`:
 
-```jora
-{
-  a: 10,
-  b: 20
-}.($a; $b; $a + $b)
-// Result: 30
-```
+    ```jora
+    {
+    a: 10,
+    b: 20
+    }.($a; $b; $a + $b)
+    // Result: 30
+    ```
 
-3. [Filtering](./filter.md) `.[]`:
+1. [Filtering](./filter.md) `.[]`:
 
-```jora
-[1, 2, 3].[$num: $; $num % 2]
-// Result: [1, 3]
-```
+    ```jora
+    [1, 2, 3].[$num: $; $num % 2]
+    // Result: [1, 3]
+    ```
 
-4. [Grouping operator](./operators.md#grouping-operator) `(…)`:
+1. [Grouping operator](./operators.md#grouping-operator) `(…)`:
 
-```jora
-($a: 5; $b: 10; $a + $b)
-// Result: 15
-```
+    ```jora
+    ($a: 5; $b: 10; $a + $b)
+    // Result: 15
+    ```
 
-5. [Object literal](./object-literal.md) `{…}`:
+1. [Object literal](./object-literal.md) `{…}`:
 
-```jora
-{
-  $a: 3;
-  $b: 4;
-  c: $a * $b
-}
-// Result: { c: 12 }
-```
+    ```jora
+    {
+    $a: 3;
+    $b: 4;
+    c: $a * $b
+    }
+    // Result: { c: 12 }
+    ```
 
-6. [Pipeline operator](./operators.md#pipeline-operator) `|`:
+1. [Pipeline operator](./operators.md#pipeline-operator) `|`:
 
-```jora
-[1, 2, 3] | $size: size(); .($ * $size)
-// Result: [3, 6, 9]
-```
+    ```jora
+    [1, 2, 3] | $size: size(); .($ * $size)
+    // Result: [3, 6, 9]
+    ```
 
 ## Preserving values across scopes
 

@@ -136,28 +136,28 @@ The following methods are used to retrieve a list of entries from an object or t
 
 1. [`entries()`](./methods-builtin.md#entries): This method is similar to `Object.entries()` in JavaScript. It returns an array of `{ key, value }` objects, where `key` is the property name and `value` is the associated value from the input object. Here's an example:
 
-```jora
-{ a: 1, b: 2, c: 3 }.entries()
+    ```jora
+    { a: 1, b: 2, c: 3 }.entries()
 
-// Result: [
-//     { "key": "a", "value": 1 },
-//     { "key": "b", "value": 2 },
-//     { "key": "c", "value": 3 }
-// ]
-```
+    // Result: [
+    //     { "key": "a", "value": 1 },
+    //     { "key": "b", "value": 2 },
+    //     { "key": "c", "value": 3 }
+    // ]
+    ```
 
-2. [`fromEntries()`](./methods-builtin.md#fromentries): This method is the inverse of `entries()` and is similar to `Object.fromEntries()` in JavaScript. It takes an array of `{ key, value }` objects and returns an object with properties corresponding to those keys and values. Here's an example:
+1. [`fromEntries()`](./methods-builtin.md#fromentries): This method is the inverse of `entries()` and is similar to `Object.fromEntries()` in JavaScript. It takes an array of `{ key, value }` objects and returns an object with properties corresponding to those keys and values. Here's an example:
 
-```jora
-[
-    { key: "a", value: 1 },
-    { key: "b", value: 2 },
-    { key: "c", value: 3 }
-].fromEntries()
+    ```jora
+    [
+        { key: "a", value: 1 },
+        { key: "b", value: 2 },
+        { key: "c", value: 3 }
+    ].fromEntries()
 
-// Result: {
-//     "a": 1,
-//     "b": 2,
-//     "c": 3
-// }
-```
+    // Result: {
+    //     "a": 1,
+    //     "b": 2,
+    //     "c": 3
+    // }
+    ```
