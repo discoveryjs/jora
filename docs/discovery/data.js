@@ -28,92 +28,106 @@ function ident(text, prefix = '  ') {
 function processMarkdown(article, href, { examples, methods }) {
     let lastHeader = null;
 
-    for (const token of marked.lexer(article.content || '')) {
-        switch (token.type) {
-            case 'heading': {
-                lastHeader = token.text;
+    walk(marked.lexer(article.content || ''));
 
-                if (Array.isArray(article.headers)) {
-                    article.headers.push({ title: token.text, level: token.depth });
+    function walk(tokens) {
+        for (const token of tokens) {
+            switch (token.type) {
+                case 'heading': {
+                    lastHeader = token.text;
+
+                    if (Array.isArray(article.headers)) {
+                        article.headers.push({ title: token.text, level: token.depth });
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 'code': {
-                if (token.lang === 'jora') {
-                    // console.log(token)
-                    try {
-                        const methodRefs = Object.create(null);
-                        const ast = jora.syntax.parse(token.text).ast;
-                        const parsedExample = parseExample(token.text);
+                case 'list':
+                    walk(token.items);
+                    break;
 
-                        if ('result' in parsedExample && !parsedExample.hasErrors && !parsedExample.inputRef) {
-                            let actual;
+                case 'list_item':
+                case 'blockquote':
+                case 'paragraph':
+                    walk(token.tokens);
+                    break;
 
-                            try {
-                                actual = jora(parsedExample.content)(parsedExample.input, parsedExample.context);
-                            } catch (e) {
-                                console.log('[ERROR] Jora query example parse error:');
-                                console.log(e.message);
-                            }
+                case 'code': {
+                    if (token.lang === 'jora') {
+                        // console.log(token)
+                        try {
+                            const methodRefs = Object.create(null);
+                            const ast = jora.syntax.parse(token.text).ast;
+                            const parsedExample = parseExample(token.text);
 
-                            try {
-                                assert.deepEqual(parsedExample.result, actual);
-                            } catch {
-                                console.log('[WARN] The result in example doesn\'t match to actual result:');
-                                console.log(ident(parsedExample.content));
-                                console.log('Example result:');
-                                console.log(' ', parsedExample.result);
-                                console.log('Actual:');
-                                console.log(' ', actual);
-                                console.log();
-                            }
-                        }
+                            if ('result' in parsedExample && !parsedExample.hasErrors && !parsedExample.inputRef) {
+                                let actual;
 
-                        jora.syntax.walk(ast, function(node) {
-                            if (node.type === 'Method' && node.reference.type === 'Identifier') {
-                                const methodName = node.reference.name;
-
-                                if (methodName in methodRefs === false) {
-                                    methodRefs[methodName] = [];
+                                try {
+                                    actual = jora(parsedExample.content)(parsedExample.input, parsedExample.context);
+                                } catch (e) {
+                                    console.log('[ERROR] Jora query example parse error:');
+                                    console.log(e.message);
                                 }
 
-                                methodRefs[methodName].push({
-                                    method: node.reference.name,
-                                    nameRange: node.reference.range,
-                                    range: node.range
-                                });
-                            }
-                        });
-
-                        for (const methodName of Object.keys(methodRefs)) {
-                            const method = methods.find(method => method.name === methodName);
-
-                            if (!method) {
-                                console.log(`Unknown method "${methodName}" found in article "${article.slug}":\n${token.text}\n`);
-                                continue;
+                                try {
+                                    assert.deepEqual(parsedExample.result, actual);
+                                } catch {
+                                    console.log('[WARN] The result in example doesn\'t match to actual result:');
+                                    console.log(ident(parsedExample.content));
+                                    console.log('Example result:');
+                                    console.log(' ', parsedExample.result);
+                                    console.log('Actual:');
+                                    console.log(' ', actual);
+                                    console.log();
+                                }
                             }
 
-                            method.examples.push(examples.length);
+                            jora.syntax.walk(ast, function(node) {
+                                if (node.type === 'Method' && node.reference.type === 'Identifier') {
+                                    const methodName = node.reference.name;
+
+                                    if (methodName in methodRefs === false) {
+                                        methodRefs[methodName] = [];
+                                    }
+
+                                    methodRefs[methodName].push({
+                                        method: node.reference.name,
+                                        nameRange: node.reference.range,
+                                        range: node.range
+                                    });
+                                }
+                            });
+
+                            for (const methodName of Object.keys(methodRefs)) {
+                                const method = methods.find(method => method.name === methodName);
+
+                                if (!method) {
+                                    console.log(`Unknown method "${methodName}" found in article "${article.slug}":\n${token.text}\n`);
+                                    continue;
+                                }
+
+                                method.examples.push(examples.length);
+                            }
+
+                            examples.push({
+                                article,
+                                header: lastHeader.replace(/<!--.+?-->/g, ''),
+                                methodRefs,
+                                source: token.text,
+                                ast
+                            });
+                        } catch (e) {
+                            // console.log();
+                            // console.log('[ERROR] Example parse error:', e.message);
+                            // console.log('Article:', href);
+                            // console.log('Example:');
+                            // console.log(ident(token.text));
                         }
-
-                        examples.push({
-                            article,
-                            header: lastHeader.replace(/<!--.+?-->/g, ''),
-                            methodRefs,
-                            source: token.text,
-                            ast
-                        });
-                    } catch (e) {
-                        // console.log();
-                        // console.log('[ERROR] Example parse error:', e.message);
-                        // console.log('Article:', href);
-                        // console.log('Example:');
-                        // console.log(ident(token.text));
                     }
-                }
 
-                break;
+                    break;
+                }
             }
         }
     }
