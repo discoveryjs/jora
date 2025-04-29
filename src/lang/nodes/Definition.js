@@ -1,6 +1,6 @@
 import { GetProperty, Identifier } from '../build.js';
 
-const reservedVars = ['data', 'context', 'ctx', 'array', 'idx', 'index'];
+const reservedVars = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
 
 export function suggest(node, ctx) {
     if (node.value === null) {
@@ -8,32 +8,35 @@ export function suggest(node, ctx) {
     }
 }
 export function compile(node, ctx) {
-    if (node.declarator.name === null) {
+    const name = node.declarator.name;
+    const unescapedName = name && ctx.unescapeName('$' + name, node);
+
+    if (unescapedName === null) {
         ctx.node(node.declarator);
         ctx.nodeOrCurrent(node.value);
         ctx.put(';');
         return;
     }
 
-    if (ctx.scope.own.has(node.declarator.name)) {
-        ctx.error(`Identifier "$${node.declarator.name}" has already been declared`, node.declarator);
+    if (ctx.scope.own.has(unescapedName)) {
+        ctx.error(`Identifier "${unescapedName}" has already been declared`, node.declarator);
         return;
     }
 
-    if (reservedVars.includes(node.declarator.name)) {
-        ctx.error(`Identifier "$${node.declarator.name}" is reserved for future use`, node.declarator);
+    if (reservedVars.includes(unescapedName)) {
+        ctx.error(`Identifier "${unescapedName}" is reserved for future use`, node.declarator);
         return;
     }
 
     ctx.put('const ');
     ctx.node(node.declarator);
     ctx.put('=');
-    ctx.node(node.value || GetProperty(null, Identifier(node.declarator.name)));
+    ctx.node(node.value || GetProperty(null, Identifier(name))); // must be original name
     ctx.put(';');
 
-    ctx.scope.add(node.declarator.name);
-    ctx.scope.own.add(node.declarator.name);
-    ctx.scope.awaitInit.delete(node.declarator.name);
+    ctx.scope.add(unescapedName);
+    ctx.scope.own.add(unescapedName);
+    ctx.scope.awaitInit.delete(unescapedName);
 }
 export function walk(node, ctx) {
     ctx.node(node.declarator);

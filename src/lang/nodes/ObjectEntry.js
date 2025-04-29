@@ -38,7 +38,7 @@ export function compile(node, ctx) {
 
         case 'Identifier':
             ctx.node(node.key);
-            value = value || GetProperty(null, Identifier(node.key.name));
+            value = value || GetProperty(null, node.key);
             break;
 
         case 'Reference':

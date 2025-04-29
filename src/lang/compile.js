@@ -2,6 +2,9 @@ import { hasOwn } from '../utils/misc.js';
 import createError from './error.js';
 import { compile as nodes } from './nodes/index.js';
 
+const IdStartRx = /^[\p{ID_Start}$_]$/u;
+const IdContinueRx = /^[\p{ID_Continue}$]$/u;
+
 export function compile(ast, tolerant, suggestions) {
     return compileInternal(ast, 'query', tolerant, suggestions);
 }
@@ -199,7 +202,7 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
         },
         scope: new Scope(),
         createScope,
-        error: (message, node) => {
+        error(message, node) {
             const error = new SyntaxError(message);
 
             if (node && node.range) {
@@ -213,6 +216,8 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
             if (!tolerant) {
                 throw error;
             }
+
+            return error;
         },
         allocateVar() {
             const name = 'tmp' + allocatedVars.length;
@@ -221,7 +226,32 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
 
             return name;
         },
+        unescapeName(name, node, ident = true) {
+            return name.replace(/\\u[0-9a-fA-F]{4}/g, (m, offset) => {
+                const unescapedChar = String.fromCharCode(parseInt(m.slice(2), 16));
+                const rx = offset === 0 ? IdStartRx : IdContinueRx;
+
+                if (ident && !rx.test(unescapedChar)) {
+                    this.error(
+                        `Bad escape sequence in indentifier name (expected ${rx})`,
+                        node && { range: [
+                            node.range[0] + offset,
+                            node.range[0] + offset + 6
+                        ] }
+                    );
+                }
+
+                return unescapedChar;
+            });
+        },
         put: chunk => buffer.push(chunk),
+        putIdent(name, node) {
+            if (!/^[\p{ID_Start}$_][\p{ID_Continue}$]*$/u.test(name)) {
+                throw this.error('Bad identifier name ' + JSON.stringify(name), node);
+            }
+
+            this.put(name);
+        },
         node: walk,
         nodeOrCurrent(node, relatedNode) {
             walk(node || { type: 'Current' }, relatedNode);
@@ -292,8 +322,12 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
         '\n}');
     }
 
+    return compileFunction(initCtx, 'return' + buffer.join('') + '})');
+};
+
+function compileFunction(initCtx, functionBody) {
     try {
-        const fn = new Function('f,m,a', 'return' + buffer.join('') + '})');
+        const fn = new Function('f,m,a', functionBody);
 
         return Object.assign(fn.bind(initCtx), {
             toString() {
@@ -301,9 +335,11 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
             }
         });
     } catch (e) {
+        // console.log('Jora query compilation error', buffer.join(''))
+        // process.exit();
         throw createError('SyntaxError', 'Jora query compilation error', {
-            compiledSource: buffer.join(''),
+            compiledSource: `function(f,m,a){\n${functionBody}\n}`,
             details: e
         });
     }
-};
+}

@@ -16,13 +16,7 @@ export function compile(node, ctx) {
     ctx.put('(');
     ctx.nodeOrCurrent(node.value);
     ctx.put(',');
-
-    if (node.property.type === 'Identifier') {
-        ctx.put(JSON.stringify(node.property.name));
-    } else {
-        ctx.node(node.property);
-    }
-
+    ctx.node(node.property);
     ctx.put(')');
 }
 export function walk(node, ctx) {

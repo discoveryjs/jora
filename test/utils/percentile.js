@@ -76,7 +76,7 @@ describe('utils/percentile', () => {
                     expected: 6
                 },
                 {
-                    title: 'should find the median in an even-length array',
+                    title: 'should find the median in an even-length array #2',
                     values: [5, 3, 8, 2, 10, 7, 1, 9, 4, 11],
                     expected: 6
                 },

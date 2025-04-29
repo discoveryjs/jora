@@ -61,9 +61,38 @@ describe('lang/object', () => {
             { $foo: 1 }
         );
         assert.deepEqual(
+            query('$a;{$a}')({ a: 42 }),
+            { a: 42 }
+        );
+        assert.deepEqual(
             query('$foo: 42; { $, $foo }')(123),
             { foo: 42 }
         );
+    });
+
+    describe('escape sequences', () => {
+        const testcases = [
+            { jora: '{ \\u0061 }', input: { a: 123 }, expected: { a: 123 } },
+            { jora: '{ \\u0061: 123 }', expected: { a: 123 } },
+            { jora: '{ \\u0031 }', input: { 1: 123 }, expected: { 1: 123 } },
+            { jora: '{ \\u0031: 123 }', expected: { 1: 123 } },
+            { jora: '{ \\u0021 }', input: { '!': 123 }, expected: { '!': 123 } },
+            { jora: '{ \\u0021: 123 }', expected: { '!': 123 } },
+            { jora: '{ \\u005balert\\u0028\\u0027hello\\u0021\\u0027\\u0029\\u005d }', expected: {
+                "[alert('hello!')]": undefined
+            } },
+            { jora: '{ $! }', error: /Bad input/ },
+            { jora: '{ $!: 1 }', error: /Bad input/ },
+            { jora: '{ $\\u0021 }', error: /Bad escape sequence in indentifier name/ },
+            { jora: '{ $\\u0021: 123 }', expected: { '$!': 123 } }
+        ];
+
+        for (const { jora, input, expected, error } of testcases) {
+            it(jora, error
+                ? () => assert.throws(() => query(jora)(input), error)
+                : () => assert.deepEqual(query(jora)(input), expected)
+            );
+        }
     });
 
     it('computed properties', () => {

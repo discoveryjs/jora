@@ -1,6 +1,6 @@
 export function compile(node, ctx) {
     if (node.name) {
-        ctx.put('$' + node.name);
+        ctx.putIdent('$' + ctx.unescapeName(node.name, node), node);
     }
 }
 export function walk() { }

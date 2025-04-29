@@ -1,5 +1,5 @@
 export function compile(node, ctx) {
-    const args = node.arguments.map(arg => '$' + arg.name);
+    const args = node.arguments.map(arg => ctx.unescapeName('$' + arg.name, arg));
     const duplicateNameNode = node.arguments.find((node, index) =>
         index > 0 && args.lastIndexOf('$' + node.name, index - 1) !== -1
     );
@@ -18,8 +18,8 @@ export function compile(node, ctx) {
             ctx.scope.arg1 = true;
             ctx.scope.$ref = args[0] || '$';
 
-            for (const arg of node.arguments) {
-                ctx.scope.add(arg.name);
+            for (const name of args) {
+                ctx.scope.add(name);
             }
 
             ctx.node(node.body);

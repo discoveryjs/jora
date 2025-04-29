@@ -2,7 +2,7 @@ import { cmp, cmpAnalytical, cmpNatural, cmpNaturalAnalytical } from '../utils/c
 import { hasOwn, addToSet, getPropertyValue, isPlainObject, isRegExp, isArrayLike, isTruthy, parseIntDefault, isArray } from '../utils/misc.js';
 
 export default Object.freeze({
-    unsafeRef,
+    awaitInitRef,
     ensureArray,
     bool: isTruthy,
     and: (a, b) => isTruthy(a) ? b : a,
@@ -37,13 +37,13 @@ export default Object.freeze({
     slice
 });
 
-function unsafeRef(fn, name, range) {
+function awaitInitRef(fn, name, range) {
     try {
         return fn();
     } catch (e) {
         if (name) {
             throw Object.assign(
-                new ReferenceError(`Cannot access $${name} before initialization`),
+                new ReferenceError(`Cannot access ${name} before initialization`),
                 { details: { name, loc: { range } } }
             );
         }

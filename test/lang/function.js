@@ -70,10 +70,13 @@ describe('lang/function', () => {
             { query: '$fn: $a => $a + $$; 2.$fn(3)', expected: 5 },
             { query: '$fn: $a => .($ + $a.size()); [1, 3].$fn()', expected: [3, 5] },
             { query: '$fn: $a => ($b:2; $a + $b); 5.$fn()', expected: 7 },
+            { query: '$fn: $\\u0061 => $a + 3; 5.$fn()', expected: 8 },
             { query: '$fn: () => $ + $$; 20.$fn(22)', expected: 42 },
             { query: '$fn: ($a) => $a + $; 3.$fn()', expected: 6 },
             { query: '$fn: ($a) => ($b:2; $a + $b); 3.$fn()', expected: 5 },
+            { query: '$fn: ($\\u0061) => $a + 3; 5.$fn()', expected: 8 },
             { query: '$fn: ($a, $b) => $a + $ + $b + $$; 2.$fn(3)', expected: 2 + 2 + 3 + 3 },
+            { query: '$fn: ($a, $\\u0062) => $a + $b; 4.$fn(2)', expected: 6 },
             { query: '$fn: ($a, $a) => $; 2.$fn(3)', error: /Duplicate parameter name "\$a" is not allowed/ }
         ];
 

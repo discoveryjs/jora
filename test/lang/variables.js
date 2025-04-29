@@ -36,11 +36,27 @@ describe('lang/variables', () => {
         );
     });
 
-    it('should destruct to a regular key when using in short form on object', () => {
-        assert.deepEqual(
-            query('$a;{$a}')({ a: 42 }),
-            { a: 42 }
-        );
+    describe('escape sequences & identifier name', () => {
+        const testcases = [
+            { jora: '$\\u0061;$a', input: { a: 123 }, expected: 123 },
+            { jora: '\\u0024\\u0061;$a', error: /Parse error/ },
+            { jora: '$\\u0021;$a', error: /Bad escape sequence in indentifier name/ }
+        ];
+
+        for (const { jora, input, expected, error } of testcases) {
+            it(jora, error
+                ? () => assert.throws(() => query(jora)(input), error)
+                : () => assert.deepEqual(query(jora)(input), expected)
+            );
+        }
+    });
+
+    it('bad identifier name in AST', () => {
+        assert.throws(() => {
+            const ast = query.syntax.parse('$a:1;');
+            ast.definitions[0].declarator.name = '!';
+            query.syntax.compile(ast);
+        }, 'Comp error');
     });
 
     it('should raise an exception when refer to undefined variable', () => {

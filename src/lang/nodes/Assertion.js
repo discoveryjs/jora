@@ -40,12 +40,14 @@ export function compile(node, ctx) {
                         ctx.put('(typeof ');
                     }
 
-                    ctx.put('a.');
-                    ctx.put(node.assertion.name);
+                    ctx.put('a[');
+                    ctx.node(node.assertion);
+                    ctx.put(']');
 
                     if (ctx.tolerant) {
-                        ctx.put('==="function"?a.');
-                        ctx.put(node.assertion.name);
+                        ctx.put('==="function"?a[');
+                        ctx.node(node.assertion);
+                        ctx.put(']');
                     }
 
                     ctx.put('.call(mctx,');

@@ -1,6 +1,7 @@
 export default [
     '$foo:true;$a:false;$c;$;$d:d.e;$f:$["f"];',
     'bar([#,@,null,undefined,Infinity,NaN,not $,no $,1,"2\'\\"",/3/i,/asd/],{a:3,$b,$,c,$d:1,"asd":3,["asd"+x]:3,...,...$,...foo,...(a+5)},',
+    '{$\\u0061:"ok"},',
     '`template`,`temp${1}late`,`te${1+1}mp${{a:3}["a"]+`xxx${42}xxx`}late`,`${1}${2} ${3}${4} ${5}${6}`,`${} ${} ${}`,',
     '[...,...$,...1+1],',
     'x?1 in xx():2,sort((($x;$x+b)*7) asc,b desc)).(a.[foo]).x($[a+"asd"],$[foo])',

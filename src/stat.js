@@ -88,7 +88,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
 
         case 'var':
             for (const value of values) {
-                suggestions.add('$' + value);
+                suggestions.add(value);
             }
             break;
 

@@ -75,4 +75,21 @@ describe('lang/get-property', () => {
             42
         );
     });
+
+    describe('escape sequences', () => {
+        const testcases = [
+            { jora: '\\u0068el\\u006cowor\\u006Cd', input: { 'helloworld': 42 }, expected: 42 },
+            { jora: '\\u0068el\\u006co\\u0020wor\\u006Cd', input: { 'hello world': 42 }, expected: 42 },
+            { jora: '\\u0031foo', input: { '1foo': 2 }, expected: 2 },
+            { jora: '\\u0021foo', input: { '!foo': 3 }, expected: 3 },
+            { jora: '\\u0020', input: { ' ': 4 }, expected: 4 }
+        ];
+
+        for (const { jora, input, expected, error } of testcases) {
+            it(jora, error
+                ? () => assert.throws(() => query(jora)(input), error)
+                : () => assert.deepEqual(query(jora)(input), expected)
+            );
+        }
+    });
 });

@@ -46,11 +46,12 @@ const $5 = { code: '$5' };
 const $6 = { code: '$6' };
 const $r0 = { code: '@0.range' };
 const $r1 = { code: '@1.range' };
+const $ri1 = { code: '[@1.range[0]+1,@1.range[1]]' };
 const $rm1 = { code: '[@1.range[0],@1.range[1]-1]' };
 const $rr = { code: '[@1.range[1],@1.range[1]]' };
 const $methodName = { code: 'this._mn' };
 const $placeholder = { code: { ...Placeholder(), range: $rr } };
-const refs = new Set([$0, $1, $1string, $1name, $$1name, $methodName, $2, $3, $4, $5, $6, $r0, $r1, $rm1, $rr, $placeholder]);
+const refs = new Set([$0, $1, $1string, $1name, $$1name, $methodName, $2, $3, $4, $5, $6, $r0, $r1, $ri1, $rm1, $rr, $placeholder]);
 const asis = '';
 
 function isPlainObject(value) {
@@ -183,7 +184,6 @@ exports.lex = {
                 return;
             }
             yy.pps();
-            yytext = this.ident(yytext);
             return 'IDENT';
         }],
         [['preventKeyword'], '', function() {
@@ -249,10 +249,10 @@ exports.lex = {
         ['(asc|desc)(NA?|AN?)?{wb}', 'return "ORDER";'],
 
         // methods & identifiers
-        ['{ident}\\(', 'yytext = this.ident(yytext.slice(0, -1)); return "METHOD(";'],
-        ['\\${ident}\\(', 'yytext = this.ident(yytext.slice(1, -1)); return "$METHOD(";'],
-        ['{ident}', 'yy.pps(); yytext = this.ident(yytext); return "IDENT";'],
-        ['\\${ident}', 'yy.pps(); yytext = this.ident(yytext.slice(1)); return "$IDENT";'],
+        ['{ident}\\(', 'yytext = yytext.slice(0, -1); return "METHOD(";'],
+        ['\\${ident}\\(', 'yytext = yytext.slice(1, -1); return "$METHOD(";'],
+        ['{ident}', 'yy.pps(); return "IDENT";'],
+        ['\\${ident}', 'yy.pps(); yytext = yytext.slice(1); return "$IDENT";'],
 
         // primitives
         ['(?:[_\\d]*\\.)?[_\\d]+(?:[eE][-+]?[_\\d]+)?{wb}', 'yy.pps(); yytext = this.toNumberLiteral(yytext, true); return "NUMBER";'],
@@ -516,7 +516,7 @@ exports.bnf = {
         ['objectEntryKeyLiteral', $$(ObjectEntry($1, null))],
         ['ident : e', $$(ObjectEntry($1, $3))],
         ['objectEntryKeyLiteral : e', $$(ObjectEntry($1, $3))],
-        ['$ident : e', $$(ObjectEntry(Identifier($$1name), $3))],
+        ['$ident : e', $$(ObjectEntry(withRange(Identifier($$1name), $r1), $3))],
         ['$ident e', $$(ObjectEntry($1, Pipeline(Reference($1), $2)))],
         ['ident e', $$(ObjectEntry($1, Pipeline(GetProperty(null, $1), $2)))],
         ['method() e', $$(ObjectEntry(Literal($methodName), Pipeline($1, $2)))],

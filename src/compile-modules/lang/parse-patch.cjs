@@ -99,8 +99,6 @@ module.exports = function buildParsers(strictParser) {
         ['NaN', NaN]
     ]);
     Object.assign(strictParser.lexer, {
-        ident: value => value.replace(/\\u[0-9a-fA-F]{4}/g, m => String.fromCharCode(parseInt(m.slice(2), 16))),
-
         toLiteral: value => literals.get(value),
 
         toNumberLiteral(value, underscoped, hex = false) {

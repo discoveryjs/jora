@@ -5,17 +5,18 @@ export function suggest(node, ctx) {
 }
 export function compile(node, ctx) {
     const nameNode = node.name;
-    const inScope = ctx.scope.has(nameNode.name);
-    const awaitInit = ctx.scope.awaitInit.has(nameNode.name);
+    const unescapedName = ctx.unescapeName('$' + nameNode.name, nameNode);
+    const inScope = ctx.scope.has(unescapedName);
+    const awaitInit = ctx.scope.awaitInit.has(unescapedName);
 
     if (!inScope || awaitInit) {
         if (awaitInit) {
-            ctx.put('f.unsafeRef(()=>$');
-            ctx.node(nameNode);
+            ctx.put('f.awaitInitRef(()=>');
+            ctx.putIdent(unescapedName, nameNode);
 
             if (!ctx.tolerant) {
                 ctx.put(',');
-                ctx.put(JSON.stringify(nameNode.name));
+                ctx.put(JSON.stringify(unescapedName));
                 ctx.put(',');
                 ctx.put(JSON.stringify(nameNode.range));
             }
@@ -25,15 +26,15 @@ export function compile(node, ctx) {
             if (ctx.tolerant) {
                 ctx.put('undefined');
             } else {
-                ctx.error(`$${nameNode.name} is not defined`, nameNode);
+                ctx.putIdent(unescapedName, node); // implicit check identifier name
+                ctx.error(`${unescapedName} is not defined`, node);
             }
         }
 
         return;
     }
 
-    ctx.put('$');
-    ctx.node(nameNode);
+    ctx.putIdent(unescapedName, nameNode);
 }
 export function walk(node, ctx) {
     ctx.node(node.name);

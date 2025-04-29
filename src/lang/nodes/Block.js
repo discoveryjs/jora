@@ -8,8 +8,10 @@ export function compile(node, ctx) {
         ctx.put('(()=>{');
         ctx.createScope(
             () => {
-                for (const definition of node.definitions) {
-                    ctx.scope.awaitInit.add(definition.declarator.name);
+                for (const { declarator } of node.definitions) {
+                    if (declarator.name) {
+                        ctx.scope.awaitInit.add(ctx.unescapeName('$' + declarator.name, declarator));
+                    }
                 }
 
                 ctx.list(node.definitions);

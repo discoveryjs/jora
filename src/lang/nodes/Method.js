@@ -18,19 +18,23 @@ export function compile(node, ctx, relatedNode) {
             ctx.usedMethods.set(node.reference.name, [node.reference.range]);
         }
 
-        ctx.put('m.');
+        ctx.put('m[');
+        ctx.node(node.reference);
+        ctx.put(']');
+    } else {
+        ctx.node(node.reference);
     }
-
-    ctx.node(node.reference);
 
     if (ctx.tolerant) {
         ctx.put('==="function"?');
 
         if (dictMethod) {
-            ctx.put('m.');
+            ctx.put('m[');
+            ctx.node(node.reference);
+            ctx.put(']');
+        } else {
+            ctx.node(node.reference);
         }
-
-        ctx.node(node.reference);
     }
 
     ctx.put(dictMethod ? '.call(mctx,' : '(');
