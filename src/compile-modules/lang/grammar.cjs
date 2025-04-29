@@ -90,24 +90,24 @@ function stringify(value) {
 
 function $$(node) {
     if (isPlainObject(node)) {
-        node.range = $r0;
+        withRange(node);
     }
 
     return '$$ = ' + stringify(node);
 }
 
-// FIXME: temporary solution, because of `declarator` is conflicting
-// with `queryRule` when declarator specified aside
-function DeclaratorWithRange(name) {
-    return Object.assign(Declarator(name), { range: $r1 });
+function withRange(node, range = $r0) {
+    node.range = range;
+
+    return node;
 }
 
 function MethodIdentifier(name) {
-    return Object.assign(Identifier(name), { range: $rm1 });
+    return withRange(Identifier(name), $rm1);
 }
 
 function MethodReference(name) {
-    return Object.assign(Reference(name), { range: $rm1 });
+    return withRange(Reference(name), $rm1);
 }
 
 function $$methodName(name) {
@@ -349,10 +349,10 @@ exports.bnf = {
         ['definitions def', '$1.push($2)']
     ],
     def: [
-        ['$ ;', $$(Definition(DeclaratorWithRange(null), null))],
-        ['$ : e ;', $$(Definition(DeclaratorWithRange(null), $3))],
-        ['$ident ;', $$(Definition(DeclaratorWithRange($1name), null))],
-        ['$ident : e ;', $$(Definition(DeclaratorWithRange($1name), $3))]
+        ['$ ;', $$(Definition(withRange(Declarator(null), $r1), null))],
+        ['$ : e ;', $$(Definition(withRange(Declarator(null), $r1), $3))],
+        ['$ident ;', $$(Definition(withRange(Declarator($1name), $r1), null))],
+        ['$ident : e ;', $$(Definition(withRange(Declarator($1name), $r1), $3))]
     ],
     ident: [
         ['IDENT', $$(Identifier($1))]
@@ -376,7 +376,7 @@ exports.bnf = {
 
         // functions
         ['=> e', $$(Function([], $2))],
-        ['$IDENT => e', $$(Function([Identifier($1)], $3))],
+        ['$IDENT => e', $$(Function([withRange(Identifier($1), $r1)], $3))],
         ['( ) => e', $$(Function([], $4))],
         ['( functionArgs ) => e', $$(Function($2, $5))],
         ['compareFunction', $$(CompareFunction($1))],

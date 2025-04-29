@@ -1,3 +1,7 @@
+## next
+
+- Fixed missed range for argument in `$arg => ...` function notation
+
 ## 1.0.0-beta.13 (September 10, 2024)
 
 - Disallowed duplicate parameter names in function definitions, i.e., `($a, $a) => expr` is now prohibited
