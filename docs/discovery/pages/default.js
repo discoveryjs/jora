@@ -27,7 +27,7 @@ discovery.page.define('default', [
                     {
                         view: 'block',
                         content: [
-                            'button:{ text: "Get started", href: "#article:get-started" }',
+                            'button:{ text: "Get started", href: "#article:getting-started" }',
                             'button-primary:{ text: "Jora query syntax", href: "#article:jora-syntax" }'
                         ]
                     },
