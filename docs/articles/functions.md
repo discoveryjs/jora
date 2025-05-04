@@ -1,6 +1,8 @@
 # Functions
 
-There are two ways to define a function in Jora: a regular function and a comparator function (which used to compare a couple of values).
+There are two ways to define a function in Jora:
+- a [regular function](#regular-functions)
+- a [comparator function](#comparator-functions) (which used to compare a couple of values).
 
 ## Regular functions
 
@@ -37,12 +39,40 @@ Functions are often used in place as method arguments:
 // Result: [{ key: 1, value: [1, 3] }, { key: 0, value: [2, 4]}]
 ```
 
-Functions can also be stored as local variables and used as regular methods:
+Functions can also be stored as local variables:
+
+```jora
+$oddEven: => $ % 2;
+[1, 2, 3, 4].group($oddEven)
+// Result: [{ key: 1, value: [1, 3] }, { key: 0, value: [2, 4]}]
+```
+
+Functions stored as local variables can also be used as regular methods:
 
 ```jora
 $countOdd: => .[$ % 2].size();
 [1, 2, 3, 4].$countOdd()
 // Result: 2
+```
+
+To use a function passed via context (`#`) or data (`@`), store it in a local variable and then use it as a method:
+
+```jora
+$functionFromContext: #.someFunction;
+someValue.$functionFromContext()
+```
+
+Explicit argument declaration is beneficial when an argument is used in nested scopes within the function body:
+
+```jora
+$books: [
+    { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee" },
+    { id: 2, title: "1984", author: "George Orwell" },
+    { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
+];
+$getBook: $id => $books[=> id = $id];
+3 | $getBook()
+// Result: { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
 ```
 
 The special variables `$` (first parameter) and `$$` (second parameter) are always accessible in function scope:
@@ -61,19 +91,6 @@ $example: ($a, $b) => [$a, $, $b, $$];
 // Result: [1, 1, 2, 2]
 ```
 
-Explicit argument declaration is beneficial when an argument is used in nested scopes within the function body:
-
-```jora
-$books: [
-    { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee" },
-    { id: 2, title: "1984", author: "George Orwell" },
-    { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
-];
-$getBook: $id => $books[=> id = $id];
-3 | $getBook()
-// Result: { id: 3, title: "The Great Gatsby", author: "F. Scott Fitzgerald" }
-```
-
 Here's how to sum up an array using the `reduce()` method and a function, where `$` is the array element and `$$` is the accumulator:
 
 ```jora
@@ -81,21 +98,14 @@ Here's how to sum up an array using the `reduce()` method and a function, where 
 // Result: 10
 ```
 
-> Note: In Jora, function arguments order is always `$, $$`, but in JavaScript's reduce(), the order is reversed.
+> Note: In Jora, function arguments order is always `$, $$`, but in JavaScript's `Array#reduce()`, the order is reversed.
 With explicit arguments a function for Jora's reduce will be `($current, $sum) => $sum + $current`.
-
-The JavaScript equivalent:
-
-```js
-[1, 2, 3, 4].reduce(($$, $) => $$ + $, 0)
-```
-
-To use a function passed via context (`#`) or data (`@`), store it in a local variable and then use it as a method:
-
-```jora
-$functionFromContext: #.someFunction;
-someValue.$functionFromContext()
-```
+>
+> The JavaScript equivalent:
+>
+> ```js
+> [1, 2, 3, 4].reduce(($$, $) => $$ + $, 0)
+> ```
 
 ## Comparator functions
 
@@ -143,6 +153,6 @@ Before comparing a pair of values, a comparator function compares their types. W
 
 There are some variations for `asc` and `desc` that provide additional comparison options:
 
-- `ascN` / `descN`: [Natural sort order](https://en.wikipedia.org/wiki/Natural_sort_order) for strings using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare) (`N` stands for "Natural")
-- `ascA` / `descA`: The same as `asc` / `desc`, but reverse order for numbers (`A` stands for "Analytical")
-- `ascAN` / `ascNA` / `descAN` / `descNA`: The same as `ascN` / `descN`, but reverse order for numbers (`AN` stands for "Analytical" and "Natural")
+- `ascN` and `descN`: [Natural sort order](https://en.wikipedia.org/wiki/Natural_sort_order) for strings using [@discoveryjs/natural-compare](https://github.com/discoveryjs/natural-compare) (`N` stands for "Natural")
+- `ascA` and `descA`: The same as `asc` and `desc`, but reverse order for numbers (`A` stands for "Analytical")
+- `ascAN`, `ascNA`, `descAN` and `descNA`: The same as `ascN` and `descN`, but reverse order for numbers (`AN` stands for "Analytical" and "Natural")

@@ -81,12 +81,12 @@ import jora from 'jora';
 // Setup query factory with custom assertions
 const createQueryWithCustomAssertions = jora.setup({
     assertions: {
-        mine($) {
+        myAssertion($) {
             /* test a value */
         }
     }
 });
 
 // Create a query
-const queryWithMyAssertion = createQueryWithCustomAssertions('is mine');
+const queryWithMyAssertion = createQueryWithCustomAssertions('is myAssertion');
 ```

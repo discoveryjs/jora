@@ -32,10 +32,12 @@ import jora from 'jora';
 // Create a custom setup for queries
 const queryWithCustomMethods = jora.setup({
     methods: {
-        customMethod($) { /* implement custom logic here */ }
+        myMethod($) {
+            /* implement custom logic here */
+        }
     }
 });
 
 // Use the custom query factory
-queryWithCustomMethods('foo.customMethod()')(data, context);
+queryWithCustomMethods('foo.myMethod()')(data, context);
 ```

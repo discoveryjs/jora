@@ -70,11 +70,24 @@ Queries can be augmented using the `methods` and `assertions` options, allowing 
 
   Within the function scope, `this` refers to a special object containing a `context` reference, which in turn refers to the query's context. Methods and assertions can be invoked using `this.method(name, ...args)` and `this.assertion(name, ...methods)`, respectively. This approach allows for the integration of both built-in and custom definitions.
 
+  > Note: To have access to `this`, the method or assertion must be declared as a function statement or expression, not as an arrow function.
+
+  ```js
+  const customMethods = {
+    example(current, sortingFn = (a, b) => a - b) {
+      if (this.context.value === 'foo' && this.assertion('array', current)) {
+        return this.method('sort', current, sortingFn);
+      }
+      return null;
+    }
+  };
+  ```
+
 - **String definitions** (jora queries):
 
-  String definitions have access to special variables such as `$`, `$$`, `@`, and `#`. Additionally, all built-in methods and assertions, along with any custom elements, are accessible within these definitions.
+  String definitions have access to special variables such as `$`, `$$`, `@`, and `#`. Additionally, all built-in methods and assertions, along with any custom methods and assertions, are accessible within these definitions.
 
-  > **Note**: The `@` variable pertains to the entry value of a method or an assertion definition, and not to the entry value of the query itself.
+  > **Note**: The `@` variable refers to the entry value of a method or an assertion definition (i.e. equals to methods `$` value), and not to the entry value of the query itself.
 
 There are two methods for enhancing queries in jora:
 
@@ -88,7 +101,7 @@ There are two methods for enhancing queries in jora:
   // Create a custom setup for queries
   const queryWithCustomMethods = jora.setup({
       methods: {
-          customMethod($) { /* implement custom logic here */ }
+          myMethod($) { /* method logic here */ }
       },
       assertions: {
           odd: '$ % 2 = 1'
@@ -96,7 +109,7 @@ There are two methods for enhancing queries in jora:
   });
 
   // Use the custom query factory
-  queryWithCustomMethods('foo.customMethod(is odd)')(data, context);
+  queryWithCustomMethods('foo.myMethod(is odd)')(data, context);
   ```
 
 - Defining extensions ad hoc on basic query factory call (less efficient):
@@ -107,9 +120,9 @@ There are two methods for enhancing queries in jora:
   import jora from 'jora';
 
   // Define extensions on a query created for basic setup
-  const result = jora('foo.customMethod(is odd)', {
+  const result = jora('foo.myMethod(is odd)', {
       methods: {
-          customMethod($) { /* implement custom logic here */ }
+          myMethod($) { /* method logic here */ }
       },
       assertions: {
           odd: '$ % 2 = 1'

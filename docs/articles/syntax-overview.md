@@ -19,7 +19,7 @@ comment */
 Jora supports literals, which include:
 
 - Numbers: `42`, `-3.14`, `6.022e23`
-- Strings: `"hello"`, `'world'`, `\`template${yes}\``, `"\u{1F600}"`
+- Strings: `"hello"`, `'world'`, `{{"\u0060template${string}\u0060"}}`, `"\u{1F600}"`
 - Booleans: `true`, `false`
 - Regular expressions: `/regexp/flags`
 - Object literals: `{ hello: 'world' }` (see [Object literals](./object-literal.md))
