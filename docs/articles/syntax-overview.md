@@ -42,6 +42,12 @@ Jora supports most JavaScript operators, including:
 
 See [Operators](./operators.md)
 
+## Variables
+
+Variables in Jora are helpful for storing intermediate results or simplifying complex expressions. To define a variable, use the `$variableName: expression;` syntax.
+
+See [Variables](./variables.md)
+
 ## Dot, bracket and slice notations
 
 Jora provides notations for accessing properties and elements: dot, bracket and slice notations. Dot notation is similar to JavaScript's property access notation, using a period followed by the property name (e.g., `$.propertyName`). Bracket notation encloses the property name or index within square brackets (e.g., `$['propertyName']` or `$[0]`), it's also possible to use functions to choose. Slice notation provides a concise syntax to slice elements with optional step (`array[5:10:2]` selects each odd element from 5th to 10th indecies).
@@ -66,9 +72,3 @@ Jora has a concise syntax for mapping and filtering. The `map(fn)` method is equ
 - [Mapping](./map.md): `.(…)` and `map()` method
 - [Recursive mapping](./recursive-map.md): `..(…)`
 - [Filtering](./filter.md): `.[…]` and `filter()` method
-
-## Variables
-
-Variables in Jora are helpful for storing intermediate results or simplifying complex expressions. To define a variable, use the `$variableName: expression;` syntax.
-
-See [Variables](./variables.md)

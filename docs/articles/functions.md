@@ -91,21 +91,12 @@ $example: ($a, $b) => [$a, $, $b, $$];
 // Result: [1, 1, 2, 2]
 ```
 
-Here's how to sum up an array using the `reduce()` method and a function, where `$` is the array element and `$$` is the accumulator:
+Here's how to sum up an array using the [`reduce()`](./methods-builtin.md#reduce) method and a function, where `$` is the array element and `$$` is the accumulator:
 
 ```jora
 [1, 2, 3, 4].reduce(=> $$ + $, 0)
 // Result: 10
 ```
-
-> Note: In Jora, function arguments order is always `$, $$`, but in JavaScript's `Array#reduce()`, the order is reversed.
-With explicit arguments a function for Jora's reduce will be `($current, $sum) => $sum + $current`.
->
-> The JavaScript equivalent:
->
-> ```js
-> [1, 2, 3, 4].reduce(($$, $) => $$ + $, 0)
-> ```
 
 ## Comparator functions
 

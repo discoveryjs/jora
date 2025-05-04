@@ -34,35 +34,35 @@ Jora's syntax is designed to be both expressive and concise, allowing to easily 
 
 Here are some basic examples to help you get started:
 
-1. Accessing properties using [bracket](./bracket-notation.md) and [dot](./dot-notation.md) notations: 
+- Accessing properties using [bracket](./bracket-notation.md) and [dot](./dot-notation.md) notations: 
 
-```jora
-posts[0].title
-```
+  ```jora
+  posts[0].title
+  ```
 
-2. [Filtering](./filter.md) arrays:
+- [Filtering](./filter.md) arrays:
 
-```jora
-users.[age > 30]
-```
+  ```jora
+  users.[age > 30]
+  ```
 
-3. [Mapping](./map.md) arrays:
+- [Mapping](./map.md) arrays:
 
-```jora
-users.(name.first + ' ' + name.last)
-```
+  ```jora
+  users.(name.first + ' ' + name.last)
+  ```
 
-5. [Methods](./methods.md) and [functions](./functions.md):
+- [Methods](./methods.md) and [functions](./functions.md):
 
-```jora
-users.sort(name asc).group(=> name)
-```
+  ```jora
+  users.sort(name asc).group(=> name)
+  ```
 
-4. [Variables](./variables.md):
+- [Variables](./variables.md) and [pipeline operator](./operators.md#pipeline-operator):
 
-```jora
-$oldestUser: users.max(age desc);
-$oldestUser.name
-```
+  ```jora
+  $oldestUser: users.max(=> age);
+  $oldestUser | { name, age }
+  ```
 
 See [Syntax overview](./syntax-overview.md) for a comprehensive overview of Jora syntax.

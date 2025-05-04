@@ -27,8 +27,9 @@ discovery.page.define('default', [
                     {
                         view: 'block',
                         content: [
-                            'button:{ text: "Get started", href: "#article:getting-started" }',
-                            'button-primary:{ text: "Jora query syntax", href: "#article:jora-syntax" }'
+                            'button{ text: "Getting started", href: "#article:getting-started" }',
+                            'button{ text: "Jora query syntax", href: "#article:jora-syntax" }',
+                            'button-primary{ text: "Playground", href: "#playground" }'
                         ]
                     },
                     'html:"<br>"',
@@ -36,14 +37,6 @@ discovery.page.define('default', [
                         view: 'md',
                         source: '=intro'
                     }
-                ]
-            },
-            {
-                view: 'block',
-                className: 'column',
-                content: [
-                    'button:{ text: "GitHub", href: "https://github.com/discoveryjs/jora" }',
-                    'button:{ text: "Jora playground", href: "#playground" }'
                 ]
             }
         ]

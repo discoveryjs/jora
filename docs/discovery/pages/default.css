@@ -1,9 +1,9 @@
 .page-default > .main-layout {
-    max-width: 950px;
+    max-width: 850px;
     display: flex;
     gap: 20px;
 }
-.page-default > .main-layout > .column:first-child {
+/* .page-default > .main-layout > .column:first-child {
     flex: 1;
 }
 .page-default > .main-layout > .column:last-child {
@@ -16,4 +16,4 @@
 }
 .page-default > .main-layout > .column:last-child > * {
     margin: 0;
-}
+} */

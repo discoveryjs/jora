@@ -354,7 +354,8 @@ The `numbers()` method is utilized internally by statistical methods such as `su
 // Result: [10, 20, 10]
 ```
 
-> Note: When applying a statistical computation to an array of objects, it is recommended to use a custom `getter` with the method rather than using dot notation or mapping. This is because dot notation and mapping ignore duplicate values. For instance, the query `[…].age.numbers()` might return `[10, 20]` for the last example instead of the expected `[10, 20, 10]`, which would be correctly returned by the query `[…].numbers(=> age)`.
+> [!NOTE]
+> When applying a statistical computation to an array of objects, it is recommended to use a custom `getter` with the method rather than using dot notation or mapping. This is because dot notation and mapping ignore duplicate values. For instance, the query `[…].age.numbers()` might return `[10, 20]` for the last example instead of the expected `[10, 20, 10]`, which would be correctly returned by the query `[…].numbers(=> age)`.
 
 ## p(<!--k, getter-->)
 
@@ -403,12 +404,26 @@ Get a value by a key, index, or function. The method repeats behaviour of [Brack
 
 ## reduce(<!--fn, initValue-->)
 
-The same as `Array#reduce()` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value:
+The same as `Array#reduce(fn, initValue)` in JS. Use `$$` to access the accumulator and `$` for the current value, e.g., find the max value:
 
 ```jora
 [1, 5, 2, 3, 4].reduce(=>$ > $$ ? $ : $$)
 // Result: 5
 ```
+
+> [!NOTE]
+> In Jora, function arguments order is always `$, $$`, but in JavaScript's `Array#reduce()`, the order is reversed.
+With explicit arguments a function for Jora's reduce will be:
+>
+> ```jora
+> reduce(($value, $acc) => $acc + $value, 0)
+> ```
+>
+> The JavaScript equivalent:
+>
+> ```js
+> reduce((acc, value) => acc + value, 0)
+> ```
 
 ## replace(<!--pattern, replacement-->)
 
@@ -522,7 +537,8 @@ Computes the sum of the values in an array. It returns `undefined` for non-array
 // Result: 0.6
 ```
 
-> Note: The `sum()` method returns `0.6` instead of `0.6000000000000001`, which is the result of the expression `0.1 + 0.2 + 0.3`. This is because the Kahan–Babuška summation algorithm is used to reduce numerical error.
+> [!NOTE]
+> The `sum()` method returns `0.6` instead of `0.6000000000000001`, which is the result of the expression `0.1 + 0.2 + 0.3`. This is because the Kahan–Babuška summation algorithm is used to reduce numerical error.
 
 Using a custom getter function:
 
@@ -599,7 +615,8 @@ Modifications from the standard JavaScript `Math` object include:
 - The [`min()`](#min) and [`max()`](#max) methods have been uniquely implemented in Jora to provide additional functionality.
 - The `random()` method is not included in Jora's Math methods, as it does not align with the deterministic nature of Jora.
 
-> Note: Keep in mind that the unary `-` operator has lower precedence than other operators. To apply a method to a negative scalar number, use the [grouping operator](./operators.md#grouping-operator), the [pipeline operator](./operators.md#pipeline-operator), or store the number in a [variable](./variables.md) and then apply the method to it. For example, instead of `-123.abs()`, which is interpreted as `-(123.abs())`, you should use one of the following:
+> [!NOTE]
+> The unary `-` operator has lower precedence than other operators. To apply a method to a negative scalar number, use the [grouping operator](./operators.md#grouping-operator), the [pipeline operator](./operators.md#pipeline-operator), or store the number in a [variable](./variables.md) and then apply the method to it. For example, instead of `-123.abs()`, which is interpreted as `-(123.abs())`, you should use one of the following:
 > - `(-123).abs()`
 > - `-123 | abs()`
 > - `$num = -123; $num.abs()`

@@ -43,9 +43,10 @@
 }
 .page-article .toc-litera {
     display: inline-block;
-    color: #888;
-    text-transform: uppercase;
     margin-right: 1ex;
+    font-family: var(--discovery-monospace-font-family);
+    text-transform: uppercase;
+    color: #888;
 }
 .page-article .toc-group {
     display: inline-flex;
