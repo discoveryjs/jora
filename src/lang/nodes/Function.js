@@ -15,7 +15,7 @@ export function compile(node, ctx) {
     ctx.put('){return ');
     ctx.createScope(
         () => {
-            ctx.scope.arg1 = true;
+            ctx.scope.arg1 = args[1] || 'arguments[1]';
             ctx.scope.$ref = args[0] || '$';
 
             for (const name of args) {

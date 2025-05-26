@@ -76,8 +76,9 @@ function compileInternal(ast, kind, tolerant = false, suggestions = null) {
     function createScope(fn, defCurrent, $ref = '$') {
         const prevScope = ctx.scope;
         const scopeStart = buffer.length - 1;
+        const arg1 = prevScope.arg1 || (kind === 'method' && 'arguments[1]');
 
-        ctx.scope = prevScope.spawn(prevScope.arg1 || kind === 'method', $ref);
+        ctx.scope = prevScope.spawn(arg1, $ref);
 
         fn();
 
