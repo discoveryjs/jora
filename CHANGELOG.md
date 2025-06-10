@@ -1,4 +1,4 @@
-## next
+## 1.0.0-beta.14 (June 10, 2025)
 
 - Fixed missed range for argument in `$arg => ...` function notation
 - Fixed a JavaScript injection vulnerability in queries using escape sequences, such as `{ \u005balert\u00281\u0029\u005d: 'test' }`. Now, Jora decodes escape sequences during query compilation depending on context and properly escapes or validates values from the AST when adding them into the query code. This approach also preserves authored escaping of identifiers during parse and stringify round-trips.
