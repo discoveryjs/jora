@@ -1,3 +1,7 @@
+## 1.0.0-beta.15 (June 11, 2025)
+
+- Removed the mistakenly included `src/index.ts` from the package, as it could cause build warnings
+
 ## 1.0.0-beta.14 (June 10, 2025)
 
 - Fixed missed range for argument in `$arg => ...` function notation
