@@ -37,6 +37,11 @@
     overflow: auto;
     padding: 0 12px 8px;
 }
+.view-sidebar > .view-tree .view-pill-badge {
+    --discovery-view-badge-color: light-dark(#dfd16c, #6e6523);
+    vertical-align: top;
+    margin-left: 1ex;
+}
 
 @media (width < 768px) {
     .discovery-sidebar {
@@ -48,7 +53,13 @@
         background-image: linear-gradient(to right, rgba(105,105,105,.1), rgba(105,105,105,.1));
         width: 350px;
         max-width: 100dvw;
+        transition: transform .1s ease-in;
     }
+    .discovery-sidebar-trigger.opened ~ .discovery-sidebar {
+        transform: none;
+        transition: transform .25s ease-in-out;
+    }
+
     .discovery-sidebar-trigger {
         display: block;
         position: fixed;
@@ -58,42 +69,33 @@
         width: 32px;
         aspect-ratio: 1/1;
         display: flex;
+        border: none;
         align-items: center;
         align-content: center;
         border-radius: 0 4px 4px 0;
         background-color: var(--discovery-background-color);
         background-image: linear-gradient(to right, rgba(105,105,105,.1), rgba(105,105,105,.1));
+        outline: .5px solid light-dark(#ccc, #555);
         cursor: pointer;
+        transition: left .1s ease-in;
+    }
+    .discovery-sidebar-trigger.opened {
+        border-radius: 4px;
+        background-image: none;
+        left: calc(min(350px, 100dvw) - 41px);
+        transition: left .25s ease-out;
     }
     .discovery-sidebar-trigger::before {
         content: '';
         display: block;
         height: 12px;
         width: 14px;
-        background-image: linear-gradient(to bottom, #fff4, #fff4 2px, transparent 0px);
+        background-image: linear-gradient(to bottom, #888, #888 2px, transparent 0px);
         background-size: 100% 5px;
         margin: auto;
+        transition: transform .1s ease-out;
     }
-    .discovery-sidebar-trigger input {
-        visibility: hidden;
-        position: absolute;
-    }
-
-    .discovery-sidebar-trigger:has(:checked) {
-        /* background-color: red; */
-        border-radius: 4px;
-    }
-    .discovery-sidebar-trigger:has(:checked) {
-        /* background-color: green; */
-        background-image: none;
-        left: calc(min(350px, 100dvw) - 41px);
-        transition: left .25s ease-in-out;
-    }
-    .discovery-sidebar-trigger:has(:checked) ~ .discovery-sidebar {
-        transform: none;
-        transition: transform .25s ease-in-out;
-    }
-    .discovery-sidebar-trigger:has(:checked)::before {
+    .discovery-sidebar-trigger.opened::before {
         height: 16px;
         width: 16px;
         background-size: 100%;
@@ -101,6 +103,6 @@
             linear-gradient(to bottom, transparent 7px, #888 7px, #888 9px, transparent 0px),
             linear-gradient(to right, transparent 7px, #888 7px, #888 9px, transparent 0px);
         transform: rotate(45deg);
-        transition: transform .5s ease-out;
+        transition-duration: .5s;
     }
 }

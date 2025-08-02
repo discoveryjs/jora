@@ -31,29 +31,20 @@ const toc = {
                     data: 'methodGroups',
                     limit: false,
                     itemConfig: {
-                        className: 'toc-group-item'
-                    },
-                    item: [
-                        {
-                            view: 'block',
-                            className: 'toc-litera',
-                            when: 'litera',
-                            content: 'text:litera.toUpperCase() + " "'
-                        },
-                        {
+                        className: 'toc-group-item',
+                        content: {
                             view: 'inline-list',
                             className: 'toc-group',
                             data: 'methods',
                             limit: false,
-                            item: [
-                                {
-                                    view: 'link',
-                                    data: '{ href: "#!" + name.toLowerCase(), text: name, match: #.filter }',
-                                    content: 'text-match'
-                                }
-                            ]
+                            postRender(el, _, methods) { el.dataset.litera = methods[0].name[0]; },
+                            item: {
+                                view: 'link',
+                                data: '{ href: "#!" + name.toLowerCase(), text: name, match: #.filter }',
+                                content: 'text-match'
+                            }
                         }
-                    ]
+                    }
                 }
             ]
         }
@@ -66,17 +57,16 @@ discovery.page.define('article', {
     content: [
         {
             view: 'page-header',
+            data: '$ + ..parent | reverse().title',
+            prelude: {
+                view: 'inline-list',
+                className: 'article-path',
+                data: '$[:-1]',
+                whenData: true
+            },
             content: [
+                'h1:$[-1]',
                 {
-                    view: 'h1',
-                    data: '$ + ..parent | reverse().title',
-                    content: [
-                        {
-                            view: 'inline-list',
-                            className: 'article-path'
-                        }
-                    ]
-                }, {
                     view: 'block',
                     when: '#.id = "jora-syntax-methods-builtin"',
                     className: 'scroll-to-top',
@@ -172,13 +162,17 @@ discovery.page.define('article', {
             content: [
                 {
                     view: 'button',
+                    className: 'prev-button',
                     when: 'prev',
-                    data: '{ text: "← Previous: " + prev.title, href: prev.slug.pageLink("article") }'
+                    href: '=prev.slug.pageLink("article")',
+                    content: 'text:"Previous: " + prev.title'
                 },
                 {
                     view: 'button',
+                    className: 'next-button',
                     when: 'next',
-                    data: '{ text: "Next: " + next.title + " →", href: next.slug.pageLink("article") }'
+                    href: '=next.slug.pageLink("article")',
+                    content: 'text:"Next: " + next.title'
                 }
             ]
         }

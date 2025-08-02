@@ -11,6 +11,15 @@
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr 1fr;
     gap: 10px 20px;
+
+    @media (width < 768px) {
+        height: auto;
+        grid-template:
+            'query-editor'
+            'compiled-code'
+            'stat'
+            'parse-result';
+    }
 }
 
 /* QUERY EDITOR */

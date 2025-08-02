@@ -15,7 +15,7 @@ function walkArticles(article, articleList) {
     }
 }
 
-module.exports = function(data, { addQueryHelpers, defineObjectMarker }) {
+module.exports = function(data, { addQueryMethods, defineObjectMarker }) {
     const articleList = [];
     const slugToArticle = new Map();
     const markArticle = defineObjectMarker('article', {
@@ -47,7 +47,7 @@ module.exports = function(data, { addQueryHelpers, defineObjectMarker }) {
         article.next = i + 1 < articleList.length ? articleList[i + 1] : null;
     }
 
-    addQueryHelpers({
+    addQueryMethods({
         parseExample,
         slug(current) {
             return current ? slugger.slug(current, { dryrun: true }) : '';

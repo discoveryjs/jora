@@ -1,18 +1,11 @@
-.discovery-nav > .github::before {
-    --size: 15px;
-    content: "";
-    display: inline-block;
-    vertical-align: text-top;
-    height: var(--size);
-    aspect-ratio: 1/1;
-    margin-right: 5px;
-    margin-left: -3px;
-    background: url("./img/github.svg") no-repeat center;
-    background-size: calc(var(--size) - 0px);
-    opacity: .85;
-}
-.discovery-root-darkmode .discovery-nav > .github::before {
-    background-image: url("./img/github-white.svg");
+@media (width < 768px) {
+    .view-page-header__prelude {
+        min-height: 1.2em;
+    }
+    .view-page-header__content .view-header {
+        line-height: 1.2;
+        font-size: 28px;
+    }
 }
 
 .view-markdown {
@@ -104,6 +97,11 @@
     padding-top: 1px;
     padding-bottom: 1px;
     padding-left: 30px;
+
+    @media (width < 768px) {
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
 }
 .view-struct_code-postlude:not(.struct-expanded-value, :hover) {
     background-color: transparent;
@@ -114,4 +112,12 @@
 }
 .view-struct_code-postlude:not(.struct-expanded-value, :hover) span {
     color: #969696a6 !important;
+}
+
+.view-source__action-buttons .open-in-playground::before {
+    content: 'Open in playground';
+
+    @media (width < 768px) {
+        content: '▷';
+    }
 }

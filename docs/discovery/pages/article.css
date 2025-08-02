@@ -1,3 +1,8 @@
+.page-article .article-path {
+    display: block;
+    margin-top: -10px;
+    color: light-dark(#555, #bbb);
+}
 .page-article .article-path .view-list-item:not(:first-child)::before {
     content: '/';
     font-size: 80%;
@@ -7,13 +12,38 @@
 }
 
 .page-article .prev-next-nav {
+    display: inline-flex;
+    gap: 4px 0;
     margin-top: 2em;
 }
+.page-article .prev-next-nav .prev-button::before {
+    content: "\2190 ";
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Tahoma, sans-serif;
+    padding-right: .6ex;
+}
+.page-article .prev-next-nav .next-button::after {
+    content: "\2192 ";
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Tahoma, sans-serif;
+    padding-left: .6ex;
+}
 
+.page-article .view-page-header {
+    top: 0;
+}
+.page-article .view-page-header::before {
+    margin-top: -10px;
+}
 .page-article .view-page-header__content {
     display: flex;
     align-items: center;
     gap: 1ex;
+    padding-bottom: 2px;
+}
+.page-article .view-page-header__content .view-header {
+    line-height: 1.2;
+    @media (width < 768px) {
+        font-size: 28px;
+    }
 }
 .page-article .scroll-to-top {
     margin-top: 5px;
@@ -41,16 +71,18 @@
     white-space: nowrap;
     margin-right: 1ex;
 }
-.page-article .toc-litera {
+.page-article .toc-group {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 .75ex;
+}
+.page-article .toc-group::before {
+    content: attr(data-litera);
     display: inline-block;
-    margin-right: 1ex;
     font-family: var(--discovery-monospace-font-family);
     text-transform: uppercase;
     color: #888;
-}
-.page-article .toc-group {
-    display: inline-flex;
-    gap: .75ex;
 }
 
 .page-article .toc-filter {
@@ -62,8 +94,8 @@
 .page-article .toc-filter > .view-input {
     margin-bottom: .5em;
 }
-.page-article .toc-filter > .content .view-list {
-    margin-left: 10px;
+.page-article .toc-filter > .content {
+    padding-left: 10px;
 }
 .page-article .toc-filter > .content .view-list::before {
     padding: 0;
@@ -74,4 +106,16 @@
     text-decoration-color: #8b7b42;
     border: none;
     color: #b6aa6a;
+}
+
+.page-article .view-table-cell code {
+    white-space: nowrap;
+}
+
+@media (width < 768px) {
+    .page-article > .view-markdown > .view-source {
+        border-radius: 0;
+        margin-left: calc(-1 * var(--discovery-page-padding-left));
+        margin-right: calc(-1 * var(--discovery-page-padding-right));
+    }
 }

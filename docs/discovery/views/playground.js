@@ -1,9 +1,10 @@
 /* eslint-env browser */
 /* global discovery */
 
-const jora = require('../jora').default;
-const { utils: { base64 } } = require('@discoveryjs/discovery');
-const beautify = require('js-beautify/js').js;
+import jora from '../jora';
+import { base64 } from '@discoveryjs/discovery/utils';
+import { js as beautify } from 'js-beautify/js';
+
 const allHasDict = new Proxy({}, {
     getOwnPropertyDescriptor() {
         return {

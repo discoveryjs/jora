@@ -5,8 +5,8 @@ discovery.view.define('example', {
     data: '{ ..., ...source.parseExample() }',
     actionButtons: {
         view: 'button',
+        className: 'open-in-playground',
         when: 'syntax = "jora"',
-        content: 'text:"Open in playground"',
         data: '{ href: { query: content }.playgroundLink() }'
     },
     // prelude: {
