@@ -37,7 +37,9 @@ const toc = {
                             className: 'toc-group',
                             data: 'methods',
                             limit: false,
-                            postRender(el, _, methods) { el.dataset.litera = methods[0].name[0]; },
+                            postRender(el, _, methods) {
+                                el.dataset.litera = methods[0].name[0];
+                            },
                             item: {
                                 view: 'link',
                                 data: '{ href: "#!" + name.toLowerCase(), text: name, match: #.filter }',
