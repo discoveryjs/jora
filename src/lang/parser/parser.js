@@ -3,6 +3,7 @@
  * Based on recursive descent with precedence climbing for operators
  */
 import { Tokenizer, TokenType } from './tokenizer.js';
+import * as build from '../build.js';
 
 // Operator precedence table (higher = higher precedence)
 const PRECEDENCE = new Map([
@@ -29,7 +30,8 @@ const PRECEDENCE = new Map([
     [TokenType.DIV, 13],
     [TokenType.MOD, 13],
     [TokenType.DOT, 14],
-    [TokenType.DOUBLE_DOT, 14]
+    [TokenType.DOUBLE_DOT, 14],
+    [TokenType.TRIPLE_DOT, 14]
 ]);
 
 const RIGHT_ASSOCIATIVE = new Set([TokenType.ARROW, TokenType.QUESTION]);
@@ -74,11 +76,7 @@ export class Parser {
     parse() {
         const expr = this.parseExpression();
         this.consume(TokenType.EOF);
-        return {
-            type: 'Block',
-            definitions: [],
-            body: expr
-        };
+        return build.Block([], expr);
     }
 
     parseExpression(minPrec = 0) {
@@ -97,37 +95,19 @@ export class Parser {
                 const consequent = this.parseExpression();
                 this.consume(TokenType.COLON);
                 const alternate = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = {
-                    type: 'Conditional',
-                    test: left,
-                    consequent,
-                    alternate
-                };
+                left = build.Conditional(left, consequent, alternate);
             } else if (op.type === TokenType.PIPE) {
                 // Pipeline operator
                 const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = {
-                    type: 'Pipeline',
-                    left,
-                    right
-                };
+                left = build.Pipeline(left, right);
             } else if (op.type === TokenType.IS) {
                 // Assertion operator
                 const assertion = this.parseAssertion();
-                left = {
-                    type: 'Postfix',
-                    left,
-                    assertion
-                };
+                left = build.Postfix(left, assertion);
             } else {
                 // Binary operators
                 const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = {
-                    type: 'Binary',
-                    operator: op.value,
-                    left,
-                    right
-                };
+                left = build.Binary(op.value, left, right);
             }
         }
 
@@ -139,22 +119,21 @@ export class Parser {
         if (this.match(TokenType.NOT) || this.match(TokenType.PLUS) || this.match(TokenType.MINUS)) {
             const op = this.consume();
             const expr = this.parseUnary();
-            return {
-                type: 'Prefix',
-                operator: op.value,
-                expression: expr
-            };
+            return build.Prefix(op.value, expr);
+        }
+
+        // IS assertions as prefix
+        if (this.match(TokenType.IS)) {
+            const op = this.consume();
+            const assertion = this.parseAssertion();
+            return build.Prefix(op.value, assertion);
         }
 
         // Arrow functions without parameters
         if (this.match(TokenType.ARROW)) {
             this.consume();
             const body = this.parseExpression();
-            return {
-                type: 'Function',
-                params: [],
-                body
-            };
+            return build.Function([], body);
         }
 
         return this.parsePostfix();
@@ -169,21 +148,10 @@ export class Parser {
 
                 if (this.match(TokenType.IDENT)) {
                     const prop = this.consume();
-                    expr = {
-                        type: 'GetProperty',
-                        value: expr,
-                        property: {
-                            type: 'Identifier',
-                            name: prop.value
-                        }
-                    };
+                    expr = build.GetProperty(expr, build.Identifier(prop.value));
                 } else if (this.match(TokenType.METHOD)) {
                     const method = this.parseMethodCall();
-                    expr = {
-                        type: 'MethodCall',
-                        value: expr,
-                        method
-                    };
+                    expr = build.MethodCall(expr, method);
                 } else {
                     break;
                 }
@@ -192,18 +160,7 @@ export class Parser {
 
                 if (this.match(TokenType.IDENT)) {
                     const prop = this.consume();
-                    expr = {
-                        type: 'MapRecursive',
-                        query: expr,
-                        expression: {
-                            type: 'GetProperty',
-                            value: null,
-                            property: {
-                                type: 'Identifier',
-                                name: prop.value
-                            }
-                        }
-                    };
+                    expr = build.MapRecursive(expr, build.GetProperty(null, build.Identifier(prop.value)));
                 } else {
                     break;
                 }
@@ -212,19 +169,11 @@ export class Parser {
 
                 if (this.match(TokenType.RBRACKET)) {
                     this.advance();
-                    expr = {
-                        type: 'Pick',
-                        value: expr,
-                        getter: null
-                    };
+                    expr = build.Pick(expr, null);
                 } else {
                     const index = this.parseExpression();
                     this.consume(TokenType.RBRACKET);
-                    expr = {
-                        type: 'Pick',
-                        value: expr,
-                        getter: index
-                    };
+                    expr = build.Pick(expr, index);
                 }
             } else {
                 break;
@@ -235,15 +184,17 @@ export class Parser {
     }
 
     parseAssertion() {
+        let negation = false;
+        
+        // Handle 'not' negation
+        if (this.match(TokenType.NOT)) {
+            this.consume();
+            negation = true;
+        }
+        
         if (this.match(TokenType.IDENT)) {
             const name = this.consume();
-            return {
-                type: 'Assertion',
-                assertion: {
-                    type: 'Identifier',
-                    name: name.value
-                }
-            };
+            return build.Assertion(build.Identifier(name.value), negation);
         }
         throw new Error('Expected assertion term');
     }
@@ -260,14 +211,7 @@ export class Parser {
         }
 
         this.consume(TokenType.RPAREN);
-        return {
-            type: 'Method',
-            name: {
-                type: 'Identifier',
-                name: name.value
-            },
-            arguments: args
-        };
+        return build.Method(build.Identifier(name.value), args);
     }
 
     parsePrimary() {
@@ -275,62 +219,74 @@ export class Parser {
         if (this.match(TokenType.NUMBER) || this.match(TokenType.STRING) ||
             this.match(TokenType.REGEXP) || this.match(TokenType.LITERAL)) {
             const token = this.consume();
-            return {
-                type: 'Literal',
-                value: token.value
-            };
+            return build.Literal(token.value);
+        }
+
+        // Template literals
+        if (this.match(TokenType.TEMPLATE)) {
+            const token = this.consume();
+            return build.Template(token.value);
         }
 
         // Special references
         if (this.match(TokenType.DATA)) {
             this.consume();
-            return { type: 'Data' };
+            return build.Data();
         }
 
         if (this.match(TokenType.CONTEXT)) {
             this.consume();
-            return { type: 'Context' };
+            return build.Context();
         }
 
         if (this.match(TokenType.CURRENT)) {
             this.consume();
-            return { type: 'Current' };
+            return build.Current();
         }
 
         if (this.match(TokenType.ARG1)) {
             this.consume();
-            return { type: 'Arg1' };
+            return build.Arg1();
         }
 
         if (this.match(TokenType.VAR_REF)) {
             const token = this.consume();
-            return {
-                type: 'Reference',
-                name: token.value
-            };
+            return build.Reference(token.value);
         }
 
         // Identifiers (property access)
         if (this.match(TokenType.IDENT)) {
             const token = this.consume();
-            return {
-                type: 'GetProperty',
-                value: null,
-                property: {
-                    type: 'Identifier',
-                    name: token.value
-                }
-            };
+            return build.GetProperty(null, build.Identifier(token.value));
         }
 
         // Method calls
         if (this.match(TokenType.METHOD)) {
             const method = this.parseMethodCall();
-            return {
-                type: 'MethodCall',
-                value: null,
-                method
-            };
+            return build.MethodCall(null, method);
+        }
+
+        // Dot notation (shorthand for @.property or map operations)
+        if (this.match(TokenType.DOT)) {
+            this.advance();
+            if (this.match(TokenType.IDENT)) {
+                const prop = this.consume();
+                return build.GetProperty(null, build.Identifier(prop.value));
+            } else if (this.match(TokenType.LPAREN)) {
+                // Map operation .()
+                this.advance(); // consume (
+                const query = this.parseExpression();
+                this.consume(TokenType.RPAREN);
+                return build.Map(null, build.Block([], query));
+            } else if (this.match(TokenType.LBRACKET)) {
+                // Map with bracket notation .[expr]
+                this.advance(); // consume [
+                const query = this.parseExpression();
+                this.consume(TokenType.RBRACKET);
+                return build.Map(null, build.Block([], query));
+            } else {
+                throw new Error('Expected property name after dot');
+            }
         }
 
         // Arrays
@@ -348,21 +304,14 @@ export class Parser {
             this.consume();
             const expr = this.parseExpression();
             this.consume(TokenType.RPAREN);
-            return {
-                type: 'Parentheses',
-                body: expr
-            };
+            return build.Parentheses(expr);
         }
 
         // Pipeline without left operand
         if (this.match(TokenType.PIPE)) {
             this.consume();
             const right = this.parseExpression();
-            return {
-                type: 'Pipeline',
-                left: null,
-                right
-            };
+            return build.Pipeline(null, right);
         }
 
         throw new Error(`Unexpected token ${this.current.type} at position ${this.current.pos}`);
@@ -373,21 +322,29 @@ export class Parser {
         const elements = [];
 
         if (!this.match(TokenType.RBRACKET)) {
-            elements.push(this.parseExpression());
+            elements.push(this.parseArrayElement());
 
             while (this.match(TokenType.COMMA)) {
                 this.consume(); // consume comma
                 if (!this.match(TokenType.RBRACKET)) { // allow trailing comma
-                    elements.push(this.parseExpression());
+                    elements.push(this.parseArrayElement());
                 }
             }
         }
 
         this.consume(TokenType.RBRACKET);
-        return {
-            type: 'Array',
-            elements
-        };
+        return build.Array(elements);
+    }
+
+    parseArrayElement() {
+        // Handle spread syntax
+        if (this.match(TokenType.TRIPLE_DOT)) {
+            this.consume();
+            const query = this.parseExpression();
+            return build.Spread(query, true);
+        }
+        
+        return this.parseExpression();
     }
 
     parseObject() {
@@ -406,26 +363,17 @@ export class Parser {
         }
 
         this.consume(TokenType.RBRACE);
-        return {
-            type: 'Object',
-            properties: entries
-        };
+        return build.Object(entries);
     }
 
     parseObjectEntry() {
         let key;
 
         if (this.match(TokenType.IDENT)) {
-            key = {
-                type: 'Identifier',
-                name: this.consume().value
-            };
+            key = build.Identifier(this.consume().value);
         } else if (this.match(TokenType.STRING) || this.match(TokenType.NUMBER)) {
             const token = this.consume();
-            key = {
-                type: 'Literal',
-                value: token.value
-            };
+            key = build.Literal(token.value);
         } else {
             throw new Error('Expected object property name');
         }
@@ -433,18 +381,10 @@ export class Parser {
         if (this.match(TokenType.COLON)) {
             this.consume();
             const value = this.parseExpression();
-            return {
-                type: 'ObjectEntry',
-                key,
-                value
-            };
+            return build.ObjectEntry(key, value);
         } else {
             // Shorthand property
-            return {
-                type: 'ObjectEntry',
-                key,
-                value: null
-            };
+            return build.ObjectEntry(key, null);
         }
     }
 }

@@ -9,6 +9,7 @@ export const TokenType = {
     IDENT: 'IDENT',
     VAR_REF: 'VAR_REF',
     METHOD: 'METHOD',
+    TEMPLATE: 'TEMPLATE',
 
     // Special references
     DATA: 'DATA',        // @
@@ -27,6 +28,7 @@ export const TokenType = {
     // Operators
     DOT: 'DOT',             // .
     DOUBLE_DOT: 'DOUBLE_DOT', // ..
+    TRIPLE_DOT: 'TRIPLE_DOT', // ...
     PIPE: 'PIPE',           // |
     ARROW: 'ARROW',         // =>
     EQ: 'EQ',               // =
@@ -58,36 +60,6 @@ export const TokenType = {
     // Special
     EOF: 'EOF'
 };
-
-// Operator precedence table (higher = higher precedence)
-const PRECEDENCE = new Map([
-    [TokenType.ARROW, 1],
-    [TokenType.PIPE, 2],
-    [TokenType.QUESTION, 3],
-    [TokenType.IS, 4],
-    [TokenType.OR, 5],
-    [TokenType.AND, 6],
-    [TokenType.NULLISH, 7],
-    [TokenType.NOT, 8],
-    [TokenType.IN, 9],
-    [TokenType.HAS, 9],
-    [TokenType.EQ, 10],
-    [TokenType.NE, 10],
-    [TokenType.MATCH, 10],
-    [TokenType.LT, 11],
-    [TokenType.LE, 11],
-    [TokenType.GT, 11],
-    [TokenType.GE, 11],
-    [TokenType.PLUS, 12],
-    [TokenType.MINUS, 12],
-    [TokenType.MULT, 13],
-    [TokenType.DIV, 13],
-    [TokenType.MOD, 13],
-    [TokenType.DOT, 14],
-    [TokenType.DOUBLE_DOT, 14]
-]);
-
-const RIGHT_ASSOCIATIVE = new Set([TokenType.ARROW, TokenType.QUESTION]);
 
 export class Token {
     constructor(type, value, pos = 0) {
@@ -183,6 +155,70 @@ export class Tokenizer {
         return new Token(TokenType.STRING, value, start);
     }
 
+    readTemplate() {
+        const start = this.pos;
+        this.advance(); // Skip opening `
+
+        let content = '';
+        const values = [];
+
+        while (this.pos < this.length && this.input[this.pos] !== '`') {
+            if (this.input[this.pos] === '$' && this.input[this.pos + 1] === '{') {
+                // Save the string part if any
+                if (content) {
+                    values.push({ type: 'Literal', value: content });
+                    content = '';
+                }
+
+                // Skip ${
+                this.advance(2);
+
+                // Read expression until }
+                let braceCount = 1;
+                let exprStart = this.pos;
+                while (this.pos < this.length && braceCount > 0) {
+                    if (this.input[this.pos] === '{') {
+                        braceCount++;
+                    } else if (this.input[this.pos] === '}') {
+                        braceCount--;
+                    }
+                    this.advance();
+                }
+
+                const expr = this.input.slice(exprStart, this.pos - 1);
+                values.push({ type: 'Expression', value: expr });
+            } else if (this.input[this.pos] === '\\') {
+                this.advance();
+                if (this.pos < this.length) {
+                    const escaped = this.input[this.pos];
+                    switch (escaped) {
+                        case 'n': content += '\n'; break;
+                        case 't': content += '\t'; break;
+                        case 'r': content += '\r'; break;
+                        case '\\': content += '\\'; break;
+                        case '`': content += '`'; break;
+                        default: content += escaped; break;
+                    }
+                    this.advance();
+                }
+            } else {
+                content += this.input[this.pos];
+                this.advance();
+            }
+        }
+
+        if (this.pos < this.length) {
+            this.advance(); // Skip closing `
+        }
+
+        // Add final string part if any
+        if (content) {
+            values.push({ type: 'Literal', value: content });
+        }
+
+        return new Token(TokenType.TEMPLATE, values, start);
+    }
+
     readRegExp() {
         const start = this.pos;
         this.advance(); // Skip opening /
@@ -276,6 +312,11 @@ export class Tokenizer {
             return this.readString(ch);
         }
 
+        // Template literals
+        if (ch === '`') {
+            return this.readTemplate();
+        }
+
         // Regular expressions (basic detection)
         if (ch === '/' && !/[0-9]/.test(this.peek(1))) {
             return this.readRegExp();
@@ -302,7 +343,13 @@ export class Tokenizer {
             }
         }
 
-        // Multi-character operators
+        // Multi-character operators (check 3-char first, then 2-char)
+        const threeChar = this.input.slice(this.pos, this.pos + 3);
+        if (threeChar === '...') {
+            this.advance(3);
+            return new Token(TokenType.TRIPLE_DOT, '...', start);
+        }
+
         const twoChar = this.input.slice(this.pos, this.pos + 2);
         const twoCharTokens = {
             '..': TokenType.DOUBLE_DOT,
