@@ -1,71 +1,86 @@
 
-// Core token types
+// Core token types (following grammar.cjs)
 export const TokenType = {
-    // Literals and identifiers
+    // Literals
     NUMBER: 'NUMBER',
     STRING: 'STRING',
     REGEXP: 'REGEXP',
     LITERAL: 'LITERAL',
     IDENT: 'IDENT',
-    VAR_REF: 'VAR_REF',
-    METHOD: 'METHOD',
-    TEMPLATE: 'TEMPLATE',
+    '$IDENT': '$IDENT',
 
     // Special references
-    DATA: 'DATA',        // @
-    CONTEXT: 'CONTEXT',  // #
-    CURRENT: 'CURRENT',  // $
-    ARG1: 'ARG1',        // $$
+    '@': '@',           // DATA
+    '#': '#',           // CONTEXT
+    '$': '$',           // CURRENT
+    '$$': '$$',         // ARG1
 
     // Keywords
     AND: 'AND',
     OR: 'OR',
     NOT: 'NOT',
+    NO: 'NO',
     IS: 'IS',
     IN: 'IN',
+    NOTIN: 'NOTIN',
     HAS: 'HAS',
+    HASNO: 'HASNO',
+    ORDER: 'ORDER',
+
+    // Method calls
+    'METHOD(': 'METHOD(',
+    '$METHOD(': '$METHOD(',
+
+    // Template tokens
+    TEMPLATE: 'TEMPLATE',
+    TPL_START: 'TPL_START',
+    TPL_CONTINUE: 'TPL_CONTINUE',
+    TPL_END: 'TPL_END',
 
     // Operators
-    DOT: 'DOT',             // .
-    DOUBLE_DOT: 'DOUBLE_DOT', // ..
-    TRIPLE_DOT: 'TRIPLE_DOT', // ...
-    PIPE: 'PIPE',           // |
-    ARROW: 'ARROW',         // =>
-    EQ: 'EQ',               // =
-    NE: 'NE',               // !=
-    MATCH: 'MATCH',         // ~=
-    LT: 'LT',               // <
-    LE: 'LE',               // <=
-    GT: 'GT',               // >
-    GE: 'GE',               // >=
-    PLUS: 'PLUS',           // +
-    MINUS: 'MINUS',         // -
-    MULT: 'MULT',           // *
-    DIV: 'DIV',             // /
-    MOD: 'MOD',             // %
-    NULLISH: 'NULLISH',     // ??
-    QUESTION: 'QUESTION',   // ?
+    '.': '.',
+    '..': '..',
+    '...': '...',
+    '.(': '.(',
+    '.[': '.[',
+    '..(': '..(',
+    '|': '|',
+    '=>': '=>',
+    '=': '=',
+    '!=': '!=',
+    '~=': '~=',
+    '<': '<',
+    '<=': '<=',
+    '>': '>',
+    '>=': '>=',
+    '+': '+',
+    '-': '-',
+    '*': '*',
+    '/': '/',
+    '%': '%',
+    '??': '??',
+    '?': '?',
 
     // Punctuation
-    LPAREN: 'LPAREN',       // (
-    RPAREN: 'RPAREN',       // )
-    LBRACKET: 'LBRACKET',   // [
-    RBRACKET: 'RBRACKET',   // ]
-    LBRACE: 'LBRACE',       // {
-    RBRACE: 'RBRACE',       // }
-    COMMA: 'COMMA',         // ,
-    COLON: 'COLON',         // :
-    SEMICOLON: 'SEMICOLON', // ;
+    '(': '(',
+    ')': ')',
+    '[': '[',
+    ']': ']',
+    '{': '{',
+    '}': '}',
+    ',': ',',
+    ':': ':',
+    ';': ';',
 
     // Special
     EOF: 'EOF'
 };
 
 export class Token {
-    constructor(type, value, pos = 0) {
+    constructor(type, value, offset = 0) {
         this.type = type;
         this.value = value;
-        this.pos = pos;
+        this.offset = offset;
     }
 }
 
@@ -74,6 +89,36 @@ export class Tokenizer {
         this.input = input;
         this.pos = 0;
         this.length = input.length;
+        this.templateStack = [];
+        this.bracketStack = []; // Track bracket balance like the legacy parser
+
+        // Bracket balance mapping (from parse-patch.cjs)
+        this.openBalance = new Map([
+            ['(', ')'],
+            ['.(', ')'],
+            ['..(', ')'],
+            ['METHOD(', ')'],
+            ['$METHOD(', ')'],
+            ['[', ']'],
+            ['.[', ']'],
+            ['{', '}'],
+            ['TPL_START', 'TPL_END']
+        ]);
+        this.closeBalance = new Set([')', ']', '}', 'TPL_END']);
+    }
+
+    // Track bracket balance like the legacy parser
+    trackBracketBalance(token) {
+        if (this.closeBalance.has(token.type)) {
+            const expected = this.bracketStack.pop();
+            // Note: We don't throw errors here like the parser does, just track balance
+        }
+
+        if (this.openBalance.has(token.type)) {
+            this.bracketStack.push(this.openBalance.get(token.type));
+        }
+
+        return token;
     }
 
     peek(offset = 0) {
@@ -90,151 +135,228 @@ export class Tokenizer {
         }
     }
 
+    skipComments() {
+        // Line comments: //
+        if (this.peek() === '/' && this.peek(1) === '/') {
+            while (this.pos < this.length && this.peek() !== '\n' && this.peek() !== '\r') {
+                this.advance();
+            }
+            return true;
+        }
+
+        // Block comments: /* */
+        if (this.peek() === '/' && this.peek(1) === '*') {
+            this.advance(2);
+            while (this.pos < this.length - 1) {
+                if (this.peek() === '*' && this.peek(1) === '/') {
+                    this.advance(2);
+                    return true;
+                }
+                this.advance();
+            }
+        }
+
+        return false;
+    }
+
     match(str) {
         return this.input.slice(this.pos, this.pos + str.length) === str;
+    }
+
+    isIdentStart(ch) {
+        return /[a-zA-Z_]/.test(ch) || (ch === '\\' && this.peek(1) === 'u');
+    }
+
+    isIdentPart(ch) {
+        return /[a-zA-Z_$0-9]/.test(ch) || (ch === '\\' && this.peek(1) === 'u');
+    }
+
+    readUnicodeEscape() {
+        if (this.peek() === '\\' && this.peek(1) === 'u') {
+            this.advance(2);
+            let hex = '';
+            for (let i = 0; i < 4; i++) {
+                if (/[0-9a-fA-F]/.test(this.peek())) {
+                    hex += this.peek();
+                    this.advance();
+                } else {
+                    throw new Error(`Invalid Unicode escape sequence at position ${this.pos}`);
+                }
+            }
+            return String.fromCharCode(parseInt(hex, 16));
+        }
+        return null;
     }
 
     readNumber() {
         const start = this.pos;
 
-        // Hex numbers
+        // Read the raw number including underscores, exponents, hex, etc.
+        const origPos = this.pos;
+
+        // Hex numbers: 0x or 0X
         if (this.match('0x') || this.match('0X')) {
             this.advance(2);
-            while (this.pos < this.length && /[0-9a-fA-F]/.test(this.input[this.pos])) {
-                this.advance();
+            while (this.pos < this.length) {
+                const ch = this.peek();
+                if (/[0-9a-fA-F_]/.test(ch)) {
+                    this.advance();
+                } else {
+                    break;
+                }
             }
-            return new Token(TokenType.NUMBER, parseInt(this.input.slice(start, this.pos), 16), start);
+        } else {
+            // Regular numbers (including underscores and scientific notation)
+            while (this.pos < this.length) {
+                const ch = this.peek();
+                if (/[0-9._]/.test(ch)) {
+                    this.advance();
+                } else {
+                    break;
+                }
+            }
+
+            // Scientific notation
+            if (this.peek() === 'e' || this.peek() === 'E') {
+                this.advance();
+                if (this.peek() === '+' || this.peek() === '-') {
+                    this.advance();
+                }
+                while (this.pos < this.length) {
+                    const ch = this.peek();
+                    if (/[0-9_]/.test(ch)) {
+                        this.advance();
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
 
-        // Regular numbers with decimal and exponent support
-        while (this.pos < this.length && /[0-9.]/.test(this.input[this.pos])) {
-            this.advance();
-        }
-
-        if (this.peek() === 'e' || this.peek() === 'E') {
-            this.advance();
-            if (this.peek() === '+' || this.peek() === '-') {
-                this.advance();
-            }
-            while (this.pos < this.length && /[0-9]/.test(this.input[this.pos])) {
-                this.advance();
-            }
-        }
-
-        return new Token(TokenType.NUMBER, parseFloat(this.input.slice(start, this.pos)), start);
+        // Return the raw number string (like legacy tokenizer)
+        const rawValue = this.input.slice(origPos, this.pos);
+        return new Token(TokenType.NUMBER, rawValue, start);
     }
 
     readString(quote) {
         const start = this.pos;
+        const origPos = this.pos;
         this.advance(); // Skip opening quote
 
-        let value = '';
+        // Read until closing quote or end, including escaped characters
         while (this.pos < this.length && this.input[this.pos] !== quote) {
             if (this.input[this.pos] === '\\') {
-                this.advance();
-                const escaped = this.input[this.pos];
-                switch (escaped) {
-                    case 'n': value += '\n'; break;
-                    case 'r': value += '\r'; break;
-                    case 't': value += '\t'; break;
-                    case '\\': value += '\\'; break;
-                    case '"': value += '"'; break;
-                    case "'": value += "'"; break;
-                    default: value += escaped; break;
+                this.advance(); // Skip escape character
+                if (this.pos < this.length) {
+                    this.advance(); // Skip escaped character
                 }
             } else {
-                value += this.input[this.pos];
+                this.advance();
             }
-            this.advance();
         }
 
         if (this.pos < this.length) {
             this.advance(); // Skip closing quote
         }
 
-        return new Token(TokenType.STRING, value, start);
+        // Return the raw string including quotes (like legacy tokenizer)
+        const rawValue = this.input.slice(origPos, this.pos);
+        return new Token(TokenType.STRING, rawValue, start);
     }
 
     readTemplate() {
         const start = this.pos;
-        this.advance(); // Skip opening `
+        const origPos = this.pos;
 
-        let content = '';
-        const values = [];
+        // Determine if this is a simple template or start of complex one
+        let pos = this.pos + 1; // Skip opening `
+        let hasInterpolation = false;
+
+        while (pos < this.length && this.input[pos] !== '`') {
+            if (this.input[pos] === '$' && this.input[pos + 1] === '{') {
+                hasInterpolation = true;
+                break;
+            }
+            if (this.input[pos] === '\\') {
+                pos++; // Skip escape
+            }
+            pos++;
+        }
+
+        if (!hasInterpolation) {
+            // Simple template literal - advance to end
+            this.pos = pos;
+            if (this.pos < this.length) {
+                this.advance(); // Skip closing `
+            }
+
+            // Return raw template including backticks (like legacy)
+            const rawValue = this.input.slice(origPos, this.pos);
+            return new Token(TokenType.TEMPLATE, rawValue, start);
+        } else {
+            // Template with interpolation - read until ${
+            this.advance(); // Skip `
+            while (this.pos < this.length && !(this.input[this.pos] === '$' && this.input[this.pos + 1] === '{')) {
+                if (this.input[this.pos] === '\\') {
+                    this.advance();
+                }
+                this.advance();
+            }
+
+            this.advance(2); // Skip ${
+            this.templateStack.push('template');
+
+            // Return raw value including delimiters (like legacy: "`temp${")
+            const rawValue = this.input.slice(origPos, this.pos);
+            const token = new Token(TokenType.TPL_START, rawValue, start);
+            return this.trackBracketBalance(token);
+        }
+    }
+
+    readTemplateEnd() {
+        const start = this.pos - 1; // Include the } that triggered this
+        const origPos = this.pos - 1; // Start from the }
 
         while (this.pos < this.length && this.input[this.pos] !== '`') {
             if (this.input[this.pos] === '$' && this.input[this.pos + 1] === '{') {
-                // Save the string part if any
-                if (content) {
-                    values.push({ type: 'Literal', value: content });
-                    content = '';
-                }
-
-                // Skip ${
+                // Continue template
                 this.advance(2);
 
-                // Read expression until }
-                let braceCount = 1;
-                let exprStart = this.pos;
-                while (this.pos < this.length && braceCount > 0) {
-                    if (this.input[this.pos] === '{') {
-                        braceCount++;
-                    } else if (this.input[this.pos] === '}') {
-                        braceCount--;
-                    }
-                    this.advance();
-                }
-
-                const expr = this.input.slice(exprStart, this.pos - 1);
-                values.push({ type: 'Expression', value: expr });
-            } else if (this.input[this.pos] === '\\') {
-                this.advance();
-                if (this.pos < this.length) {
-                    const escaped = this.input[this.pos];
-                    switch (escaped) {
-                        case 'n': content += '\n'; break;
-                        case 't': content += '\t'; break;
-                        case 'r': content += '\r'; break;
-                        case '\\': content += '\\'; break;
-                        case '`': content += '`'; break;
-                        default: content += escaped; break;
-                    }
-                    this.advance();
-                }
-            } else {
-                content += this.input[this.pos];
+                // Return raw value including delimiters (like legacy: "}more${")
+                const rawValue = this.input.slice(origPos, this.pos);
+                return new Token(TokenType.TPL_CONTINUE, rawValue, start);
+            }
+            if (this.input[this.pos] === '\\') {
                 this.advance();
             }
+            this.advance();
         }
 
         if (this.pos < this.length) {
             this.advance(); // Skip closing `
         }
 
-        // Add final string part if any
-        if (content) {
-            values.push({ type: 'Literal', value: content });
-        }
+        this.templateStack.pop();
 
-        return new Token(TokenType.TEMPLATE, values, start);
+        // Return raw value including delimiters (like legacy: "}late`")
+        const rawValue = this.input.slice(origPos, this.pos);
+        return new Token(TokenType.TPL_END, rawValue, start);
     }
 
     readRegExp() {
         const start = this.pos;
+        const rawStart = this.pos;
         this.advance(); // Skip opening /
 
-        let pattern = '';
         while (this.pos < this.length && this.input[this.pos] !== '/') {
             if (this.input[this.pos] === '\\') {
-                pattern += this.input[this.pos];
                 this.advance();
                 if (this.pos < this.length) {
-                    pattern += this.input[this.pos];
+                    this.advance();
                 }
             } else {
-                pattern += this.input[this.pos];
+                this.advance();
             }
-            this.advance();
         }
 
         if (this.pos < this.length) {
@@ -242,58 +364,94 @@ export class Tokenizer {
         }
 
         // Read flags
-        let flags = '';
         while (this.pos < this.length && /[gimsu]/.test(this.input[this.pos])) {
-            flags += this.input[this.pos];
             this.advance();
         }
 
-        return new Token(TokenType.REGEXP, new RegExp(pattern, flags), start);
+        // Store the raw string value including delimiters and flags
+        const rawValue = this.input.slice(rawStart, this.pos);
+        return new Token(TokenType.REGEXP, rawValue, start);
     }
 
     readIdentifier() {
         const start = this.pos;
+        let value = '';
 
-        while (this.pos < this.length && /[a-zA-Z_$0-9]/.test(this.input[this.pos])) {
-            this.advance();
-        }
-
-        const value = this.input.slice(start, this.pos);
-
-        // Check for keywords
-        const keywords = {
-            'true': true,
-            'false': false,
-            'null': null,
-            'undefined': undefined,
-            'Infinity': Infinity,
-            'NaN': NaN,
-            'and': TokenType.AND,
-            'or': TokenType.OR,
-            'not': TokenType.NOT,
-            'is': TokenType.IS,
-            'in': TokenType.IN,
-            'has': TokenType.HAS
-        };
-
-        if (keywords.hasOwnProperty(value)) {
-            if (typeof keywords[value] === 'string') {
-                return new Token(keywords[value], value, start);
+        while (this.pos < this.length && this.isIdentPart(this.peek())) {
+            if (this.peek() === '\\' && this.peek(1) === 'u') {
+                // Store the raw unicode escape sequence
+                value += '\\u';
+                this.advance(2);
+                for (let i = 0; i < 4; i++) {
+                    if (/[0-9a-fA-F]/.test(this.peek())) {
+                        value += this.peek();
+                        this.advance();
+                    } else {
+                        throw new Error(`Invalid Unicode escape sequence at position ${this.pos}`);
+                    }
+                }
             } else {
-                return new Token(TokenType.LITERAL, keywords[value], start);
+                value += this.peek();
+                this.advance();
             }
         }
 
-        // Check for method call
-        if (this.peek() === '(') {
-            return new Token(TokenType.METHOD, value, start);
+        return value;
+    }
+
+    readKeywordSequence() {
+        const savedPos = this.pos;
+
+        // Try to match multi-word keywords
+        if (this.match('has')) {
+            this.advance(3);
+            if (!this.isWordBoundary()) {
+                this.pos = savedPos;
+                return null;
+            }
+
+            // Look ahead for 'no' after whitespace
+            const tempPos = this.pos;
+            this.skipWhitespace();
+            if (this.match('no') && this.isWordBoundary(2)) {
+                this.advance(2);
+                return new Token(TokenType.HASNO, 'has no', savedPos);
+            }
+            this.pos = tempPos; // Restore if 'no' not found
+            return new Token(TokenType.HAS, 'has', savedPos);
         }
 
-        return new Token(TokenType.IDENT, value, start);
+        if (this.match('not')) {
+            this.advance(3);
+            if (!this.isWordBoundary()) {
+                this.pos = savedPos;
+                return null;
+            }
+
+            // Look ahead for 'in' after whitespace
+            const tempPos = this.pos;
+            this.skipWhitespace();
+            if (this.match('in') && this.isWordBoundary(2)) {
+                this.advance(2);
+                return new Token(TokenType.NOTIN, 'not in', savedPos);
+            }
+            this.pos = tempPos; // Restore if 'in' not found
+            return new Token(TokenType.NOT, 'not', savedPos);
+        }
+
+        return null;
+    }
+
+    isWordBoundary(offset = 0) {
+        const ch = this.peek(offset);
+        return !ch || !/[a-zA-Z_$0-9]/.test(ch);
     }
 
     nextToken() {
-        this.skipWhitespace();
+        // Skip whitespace and comments
+        do {
+            this.skipWhitespace();
+        } while (this.skipComments());
 
         if (this.pos >= this.length) {
             return new Token(TokenType.EOF, '', this.pos);
@@ -302,7 +460,17 @@ export class Tokenizer {
         const ch = this.input[this.pos];
         const start = this.pos;
 
-        // Numbers
+        // Handle template continuation/end using bracket stack
+        if (this.templateStack.length > 0 && ch === '}') {
+            // Check if this } would close a template expression
+            const expectedClose = this.bracketStack[this.bracketStack.length - 1];
+            if (expectedClose === 'TPL_END') {
+                // This } closes a template expression
+                this.advance();
+                return this.trackBracketBalance(this.readTemplateEnd());
+            }
+            // Otherwise, it's a regular } token - let normal processing handle it
+        }        // Numbers
         if (/[0-9]/.test(ch) || (ch === '0' && (this.peek(1) === 'x' || this.peek(1) === 'X'))) {
             return this.readNumber();
         }
@@ -317,84 +485,160 @@ export class Tokenizer {
             return this.readTemplate();
         }
 
-        // Regular expressions (basic detection)
-        if (ch === '/' && !/[0-9]/.test(this.peek(1))) {
+        // Regular expressions
+        if (ch === '/' && this.peek(1) !== '/' && this.peek(1) !== '*' && this.peek(1) !== '=') {
             return this.readRegExp();
         }
 
-        // Identifiers
-        if (/[a-zA-Z_]/.test(ch)) {
-            return this.readIdentifier();
+        // Keywords (must be before identifiers)
+        const keyword = this.readKeywordSequence();
+        if (keyword) {
+            return keyword;
+        }
+
+        // Identifiers and method calls
+        if (this.isIdentStart(ch)) {
+            const value = this.readIdentifier();
+
+            // Check for literals
+            const literals = {
+                'true': true,
+                'false': false,
+                'null': null,
+                'undefined': undefined,
+                'Infinity': Infinity,
+                'NaN': NaN
+            };
+
+            if (literals.hasOwnProperty(value)) {
+                return new Token(TokenType.LITERAL, value, start);
+            }
+
+            // Check for single-word keywords that weren't caught by readKeywordSequence
+            const singleKeywords = {
+                'and': TokenType.AND,
+                'or': TokenType.OR,
+                'is': TokenType.IS,
+                'in': TokenType.IN,
+                'no': TokenType.NO
+            };
+
+            if (singleKeywords.hasOwnProperty(value)) {
+                return new Token(singleKeywords[value], value, start);
+            }
+
+            // Check for order keywords
+            if (/^(asc|desc)(NA?|AN?)?$/.test(value)) {
+                return new Token(TokenType.ORDER, value, start);
+            }
+
+            // Check for method call
+            if (this.peek() === '(') {
+                // Include the opening parenthesis like legacy tokenizer
+                this.advance(); // consume the (
+                const token = new Token('METHOD(', value + '(', start);
+                return this.trackBracketBalance(token);
+            }
+
+            return new Token(TokenType.IDENT, value, start);
         }
 
         // Variable references and special symbols
         if (ch === '$') {
             if (this.peek(1) === '$') {
                 this.advance(2);
-                return new Token(TokenType.ARG1, '$$', start);
-            } else if (/[a-zA-Z_]/.test(this.peek(1))) {
+                return new Token(TokenType.$$, '$$', start);
+            } else if (this.peek(1) === '{') {
+                // Template expression start - this will be handled by template reading
+                // Continue with normal $ handling
+            }
+
+            if (this.isIdentStart(this.peek(1)) || (this.peek(1) === '\\' && this.peek(2) === 'u')) {
                 this.advance();
-                const ident = this.readIdentifier();
-                ident.type = TokenType.VAR_REF;
-                return ident;
+                const value = this.readIdentifier();
+
+                // Check for $method(
+                if (this.peek() === '(') {
+                    this.advance(); // consume the (
+                    const token = new Token('$METHOD(', '$' + value + '(', start);
+                    return this.trackBracketBalance(token);
+                }
+
+                return new Token('$IDENT', '$' + value, start);
             } else {
                 this.advance();
-                return new Token(TokenType.CURRENT, '$', start);
+                return new Token(TokenType.$, '$', start);
             }
         }
 
-        // Multi-character operators (check 3-char first, then 2-char)
+        // Multi-character operators (check longest first)
         const threeChar = this.input.slice(this.pos, this.pos + 3);
         if (threeChar === '...') {
             this.advance(3);
-            return new Token(TokenType.TRIPLE_DOT, '...', start);
+            return new Token(TokenType['...'], '...', start);
+        }
+        if (threeChar === '..(') {
+            this.advance(3);
+            return new Token(TokenType['..('], '..(', start);
         }
 
         const twoChar = this.input.slice(this.pos, this.pos + 2);
         const twoCharTokens = {
-            '..': TokenType.DOUBLE_DOT,
-            '=>': TokenType.ARROW,
-            '!=': TokenType.NE,
-            '~=': TokenType.MATCH,
-            '<=': TokenType.LE,
-            '>=': TokenType.GE,
-            '??': TokenType.NULLISH
+            '..': '..',
+            '.(': '.(',
+            '.[': '.[',
+            '=>': '=>',
+            '!=': '!=',
+            '~=': '~=',
+            '<=': '<=',
+            '>=': '>=',
+            '??': '??'
         };
 
         if (twoCharTokens[twoChar]) {
             this.advance(2);
-            return new Token(twoCharTokens[twoChar], twoChar, start);
+            const token = new Token(TokenType[twoChar], twoChar, start);
+            // Track bracket balance for relevant tokens
+            if (twoChar === '.(' || twoChar === '.[') {
+                return this.trackBracketBalance(token);
+            }
+            return token;
         }
 
         // Single character tokens
         const singleCharTokens = {
-            '@': TokenType.DATA,
-            '#': TokenType.CONTEXT,
-            '.': TokenType.DOT,
-            '|': TokenType.PIPE,
-            '=': TokenType.EQ,
-            '<': TokenType.LT,
-            '>': TokenType.GT,
-            '+': TokenType.PLUS,
-            '-': TokenType.MINUS,
-            '*': TokenType.MULT,
-            '/': TokenType.DIV,
-            '%': TokenType.MOD,
-            '?': TokenType.QUESTION,
-            '(': TokenType.LPAREN,
-            ')': TokenType.RPAREN,
-            '[': TokenType.LBRACKET,
-            ']': TokenType.RBRACKET,
-            '{': TokenType.LBRACE,
-            '}': TokenType.RBRACE,
-            ',': TokenType.COMMA,
-            ':': TokenType.COLON,
-            ';': TokenType.SEMICOLON
+            '@': '@',
+            '#': '#',
+            '.': '.',
+            '|': '|',
+            '=': '=',
+            '<': '<',
+            '>': '>',
+            '+': '+',
+            '-': '-',
+            '*': '*',
+            '/': '/',
+            '%': '%',
+            '?': '?',
+            '(': '(',
+            ')': ')',
+            '[': '[',
+            ']': ']',
+            '{': '{',
+            '}': '}',
+            ',': ',',
+            ':': ':',
+            ';': ';'
         };
 
         if (singleCharTokens[ch]) {
             this.advance();
-            return new Token(singleCharTokens[ch], ch, start);
+            const token = new Token(TokenType[ch], ch, start);
+            // Track bracket balance for bracket tokens
+            if (ch === '(' || ch === ')' || ch === '[' || ch === ']' || ch === '{' || ch === '}') {
+                return this.trackBracketBalance(token);
+            }
+            return token;
         }
 
         throw new Error(`Unexpected character '${ch}' at position ${this.pos}`);
