@@ -69,10 +69,23 @@ export class Parser {
         return this.current;
     }
 
+    saveState() {
+        return {
+            tokenizerPos: this.tokenizer.pos,
+            bracketStack: [...this.tokenizer.bracketStack],
+            current: { ...this.current }
+        };
+    }
+
+    restoreState(state) {
+        this.tokenizer.pos = state.tokenizerPos;
+        this.tokenizer.bracketStack = state.bracketStack;
+        this.current = state.current;
+    }
+
     peek() {
         // Save current position
         const savedPos = this.tokenizer.pos;
-        const savedTemplateStack = [...this.tokenizer.templateStack];
         const savedBracketStack = [...this.tokenizer.bracketStack];
 
         // Get next token
@@ -80,7 +93,6 @@ export class Parser {
 
         // Restore position
         this.tokenizer.pos = savedPos;
-        this.tokenizer.templateStack = savedTemplateStack;
         this.tokenizer.bracketStack = savedBracketStack;
 
         return nextToken.type;
@@ -91,12 +103,13 @@ export class Parser {
     }
 
     consume(expectedType) {
-        if (expectedType && this.current.type !== expectedType) {
-            throw new Error(`Expected \`${tokenNames[expectedType]}\`, got \`${this.current.name}\` at position ${this.current.offset}`);
+        if (expectedType === undefined || this.current.type === expectedType) {
+            const token = this.current;
+            this.advance();
+            return token;
         }
-        const token = this.current;
-        this.advance();
-        return token;
+
+        throw new Error(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[this.current.type]}\``); //  at position ${this.current.offset}
     }
 
     getPrecedence(type) {
@@ -111,50 +124,62 @@ export class Parser {
         return RIGHT_ASSOCIATIVE.has(type);
     }
 
+    maybe(fn) {
+        const savedState = this.saveState();
+        try {
+            return fn.call(this);
+        } catch (error) {
+            this.restoreState(savedState);
+            return null;
+        }
+    }
+
     parse() {
-        return this.parseBlock();
+        try {
+            return this.parseBlock();
+        } finally {
+            // Ensure nothing left after parsing
+            this.consume(TOKEN_EOF);
+        }
     }
 
     parseBlock() {
+        return build.Block(this.parseDefinitions(), this.parseExpression());
+    }
+
+    parseDefinitions() {
         const definitions = [];
+        let definition;
 
-        // Parse definitions (variable declarations with semicolons)
-        // Only parse as definition if we see $ident followed by colon
-        while ((this.match(TOKEN_$) || this.match(TOKEN_$IDENT)) && this.peek() === TOKEN_COLON) {
-            definitions.push(this.parseDefinition());
+        while (definition = this.maybe(this.parseDefinition)) {
+            definitions.push(definition);
         }
 
-        // Parse the main expression
-        if (this.match(TOKEN_EOF)) {
-            // Empty block or only definitions
-            return build.Block(definitions, build.Literal(null));
-        }
-
-        const expr = this.parseExpression();
-        this.consume(TOKEN_EOF);
-        return build.Block(definitions, expr);
+        return definitions;
     }
 
     parseDefinition() {
         let name = null;
+        let value = null;
 
+        // Try to parse a definition
         if (this.match(TOKEN_$IDENT)) {
-            const ident = this.consume();
-            name = ident.value.slice(1); // Remove $ prefix
+            name = this.consume().value.slice(1); // Remove $ prefix
+        } else if (this.match(TOKEN_$)) {
+            // name remains null for anonymous definition
+            this.consume(); // consume '$'
         } else {
-            this.consume(TOKEN_$); // Anonymous definition
+            throw new Error('Expected definition');
         }
 
-        let value = null;
         if (this.match(TOKEN_COLON)) {
-            this.consume();
+            this.consume(); // consume ':'
             value = this.parseExpression();
         }
 
-        this.consume(TOKEN_SEMICOLON);
+        this.consume(TOKEN_SEMICOLON); // consume ';'
 
-        const declarator = build.Declarator(name);
-        return build.Definition(declarator, value);
+        return build.Definition(build.Declarator(name), value);
     }
 
     parseExpression(minPrec = 0) {
@@ -168,24 +193,32 @@ export class Parser {
             const rightAssoc = this.isRightAssociative(op.type);
             this.advance();
 
-            if (op.type === TOKEN_QUESTION) {
-                // Ternary operator
-                const consequent = this.parseExpression();
-                this.consume(TOKEN_COLON);
-                const alternate = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = build.Conditional(left, consequent, alternate);
-            } else if (op.type === TOKEN_PIPE) {
-                // Pipeline operator
-                const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = build.Pipeline(left, right);
-            } else if (op.type === TOKEN_IS) {
-                // Assertion operator
-                const assertion = this.parseAssertion();
-                left = build.Postfix(left, assertion);
-            } else {
-                // Binary operators
-                const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
-                left = build.Binary(op.value, left, right);
+            switch (op.type) {
+                case TOKEN_QUESTION: {
+                    // Ternary operator
+                    const consequent = this.parseExpression();
+                    this.consume(TOKEN_COLON);
+                    const alternate = this.parseExpression(prec + (rightAssoc ? 0 : 1));
+                    left = build.Conditional(left, consequent, alternate);
+                    break;
+                }
+                case TOKEN_PIPE: {
+                    // Pipeline operator
+                    const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
+                    left = build.Pipeline(left, right);
+                    break;
+                }
+                case TOKEN_IS: {
+                    // Assertion operator
+                    const assertion = this.parseAssertion();
+                    left = build.Postfix(left, assertion);
+                    break;
+                }
+                default: {
+                    // Binary operators
+                    const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
+                    left = build.Binary(op.value, left, right);
+                }
             }
         }
 
@@ -236,15 +269,15 @@ export class Parser {
             } else if (this.match(TOKEN_DOT_OPEN_PAREN)) {
                 // .( block ) - Map operation
                 this.advance();
-                const block = this.parseExpression();
+                const block = this.parseBlock();
                 this.consume(TOKEN_CLOSE_PAREN);
-                expr = build.Map(expr, build.Block([], block));
+                expr = build.Map(expr, block);
             } else if (this.match(TOKEN_DOT_OPEN_BRACKET)) {
                 // .[ block ] - Filter operation
                 this.advance();
-                const block = this.parseExpression();
+                const block = this.parseBlock();
                 this.consume(TOKEN_CLOSE_BRACKET);
-                expr = build.Filter(expr, build.Block([], block));
+                expr = build.Filter(expr, block);
             } else if (this.match(TOKEN_DOT_DOT)) {
                 this.advance();
 
@@ -260,9 +293,9 @@ export class Parser {
             } else if (this.match(TOKEN_DOT_DOT_OPEN_PAREN)) {
                 // ..( block ) - Recursive map operation
                 this.advance();
-                const block = this.parseExpression();
+                const block = this.parseBlock();
                 this.consume(TOKEN_CLOSE_PAREN);
-                expr = build.MapRecursive(expr, build.Block([], block));
+                expr = build.MapRecursive(expr, block);
             } else if (this.match(TOKEN_OPEN_BRACKET)) {
                 this.advance();
 
@@ -270,10 +303,44 @@ export class Parser {
                     this.advance();
                     expr = build.Pick(expr, null);
                 } else {
-                    const index = this.parseExpression();
+                    // Check if this is slice notation by looking for colons
+                    const args = [];
+                    let isSliceNotation = false;
+
+                    // Parse first argument (might be empty for [:end] notation)
+                    if (this.match(TOKEN_COLON)) {
+                        args.push(null);
+                        isSliceNotation = true;
+                    } else {
+                        args.push(this.parseExpression());
+                    }
+
+                    // Check for colons to determine if this is slice notation
+                    while (this.match(TOKEN_COLON)) {
+                        this.advance(); // consume ':'
+                        isSliceNotation = true;
+
+                        if (this.match(TOKEN_CLOSE_BRACKET) || this.match(TOKEN_COLON)) {
+                            // Empty argument: [start:] or [start::step]
+                            args.push(null);
+                        } else {
+                            args.push(this.parseExpression());
+                        }
+                    }
+
                     this.consume(TOKEN_CLOSE_BRACKET);
-                    expr = build.Pick(expr, index);
+
+                    if (isSliceNotation) {
+                        expr = build.SliceNotation(expr, args);
+                    } else {
+                        // Regular array access [index]
+                        expr = build.Pick(expr, args[0]);
+                    }
                 }
+            } else if (this.match(TOKEN_ORDER)) {
+                // Handle ORDER tokens (asc/desc) for compare expressions
+                const orderToken = this.consume();
+                expr = build.Compare(expr, orderToken.value);
             } else {
                 break;
             }
@@ -291,11 +358,112 @@ export class Parser {
             negation = true;
         }
 
+        // Handle parentheses around assertion expression: is (complex_assertion)
+        if (this.match(TOKEN_OPEN_PAREN)) {
+            this.consume(); // consume '('
+            const assertion = this.parseAssertionExpression();
+            this.consume(TOKEN_CLOSE_PAREN); // consume ')'
+
+            if (negation) {
+                // Apply outer negation to the complex assertion
+                return this.negateAssertion(assertion);
+            }
+            return assertion;
+        }
+
+        // Handle direct identifier: is name or is not name
         if (this.match(TOKEN_IDENT)) {
             const name = this.consume();
             return build.Assertion(build.Identifier(name.value), negation);
         }
+
+        // Handle literal assertion names: is null, is undefined, etc.
+        if (this.match(TOKEN_LITERAL)) {
+            const name = this.consume();
+            return build.Assertion(build.Identifier(String(name.value)), negation);
+        }
+
+        // Handle $identifier references: is $myAssertion
+        if (this.match(TOKEN_$IDENT)) {
+            const ref = this.consume();
+            return build.Assertion(build.Reference(ref.value), negation);
+        }
+
         throw new Error('Expected assertion term');
+    }
+
+    // Parse complex assertion expressions with boolean logic
+    parseAssertionExpression() {
+        return this.parseAssertionOr();
+    }
+
+    parseAssertionOr() {
+        let left = this.parseAssertionAnd();
+
+        while (this.match(TOKEN_OR)) {
+            this.consume();
+            const right = this.parseAssertionAnd();
+            left = build.Binary('or', left, right);
+        }
+
+        return left;
+    }
+
+    parseAssertionAnd() {
+        let left = this.parseAssertionTerm();
+
+        while (this.match(TOKEN_AND)) {
+            this.consume();
+            const right = this.parseAssertionTerm();
+            left = build.Binary('and', left, right);
+        }
+
+        return left;
+    }
+
+    parseAssertionTerm() {
+        // Handle 'not' negation within complex assertions
+        if (this.match(TOKEN_NOT)) {
+            this.consume();
+            const term = this.parseAssertionTerm();
+            return this.negateAssertion(term);
+        }
+
+        // Handle nested parentheses
+        if (this.match(TOKEN_OPEN_PAREN)) {
+            this.consume();
+            const assertion = this.parseAssertionExpression();
+            this.consume(TOKEN_CLOSE_PAREN);
+            return assertion;
+        }
+
+        // Handle simple assertion terms
+        if (this.match(TOKEN_IDENT)) {
+            const name = this.consume();
+            return build.Assertion(build.Identifier(name.value), false);
+        }
+
+        if (this.match(TOKEN_LITERAL)) {
+            const name = this.consume();
+            return build.Assertion(build.Identifier(String(name.value)), false);
+        }
+
+        // Handle $identifier references in assertion terms
+        if (this.match(TOKEN_$IDENT)) {
+            const ref = this.consume();
+            return build.Assertion(build.Reference(ref.value), false);
+        }
+
+        throw new Error('Expected assertion term');
+    }
+
+    negateAssertion(assertion) {
+        if (assertion.type === 'Assertion') {
+            return build.Assertion(assertion.assertion, !assertion.negation);
+        } else {
+            // For complex expressions, wrap in a negation
+            return build.Prefix('not', assertion);
+        }
     }
 
     parseMethodCall() {
@@ -396,6 +564,15 @@ export class Parser {
 
         if (this.match(TOKEN_$IDENT)) {
             const token = this.consume();
+
+            // Check if this is a single-parameter arrow function: $param => body
+            if (this.match(TOKEN_ARROW)) {
+                this.consume(); // consume '=>'
+                const body = this.parseExpression();
+                const param = build.Declarator(token.value.slice(1)); // Remove $ prefix
+                return build.Function([param], build.Block([], body));
+            }
+
             return build.Reference(token.value);
         }
 
@@ -445,26 +622,34 @@ export class Parser {
             } else if (this.match(TOKEN_OPEN_PAREN)) {
                 // Map operation .()
                 this.advance(); // consume (
-                const query = this.parseExpression();
+                const query = this.parseBlock();
                 this.consume(TOKEN_CLOSE_PAREN);
-                return build.Map(null, build.Block([], query));
+                return build.Map(null, query);
             } else if (this.match(TOKEN_OPEN_BRACKET)) {
                 // Map with bracket notation .[expr]
                 this.advance(); // consume [
-                const query = this.parseExpression();
+                const query = this.parseBlock();
                 this.consume(TOKEN_CLOSE_BRACKET);
-                return build.Map(null, build.Block([], query));
+                return build.Map(null, query);
             } else {
                 throw new Error('Expected property name after dot');
             }
         }
 
+        // Direct dot-parentheses notation .( expr ) (shorthand for @.( expr ))
+        if (this.match(TOKEN_DOT_OPEN_PAREN)) {
+            this.advance(); // consume .(
+            const query = this.parseBlock();
+            this.consume(TOKEN_CLOSE_PAREN);
+            return build.Map(null, query);
+        }
+
         // Direct dot-bracket notation .[expr] (shorthand for @[expr])
         if (this.match(TOKEN_DOT_OPEN_BRACKET)) {
             this.advance(); // consume .[
-            const query = this.parseExpression();
+            const query = this.parseBlock();
             this.consume(TOKEN_CLOSE_BRACKET);
-            return build.Filter(null, build.Block([], query));
+            return build.Filter(null, query);
         }
 
         // Recursive operator ..property
@@ -490,33 +675,7 @@ export class Parser {
 
         // Parenthesized expressions or lambda functions
         if (this.match(TOKEN_OPEN_PAREN)) {
-            // Look ahead to detect lambda pattern: () =>
-            if (this.peek() === TOKEN_CLOSE_PAREN) {
-                // Look even further ahead for arrow - we're currently at (
-                const savedPos = this.tokenizer.pos;
-                const savedTemplateStack = [...this.tokenizer.templateStack];
-                const savedBracketStack = [...this.tokenizer.bracketStack];
-
-                // We need to skip past the current ( and the ) to see what's after
-                // Current token is (, so next is ), then we want to see what's after )
-                this.tokenizer.nextToken(); // consume )
-                const afterCloseParenToken = this.tokenizer.nextToken(); // get token after )
-
-                // Restore position
-                this.tokenizer.pos = savedPos;
-                this.tokenizer.templateStack = savedTemplateStack;
-                this.tokenizer.bracketStack = savedBracketStack;
-
-                if (afterCloseParenToken.type === TOKEN_ARROW) {
-                    return this.parseLambda();
-                }
-            }
-
-            // Regular parenthesized expression
-            this.consume(); // consume (
-            const expr = this.parseExpression();
-            this.consume(TOKEN_CLOSE_PAREN);
-            return build.Parentheses(expr);
+            return this.maybe(this.parseLambda) || this.parseParentheses();
         }
 
         // Pipeline without left operand
@@ -526,27 +685,61 @@ export class Parser {
             return build.Pipeline(null, right);
         }
 
-        throw new Error(`Unexpected token \`${tokenNames[this.current.type]}\` at position ${this.current.offset}`);
+        return build.Placeholder();
     }
 
     parseLambda() {
         this.consume(TOKEN_OPEN_PAREN);
 
-        // For now, only support empty parameter list ()
-        // TODO: Add support for parameter lists
+        // Parse parameter list
+        const params = [];
+        if (!this.match(TOKEN_CLOSE_PAREN)) {
+            do {
+                if (this.match(TOKEN_$IDENT)) {
+                    const param = this.consume();
+                    params.push(build.Declarator(param.value.slice(1))); // Remove $ prefix
+                } else {
+                    throw new Error('Expected parameter name in lambda function');
+                }
+            } while (this.match(TOKEN_COMMA) && this.consume());
+        }
+
         this.consume(TOKEN_CLOSE_PAREN);
         this.consume(TOKEN_ARROW);
 
         const body = this.parseExpression();
-        return build.Function([], build.Block([], body));
+        return build.Function(params, build.Block([], body));
+    }
+
+    parseParentheses() {
+        this.consume(TOKEN_OPEN_PAREN);
+        const block = this.parseBlock();
+        this.consume(TOKEN_CLOSE_PAREN);
+        return build.Parentheses(block);
     }
 
     parseArray() {
         this.consume(TOKEN_OPEN_BRACKET);
-        const elements = [];
 
-        if (!this.match(TOKEN_CLOSE_BRACKET)) {
-            elements.push(this.parseArrayElement());
+        // Check if this is slice notation starting with colon
+        if (this.match(TOKEN_COLON)) {
+            return this.parseStandaloneSliceNotation();
+        }
+
+        // Check if empty bracket (empty array)
+        if (this.match(TOKEN_CLOSE_BRACKET)) {
+            this.consume(TOKEN_CLOSE_BRACKET);
+            return build.Array([]);
+        }
+
+        // Parse first element/expression to check if it's slice notation or array
+        let firstElement;
+
+        // If it starts with spread, it's definitely an array
+        if (this.match(TOKEN_DOT_DOT_DOT)) {
+            firstElement = this.parseArrayElement();
+            // Continue with array parsing
+            const elements = [firstElement];
 
             while (this.match(TOKEN_COMMA)) {
                 this.consume(); // consume comma
@@ -554,10 +747,74 @@ export class Parser {
                     elements.push(this.parseArrayElement());
                 }
             }
+
+            this.consume(TOKEN_CLOSE_BRACKET);
+            return build.Array(elements);
+        }
+
+        // Parse first expression to check for slice notation
+        firstElement = this.parseExpression();
+
+        // Check if followed by colon (slice notation)
+        if (this.match(TOKEN_COLON)) {
+            return this.parseStandaloneSliceNotationWithFirst(firstElement);
+        }
+
+        // Otherwise it's an array literal
+        const elements = [firstElement];
+
+        while (this.match(TOKEN_COMMA)) {
+            this.consume(); // consume comma
+            if (!this.match(TOKEN_CLOSE_BRACKET)) { // allow trailing comma
+                elements.push(this.parseArrayElement());
+            }
         }
 
         this.consume(TOKEN_CLOSE_BRACKET);
         return build.Array(elements);
+    }
+
+    parseStandaloneSliceNotationWithFirst(firstArg) {
+        // Parse slice notation starting with: [firstArg:...]
+        const args = [firstArg];
+
+        // Parse colons and additional arguments
+        while (this.match(TOKEN_COLON)) {
+            this.advance(); // consume ':'
+
+            if (this.match(TOKEN_CLOSE_BRACKET) || this.match(TOKEN_COLON)) {
+                // Empty argument: [start:] or [start::step]
+                args.push(null);
+            } else {
+                args.push(this.parseExpression());
+            }
+        }
+
+        this.consume(TOKEN_CLOSE_BRACKET);
+        return build.SliceNotation(null, args);
+    }
+
+    parseStandaloneSliceNotation() {
+        // Parse slice notation starting with colon: [:end:step]
+        const args = [];
+
+        // Parse first argument (must be null since we start with colon)
+        args.push(null);
+
+        // Parse colons and additional arguments
+        while (this.match(TOKEN_COLON)) {
+            this.advance(); // consume ':'
+
+            if (this.match(TOKEN_CLOSE_BRACKET) || this.match(TOKEN_COLON)) {
+                // Empty argument: [:] or [::step]
+                args.push(null);
+            } else {
+                args.push(this.parseExpression());
+            }
+        }
+
+        this.consume(TOKEN_CLOSE_BRACKET);
+        return build.SliceNotation(null, args);
     }
 
     parseArrayElement() {
@@ -591,13 +848,35 @@ export class Parser {
     }
 
     parseObjectEntry() {
+        // Handle spread syntax: ...expression
+        if (this.match(TOKEN_DOT_DOT_DOT)) {
+            this.consume(); // consume '...'
+            const query = this.parseExpression();
+            return build.Spread(query, false); // false for object spread vs array spread
+        }
+
         let key;
 
         if (this.match(TOKEN_IDENT)) {
             key = build.Identifier(this.consume().value);
+        } else if (this.match(TOKEN_$IDENT)) {
+            const token = this.consume();
+            key = build.Reference(token.value);
+        } else if (this.match(TOKEN_$)) {
+            this.consume();
+            key = build.Current();
         } else if (this.match(TOKEN_STRING) || this.match(TOKEN_NUMBER)) {
             const token = this.consume();
             key = build.Literal(token.value);
+        } else if (this.match(TOKEN_LITERAL)) {
+            // Handle literal property names: true, false, null, undefined, etc.
+            const token = this.consume();
+            key = build.Literal(token.value);
+        } else if (this.match(TOKEN_OPEN_BRACKET)) {
+            // Computed property name: [expression]
+            this.consume(); // consume [
+            key = this.parseExpression();
+            this.consume(TOKEN_CLOSE_BRACKET); // consume ]
         } else {
             throw new Error('Expected object property name');
         }

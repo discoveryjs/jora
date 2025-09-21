@@ -146,7 +146,6 @@ export class Tokenizer {
         this.input = input;
         this.pos = 0;
         this.length = input.length;
-        this.templateStack = [];
         this.bracketStack = [];
     }
 
@@ -327,12 +326,21 @@ export class Tokenizer {
             }
         } else {
             // Regular numbers (including underscores and decimals)
+            let hasDecimalPoint = false;
+
             while (pos < this.length) {
                 const code = input.charCodeAt(pos);
-                if (isDigit(code) ||
-                    code === 95 ||  // underscore
-                    input[pos] === '.') {
+                if (isDigit(code) || code === 95) {  // digit or underscore
                     pos++;
+                } else if (input[pos] === '.' && !hasDecimalPoint) {
+                    // Only consume dot if followed by a digit (valid decimal)
+                    if (pos + 1 < this.length && isDigit(input.charCodeAt(pos + 1))) {
+                        hasDecimalPoint = true;
+                        pos++;
+                    } else {
+                        // Dot not followed by digit, stop here
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -495,7 +503,6 @@ export class Tokenizer {
             }
 
             this.advance(2); // Skip ${
-            this.templateStack.push('template');
 
             // Return raw value including delimiters (like legacy: "`temp${")
             const rawValue = this.input.slice(origPos, this.pos);
@@ -532,8 +539,6 @@ export class Tokenizer {
         if (this.pos < this.length) {
             this.advance(); // Skip closing `
         }
-
-        this.templateStack.pop();
 
         // Return raw value including delimiters (like legacy: "}late`")
         const rawValue = this.input.slice(origPos, this.pos);
@@ -667,7 +672,7 @@ export class Tokenizer {
         const start = this.pos;
 
         // Handle template continuation/end using bracket stack
-        if (this.templateStack.length > 0 && ch === '}') {
+        if (this.bracketStack.length > 0 && ch === '}') {
             // Check if this } would close a template expression
             const expectedClose = this.bracketStack[this.bracketStack.length - 1];
             if (expectedClose === TOKEN_TPL_END) {
