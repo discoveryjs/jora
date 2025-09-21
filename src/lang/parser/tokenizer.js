@@ -91,15 +91,28 @@ const OPEN_BRACKET_MAP = new Map([
 
 const CLOSE_BRACKET_SET = new Set([TOKEN_CLOSE_PAREN, TOKEN_CLOSE_BRACKET, TOKEN_CLOSE_BRACE, TOKEN_TPL_END]);
 
-// Character codes for faster comparisons
-const CHAR_CODE_0 = '0'.charCodeAt(0);
-const CHAR_CODE_9 = '9'.charCodeAt(0);
-const CHAR_CODE_A = 'A'.charCodeAt(0);
-const CHAR_CODE_F = 'F'.charCodeAt(0);
-const CHAR_CODE_LOWER_A = 'a'.charCodeAt(0);
-const CHAR_CODE_LOWER_F = 'f'.charCodeAt(0);
-const CHAR_CODE_UNDERSCORE = '_'.charCodeAt(0);
-const CHAR_CODE_DOLLAR = '$'.charCodeAt(0);
+// Helper functions for character classification
+function isDigit(code) {
+    return code >= 48 && code <= 57; // 0-9
+}
+
+function isUpperLetter(code) {
+    return code >= 65 && code <= 90; // A-Z
+}
+
+function isLowerLetter(code) {
+    return code >= 97 && code <= 122; // a-z
+}
+
+function isLetter(code) {
+    return isUpperLetter(code) || isLowerLetter(code);
+}
+
+function isHexDigit(code) {
+    return isDigit(code) || 
+           (code >= 65 && code <= 70) ||  // A-F
+           (code >= 97 && code <= 102);   // a-f
+}
 
 export class Token {
     constructor(type, value, offset = 0) {
@@ -214,20 +227,15 @@ export class Tokenizer {
     // Optimized identifier character checking
     isIdentStart(ch) {
         const code = ch.charCodeAt(0);
-        return (code >= 65 && code <= 90) ||    // A-Z
-               (code >= 97 && code <= 122) ||   // a-z
-               code === CHAR_CODE_UNDERSCORE ||
+        return isLetter(code) ||
+               code === 95 ||  // underscore
                (ch === '\\' && this.peekChar(1) === 'u');
     }
 
     isIdentPart(ch) {
         const code = ch.charCodeAt(0);
-        return (code >= 65 && code <= 90) ||     // A-Z
-               (code >= 97 && code <= 122) ||    // a-z
-               (code >= 48 && code <= 57) ||     // 0-9
-               code === CHAR_CODE_UNDERSCORE ||
-               code === CHAR_CODE_DOLLAR ||
-               (ch === '\\' && this.peekChar(1) === 'u');
+        return this.isIdentStart(ch) ||
+               isDigit(code);
     }
 
     // Optimized word boundary check
@@ -238,11 +246,10 @@ export class Tokenizer {
         }
 
         const code = ch.charCodeAt(0);
-        return !((code >= 65 && code <= 90) ||     // A-Z
-                 (code >= 97 && code <= 122) ||    // a-z
-                 (code >= 48 && code <= 57) ||     // 0-9
-                 code === CHAR_CODE_UNDERSCORE ||
-                 code === CHAR_CODE_DOLLAR);
+        return !(isLetter(code) ||
+                 isDigit(code) ||
+                 code === 95 ||  // underscore
+                 code === 36);   // dollar sign
     }
 
     // Optimized Unicode escape reading
@@ -253,9 +260,7 @@ export class Tokenizer {
             for (let i = 0; i < 4; i++) {
                 const ch = this.peekChar();
                 const code = ch.charCodeAt(0);
-                if ((code >= CHAR_CODE_0 && code <= CHAR_CODE_9) ||
-                    (code >= CHAR_CODE_A && code <= CHAR_CODE_F) ||
-                    (code >= CHAR_CODE_LOWER_A && code <= CHAR_CODE_LOWER_F)) {
+                if (isHexDigit(code)) {
                     hex += ch;
                     this.advance();
                 } else {
@@ -278,10 +283,7 @@ export class Tokenizer {
             pos += 2;
             while (pos < this.length) {
                 const code = input.charCodeAt(pos);
-                if ((code >= CHAR_CODE_0 && code <= CHAR_CODE_9) ||
-                    (code >= CHAR_CODE_A && code <= CHAR_CODE_F) ||
-                    (code >= CHAR_CODE_LOWER_A && code <= CHAR_CODE_LOWER_F) ||
-                    code === CHAR_CODE_UNDERSCORE) {
+                if (isHexDigit(code) || code === 95) {  // underscore
                     pos++;
                 } else {
                     break;
@@ -291,8 +293,8 @@ export class Tokenizer {
             // Regular numbers (including underscores and decimals)
             while (pos < this.length) {
                 const code = input.charCodeAt(pos);
-                if ((code >= CHAR_CODE_0 && code <= CHAR_CODE_9) ||
-                    code === CHAR_CODE_UNDERSCORE ||
+                if (isDigit(code) ||
+                    code === 95 ||  // underscore
                     input[pos] === '.') {
                     pos++;
                 } else {
@@ -308,7 +310,7 @@ export class Tokenizer {
                 }
                 while (pos < this.length) {
                     const code = input.charCodeAt(pos);
-                    if ((code >= CHAR_CODE_0 && code <= CHAR_CODE_9) || code === CHAR_CODE_UNDERSCORE) {
+                    if (isDigit(code) || code === 95) {  // underscore
                         pos++;
                     } else {
                         break;
@@ -474,9 +476,7 @@ export class Tokenizer {
                 for (let i = 0; i < 4; i++) {
                     if (pos < length) {
                         const code = input.charCodeAt(pos);
-                        if ((code >= CHAR_CODE_0 && code <= CHAR_CODE_9) ||
-                            (code >= CHAR_CODE_A && code <= CHAR_CODE_F) ||
-                            (code >= CHAR_CODE_LOWER_A && code <= CHAR_CODE_LOWER_F)) {
+                        if (isHexDigit(code)) {
                             value += input[pos];
                             pos++;
                         } else {
@@ -569,7 +569,7 @@ export class Tokenizer {
 
         // Numbers (optimized character code check)
         const charCode = ch.charCodeAt(0);
-        if ((charCode >= CHAR_CODE_0 && charCode <= CHAR_CODE_9) ||
+        if (isDigit(charCode) ||
             (ch === '0' && this.pos < this.length - 1 && (input[this.pos + 1] === 'x' || input[this.pos + 1] === 'X'))) {
             return this.readNumber();
         }
