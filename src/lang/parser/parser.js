@@ -65,7 +65,7 @@ export class Parser {
     constructor(tokenizer) {
         this.tokenizer = tokenizer;
         this.current = null;
-        this.advance();
+        this.advance(); // Initial advance without type check
     }
 
     maybe(fn) {
@@ -92,30 +92,25 @@ export class Parser {
         return this.current.type === type;
     }
 
-    advance() {
+    advance(expectedType) {
+        if (expectedType !== undefined && this.current.type !== expectedType) {
+            this.throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[this.current.type]}\``);
+        }
+
+        const token = this.current;
         this.current = this.tokenizer.nextToken();
-        return this.current;
+        return token;
     }
 
-    matchAdvance(type) {
+    advanceIf(type) {
         return this.current.type === type
             ? this.advance()
             : null;
     }
 
-    consume(expectedType) {
-        if (expectedType === undefined || this.current.type === expectedType) {
-            const token = this.current;
-            this.advance();
-            return token;
-        }
-
-        this.throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${this.current.name}\``); //  at position ${this.current.offset}
-    }
-
     consumeValue(expectedType) {
         const value = this.current.value;
-        this.consume(expectedType);
+        this.advance(expectedType);
         return value;
     }
 
@@ -136,7 +131,7 @@ export class Parser {
             return this.parseBlock();
         } finally {
             // Ensure nothing left after parsing
-            this.consume(TOKEN_EOF);
+            this.advance(TOKEN_EOF);
         }
     }
 
@@ -157,11 +152,11 @@ export class Parser {
 
     parseDefinition() {
         const declarator = this.parseDeclarator();
-        const value = this.matchAdvance(TOKEN_COLON)
+        const value = this.advanceIf(TOKEN_COLON)
             ? this.parseExpression()
             : null;
 
-        this.consume(TOKEN_SEMICOLON); // consume ';'
+        this.advance(TOKEN_SEMICOLON); // consume ';'
 
         return build.Definition(declarator, value);
     }
@@ -169,7 +164,7 @@ export class Parser {
     parseDeclarator() {
         const name = this.match(TOKEN_$IDENT)
             ? this.consumeValue().slice(1)
-            : this.matchAdvance(TOKEN_$)
+            : this.advanceIf(TOKEN_$)
                 ? null
                 : this.throwError('Expected declarator');
 
@@ -309,7 +304,7 @@ export class Parser {
         while (!this.match(TOKEN_EOF)) {
             switch (this.current.type) {
                 case TOKEN_DOT:
-                    this.matchAdvance(TOKEN_DOT); // consume '.'
+                    this.advanceIf(TOKEN_DOT); // consume '.'
 
                     switch (this.current.type) {
                         case TOKEN_IDENT:
@@ -337,7 +332,7 @@ export class Parser {
                     break;
 
                 case TOKEN_DOT_DOT:
-                    this.matchAdvance(TOKEN_DOT_DOT); // consume '..'
+                    this.advanceIf(TOKEN_DOT_DOT); // consume '..'
 
                     switch (this.current.type) {
                         case TOKEN_IDENT:
@@ -371,13 +366,13 @@ export class Parser {
     }
 
     parseAssertion() {
-        const negate = Boolean(this.matchAdvance(TOKEN_NOT));
+        const negate = Boolean(this.advanceIf(TOKEN_NOT));
 
         // Handle parentheses
-        if (this.matchAdvance(TOKEN_OPEN_PAREN)) {
+        if (this.advanceIf(TOKEN_OPEN_PAREN)) {
             const terms = [];
 
-            while (!this.matchAdvance(TOKEN_CLOSE_PAREN)) {
+            while (!this.advanceIf(TOKEN_CLOSE_PAREN)) {
                 terms.push(this.parseAssertion());
                 if (this.match(TOKEN_AND) || this.match(TOKEN_OR)) {
                     terms.push(this.consumeValue());
@@ -415,10 +410,10 @@ export class Parser {
         if (!this.match(TOKEN_CLOSE_PAREN)) {
             do {
                 args.push(this.parseExpression());
-            } while (this.matchAdvance(TOKEN_COMMA));
+            } while (this.advanceIf(TOKEN_COMMA));
         }
 
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
 
         return build.Method(methodRef, args);
     }
@@ -484,7 +479,7 @@ export class Parser {
                 return this.parseMethodCall(null);
 
             case TOKEN_DOT:
-                this.consume(TOKEN_DOT); // consume '.'
+                this.advance(TOKEN_DOT); // consume '.'
 
                 switch (this.current.type) {
                     case TOKEN_IDENT:
@@ -507,7 +502,7 @@ export class Parser {
                 return this.parseFilter(null);
 
             case TOKEN_DOT_DOT: {
-                this.matchAdvance(TOKEN_DOT_DOT); // consume '..'
+                this.advanceIf(TOKEN_DOT_DOT); // consume '..'
 
                 switch (this.current.type) {
                     case TOKEN_IDENT:
@@ -540,20 +535,20 @@ export class Parser {
     parseFunction() {
         const params = [];
 
-        if (this.matchAdvance(TOKEN_OPEN_PAREN)) {
+        if (this.advanceIf(TOKEN_OPEN_PAREN)) {
             // Parse parameter list
             if (!this.match(TOKEN_CLOSE_PAREN)) {
                 do {
                     params.push(this.parseIdentifier(true));
-                } while (this.matchAdvance(TOKEN_COMMA));
+                } while (this.advanceIf(TOKEN_COMMA));
             }
 
-            this.consume(TOKEN_CLOSE_PAREN);
+            this.advance(TOKEN_CLOSE_PAREN);
         } else if (this.match(TOKEN_$IDENT)) {
             params.push(this.parseIdentifier(true));
         }
 
-        this.consume(TOKEN_ARROW);
+        this.advance(TOKEN_ARROW);
 
         return build.Function(
             params,
@@ -564,7 +559,7 @@ export class Parser {
     parseCompareFunction(expr) {
         const compares = [this.parseCompare(expr)];
 
-        while (this.matchAdvance(TOKEN_COMMA)) {
+        while (this.advanceIf(TOKEN_COMMA)) {
             compares.push(this.parseCompare(this.parseExpression()));
         }
 
@@ -576,17 +571,17 @@ export class Parser {
     }
 
     parseParentheses() {
-        this.consume(TOKEN_OPEN_PAREN);
+        this.advance(TOKEN_OPEN_PAREN);
         const block = this.parseBlock();
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
         return build.Parentheses(block);
     }
 
     parseArray() {
-        this.consume(TOKEN_OPEN_BRACKET);
+        this.advance(TOKEN_OPEN_BRACKET);
 
         // Check if empty bracket (empty array)
-        if (this.matchAdvance(TOKEN_CLOSE_BRACKET)) {
+        if (this.advanceIf(TOKEN_CLOSE_BRACKET)) {
             return build.Array([]);
         }
 
@@ -594,9 +589,9 @@ export class Parser {
         const elements = [];
         do {
             elements.push(this.parseArrayElement());
-        } while (this.matchAdvance(TOKEN_COMMA) && !this.match(TOKEN_CLOSE_BRACKET));
+        } while (this.advanceIf(TOKEN_COMMA) && !this.match(TOKEN_CLOSE_BRACKET));
 
-        this.consume(TOKEN_CLOSE_BRACKET);
+        this.advance(TOKEN_CLOSE_BRACKET);
         return build.Array(elements);
     }
 
@@ -610,55 +605,55 @@ export class Parser {
     }
 
     parseSliceNotation() {
-        this.consume(TOKEN_OPEN_BRACKET);
+        this.advance(TOKEN_OPEN_BRACKET);
 
         const args = [];
 
         // Parse first argument (might be empty for [:end] notation)
-        if (this.matchAdvance(TOKEN_COLON)) {
+        if (this.advanceIf(TOKEN_COLON)) {
             args.push(null);
         } else {
             args.push(this.parseExpression());
-            this.consume(TOKEN_COLON);
+            this.advance(TOKEN_COLON);
         }
 
         if (!this.match(TOKEN_CLOSE_BRACKET)) {
-            if (this.matchAdvance(TOKEN_COLON)) {
+            if (this.advanceIf(TOKEN_COLON)) {
                 args.push(null);
             } else {
                 args.push(this.parseExpression());
 
                 if (!this.match(TOKEN_CLOSE_BRACKET)) {
-                    this.consume(TOKEN_COLON);
+                    this.advance(TOKEN_COLON);
                 }
             }
         }
 
-        if (this.matchAdvance(TOKEN_CLOSE_BRACKET)) {
+        if (this.advanceIf(TOKEN_CLOSE_BRACKET)) {
             args.push(null);
         } else {
             args.push(this.parseExpression());
-            this.consume(TOKEN_CLOSE_BRACKET);
+            this.advance(TOKEN_CLOSE_BRACKET);
         }
 
         return build.SliceNotation(null, args);
     }
 
     parseObject() {
-        this.consume(TOKEN_OPEN_BRACE);
+        this.advance(TOKEN_OPEN_BRACE);
         const entries = [];
 
         if (!this.match(TOKEN_CLOSE_BRACE)) {
             entries.push(this.parseObjectEntry());
 
-            while (this.matchAdvance(TOKEN_COMMA)) {
+            while (this.advanceIf(TOKEN_COMMA)) {
                 if (!this.match(TOKEN_CLOSE_BRACE)) { // allow trailing comma
                     entries.push(this.parseObjectEntry());
                 }
             }
         }
 
-        this.consume(TOKEN_CLOSE_BRACE);
+        this.advance(TOKEN_CLOSE_BRACE);
         return build.Object(entries);
     }
 
@@ -692,14 +687,14 @@ export class Parser {
                 // Computed property name: [expression]
                 this.advance();
                 key = this.parseExpression();
-                this.consume(TOKEN_CLOSE_BRACKET); // consume ]
+                this.advance(TOKEN_CLOSE_BRACKET); // consume ]
                 break;
 
             default:
                 this.throwError('Expected object property name');
         }
 
-        if (this.matchAdvance(TOKEN_COLON)) {
+        if (this.advanceIf(TOKEN_COLON)) {
             return build.ObjectEntry(key, this.parseExpression());
         }
 
@@ -709,16 +704,16 @@ export class Parser {
 
     // Dedicated parse methods for single AST node creation
     parseMap(value) {
-        this.consume(TOKEN_DOT_OPEN_PAREN);
+        this.advance(TOKEN_DOT_OPEN_PAREN);
         const query = this.parseBlock();
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
         return build.Map(value, query);
     }
 
     parseFilter(value) {
-        this.consume(TOKEN_DOT_OPEN_BRACKET);
+        this.advance(TOKEN_DOT_OPEN_BRACKET);
         const query = this.parseBlock();
-        this.consume(TOKEN_CLOSE_BRACKET);
+        this.advance(TOKEN_CLOSE_BRACKET);
         return build.Filter(value, query);
     }
 
@@ -727,9 +722,9 @@ export class Parser {
             return build.MapRecursive(value, property);
         }
 
-        this.consume(TOKEN_DOT_DOT_OPEN_PAREN);
+        this.advance(TOKEN_DOT_DOT_OPEN_PAREN);
         const query = this.parseBlock();
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
         return build.MapRecursive(value, query);
     }
 
@@ -738,37 +733,37 @@ export class Parser {
             return build.Pick(value, index);
         }
 
-        this.consume(TOKEN_OPEN_BRACKET);
-        if (this.matchAdvance(TOKEN_CLOSE_BRACKET)) {
+        this.advance(TOKEN_OPEN_BRACKET);
+        if (this.advanceIf(TOKEN_CLOSE_BRACKET)) {
             return build.Pick(value, null);
         }
 
         const getter = this.parseExpression();
-        this.consume(TOKEN_CLOSE_BRACKET);
+        this.advance(TOKEN_CLOSE_BRACKET);
         return build.Pick(value, getter);
     }
 
     parseSpread(isArray) {
-        this.consume(TOKEN_DOT_DOT_DOT);
+        this.advance(TOKEN_DOT_DOT_DOT);
         return build.Spread(this.parseExpression(), isArray);
     }
 
     parsePipeline(left) {
-        this.consume(TOKEN_PIPE);
+        this.advance(TOKEN_PIPE);
         return build.Pipeline(left, this.parseBlock());
     }
 
     parseTernaryConditional(condition, prec, rightAssoc) {
-        this.consume(TOKEN_QUESTION);
+        this.advance(TOKEN_QUESTION);
         const consequent = this.parseExpression();
-        const alternate = this.matchAdvance(TOKEN_COLON)
+        const alternate = this.advanceIf(TOKEN_COLON)
             ? this.parseExpression(prec + (rightAssoc ? 0 : 1))
             : null;
         return build.Conditional(condition, consequent, alternate);
     }
 
     parseAssertionPostfix(left) {
-        this.consume(TOKEN_IS);
+        this.advance(TOKEN_IS);
         return build.Postfix(left, this.parseAssertion());
     }
 
@@ -789,38 +784,38 @@ export class Parser {
     }
 
     parseBracketAccess(expr) {
-        this.consume(TOKEN_OPEN_BRACKET); // consume '['
+        this.advance(TOKEN_OPEN_BRACKET); // consume '['
 
         // Empty brackets: expr[]
-        if (this.matchAdvance(TOKEN_CLOSE_BRACKET)) {
+        if (this.advanceIf(TOKEN_CLOSE_BRACKET)) {
             return build.Pick(expr, null);
         }
 
         // Regular array access: expr[getter]
         const getter = this.parseExpression();
-        this.consume(TOKEN_CLOSE_BRACKET);
+        this.advance(TOKEN_CLOSE_BRACKET);
         return build.Pick(expr, getter);
     }
 
     parseParentheses() {
-        this.consume(TOKEN_OPEN_PAREN);
+        this.advance(TOKEN_OPEN_PAREN);
         const block = this.parseBlock();
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
         return build.Parentheses(block);
     }
 
     // Specialized versions for different opening token types
     parseMapFromParen(value) {
-        this.consume(TOKEN_OPEN_PAREN);
+        this.advance(TOKEN_OPEN_PAREN);
         const query = this.parseBlock();
-        this.consume(TOKEN_CLOSE_PAREN);
+        this.advance(TOKEN_CLOSE_PAREN);
         return build.Map(value, query);
     }
 
     parseFilterFromBracket(value) {
-        this.consume(TOKEN_OPEN_BRACKET);
+        this.advance(TOKEN_OPEN_BRACKET);
         const query = this.parseBlock();
-        this.consume(TOKEN_CLOSE_BRACKET);
+        this.advance(TOKEN_CLOSE_BRACKET);
         return build.Filter(value, query);
     }
 }
