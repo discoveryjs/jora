@@ -32,9 +32,13 @@ const LITERALS = new Map([
 const KEYWORDS = new Map([
     ['and', TOKEN_AND],
     ['or', TOKEN_OR],
+    ['not', TOKEN_NOT],
+    ['no', TOKEN_NO],
     ['is', TOKEN_IS],
     ['in', TOKEN_IN],
-    ['no', TOKEN_NO]
+    ['notin', TOKEN_NOTIN],
+    ['has', TOKEN_HAS],
+    ['hasno', TOKEN_HASNO]
 ]);
 
 // Two-character operators
@@ -109,7 +113,7 @@ function isLetter(code) {
 }
 
 function isHexDigit(code) {
-    return isDigit(code) || 
+    return isDigit(code) ||
            (code >= 65 && code <= 70) ||  // A-F
            (code >= 97 && code <= 102);   // a-f
 }
