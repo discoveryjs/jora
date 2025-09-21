@@ -118,6 +118,18 @@ function isHexDigit(code) {
            (code >= 97 && code <= 102);   // a-f
 }
 
+// Helper to scan hex digits from a string starting at offset
+function scanHex(str, offset, max) {
+    let count = 0;
+    while (count < max && offset + count < str.length) {
+        if (!isHexDigit(str.charCodeAt(offset + count))) {
+            break;
+        }
+        count++;
+    }
+    return count;
+}
+
 export class Token {
     constructor(type, value, offset = 0) {
         this.type = type;
@@ -276,6 +288,26 @@ export class Tokenizer {
         return null;
     }
 
+    // Validate escape sequences in strings and templates
+    validateEscapeSequence(escapeChar, pos, input) {
+        // Validate Unicode escape sequences \uXXXX
+        if (escapeChar === 'u') {
+            const hexCount = scanHex(input, pos + 1, 4);
+            if (hexCount < 4) {
+                throw new Error('Invalid Unicode escape sequence');
+            }
+            return 4; // Number of hex digits to skip
+        } else if (escapeChar === 'x') {
+            // Validate hexadecimal escape sequences \xXX
+            const hexCount = scanHex(input, pos + 1, 2);
+            if (hexCount < 2) {
+                throw new Error('Invalid hexadecimal escape sequence');
+            }
+            return 2; // Number of hex digits to skip
+        }
+        return 0; // No special handling needed
+    }
+
     // Optimized number reading
     readNumber() {
         const start = this.pos;
@@ -325,7 +357,35 @@ export class Tokenizer {
 
         this.pos = pos;
         const rawValue = input.slice(start, pos);
+
+        // Validate underscore placement if present
+        if (rawValue.includes('_')) {
+            this.validateNumberUnderscores(rawValue);
+        }
+
         return new Token(TOKEN_NUMBER, rawValue, start);
+    }
+
+    validateNumberUnderscores(value) {
+        const isHex = value.startsWith('0x') || value.startsWith('0X');
+
+        // Pattern to check for invalid underscore placement:
+        // - Underscore at start/end or next to non-digit/non-hex characters
+        // - Consecutive underscores
+        const errorPattern = isHex
+            ? /(?:^|[^0-9a-fA-F])_|_(?:[^0-9a-fA-F]|$)/
+            : /(?:^|\D)_|_(?:\D|$)/;
+
+        const errorMatch = value.match(errorPattern);
+
+        if (errorMatch) {
+            const matchStr = errorMatch[0];
+            const message = matchStr === '__'
+                ? 'Only one underscore is allowed'
+                : 'Wrong underscore';
+
+            throw new Error(`${message} as numeric separator`);
+        }
     }
 
     // Optimized string reading
@@ -335,13 +395,38 @@ export class Tokenizer {
         const length = this.length;
         let pos = this.pos + 1; // Skip opening quote
 
-        // Read until closing quote or end, including escaped characters
+        // Read until closing quote or end, validating escape sequences
         while (pos < length && input[pos] !== quote) {
-            if (input[pos] === '\\') {
+            const char = input[pos];
+
+            // Check for invalid line terminators
+            if (char === '\n' || char === '\r' || char === '\u2028' || char === '\u2029') {
+                throw new Error('Invalid line terminator');
+            }
+
+            if (char === '\\') {
                 pos++; // Skip escape character
-                if (pos < length) {
-                    pos++; // Skip escaped character
+                if (pos >= length) {
+                    // Backslash at end of string
+                    throw new Error('Invalid backslash');
                 }
+
+                const escapeChar = input[pos];
+
+                // Check for invalid backslash escaping the closing quote
+                if (escapeChar === quote) {
+                    // Look ahead to see if this is actually the end of the string
+                    const nextPos = pos + 1;
+                    if (nextPos >= length || input[nextPos] !== quote) {
+                        throw new Error('Invalid backslash');
+                    }
+                }
+
+                // Validate escape sequences
+                const hexSkip = this.validateEscapeSequence(escapeChar, pos, input);
+                pos += hexSkip;
+
+                pos++; // Skip the escape character
             } else {
                 pos++;
             }
@@ -371,6 +456,14 @@ export class Tokenizer {
             }
             if (this.input[pos] === '\\') {
                 pos++; // Skip escape
+                if (pos >= this.length) {
+                    break;
+                }
+
+                const escapeChar = this.input[pos];
+                // Validate escape sequences
+                const hexSkip = this.validateEscapeSequence(escapeChar, pos, this.input);
+                pos += hexSkip;
             }
             pos++;
         }
@@ -391,6 +484,12 @@ export class Tokenizer {
             while (this.pos < this.length && !(this.input[this.pos] === '$' && this.input[this.pos + 1] === '{')) {
                 if (this.input[this.pos] === '\\') {
                     this.advance();
+                    if (this.pos < this.length) {
+                        const escapeChar = this.input[this.pos];
+                        // Validate escape sequences
+                        const hexSkip = this.validateEscapeSequence(escapeChar, this.pos, this.input);
+                        this.advance(hexSkip);
+                    }
                 }
                 this.advance();
             }
@@ -420,6 +519,12 @@ export class Tokenizer {
             }
             if (this.input[this.pos] === '\\') {
                 this.advance();
+                if (this.pos < this.length) {
+                    const escapeChar = this.input[this.pos];
+                    // Validate escape sequences
+                    const hexSkip = this.validateEscapeSequence(escapeChar, this.pos, this.input);
+                    this.advance(hexSkip);
+                }
             }
             this.advance();
         }
@@ -455,8 +560,15 @@ export class Tokenizer {
             this.advance(); // Skip closing /
         }
 
-        // Read flags
+        // Read flags and validate for duplicates
+        const seenFlags = new Set();
+
         while (this.pos < this.length && /[gimsu]/.test(this.input[this.pos])) {
+            const flag = this.input[this.pos];
+            if (seenFlags.has(flag)) {
+                throw new Error('Duplicate flag in regexp');
+            }
+            seenFlags.add(flag);
             this.advance();
         }
 
@@ -477,18 +589,13 @@ export class Tokenizer {
                 // Store the raw unicode escape sequence
                 value += '\\u';
                 pos += 2;
+                const hexCount = scanHex(input, pos, 4);
+                if (hexCount < 4) {
+                    throw new Error(`Invalid Unicode escape sequence at position ${pos}`);
+                }
                 for (let i = 0; i < 4; i++) {
-                    if (pos < length) {
-                        const code = input.charCodeAt(pos);
-                        if (isHexDigit(code)) {
-                            value += input[pos];
-                            pos++;
-                        } else {
-                            throw new Error(`Invalid Unicode escape sequence at position ${pos}`);
-                        }
-                    } else {
-                        throw new Error(`Invalid Unicode escape sequence at position ${pos}`);
-                    }
+                    value += input[pos];
+                    pos++;
                 }
             } else {
                 value += input[pos];
@@ -574,7 +681,8 @@ export class Tokenizer {
         // Numbers (optimized character code check)
         const charCode = ch.charCodeAt(0);
         if (isDigit(charCode) ||
-            (ch === '0' && this.pos < this.length - 1 && (input[this.pos + 1] === 'x' || input[this.pos + 1] === 'X'))) {
+            (ch === '0' && this.pos < this.length - 1 && (input[this.pos + 1] === 'x' || input[this.pos + 1] === 'X')) ||
+            (ch === '.' && this.pos < this.length - 1 && (isDigit(input.charCodeAt(this.pos + 1)) || input[this.pos + 1] === '_'))) {
             return this.readNumber();
         }
 
