@@ -102,6 +102,17 @@ export class Parser {
         return this.current.type === type;
     }
 
+    matchAdvance(type) {
+        return this.current.type === type
+            ? this.advance()
+            : null;
+    }
+
+    // Helper to create property access nodes
+    property(name, obj = null) {
+        return build.GetProperty(obj, build.Identifier(name));
+    }
+
     consume(expectedType) {
         if (expectedType === undefined || this.current.type === expectedType) {
             const token = this.current;
@@ -110,6 +121,10 @@ export class Parser {
         }
 
         throw new Error(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[this.current.type]}\``); //  at position ${this.current.offset}
+    }
+
+    consumeValue(expectedType) {
+        return this.consume(expectedType).value;
     }
 
     getPrecedence(type) {
@@ -164,16 +179,16 @@ export class Parser {
 
         // Try to parse a definition
         if (this.match(TOKEN_$IDENT)) {
-            name = this.consume().value.slice(1); // Remove $ prefix
+            name = this.consumeValue().slice(1); // Remove $ prefix
         } else if (this.match(TOKEN_$)) {
             // name remains null for anonymous definition
-            this.consume(); // consume '$'
+            this.advance(); // consume '$'
         } else {
             throw new Error('Expected definition');
         }
 
         if (this.match(TOKEN_COLON)) {
-            this.consume(); // consume ':'
+            this.advance(); // consume ':'
             value = this.parseExpression();
         }
 
@@ -197,7 +212,7 @@ export class Parser {
                 case TOKEN_QUESTION: {
                     // Ternary operator
                     const consequent = this.parseExpression();
-                    this.consume(TOKEN_COLON);
+                    this.advance(); // consume ':'
                     const alternate = this.parseExpression(prec + (rightAssoc ? 0 : 1));
                     left = build.Conditional(left, consequent, alternate);
                     break;
@@ -228,21 +243,21 @@ export class Parser {
     parseUnary() {
         // Unary prefix operators
         if (this.match(TOKEN_NOT) || this.match(TOKEN_NO) || this.match(TOKEN_PLUS) || this.match(TOKEN_MINUS)) {
-            const op = this.consume();
+            const op = this.consumeValue();
             const expr = this.parseUnary();
-            return build.Prefix(op.value, expr);
+            return build.Prefix(op, expr);
         }
 
         // IS assertions as prefix
         if (this.match(TOKEN_IS)) {
-            const op = this.consume();
+            const op = this.consumeValue();
             const assertion = this.parseAssertion();
-            return build.Prefix(op.value, assertion);
+            return build.Prefix(op, assertion);
         }
 
         // Arrow functions without parameters
         if (this.match(TOKEN_ARROW)) {
-            this.consume();
+            this.advance();
             const body = this.parseExpression();
             return build.Function([], body);
         }
@@ -254,53 +269,42 @@ export class Parser {
         let expr = this.parsePrimary();
 
         while (!this.match(TOKEN_EOF)) {
-            if (this.match(TOKEN_DOT)) {
-                this.advance();
-
+            if (this.matchAdvance(TOKEN_DOT)) {
                 if (this.match(TOKEN_IDENT)) {
-                    const prop = this.consume();
-                    expr = build.GetProperty(expr, build.Identifier(prop.value));
+                    const propName = this.consumeValue();
+                    expr = this.property(propName, expr);
                 } else if (this.match(TOKEN_METHOD_OPEN)) {
                     const method = this.parseMethodCall();
                     expr = build.MethodCall(expr, method);
                 } else {
                     break;
                 }
-            } else if (this.match(TOKEN_DOT_OPEN_PAREN)) {
+            } else if (this.matchAdvance(TOKEN_DOT_OPEN_PAREN)) {
                 // .( block ) - Map operation
-                this.advance();
-                const block = this.parseBlock();
+                expr = build.Map(expr, this.parseBlock());
                 this.consume(TOKEN_CLOSE_PAREN);
-                expr = build.Map(expr, block);
-            } else if (this.match(TOKEN_DOT_OPEN_BRACKET)) {
+            } else if (this.matchAdvance(TOKEN_DOT_OPEN_BRACKET)) {
                 // .[ block ] - Filter operation
-                this.advance();
-                const block = this.parseBlock();
+                expr = build.Filter(expr, this.parseBlock());
                 this.consume(TOKEN_CLOSE_BRACKET);
-                expr = build.Filter(expr, block);
-            } else if (this.match(TOKEN_DOT_DOT)) {
-                this.advance();
-
+            } else if (this.matchAdvance(TOKEN_DOT_DOT)) {
                 if (this.match(TOKEN_IDENT)) {
-                    const prop = this.consume();
-                    expr = build.MapRecursive(expr, build.GetProperty(null, build.Identifier(prop.value)));
+                    const propName = this.consumeValue();
+                    expr = build.MapRecursive(expr, this.property(propName));
                 } else if (this.match(TOKEN_METHOD_OPEN)) {
                     const method = this.parseMethodCall();
                     expr = build.MapRecursive(expr, build.MethodCall(null, method));
                 } else {
                     break;
                 }
-            } else if (this.match(TOKEN_DOT_DOT_OPEN_PAREN)) {
+            } else if (this.matchAdvance(TOKEN_DOT_DOT_OPEN_PAREN)) {
                 // ..( block ) - Recursive map operation
-                this.advance();
                 const block = this.parseBlock();
                 this.consume(TOKEN_CLOSE_PAREN);
                 expr = build.MapRecursive(expr, block);
-            } else if (this.match(TOKEN_OPEN_BRACKET)) {
-                this.advance();
+            } else if (this.matchAdvance(TOKEN_OPEN_BRACKET)) {
 
-                if (this.match(TOKEN_CLOSE_BRACKET)) {
-                    this.advance();
+                if (this.matchAdvance(TOKEN_CLOSE_BRACKET)) {
                     expr = build.Pick(expr, null);
                 } else {
                     // Check if this is slice notation by looking for colons
@@ -339,8 +343,8 @@ export class Parser {
                 }
             } else if (this.match(TOKEN_ORDER)) {
                 // Handle ORDER tokens (asc/desc) for compare expressions
-                const orderToken = this.consume();
-                expr = build.Compare(expr, orderToken.value);
+                const orderToken = this.consumeValue();
+                expr = build.Compare(expr, orderToken);
             } else {
                 break;
             }
@@ -354,13 +358,13 @@ export class Parser {
 
         // Handle 'not' negation
         if (this.match(TOKEN_NOT)) {
-            this.consume();
+            this.advance();
             negation = true;
         }
 
         // Handle parentheses around assertion expression: is (complex_assertion)
         if (this.match(TOKEN_OPEN_PAREN)) {
-            this.consume(); // consume '('
+            this.advance(); // consume '('
             const assertion = this.parseAssertionExpression();
             this.consume(TOKEN_CLOSE_PAREN); // consume ')'
 
@@ -373,20 +377,20 @@ export class Parser {
 
         // Handle direct identifier: is name or is not name
         if (this.match(TOKEN_IDENT)) {
-            const name = this.consume();
-            return build.Assertion(build.Identifier(name.value), negation);
+            const name = this.consumeValue();
+            return build.Assertion(build.Identifier(name), negation);
         }
 
         // Handle literal assertion names: is null, is undefined, etc.
         if (this.match(TOKEN_LITERAL)) {
-            const name = this.consume();
-            return build.Assertion(build.Identifier(String(name.value)), negation);
+            const name = this.consumeValue();
+            return build.Assertion(build.Identifier(String(name)), negation);
         }
 
         // Handle $identifier references: is $myAssertion
         if (this.match(TOKEN_$IDENT)) {
-            const ref = this.consume();
-            return build.Assertion(build.Reference(ref.value), negation);
+            const ref = this.consumeValue();
+            return build.Assertion(build.Reference(ref), negation);
         }
 
         throw new Error('Expected assertion term');
@@ -401,7 +405,7 @@ export class Parser {
         let left = this.parseAssertionAnd();
 
         while (this.match(TOKEN_OR)) {
-            this.consume();
+            this.advance();
             const right = this.parseAssertionAnd();
             left = build.Binary('or', left, right);
         }
@@ -413,7 +417,7 @@ export class Parser {
         let left = this.parseAssertionTerm();
 
         while (this.match(TOKEN_AND)) {
-            this.consume();
+            this.advance();
             const right = this.parseAssertionTerm();
             left = build.Binary('and', left, right);
         }
@@ -424,14 +428,14 @@ export class Parser {
     parseAssertionTerm() {
         // Handle 'not' negation within complex assertions
         if (this.match(TOKEN_NOT)) {
-            this.consume();
+            this.advance();
             const term = this.parseAssertionTerm();
             return this.negateAssertion(term);
         }
 
         // Handle nested parentheses
         if (this.match(TOKEN_OPEN_PAREN)) {
-            this.consume();
+            this.advance();
             const assertion = this.parseAssertionExpression();
             this.consume(TOKEN_CLOSE_PAREN);
             return assertion;
@@ -439,19 +443,19 @@ export class Parser {
 
         // Handle simple assertion terms
         if (this.match(TOKEN_IDENT)) {
-            const name = this.consume();
-            return build.Assertion(build.Identifier(name.value), false);
+            const name = this.consumeValue();
+            return build.Assertion(build.Identifier(name), false);
         }
 
         if (this.match(TOKEN_LITERAL)) {
-            const name = this.consume();
-            return build.Assertion(build.Identifier(String(name.value)), false);
+            const name = this.consumeValue();
+            return build.Assertion(build.Identifier(String(name)), false);
         }
 
         // Handle $identifier references in assertion terms
         if (this.match(TOKEN_$IDENT)) {
-            const ref = this.consume();
-            return build.Assertion(build.Reference(ref.value), false);
+            const ref = this.consumeValue();
+            return build.Assertion(build.Reference(ref), false);
         }
 
         throw new Error('Expected assertion term');
@@ -467,16 +471,16 @@ export class Parser {
     }
 
     parseMethodCall() {
-        const name = this.consume(TOKEN_METHOD_OPEN);
+        const nameValue = this.consumeValue(TOKEN_METHOD_OPEN);
         // The TOKEN_METHOD_OPEN already includes the opening parenthesis
         // Extract method name by removing the trailing '('
-        const methodName = name.value.slice(0, -1);
+        const methodName = nameValue.slice(0, -1);
 
         const args = [];
         if (!this.match(TOKEN_CLOSE_PAREN)) {
             do {
                 args.push(this.parseExpression());
-            } while (this.match(TOKEN_COMMA) && this.consume());
+            } while (this.matchAdvance(TOKEN_COMMA));
         }
 
         this.consume(TOKEN_CLOSE_PAREN);
@@ -507,79 +511,74 @@ export class Parser {
         parts.push(build.Literal(start.value));
 
         // Parse template expressions and continuations
-        while (this.match(TOKEN_TPL_CONTINUE) || this.current.type !== TOKEN_TPL_END) {
+        while (true) {
+            // Parse the expression inside ${}
+            parts.push(this.parseExpression());
+
             if (this.match(TOKEN_TPL_CONTINUE)) {
                 const cont = this.consume(TOKEN_TPL_CONTINUE);
                 parts.push(build.Literal(cont.value));
             } else {
-                // Parse the expression inside ${}
-                const expr = this.parseExpression();
-                parts.push(expr);
+                break;
             }
         }
 
         // End with TPL_END token
-        if (this.match(TOKEN_TPL_END)) {
-            const end = this.consume(TOKEN_TPL_END);
-            parts.push(build.Literal(end.value));
-        }
+        const end = this.consume(TOKEN_TPL_END);
+        parts.push(build.Literal(end.value));
 
         return build.Template(parts);
     }
 
     parsePrimary() {
-        // Literals
+        // Literals (number, string, regexp, literal values)
         if (this.match(TOKEN_NUMBER) || this.match(TOKEN_STRING) ||
             this.match(TOKEN_REGEXP) || this.match(TOKEN_LITERAL)) {
-            const token = this.consume();
-            return build.Literal(token.value);
+            const value = this.consumeValue();
+            return build.Literal(value);
         }
 
         // Template literals
         if (this.match(TOKEN_TEMPLATE)) {
-            const token = this.consume();
-            return build.Template(token.value);
+            const value = this.consumeValue();
+            return build.Template(value);
         }
 
         // Special references
-        if (this.match(TOKEN_AT)) {
-            this.consume();
+        if (this.matchAdvance(TOKEN_AT)) {
             return build.Data();
         }
 
-        if (this.match(TOKEN_HASH)) {
-            this.consume();
+        if (this.matchAdvance(TOKEN_HASH)) {
             return build.Context();
         }
 
-        if (this.match(TOKEN_$)) {
-            this.consume();
+        if (this.matchAdvance(TOKEN_$)) {
             return build.Current();
         }
 
-        if (this.match(TOKEN_$$)) {
-            this.consume();
+        if (this.matchAdvance(TOKEN_$$)) {
             return build.Arg1();
         }
 
         if (this.match(TOKEN_$IDENT)) {
-            const token = this.consume();
+            const tokenValue = this.consumeValue();
 
             // Check if this is a single-parameter arrow function: $param => body
             if (this.match(TOKEN_ARROW)) {
-                this.consume(); // consume '=>'
+                this.advance(); // consume '=>'
                 const body = this.parseExpression();
-                const param = build.Declarator(token.value.slice(1)); // Remove $ prefix
+                const param = build.Declarator(tokenValue.slice(1)); // Remove $ prefix
                 return build.Function([param], build.Block([], body));
             }
 
-            return build.Reference(token.value);
+            return build.Reference(tokenValue);
         }
 
         // Identifiers (property access)
         if (this.match(TOKEN_IDENT)) {
-            const token = this.consume();
-            return build.GetProperty(null, build.Identifier(token.value));
+            const value = this.consumeValue();
+            return this.property(value);
         }
 
         // Method calls
@@ -600,11 +599,10 @@ export class Parser {
         }
 
         // Dot notation (shorthand for @.property or map operations)
-        if (this.match(TOKEN_DOT)) {
-            this.advance();
+        if (this.matchAdvance(TOKEN_DOT)) {
             if (this.match(TOKEN_IDENT)) {
-                const prop = this.consume();
-                return build.GetProperty(null, build.Identifier(prop.value));
+                const propName = this.consumeValue();
+                return this.property(propName);
             } else if (this.match(TOKEN_METHOD_OPEN)) {
                 // Method call on implicit data root .method(...)
                 const methodToken = this.consume(TOKEN_METHOD_OPEN);
@@ -619,15 +617,13 @@ export class Parser {
 
                 this.consume(TOKEN_CLOSE_PAREN);
                 return build.Method(build.Identifier(methodName), args);
-            } else if (this.match(TOKEN_OPEN_PAREN)) {
+            } else if (this.matchAdvance(TOKEN_OPEN_PAREN)) {
                 // Map operation .()
-                this.advance(); // consume (
                 const query = this.parseBlock();
                 this.consume(TOKEN_CLOSE_PAREN);
                 return build.Map(null, query);
-            } else if (this.match(TOKEN_OPEN_BRACKET)) {
+            } else if (this.matchAdvance(TOKEN_OPEN_BRACKET)) {
                 // Map with bracket notation .[expr]
-                this.advance(); // consume [
                 const query = this.parseBlock();
                 this.consume(TOKEN_CLOSE_BRACKET);
                 return build.Map(null, query);
@@ -637,27 +633,24 @@ export class Parser {
         }
 
         // Direct dot-parentheses notation .( expr ) (shorthand for @.( expr ))
-        if (this.match(TOKEN_DOT_OPEN_PAREN)) {
-            this.advance(); // consume .(
+        if (this.matchAdvance(TOKEN_DOT_OPEN_PAREN)) {
             const query = this.parseBlock();
             this.consume(TOKEN_CLOSE_PAREN);
             return build.Map(null, query);
         }
 
         // Direct dot-bracket notation .[expr] (shorthand for @[expr])
-        if (this.match(TOKEN_DOT_OPEN_BRACKET)) {
-            this.advance(); // consume .[
+        if (this.matchAdvance(TOKEN_DOT_OPEN_BRACKET)) {
             const query = this.parseBlock();
             this.consume(TOKEN_CLOSE_BRACKET);
             return build.Filter(null, query);
         }
 
         // Recursive operator ..property
-        if (this.match(TOKEN_DOT_DOT)) {
-            this.advance();
+        if (this.matchAdvance(TOKEN_DOT_DOT)) {
             if (this.match(TOKEN_IDENT)) {
-                const prop = this.consume();
-                return build.MapRecursive(null, build.GetProperty(null, build.Identifier(prop.value)));
+                const propName = this.consumeValue();
+                return build.MapRecursive(null, this.property(propName));
             } else {
                 throw new Error('Expected property name after ..');
             }
@@ -680,7 +673,7 @@ export class Parser {
 
         // Pipeline without left operand
         if (this.match(TOKEN_PIPE)) {
-            this.consume();
+            this.advance();
             const right = this.parseExpression();
             return build.Pipeline(null, right);
         }
@@ -696,12 +689,12 @@ export class Parser {
         if (!this.match(TOKEN_CLOSE_PAREN)) {
             do {
                 if (this.match(TOKEN_$IDENT)) {
-                    const param = this.consume();
-                    params.push(build.Declarator(param.value.slice(1))); // Remove $ prefix
+                    const param = this.consumeValue();
+                    params.push(build.Declarator(param.slice(1))); // Remove $ prefix
                 } else {
                     throw new Error('Expected parameter name in lambda function');
                 }
-            } while (this.match(TOKEN_COMMA) && this.consume());
+            } while (this.matchAdvance(TOKEN_COMMA));
         }
 
         this.consume(TOKEN_CLOSE_PAREN);
@@ -742,7 +735,7 @@ export class Parser {
             const elements = [firstElement];
 
             while (this.match(TOKEN_COMMA)) {
-                this.consume(); // consume comma
+                this.advance(); // consume comma
                 if (!this.match(TOKEN_CLOSE_BRACKET)) { // allow trailing comma
                     elements.push(this.parseArrayElement());
                 }
@@ -764,7 +757,7 @@ export class Parser {
         const elements = [firstElement];
 
         while (this.match(TOKEN_COMMA)) {
-            this.consume(); // consume comma
+            this.advance(); // consume comma
             if (!this.match(TOKEN_CLOSE_BRACKET)) { // allow trailing comma
                 elements.push(this.parseArrayElement());
             }
@@ -820,7 +813,7 @@ export class Parser {
     parseArrayElement() {
         // Handle spread syntax
         if (this.match(TOKEN_DOT_DOT_DOT)) {
-            this.consume();
+            this.advance();
             const query = this.parseExpression();
             return build.Spread(query, true);
         }
@@ -836,7 +829,7 @@ export class Parser {
             entries.push(this.parseObjectEntry());
 
             while (this.match(TOKEN_COMMA)) {
-                this.consume(); // consume comma
+                this.advance(); // consume comma
                 if (!this.match(TOKEN_CLOSE_BRACE)) { // allow trailing comma
                     entries.push(this.parseObjectEntry());
                 }
@@ -850,7 +843,7 @@ export class Parser {
     parseObjectEntry() {
         // Handle spread syntax: ...expression
         if (this.match(TOKEN_DOT_DOT_DOT)) {
-            this.consume(); // consume '...'
+            this.advance(); // consume '...'
             const query = this.parseExpression();
             return build.Spread(query, false); // false for object spread vs array spread
         }
@@ -858,23 +851,20 @@ export class Parser {
         let key;
 
         if (this.match(TOKEN_IDENT)) {
-            key = build.Identifier(this.consume().value);
+            key = build.Identifier(this.consumeValue());
         } else if (this.match(TOKEN_$IDENT)) {
-            const token = this.consume();
-            key = build.Reference(token.value);
-        } else if (this.match(TOKEN_$)) {
-            this.consume();
+            key = build.Reference(this.consumeValue());
+        } else if (this.matchAdvance(TOKEN_$)) {
             key = build.Current();
         } else if (this.match(TOKEN_STRING) || this.match(TOKEN_NUMBER)) {
-            const token = this.consume();
-            key = build.Literal(token.value);
+            const value = this.consumeValue();
+            key = build.Literal(value);
         } else if (this.match(TOKEN_LITERAL)) {
             // Handle literal property names: true, false, null, undefined, etc.
-            const token = this.consume();
-            key = build.Literal(token.value);
-        } else if (this.match(TOKEN_OPEN_BRACKET)) {
+            const value = this.consumeValue();
+            key = build.Literal(value);
+        } else if (this.matchAdvance(TOKEN_OPEN_BRACKET)) {
             // Computed property name: [expression]
-            this.consume(); // consume [
             key = this.parseExpression();
             this.consume(TOKEN_CLOSE_BRACKET); // consume ]
         } else {
@@ -882,7 +872,7 @@ export class Parser {
         }
 
         if (this.match(TOKEN_COLON)) {
-            this.consume();
+            this.advance();
             const value = this.parseExpression();
             return build.ObjectEntry(key, value);
         } else {
