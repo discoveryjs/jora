@@ -3,7 +3,6 @@
 import legacyParser from './parse-old.js';
 import newImplementation from './parser/index.js';
 // import { tokenNames as __newTokenNames } from '../rework-parser/tokens.js';
-const __tokenNames = {};
 // File output for parity diffs
 // Guard import for environments without node fs (e.g., browser bundling)
 const { parse: newParse, tokenize: newTokenizer } = newImplementation;
@@ -276,7 +275,7 @@ function *__tokenize(source, tolerantMode = false, loc = false) {
     try {
         const newSeq = [];
         for (const t of newTokenizer(source, { tolerant: tolerantMode, commentRanges: [] })) {
-            let typeName = typeof t.type === 'number' ? (__newTokenNames[t.type] || '?') : t.type;
+            let typeName = typeof t.type === 'number' ? (t.name || '?') : t.type;
             if (__tokenPunctMap[typeName]) {
                 typeName = __tokenPunctMap[typeName];
             }

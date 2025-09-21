@@ -3,15 +3,17 @@
  * Provides compatibility with the existing jison parser interface
  */
 
-import { JoraParser } from './parser.js';
+import { Parser } from './parser.js';
 import { Tokenizer } from './tokenizer.js';
+import { TOKEN_EOF } from './tokens.js';
 
 // Create a compatible parser interface
 const parser = {
     parse(source, tolerantMode = false) {
         try {
-            const joraParser = new JoraParser({ tolerant: tolerantMode });
-            const ast = joraParser.parse(source);
+            const tokenizer = new Tokenizer(source);
+            const joraParser = new Parser(tokenizer);
+            const ast = joraParser.parse();
 
             return {
                 ast: ast,
@@ -46,15 +48,11 @@ const parser = {
         do {
             token = tokenizer.nextToken();
             tokens.push({
-                type: token.type,
+                type: token.name,  // Use token.name for compatibility with legacy interface
                 value: token.value,
-                range: token.range,
-                loc: {
-                    start: token.start,
-                    end: token.end
-                }
+                offset: token.offset
             });
-        } while (token.type !== 'EOF');
+        } while (token.type !== TOKEN_EOF);
 
         return tokens;
     }

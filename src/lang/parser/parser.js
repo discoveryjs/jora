@@ -2,39 +2,53 @@
  * Production-ready Jora parser - Compact, performant, extensible
  * Based on recursive descent with precedence climbing for operators
  */
-import { Tokenizer, TokenType } from './tokenizer.js';
+import { Tokenizer } from './tokenizer.js';
+import {
+    TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
+    TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$,
+    TOKEN_AND, TOKEN_OR, TOKEN_NOT, TOKEN_NO, TOKEN_IS, TOKEN_IN, TOKEN_NOTIN, TOKEN_HAS, TOKEN_HASNO, TOKEN_ORDER,
+    TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN,
+    TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END,
+    TOKEN_DOT, TOKEN_DOT_DOT, TOKEN_DOT_DOT_DOT, TOKEN_DOT_OPEN_PAREN, TOKEN_DOT_OPEN_BRACKET, TOKEN_DOT_DOT_OPEN_PAREN,
+    TOKEN_PIPE, TOKEN_ARROW, TOKEN_EQUALS, TOKEN_NOT_EQUALS, TOKEN_MATCH,
+    TOKEN_LESS_THAN, TOKEN_LESS_THAN_EQUALS, TOKEN_GREATER_THAN, TOKEN_GREATER_THAN_EQUALS,
+    TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE, TOKEN_MODULO, TOKEN_NULLISH_COALESCING, TOKEN_QUESTION,
+    TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN, TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
+    TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA, TOKEN_COLON, TOKEN_SEMICOLON,
+    TOKEN_EOF
+} from './tokens.js';
 import * as build from '../build.js';
 
 // Operator precedence table (higher = higher precedence)
 const PRECEDENCE = new Map([
-    [TokenType.ARROW, 1],
-    [TokenType.PIPE, 2],
-    [TokenType.QUESTION, 3],
-    [TokenType.IS, 4],
-    [TokenType.OR, 5],
-    [TokenType.AND, 6],
-    [TokenType.NULLISH, 7],
-    [TokenType.NOT, 8],
-    [TokenType.IN, 9],
-    [TokenType.HAS, 9],
-    [TokenType.EQ, 10],
-    [TokenType.NE, 10],
-    [TokenType.MATCH, 10],
-    [TokenType.LT, 11],
-    [TokenType.LE, 11],
-    [TokenType.GT, 11],
-    [TokenType.GE, 11],
-    [TokenType.PLUS, 12],
-    [TokenType.MINUS, 12],
-    [TokenType.MULT, 13],
-    [TokenType.DIV, 13],
-    [TokenType.MOD, 13],
-    [TokenType.DOT, 14],
-    [TokenType.DOUBLE_DOT, 14],
-    [TokenType.TRIPLE_DOT, 14]
+    [TOKEN_ARROW, 1],
+    [TOKEN_PIPE, 2],
+    [TOKEN_QUESTION, 3],
+    [TOKEN_IS, 4],
+    [TOKEN_OR, 5],
+    [TOKEN_AND, 6],
+    [TOKEN_NULLISH_COALESCING, 7],
+    [TOKEN_NOT, 8],
+    [TOKEN_IN, 9],
+    [TOKEN_HAS, 9],
+    [TOKEN_EQUALS, 10],
+    [TOKEN_NOT_EQUALS, 10],
+    [TOKEN_MATCH, 10],
+    [TOKEN_LESS_THAN, 11],
+    [TOKEN_LESS_THAN_EQUALS, 11],
+    [TOKEN_GREATER_THAN, 11],
+    [TOKEN_GREATER_THAN_EQUALS, 11],
+    [TOKEN_PLUS, 12],
+    [TOKEN_MINUS, 12],
+    [TOKEN_MULTIPLY, 13],
+    [TOKEN_DIVIDE, 13],
+    [TOKEN_MODULO, 13],
+    [TOKEN_DOT, 14],
+    [TOKEN_DOT_DOT, 14],
+    [TOKEN_DOT_DOT_DOT, 14]
 ]);
 
-const RIGHT_ASSOCIATIVE = new Set([TokenType.ARROW, TokenType.QUESTION]);
+const RIGHT_ASSOCIATIVE = new Set([TOKEN_ARROW, TOKEN_QUESTION]);
 
 export class Parser {
     constructor(tokenizer) {
@@ -75,7 +89,7 @@ export class Parser {
 
     parse() {
         const expr = this.parseExpression();
-        this.consume(TokenType.EOF);
+        this.consume(TOKEN_EOF);
         return build.Block([], expr);
     }
 
@@ -84,23 +98,23 @@ export class Parser {
 
         while (this.isOperator(this.current.type) &&
                this.getPrecedence(this.current.type) >= minPrec &&
-               !this.match(TokenType.EOF)) {
+               !this.match(TOKEN_EOF)) {
             const op = this.current;
             const prec = this.getPrecedence(op.type);
             const rightAssoc = this.isRightAssociative(op.type);
             this.advance();
 
-            if (op.type === TokenType.QUESTION) {
+            if (op.type === TOKEN_QUESTION) {
                 // Ternary operator
                 const consequent = this.parseExpression();
-                this.consume(TokenType.COLON);
+                this.consume(TOKEN_COLON);
                 const alternate = this.parseExpression(prec + (rightAssoc ? 0 : 1));
                 left = build.Conditional(left, consequent, alternate);
-            } else if (op.type === TokenType.PIPE) {
+            } else if (op.type === TOKEN_PIPE) {
                 // Pipeline operator
                 const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
                 left = build.Pipeline(left, right);
-            } else if (op.type === TokenType.IS) {
+            } else if (op.type === TOKEN_IS) {
                 // Assertion operator
                 const assertion = this.parseAssertion();
                 left = build.Postfix(left, assertion);
@@ -116,21 +130,21 @@ export class Parser {
 
     parseUnary() {
         // Unary prefix operators
-        if (this.match(TokenType.NOT) || this.match(TokenType.PLUS) || this.match(TokenType.MINUS)) {
+        if (this.match(TOKEN_NOT) || this.match(TOKEN_PLUS) || this.match(TOKEN_MINUS)) {
             const op = this.consume();
             const expr = this.parseUnary();
             return build.Prefix(op.value, expr);
         }
 
         // IS assertions as prefix
-        if (this.match(TokenType.IS)) {
+        if (this.match(TOKEN_IS)) {
             const op = this.consume();
             const assertion = this.parseAssertion();
             return build.Prefix(op.value, assertion);
         }
 
         // Arrow functions without parameters
-        if (this.match(TokenType.ARROW)) {
+        if (this.match(TOKEN_ARROW)) {
             this.consume();
             const body = this.parseExpression();
             return build.Function([], body);
@@ -142,37 +156,37 @@ export class Parser {
     parsePostfix() {
         let expr = this.parsePrimary();
 
-        while (!this.match(TokenType.EOF)) {
-            if (this.match(TokenType.DOT)) {
+        while (!this.match(TOKEN_EOF)) {
+            if (this.match(TOKEN_DOT)) {
                 this.advance();
 
-                if (this.match(TokenType.IDENT)) {
+                if (this.match(TOKEN_IDENT)) {
                     const prop = this.consume();
                     expr = build.GetProperty(expr, build.Identifier(prop.value));
-                } else if (this.match(TokenType.METHOD)) {
+                } else if (this.match(TOKEN_METHOD_OPEN)) {
                     const method = this.parseMethodCall();
                     expr = build.MethodCall(expr, method);
                 } else {
                     break;
                 }
-            } else if (this.match(TokenType.DOUBLE_DOT)) {
+            } else if (this.match(TOKEN_DOT_DOT)) {
                 this.advance();
 
-                if (this.match(TokenType.IDENT)) {
+                if (this.match(TOKEN_IDENT)) {
                     const prop = this.consume();
                     expr = build.MapRecursive(expr, build.GetProperty(null, build.Identifier(prop.value)));
                 } else {
                     break;
                 }
-            } else if (this.match(TokenType.LBRACKET)) {
+            } else if (this.match(TOKEN_OPEN_BRACKET)) {
                 this.advance();
 
-                if (this.match(TokenType.RBRACKET)) {
+                if (this.match(TOKEN_CLOSE_BRACKET)) {
                     this.advance();
                     expr = build.Pick(expr, null);
                 } else {
                     const index = this.parseExpression();
-                    this.consume(TokenType.RBRACKET);
+                    this.consume(TOKEN_CLOSE_BRACKET);
                     expr = build.Pick(expr, index);
                 }
             } else {
@@ -185,14 +199,14 @@ export class Parser {
 
     parseAssertion() {
         let negation = false;
-        
+
         // Handle 'not' negation
-        if (this.match(TokenType.NOT)) {
+        if (this.match(TOKEN_NOT)) {
             this.consume();
             negation = true;
         }
-        
-        if (this.match(TokenType.IDENT)) {
+
+        if (this.match(TOKEN_IDENT)) {
             const name = this.consume();
             return build.Assertion(build.Identifier(name.value), negation);
         }
@@ -200,89 +214,89 @@ export class Parser {
     }
 
     parseMethodCall() {
-        const name = this.consume(TokenType.METHOD);
-        this.consume(TokenType.LPAREN);
+        const name = this.consume(TOKEN_METHOD_OPEN);
+        this.consume(TOKEN_OPEN_PAREN);
 
         const args = [];
-        if (!this.match(TokenType.RPAREN)) {
+        if (!this.match(TOKEN_CLOSE_PAREN)) {
             do {
                 args.push(this.parseExpression());
-            } while (this.match(TokenType.COMMA) && this.consume());
+            } while (this.match(TOKEN_COMMA) && this.consume());
         }
 
-        this.consume(TokenType.RPAREN);
+        this.consume(TOKEN_CLOSE_PAREN);
         return build.Method(build.Identifier(name.value), args);
     }
 
     parsePrimary() {
         // Literals
-        if (this.match(TokenType.NUMBER) || this.match(TokenType.STRING) ||
-            this.match(TokenType.REGEXP) || this.match(TokenType.LITERAL)) {
+        if (this.match(TOKEN_NUMBER) || this.match(TOKEN_STRING) ||
+            this.match(TOKEN_REGEXP) || this.match(TOKEN_LITERAL)) {
             const token = this.consume();
             return build.Literal(token.value);
         }
 
         // Template literals
-        if (this.match(TokenType.TEMPLATE)) {
+        if (this.match(TOKEN_TEMPLATE)) {
             const token = this.consume();
             return build.Template(token.value);
         }
 
         // Special references
-        if (this.match(TokenType.DATA)) {
+        if (this.match(TOKEN_AT)) {
             this.consume();
             return build.Data();
         }
 
-        if (this.match(TokenType.CONTEXT)) {
+        if (this.match(TOKEN_HASH)) {
             this.consume();
             return build.Context();
         }
 
-        if (this.match(TokenType.CURRENT)) {
+        if (this.match(TOKEN_$)) {
             this.consume();
             return build.Current();
         }
 
-        if (this.match(TokenType.ARG1)) {
+        if (this.match(TOKEN_$$)) {
             this.consume();
             return build.Arg1();
         }
 
-        if (this.match(TokenType.VAR_REF)) {
+        if (this.match(TOKEN_$IDENT)) {
             const token = this.consume();
             return build.Reference(token.value);
         }
 
         // Identifiers (property access)
-        if (this.match(TokenType.IDENT)) {
+        if (this.match(TOKEN_IDENT)) {
             const token = this.consume();
             return build.GetProperty(null, build.Identifier(token.value));
         }
 
         // Method calls
-        if (this.match(TokenType.METHOD)) {
+        if (this.match(TOKEN_METHOD_OPEN)) {
             const method = this.parseMethodCall();
             return build.MethodCall(null, method);
         }
 
         // Dot notation (shorthand for @.property or map operations)
-        if (this.match(TokenType.DOT)) {
+        if (this.match(TOKEN_DOT)) {
             this.advance();
-            if (this.match(TokenType.IDENT)) {
+            if (this.match(TOKEN_IDENT)) {
                 const prop = this.consume();
                 return build.GetProperty(null, build.Identifier(prop.value));
-            } else if (this.match(TokenType.LPAREN)) {
+            } else if (this.match(TOKEN_OPEN_PAREN)) {
                 // Map operation .()
                 this.advance(); // consume (
                 const query = this.parseExpression();
-                this.consume(TokenType.RPAREN);
+                this.consume(TOKEN_CLOSE_PAREN);
                 return build.Map(null, build.Block([], query));
-            } else if (this.match(TokenType.LBRACKET)) {
+            } else if (this.match(TOKEN_OPEN_BRACKET)) {
                 // Map with bracket notation .[expr]
                 this.advance(); // consume [
                 const query = this.parseExpression();
-                this.consume(TokenType.RBRACKET);
+                this.consume(TOKEN_CLOSE_BRACKET);
                 return build.Map(null, build.Block([], query));
             } else {
                 throw new Error('Expected property name after dot');
@@ -290,25 +304,25 @@ export class Parser {
         }
 
         // Arrays
-        if (this.match(TokenType.LBRACKET)) {
+        if (this.match(TOKEN_OPEN_BRACKET)) {
             return this.parseArray();
         }
 
         // Objects
-        if (this.match(TokenType.LBRACE)) {
+        if (this.match(TOKEN_OPEN_BRACE)) {
             return this.parseObject();
         }
 
         // Parenthesized expressions
-        if (this.match(TokenType.LPAREN)) {
+        if (this.match(TOKEN_OPEN_PAREN)) {
             this.consume();
             const expr = this.parseExpression();
-            this.consume(TokenType.RPAREN);
+            this.consume(TOKEN_CLOSE_PAREN);
             return build.Parentheses(expr);
         }
 
         // Pipeline without left operand
-        if (this.match(TokenType.PIPE)) {
+        if (this.match(TOKEN_PIPE)) {
             this.consume();
             const right = this.parseExpression();
             return build.Pipeline(null, right);
@@ -318,67 +332,67 @@ export class Parser {
     }
 
     parseArray() {
-        this.consume(TokenType.LBRACKET);
+        this.consume(TOKEN_OPEN_BRACKET);
         const elements = [];
 
-        if (!this.match(TokenType.RBRACKET)) {
+        if (!this.match(TOKEN_CLOSE_BRACKET)) {
             elements.push(this.parseArrayElement());
 
-            while (this.match(TokenType.COMMA)) {
+            while (this.match(TOKEN_COMMA)) {
                 this.consume(); // consume comma
-                if (!this.match(TokenType.RBRACKET)) { // allow trailing comma
+                if (!this.match(TOKEN_CLOSE_BRACKET)) { // allow trailing comma
                     elements.push(this.parseArrayElement());
                 }
             }
         }
 
-        this.consume(TokenType.RBRACKET);
+        this.consume(TOKEN_CLOSE_BRACKET);
         return build.Array(elements);
     }
 
     parseArrayElement() {
         // Handle spread syntax
-        if (this.match(TokenType.TRIPLE_DOT)) {
+        if (this.match(TOKEN_DOT_DOT_DOT)) {
             this.consume();
             const query = this.parseExpression();
             return build.Spread(query, true);
         }
-        
+
         return this.parseExpression();
     }
 
     parseObject() {
-        this.consume(TokenType.LBRACE);
+        this.consume(TOKEN_OPEN_BRACE);
         const entries = [];
 
-        if (!this.match(TokenType.RBRACE)) {
+        if (!this.match(TOKEN_CLOSE_BRACE)) {
             entries.push(this.parseObjectEntry());
 
-            while (this.match(TokenType.COMMA)) {
+            while (this.match(TOKEN_COMMA)) {
                 this.consume(); // consume comma
-                if (!this.match(TokenType.RBRACE)) { // allow trailing comma
+                if (!this.match(TOKEN_CLOSE_BRACE)) { // allow trailing comma
                     entries.push(this.parseObjectEntry());
                 }
             }
         }
 
-        this.consume(TokenType.RBRACE);
+        this.consume(TOKEN_CLOSE_BRACE);
         return build.Object(entries);
     }
 
     parseObjectEntry() {
         let key;
 
-        if (this.match(TokenType.IDENT)) {
+        if (this.match(TOKEN_IDENT)) {
             key = build.Identifier(this.consume().value);
-        } else if (this.match(TokenType.STRING) || this.match(TokenType.NUMBER)) {
+        } else if (this.match(TOKEN_STRING) || this.match(TOKEN_NUMBER)) {
             const token = this.consume();
             key = build.Literal(token.value);
         } else {
             throw new Error('Expected object property name');
         }
 
-        if (this.match(TokenType.COLON)) {
+        if (this.match(TOKEN_COLON)) {
             this.consume();
             const value = this.parseExpression();
             return build.ObjectEntry(key, value);
