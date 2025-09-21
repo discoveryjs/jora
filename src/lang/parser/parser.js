@@ -164,26 +164,24 @@ export class Parser {
     }
 
     parseDefinition() {
-        let name = null;
-        let value = null;
-
-        // Try to parse a definition
-        if (this.match(TOKEN_$IDENT)) {
-            name = this.consumeValue().slice(1); // Remove $ prefix
-        } else if (this.match(TOKEN_$)) {
-            // name remains null for anonymous definition
-            this.advance(); // consume '$'
-        } else {
-            this.throwError('Expected definition');
-        }
-
-        if (this.matchAdvance(TOKEN_COLON)) {
-            value = this.parseExpression();
-        }
+        const declarator = this.parseDeclarator();
+        const value = this.matchAdvance(TOKEN_COLON)
+            ? this.parseExpression()
+            : null;
 
         this.consume(TOKEN_SEMICOLON); // consume ';'
 
-        return build.Definition(build.Declarator(name), value);
+        return build.Definition(declarator, value);
+    }
+
+    parseDeclarator() {
+        const name = this.match(TOKEN_$IDENT)
+            ? this.consumeValue().slice(1)
+            : this.matchAdvance(TOKEN_$)
+                ? null
+                : this.throwError('Expected declarator');
+
+        return build.Declarator(name);
     }
 
     parseExpression(minPrec = 0) {
@@ -465,10 +463,14 @@ export class Parser {
         return this.parseMethodCall(TOKEN_$METHOD_OPEN);
     }
 
-    parseComplexTemplate() {
+    parseTemplate() {
+        if (this.match(TOKEN_TEMPLATE)) {
+            return build.Template([this.consumeValue()]);
+        }
+
         const parts = [
             // Start with TPL_START token
-            build.Literal(this.consume(TOKEN_TPL_START).value)
+            build.Literal(this.consumeValue(TOKEN_TPL_START))
         ];
 
         // Parse template expressions and continuations
@@ -477,14 +479,14 @@ export class Parser {
             parts.push(this.parseExpression());
 
             if (this.match(TOKEN_TPL_CONTINUE)) {
-                parts.push(build.Literal(this.consume(TOKEN_TPL_CONTINUE).value));
+                parts.push(build.Literal(this.consumeValue(TOKEN_TPL_CONTINUE)));
             } else {
                 break;
             }
         }
 
         // End with TPL_END token
-        parts.push(build.Literal(this.consume(TOKEN_TPL_END).value));
+        parts.push(build.Literal(this.consumeValue(TOKEN_TPL_END)));
 
         return build.Template(parts);
     }
@@ -497,8 +499,8 @@ export class Parser {
         }
 
         // Template literals
-        if (this.match(TOKEN_TEMPLATE)) {
-            return build.Template(this.consumeValue());
+        if (this.match(TOKEN_TEMPLATE) || this.match(TOKEN_TPL_START)) {
+            return this.parseTemplate();
         }
 
         // Special references
@@ -544,11 +546,6 @@ export class Parser {
         // $Method calls
         if (this.match(TOKEN_$METHOD_OPEN)) {
             return build.MethodCall(null, this.parseMethodCall(TOKEN_$METHOD_OPEN));
-        }
-
-        // Complex template literals
-        if (this.match(TOKEN_TPL_START)) {
-            return this.parseComplexTemplate();
         }
 
         // Dot notation (shorthand for @.property or map operations)
