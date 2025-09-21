@@ -210,7 +210,7 @@ export class Tokenizer {
         }
 
         // Block comments: /* */
-        if (pos < length - 1 && input[pos] === '/' && input[pos] === '*') {
+        if (pos < length - 1 && input[pos] === '/' && input[pos + 1] === '*') {
             pos += 2;
             while (pos < length - 1) {
                 if (input[pos] === '*' && input[pos + 1] === '/') {
