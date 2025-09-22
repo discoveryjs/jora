@@ -230,7 +230,15 @@ export class Parser {
 
     parseLiteralValue() {
         switch (this.current.type) {
-            case TOKEN_NUMBER:
+            case TOKEN_NUMBER: {
+                const numberStr = this.consumeValue();
+                // Convert string to actual number, handling underscores and different bases
+                const cleanedNumber = numberStr.replace(/_/g, '');
+                const value = cleanedNumber.startsWith('0x') || cleanedNumber.startsWith('0X')
+                    ? parseInt(cleanedNumber, 16)
+                    : Number(cleanedNumber);
+                return build.Literal(value);
+            }
             case TOKEN_STRING:
             case TOKEN_REGEXP:
             case TOKEN_LITERAL:

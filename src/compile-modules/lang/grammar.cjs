@@ -168,7 +168,6 @@ exports.lex = {
 
         // hack to prevent primitive (i.e. regexp and function) consumption
         [['preventPrimitive'], '\\/', 'this.popState(); return "/";'],
-        [['preventPrimitive'], '<(?!=)', 'this.popState(); return "<";'],
         // FIXME: using `this.done = false;` is a hack, since `regexp-lexer` set done=true
         // when no input left and doesn't take into account current state;
         // should be fixed in `regexp-lexer`

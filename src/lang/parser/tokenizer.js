@@ -147,12 +147,13 @@ export class Tokenizer {
         this.pos = 0;
         this.length = input.length;
         this.bracketStack = [];
+        // Simple boolean flags for single-token state (like jison/bison behavior)
+        this.preventPrimitive = false;
+        this.preventKeyword = false;
     }
 
     // Optimized bracket balance tracking
-    trackBracketBalance(token) {
-        const tokenType = token.type;
-
+    trackBracketBalance(tokenType) {
         if (CLOSE_BRACKET_SET.has(tokenType)) {
             this.bracketStack.pop();
         }
@@ -160,8 +161,6 @@ export class Tokenizer {
         if (OPEN_BRACKET_MAP.has(tokenType)) {
             this.bracketStack.push(OPEN_BRACKET_MAP.get(tokenType));
         }
-
-        return token;
     }
 
     // Optimized character access (avoid method calls)
@@ -371,6 +370,7 @@ export class Tokenizer {
             this.validateNumberUnderscores(rawValue);
         }
 
+        this.preventPrimitive = true; // Set state for next token
         return new Token(TOKEN_NUMBER, rawValue, start);
     }
 
@@ -445,6 +445,7 @@ export class Tokenizer {
         }
 
         this.pos = pos;
+        this.preventPrimitive = true; // Set state for next token
         const rawValue = input.slice(start, pos);
         return new Token(TOKEN_STRING, rawValue, start);
     }
@@ -485,6 +486,7 @@ export class Tokenizer {
 
             // Return raw template including backticks (like legacy)
             const rawValue = this.input.slice(origPos, this.pos);
+            this.preventPrimitive = true; // Set state for next token
             return new Token(TOKEN_TEMPLATE, rawValue, start);
         } else {
             // Template with interpolation - read until ${
@@ -506,8 +508,8 @@ export class Tokenizer {
 
             // Return raw value including delimiters (like legacy: "`temp${")
             const rawValue = this.input.slice(origPos, this.pos);
-            const token = new Token(TOKEN_TPL_START, rawValue, start);
-            return this.trackBracketBalance(token);
+            this.trackBracketBalance(TOKEN_TPL_START);
+            return new Token(TOKEN_TPL_START, rawValue, start);
         }
     }
 
@@ -542,20 +544,37 @@ export class Tokenizer {
 
         // Return raw value including delimiters (like legacy: "}late`")
         const rawValue = this.input.slice(origPos, this.pos);
+        this.preventPrimitive = true; // Set state for next token
+        this.trackBracketBalance(TOKEN_TPL_END);
         return new Token(TOKEN_TPL_END, rawValue, start);
     }
 
     readRegExp() {
         const start = this.pos;
         const rawStart = this.pos;
+        let inCharClass = false;
         this.advance(); // Skip opening /
 
-        while (this.pos < this.length && this.input[this.pos] !== '/') {
-            if (this.input[this.pos] === '\\') {
+        while (this.pos < this.length) {
+            const ch = this.input[this.pos];
+
+            if (ch === '\\') {
+                // Handle escape sequences - advance past both backslash and escaped char
                 this.advance();
                 if (this.pos < this.length) {
                     this.advance();
                 }
+            } else if (ch === '[' && !inCharClass) {
+                // Start of character class
+                inCharClass = true;
+                this.advance();
+            } else if (ch === ']' && inCharClass) {
+                // End of character class
+                inCharClass = false;
+                this.advance();
+            } else if (ch === '/' && !inCharClass) {
+                // End of regex (only if not inside character class)
+                break;
             } else {
                 this.advance();
             }
@@ -658,10 +677,18 @@ export class Tokenizer {
 
     // Optimized main tokenization method
     nextToken() {
-        // Skip whitespace and comments
+        // Skip whitespace and comments first
         do {
             this.skipWhitespace();
         } while (this.skipComments());
+
+        // Check and consume state flags (they affect current token only)
+        const preventPrimitive = this.preventPrimitive;
+        const preventKeyword = this.preventKeyword;
+
+        // Clear flags after reading them (single-use)
+        this.preventPrimitive = false;
+        this.preventKeyword = false;
 
         if (this.pos >= this.length) {
             return new Token(TOKEN_EOF, '', this.pos);
@@ -678,7 +705,7 @@ export class Tokenizer {
             if (expectedClose === TOKEN_TPL_END) {
                 // This } closes a template expression
                 this.advance();
-                return this.trackBracketBalance(this.readTemplateEnd());
+                return this.readTemplateEnd();
             }
             // Otherwise, it's a regular } token - let normal processing handle it
         }
@@ -701,18 +728,25 @@ export class Tokenizer {
             return this.readTemplate();
         }
 
-        // Regular expressions (optimized checks)
-        if (ch === '/' && this.pos < this.length - 1) {
-            const nextCh = input[this.pos + 1];
-            if (nextCh !== '/' && nextCh !== '*' && nextCh !== '=') {
+        // Regular expressions (context-aware using state)
+        if (ch === '/') {
+            // If preventPrimitive state is active, treat as division
+            if (preventPrimitive) {
+                this.advance();
+                return new Token(TOKEN_DIVIDE, '/', start);
+            } else {
+                // Otherwise treat as regex and set preventPrimitive for next token
+                this.preventPrimitive = true; // Set state for next token
                 return this.readRegExp();
             }
         }
 
-        // Keywords (must be before identifiers)
-        const keyword = this.readKeywordSequence();
-        if (keyword) {
-            return keyword;
+        // Keywords (must be before identifiers, unless preventKeyword is active)
+        if (!preventKeyword) {
+            const keyword = this.readKeywordSequence();
+            if (keyword) {
+                return keyword;
+            }
         }
 
         // Identifiers and method calls
@@ -720,33 +754,36 @@ export class Tokenizer {
             const value = this.readIdentifier();
 
             // Check for literals using Map lookup
-            if (LITERALS.has(value)) {
+            if (!preventKeyword && LITERALS.has(value)) {
+                this.preventPrimitive = true; // Set state for next token
                 return new Token(TOKEN_LITERAL, value, start);
             }
 
-            // Check for single-word keywords using Map lookup
-            if (KEYWORDS.has(value)) {
+            // Check for single-word keywords using Map lookup (unless preventKeyword is active)
+            if (!preventKeyword && KEYWORDS.has(value)) {
                 return new Token(KEYWORDS.get(value), value, start);
             }
 
             // Check for order keywords
-            if (ORDER_RE.test(value)) {
+            if (!preventKeyword && ORDER_RE.test(value)) {
                 return new Token(TOKEN_ORDER, value, start);
             }
 
             // Check for method call
             if (this.pos < this.length && input[this.pos] === '(') {
                 this.advance(); // consume the (
-                const token = new Token(TOKEN_METHOD_OPEN, value + '(', start);
-                return this.trackBracketBalance(token);
+                this.trackBracketBalance(TOKEN_METHOD_OPEN);
+                return new Token(TOKEN_METHOD_OPEN, value + '(', start);
             }
 
+            this.preventPrimitive = true; // Set state for next token
             return new Token(TOKEN_IDENT, value, start);
         }
 
         // Variable references and special symbols
         if (ch === '$') {
             if (this.pos < this.length - 1 && input[this.pos + 1] === '$') {
+                this.preventPrimitive = true; // Set state for next token
                 this.advance(2);
                 return new Token(TOKEN_$$, '$$', start);
             } else if (this.pos < this.length - 1 && input[this.pos + 1] === '{') {
@@ -763,13 +800,15 @@ export class Tokenizer {
                 // Check for $method(
                 if (this.pos < this.length && input[this.pos] === '(') {
                     this.advance(); // consume the (
-                    const token = new Token(TOKEN_$METHOD_OPEN, '$' + value + '(', start);
-                    return this.trackBracketBalance(token);
+                    this.trackBracketBalance(TOKEN_$METHOD_OPEN);
+                    return new Token(TOKEN_$METHOD_OPEN, '$' + value + '(', start);
                 }
 
+                this.preventPrimitive = true; // Set state for next token
                 return new Token(TOKEN_$IDENT, '$' + value, start);
             } else {
                 this.advance();
+                this.preventPrimitive = true; // Set state for next token
                 return new Token(TOKEN_$, '$', start);
             }
         }
@@ -792,24 +831,38 @@ export class Tokenizer {
             const twoChar = input.slice(this.pos, this.pos + 2);
             if (TWO_CHAR_OPERATORS.has(twoChar)) {
                 this.advance(2);
-                const token = new Token(TWO_CHAR_OPERATORS.get(twoChar), twoChar, start);
+                const tokenType = TWO_CHAR_OPERATORS.get(twoChar);
+
+                // Set preventKeyword state for DOT_DOT tokens
+                this.preventKeyword = tokenType === TOKEN_DOT_DOT;
+
                 // Track bracket balance for relevant tokens
-                if (twoChar === '.(' || twoChar === '.[') {
-                    return this.trackBracketBalance(token);
-                }
-                return token;
+                this.trackBracketBalance(tokenType);
+                return new Token(tokenType, twoChar, start);
             }
         }
 
         // Single character tokens using Map lookup
         if (SINGLE_CHAR_TOKENS.has(ch)) {
             this.advance();
-            const token = new Token(SINGLE_CHAR_TOKENS.get(ch), ch, start);
-            // Track bracket balance for bracket tokens
-            if (ch === '(' || ch === ')' || ch === '[' || ch === ']' || ch === '{' || ch === '}') {
-                return this.trackBracketBalance(token);
+            const tokenType = SINGLE_CHAR_TOKENS.get(ch);
+
+            // Set preventPrimitive state for tokens that should trigger it
+            if (tokenType === TOKEN_AT || tokenType === TOKEN_HASH ||
+                tokenType === TOKEN_CLOSE_PAREN || tokenType === TOKEN_CLOSE_BRACKET ||
+                tokenType === TOKEN_CLOSE_BRACE) {
+                this.preventPrimitive = true;
             }
-            return token;
+
+            // Set preventKeyword state for DOT tokens
+            if (tokenType === TOKEN_DOT) {
+                this.preventPrimitive = true;
+                this.preventKeyword = true;
+            }
+
+            // Track bracket balance for bracket tokens
+            this.trackBracketBalance(tokenType);
+            return new Token(tokenType, ch, start);
         }
 
         throw new Error(`Unexpected character '${ch}' at position ${this.pos}`);
