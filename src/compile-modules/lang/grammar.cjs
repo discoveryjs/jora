@@ -33,7 +33,7 @@ const {
     SliceNotation,
     Spread,
     Template
-} = require('./nodes.cjs');
+} = require('../../lang/parser/nodes.js');
 const $0 = { code: '$0' };
 const $1 = { code: '$1' };
 const $1string = { code: 'String($1)' };

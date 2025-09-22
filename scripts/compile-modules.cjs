@@ -13,24 +13,24 @@ const files = [
             return `export const version = '${version}';\n`;
         }
     },
-    {
-        input: [
-            'src/compile-modules/lang/nodes.cjs'
-        ],
-        output: 'src/lang/build.js',
-        content([fn]) {
-            return fs.readFileSync(fn, 'utf8')
-                .replace(/exports.(\S+) = function/g, 'export function $1');
-        }
-    },
+    // {
+    //     input: [
+    //         'src/lang/parser/nodes.js'
+    //     ],
+    //     output: 'src/lang/build.js',
+    //     content([fn]) {
+    //         return fs.readFileSync(fn, 'utf8')
+    //             .replace(/exports.(\S+) = function/g, 'export function $1');
+    //     }
+    // },
     {
         input: [
             'src/compile-modules/lang/grammar.cjs',
             'src/compile-modules/lang/parse-patch.cjs',
             'src/compile-modules/lang/parse.cjs',
-            'src/compile-modules/lang/nodes.cjs'
+            'src/lang/parser/nodes.js'
         ],
-        output: 'src/lang/parse.js',
+        output: 'src/lang/parse-old.js',
         content(input) {
             for (const fn of input) {
                 delete require.cache[path.resolve(fn)];

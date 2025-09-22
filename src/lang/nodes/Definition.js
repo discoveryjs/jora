@@ -1,4 +1,4 @@
-import { GetProperty, Identifier } from '../build.js';
+import { GetProperty, Identifier } from '../parser/nodes.js';
 
 const reservedVars = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
 

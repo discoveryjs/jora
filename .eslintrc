@@ -10,7 +10,7 @@
     },
     "ignorePatterns": [
         "dist/**",
-        "src/lang/parse.js"
+        "src/lang/parse-old.js"
     ],
     "rules": {
         "no-duplicate-case": 2,

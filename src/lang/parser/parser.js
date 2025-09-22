@@ -18,7 +18,7 @@ import {
     TOKEN_EOF,
     tokenNames
 } from './tokens.js';
-import * as build from '../build.js';
+import * as build from './nodes.js';
 
 // Spread type constants
 const SPREAD_ARRAY = true;
