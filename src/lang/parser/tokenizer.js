@@ -218,6 +218,9 @@ export class Tokenizer {
                 }
                 pos++;
             }
+            // Handle unclosed block comment - consume rest of input (like legacy parser)
+            this.pos = length;
+            return true;
         }
 
         return false;
@@ -407,11 +410,6 @@ export class Tokenizer {
         while (pos < length && input[pos] !== quote) {
             const char = input[pos];
 
-            // Check for invalid line terminators
-            if (char === '\n' || char === '\r' || char === '\u2028' || char === '\u2029') {
-                throw new Error('Invalid line terminator');
-            }
-
             if (char === '\\') {
                 pos++; // Skip escape character
                 if (pos >= length) {
@@ -420,15 +418,6 @@ export class Tokenizer {
                 }
 
                 const escapeChar = input[pos];
-
-                // Check for invalid backslash escaping the closing quote
-                if (escapeChar === quote) {
-                    // Look ahead to see if this is actually the end of the string
-                    const nextPos = pos + 1;
-                    if (nextPos >= length || input[nextPos] !== quote) {
-                        throw new Error('Invalid backslash');
-                    }
-                }
 
                 // Validate escape sequences
                 const hexSkip = this.validateEscapeSequence(escapeChar, pos, input);

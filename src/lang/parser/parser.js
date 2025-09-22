@@ -27,27 +27,28 @@ const SPREAD_OBJECT = false;
 // Operator precedence table (higher = higher precedence)
 const PRECEDENCE = new Map([
     [TOKEN_ARROW, 1],
-    [TOKEN_PIPE, 2],
-    [TOKEN_QUESTION, 3],
-    [TOKEN_IS, 4],
-    [TOKEN_OR, 5],
-    [TOKEN_AND, 6],
-    [TOKEN_NULLISH_COALESCING, 7],
-    [TOKEN_NOT, 8],
-    [TOKEN_NO, 8],
-    [TOKEN_IN, 9],
-    [TOKEN_NOTIN, 9],
-    [TOKEN_HAS, 9],
-    [TOKEN_HASNO, 9],
-    [TOKEN_EQUALS, 10],
-    [TOKEN_NOT_EQUALS, 10],
-    [TOKEN_MATCH, 10],
-    [TOKEN_LESS_THAN, 11],
-    [TOKEN_LESS_THAN_EQUALS, 11],
-    [TOKEN_GREATER_THAN, 11],
-    [TOKEN_GREATER_THAN_EQUALS, 11],
-    [TOKEN_PLUS, 12],
-    [TOKEN_MINUS, 12],
+    [TOKEN_ORDER, 2],  // ORDER has lower precedence than PIPE
+    [TOKEN_PIPE, 3],   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
+    [TOKEN_QUESTION, 4],
+    [TOKEN_IS, 5],
+    [TOKEN_OR, 6],
+    [TOKEN_AND, 7],
+    [TOKEN_NULLISH_COALESCING, 8],
+    [TOKEN_NOT, 9],
+    [TOKEN_NO, 9],
+    [TOKEN_IN, 10],
+    [TOKEN_NOTIN, 10],
+    [TOKEN_HAS, 10],
+    [TOKEN_HASNO, 10],
+    [TOKEN_EQUALS, 11],
+    [TOKEN_NOT_EQUALS, 11],
+    [TOKEN_MATCH, 11],
+    [TOKEN_LESS_THAN, 12],
+    [TOKEN_LESS_THAN_EQUALS, 12],
+    [TOKEN_GREATER_THAN, 12],
+    [TOKEN_GREATER_THAN_EQUALS, 12],
+    [TOKEN_PLUS, 13],
+    [TOKEN_MINUS, 13],
     [TOKEN_MULTIPLY, 13],
     [TOKEN_DIVIDE, 13],
     [TOKEN_MODULO, 13],
@@ -282,6 +283,11 @@ export class Parser {
                     left = this.parseAssertionPostfix(left);
                     break;
                 }
+                case TOKEN_ORDER: {
+                    // Compare function
+                    left = this.parseCompareFunction(left);
+                    break;
+                }
                 default: {
                     // Binary operators
                     left = this.parseBinaryOperator(left, prec, rightAssoc);
@@ -362,11 +368,6 @@ export class Parser {
                     expr = this.maybe(this.parseSliceNotation) || this.parseBracketAccess(expr);
                     break;
                 }
-
-                case TOKEN_ORDER:
-                    // Handle ORDER tokens (asc/desc) for compare expressions
-                    expr = this.parseCompareFunction(expr);
-                    break;
 
                 default:
                     return expr; // End of postfix chain
@@ -567,7 +568,9 @@ export class Parser {
         const compares = [this.parseCompare(expr)];
 
         while (this.advanceIf(TOKEN_COMMA)) {
-            compares.push(this.parseCompare(this.parseExpression()));
+            // Parse the next expression with precedence higher than ORDER to avoid nested CompareFunction
+            const compareExpr = this.parseExpression(this.getPrecedence(TOKEN_ORDER) + 1);
+            compares.push(this.parseCompare(compareExpr));
         }
 
         return build.CompareFunction(compares);
@@ -636,6 +639,9 @@ export class Parser {
 
     parseObject() {
         this.advance(TOKEN_OPEN_BRACE);
+
+        // First, try to parse any definitions (like parseBlock does)
+        const definitions = this.parseDefinitions();
         const entries = [];
 
         if (!this.match(TOKEN_CLOSE_BRACE)) {
@@ -649,6 +655,12 @@ export class Parser {
         }
 
         this.advance(TOKEN_CLOSE_BRACE);
+
+        // If we found definitions, wrap the object in a Block (like legacy parser does)
+        if (definitions.length > 0) {
+            return build.Block(definitions, build.Object(entries));
+        }
+
         return build.Object(entries);
     }
 
@@ -745,7 +757,17 @@ export class Parser {
 
     parsePipeline(left) {
         this.advance(TOKEN_PIPE);
-        return build.Pipeline(left, this.parseBlock());
+
+        // Parse right side: definitions + expression with proper precedence
+        const definitions = this.parseDefinitions();
+        const body = this.parseExpression(this.getPrecedence(TOKEN_PIPE) + 1) || build.Placeholder();
+
+        // If we have definitions, wrap in a Block like parseBlock does
+        const right = definitions.length > 0
+            ? build.Block(definitions, body)
+            : body;
+
+        return build.Pipeline(left, right);
     }
 
     parseTernaryConditional(condition, prec, rightAssoc) {
