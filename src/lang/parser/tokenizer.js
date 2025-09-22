@@ -96,6 +96,11 @@ const OPEN_BRACKET_MAP = new Map([
 const CLOSE_BRACKET_SET = new Set([TOKEN_CLOSE_PAREN, TOKEN_CLOSE_BRACKET, TOKEN_CLOSE_BRACE, TOKEN_TPL_END]);
 
 // Helper functions for character classification
+function isNewline(code) {
+    // \n, \r, \u2028, \u2029
+    return code === 10 || code === 13 || code === 0x2028 || code === 0x2029;
+}
+
 function isDigit(code) {
     return code >= 48 && code <= 57; // 0-9
 }
@@ -419,19 +424,35 @@ export class Tokenizer {
 
                 const escapeChar = input[pos];
 
-                // Validate escape sequences
-                const hexSkip = this.validateEscapeSequence(escapeChar, pos, input);
-                pos += hexSkip;
+                // Line continuation: backslash followed by line terminator is allowed
+                if (isNewline(escapeChar.charCodeAt(0))) {
+                    // Handle line continuation - skip the line terminator
+                    pos++;
+                    // If it's \r\n, skip the \n too
+                    if (escapeChar === '\r' && pos < length && input[pos] === '\n') {
+                        pos++;
+                    }
+                    continue;
+                }
 
+                // Validate escape sequences
+                pos += this.validateEscapeSequence(escapeChar, pos, input);
                 pos++; // Skip the escape character
             } else {
+                // Check for invalid line terminators (only when not escaped)
+                if (isNewline(char.charCodeAt(0))) {
+                    throw new Error('Invalid line terminator');
+                }
                 pos++;
             }
         }
 
-        if (pos < length) {
-            pos++; // Skip closing quote
+        // Ensure we found a closing quote
+        if (pos >= length) {
+            throw new Error('Invalid backslash');
         }
+
+        pos++; // Skip closing quote
 
         this.pos = pos;
         this.preventPrimitive = true; // Set state for next token

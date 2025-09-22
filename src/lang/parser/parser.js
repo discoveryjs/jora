@@ -772,7 +772,7 @@ export class Parser {
 
     parseTernaryConditional(condition, prec, rightAssoc) {
         this.advance(TOKEN_QUESTION);
-        const consequent = this.parseExpression() || build.Placeholder();
+        const consequent = this.parseExpression(prec + (rightAssoc ? 0 : 1)) || build.Placeholder();
         const alternate = this.advanceIf(TOKEN_COLON)
             ? this.parseExpression(prec + (rightAssoc ? 0 : 1))
             : null;
