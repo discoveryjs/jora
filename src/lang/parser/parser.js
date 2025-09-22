@@ -70,30 +70,14 @@ export class Parser {
     }
 
     maybe(fn) {
-        const tokenizerPos = this.tokenizer.pos;
-        const bracketStack = [...this.tokenizer.bracketStack];
+        const tokenizerState = this.tokenizer.saveState();
         const current = this.current;
-
-        // Save additional tokenizer state fields
-        const preventPrimitive = this.tokenizer.preventPrimitive;
-        const preventKeyword = this.tokenizer.preventKeyword;
-        const prevToken = this.tokenizer.prevToken;
-        const prevTokenEnd = this.tokenizer.prevTokenEnd;
-        const pendingToken = this.tokenizer.pendingToken;
 
         try {
             return fn.call(this);
         } catch (error) {
-            this.tokenizer.pos = tokenizerPos;
-            this.tokenizer.bracketStack = bracketStack;
+            this.tokenizer.restoreState(tokenizerState);
             this.current = current;
-
-            // Restore additional tokenizer state fields
-            this.tokenizer.preventPrimitive = preventPrimitive;
-            this.tokenizer.preventKeyword = preventKeyword;
-            this.tokenizer.prevToken = prevToken;
-            this.tokenizer.prevTokenEnd = prevTokenEnd;
-            this.tokenizer.pendingToken = pendingToken;
 
             return null;
         }

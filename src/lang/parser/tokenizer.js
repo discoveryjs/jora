@@ -1068,4 +1068,27 @@ export class Tokenizer {
             flags
         );
     }
+
+    // State management methods for parser backtracking
+    saveState() {
+        return {
+            pos: this.pos,
+            bracketStack: [...this.bracketStack],
+            preventPrimitive: this.preventPrimitive,
+            preventKeyword: this.preventKeyword,
+            prevToken: this.prevToken,
+            prevTokenEnd: this.prevTokenEnd,
+            pendingToken: this.pendingToken
+        };
+    }
+
+    restoreState(state) {
+        this.pos = state.pos;
+        this.bracketStack = state.bracketStack;
+        this.preventPrimitive = state.preventPrimitive;
+        this.preventKeyword = state.preventKeyword;
+        this.prevToken = state.prevToken;
+        this.prevTokenEnd = state.prevTokenEnd;
+        this.pendingToken = state.pendingToken;
+    }
 }
