@@ -234,18 +234,13 @@ export class Parser {
 
     parseLiteralValue() {
         switch (this.current.type) {
-            case TOKEN_NUMBER: {
-                const numberStr = this.consumeValue();
-                // Convert string to actual number, handling underscores and different bases
-                const cleanedNumber = numberStr.replace(/_/g, '');
-                const value = cleanedNumber.startsWith('0x') || cleanedNumber.startsWith('0X')
-                    ? parseInt(cleanedNumber, 16)
-                    : Number(cleanedNumber);
-                return build.Literal(value);
-            }
+            case TOKEN_NUMBER:
+            case TOKEN_LITERAL:
             case TOKEN_STRING:
             case TOKEN_REGEXP:
-            case TOKEN_LITERAL:
+                // Tokenizer already converted these values
+                return build.Literal(this.consumeValue());
+
             case TOKEN_TEMPLATE:
             case TOKEN_TPL_START:
             case TOKEN_TPL_CONTINUE:
@@ -558,10 +553,7 @@ export class Parser {
 
         this.advance(TOKEN_ARROW);
 
-        return build.Function(
-            params,
-            build.Block([], this.parseExpression())
-        );
+        return build.Function(params, this.parseExpression() || build.Placeholder());
     }
 
     parseCompareFunction(expr) {
@@ -582,9 +574,19 @@ export class Parser {
 
     parseParentheses() {
         this.advance(TOKEN_OPEN_PAREN);
-        const block = this.parseBlock();
+        
+        // Try to parse definitions first (like legacy parser)
+        const definitions = this.parseDefinitions();
+        const expression = this.parseExpression() || build.Placeholder();
+        
         this.advance(TOKEN_CLOSE_PAREN);
-        return build.Parentheses(block);
+        
+        // If we have definitions, wrap in a Block, otherwise just return the expression
+        const body = definitions.length > 0 
+            ? build.Block(definitions, expression)
+            : expression;
+            
+        return build.Parentheses(body);
     }
 
     parseArray() {
@@ -675,10 +677,27 @@ export class Parser {
         // Parse object key using existing methods
         switch (this.current.type) {
             case TOKEN_IDENT:
-            case TOKEN_LITERAL:
-            case TOKEN_$IDENT:
                 key = this.parseIdentifierOrReference();
                 break;
+
+            case TOKEN_LITERAL:
+                // Literal values (true, false, null, etc.) should be treated as literals in object keys
+                key = this.parseLiteralValue();
+                break;
+
+            case TOKEN_$IDENT: {
+                // $variables in object context depend on whether it's shorthand or explicit
+                const tokenValue = this.consumeValue();
+                
+                if (this.match(TOKEN_COLON)) {
+                    // Explicit property: treat as identifier with $ preserved
+                    key = build.Identifier(tokenValue);
+                } else {
+                    // Shorthand property: treat as reference
+                    key = build.Reference(build.Identifier(tokenValue.slice(1)));
+                }
+                break;
+            }
 
             case TOKEN_$:
                 key = this.parseSpecialReference();
@@ -811,13 +830,6 @@ export class Parser {
         const getter = this.parseExpression();
         this.advance(TOKEN_CLOSE_BRACKET);
         return build.Pick(expr, getter);
-    }
-
-    parseParentheses() {
-        this.advance(TOKEN_OPEN_PAREN);
-        const block = this.parseBlock();
-        this.advance(TOKEN_CLOSE_PAREN);
-        return build.Parentheses(block);
     }
 }
 

@@ -20,12 +20,12 @@ const ORDER_RE = /^(asc|desc)(NA?|AN?)?$/;
 
 // Literal value lookup
 const LITERALS = new Map([
-    ['true', 'true'],
-    ['false', 'false'],
-    ['null', 'null'],
-    ['undefined', 'undefined'],
-    ['Infinity', 'Infinity'],
-    ['NaN', 'NaN']
+    ['true', true],
+    ['false', false],
+    ['null', null],
+    ['undefined', undefined],
+    ['Infinity', Infinity],
+    ['NaN', NaN]
 ]);
 
 // Single-word keyword lookup
@@ -373,35 +373,11 @@ export class Tokenizer {
         this.pos = pos;
         const rawValue = input.slice(start, pos);
 
-        // Validate underscore placement if present
-        if (rawValue.includes('_')) {
-            this.validateNumberUnderscores(rawValue);
-        }
+        // Convert to actual number value using the same logic as legacy
+        const convertedValue = this.toNumberLiteral(rawValue);
 
         this.preventPrimitive = true; // Set state for next token
-        return new Token(TOKEN_NUMBER, rawValue, start);
-    }
-
-    validateNumberUnderscores(value) {
-        const isHex = value.startsWith('0x') || value.startsWith('0X');
-
-        // Pattern to check for invalid underscore placement:
-        // - Underscore at start/end or next to non-digit/non-hex characters
-        // - Consecutive underscores
-        const errorPattern = isHex
-            ? /(?:^|[^0-9a-fA-F])_|_(?:[^0-9a-fA-F]|$)/
-            : /(?:^|\D)_|_(?:\D|$)/;
-
-        const errorMatch = value.match(errorPattern);
-
-        if (errorMatch) {
-            const matchStr = errorMatch[0];
-            const message = matchStr === '__'
-                ? 'Only one underscore is allowed'
-                : 'Wrong underscore';
-
-            throw new Error(`${message} as numeric separator`);
-        }
+        return new Token(TOKEN_NUMBER, convertedValue, start);
     }
 
     // Optimized string reading
@@ -412,52 +388,27 @@ export class Tokenizer {
         let pos = this.pos + 1; // Skip opening quote
 
         // Read until closing quote or end, validating escape sequences
-        while (pos < length && input[pos] !== quote) {
+        for (; pos < length && input[pos] !== quote; pos++) {
             const char = input[pos];
 
             if (char === '\\') {
-                pos++; // Skip escape character
-                if (pos >= length) {
-                    // Backslash at end of string
-                    throw new Error('Invalid backslash');
-                }
-
-                const escapeChar = input[pos];
-
-                // Line continuation: backslash followed by line terminator is allowed
-                if (isNewline(escapeChar.charCodeAt(0))) {
-                    // Handle line continuation - skip the line terminator
-                    pos++;
-                    // If it's \r\n, skip the \n too
-                    if (escapeChar === '\r' && pos < length && input[pos] === '\n') {
-                        pos++;
-                    }
-                    continue;
-                }
-
-                // Validate escape sequences
-                pos += this.validateEscapeSequence(escapeChar, pos, input);
                 pos++; // Skip the escape character
-            } else {
-                // Check for invalid line terminators (only when not escaped)
-                if (isNewline(char.charCodeAt(0))) {
-                    throw new Error('Invalid line terminator');
-                }
-                pos++;
             }
         }
 
         // Ensure we found a closing quote
-        if (pos >= length) {
-            throw new Error('Invalid backslash');
+        if (pos < length) {
+            pos++; // Skip closing quote
         }
-
-        pos++; // Skip closing quote
 
         this.pos = pos;
         this.preventPrimitive = true; // Set state for next token
         const rawValue = input.slice(start, pos);
-        return new Token(TOKEN_STRING, rawValue, start);
+
+        // Convert to actual string value using the same logic as legacy
+        const convertedValue = this.toStringLiteral(rawValue);
+
+        return new Token(TOKEN_STRING, convertedValue, start);
     }
 
     readTemplate() {
@@ -608,7 +559,11 @@ export class Tokenizer {
 
         // Store the raw string value including delimiters and flags
         const rawValue = this.input.slice(rawStart, this.pos);
-        return new Token(TOKEN_REGEXP, rawValue, start);
+        
+        // Convert to actual RegExp object using the same logic as legacy
+        const convertedValue = this.toRegExp(rawValue);
+        
+        return new Token(TOKEN_REGEXP, convertedValue, start);
     }
 
     // Optimized identifier reading
@@ -766,7 +721,9 @@ export class Tokenizer {
             // Check for literals using Map lookup
             if (!preventKeyword && LITERALS.has(value)) {
                 this.preventPrimitive = true; // Set state for next token
-                return new Token(TOKEN_LITERAL, value, start);
+                // Convert literal to actual value
+                const convertedValue = LITERALS.get(value);
+                return new Token(TOKEN_LITERAL, convertedValue, start);
             }
 
             // Check for single-word keywords using Map lookup (unless preventKeyword is active)
@@ -876,5 +833,121 @@ export class Tokenizer {
         }
 
         throw new Error(`Unexpected character '${ch}' at position ${this.pos}`);
+    }
+
+    // Conversion methods (matching legacy parser)
+    toNumberLiteral(value) {
+        const hex = value.startsWith('0x') || value.startsWith('0X');
+
+        if (value.includes('_')) {
+            const errorMatch = value.match(hex
+                ? /(?:^|[^0-9a-fA-F])_|_(?:[^0-9a-fA-F]|$)/
+                : /(?:^|\D)_|_(?:\D|$)/
+            );
+
+            if (errorMatch) {
+                const m = errorMatch[0];
+                const message = m === '__'
+                    ? 'Only one underscore is allowed'
+                    : 'Wrong underscore';
+
+                throw new Error(`${message} as numeric separator`);
+            }
+
+            value = value.replace(/_/g, '');
+        }
+
+        return hex
+            ? parseInt(value, 16)
+            : parseFloat(value);
+    }
+
+    toStringLiteral(value, multiline = false, end = 1) {
+        const lineTerminator = new Set(['\n', '\r', '\u2028', '\u2029']);
+        const valueEnd = value.length - end;
+        let result = '';
+
+        for (let i = 1; i < valueEnd; i++) {
+            if (!multiline && lineTerminator.has(value[i])) {
+                throw new Error('Invalid line terminator');
+            }
+
+            if (value[i] !== '\\') {
+                result += value[i];
+                continue;
+            }
+
+            if (i === valueEnd - 1) {
+                throw new Error('Invalid backslash');
+            }
+
+            const next = value[++i];
+            switch (next) {
+                case '\r':
+                    // ignore line terminator
+                    i += value[i + 1] === '\n';  // \r\n
+                    break;
+
+                case '\n':
+                case '\u2028':
+                case '\u2029':
+                    // ignore line terminator
+                    break;
+
+                case '0': result += '\0'; break;
+                case 'b': result += '\b'; break;
+                case 'n': result += '\n'; break;
+                case 'r': result += '\r'; break;
+                case 'f': result += '\f'; break;
+                case 't': result += '\t'; break;
+                case 'v': result += '\v'; break;
+
+                case 'u': {
+                    const [hex = ''] = value.slice(i + 1, i + 5).match(/^[0-9a-f]*/i) || [];
+
+                    if (hex.length === 4) {
+                        result += String.fromCharCode(parseInt(hex, 16));
+                        i += 4;
+                        break;
+                    }
+
+                    throw new Error('Invalid Unicode escape sequence');
+                }
+
+                case 'x': {
+                    const [hex = ''] = value.slice(i + 1, i + 3).match(/^[0-9a-f]*/i) || [];
+
+                    if (hex.length === 2) {
+                        result += String.fromCharCode(parseInt(hex, 16));
+                        i += 2;
+                        break;
+                    }
+
+                    throw new Error('Invalid hexadecimal escape sequence');
+                }
+
+                default:
+                    result += next;
+            }
+        }
+
+        return result;
+    }
+
+    toRegExp(value) {
+        const flagsIndex = value.lastIndexOf('/') + 1;
+        const flags = value.substr(flagsIndex);
+
+        flags.split('').forEach((flag, idx, array) => {
+            const duplicateIndex = array.indexOf(flag, idx + 1);
+            if (duplicateIndex !== -1) {
+                throw new Error('Duplicate flag in regexp');
+            }
+        });
+
+        return new RegExp(
+            value.substr(1, value.lastIndexOf('/') - 1),
+            flags
+        );
     }
 }
