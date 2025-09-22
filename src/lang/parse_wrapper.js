@@ -96,6 +96,8 @@ function __scheduleFlush() {
                         // }
                     }
                 }
+            } else {
+                console.log('🎉 No differences found!');
             }
         } catch (e) {
             // eslint-disable-next-line no-console
@@ -185,12 +187,11 @@ function __log(kind, tolerantMode, source, legacyData, newData) {
                 newContext: diff.b,
                 newAst: isNewError ? null : newData
             });
-            __scheduleFlush();
         }
     } catch (e) {
         __parityDiffs.push({ id, kind: 'ERROR', tolerant: tolerantMode, error: e && e.message });
-        __scheduleFlush();
     }
+    __scheduleFlush();
 }
 
 function __runParsers(source, tolerantMode = false) {

@@ -74,12 +74,27 @@ export class Parser {
         const bracketStack = [...this.tokenizer.bracketStack];
         const current = this.current;
 
+        // Save additional tokenizer state fields
+        const preventPrimitive = this.tokenizer.preventPrimitive;
+        const preventKeyword = this.tokenizer.preventKeyword;
+        const prevToken = this.tokenizer.prevToken;
+        const prevTokenEnd = this.tokenizer.prevTokenEnd;
+        const pendingToken = this.tokenizer.pendingToken;
+
         try {
             return fn.call(this);
         } catch (error) {
             this.tokenizer.pos = tokenizerPos;
             this.tokenizer.bracketStack = bracketStack;
             this.current = current;
+
+            // Restore additional tokenizer state fields
+            this.tokenizer.preventPrimitive = preventPrimitive;
+            this.tokenizer.preventKeyword = preventKeyword;
+            this.tokenizer.prevToken = prevToken;
+            this.tokenizer.prevTokenEnd = prevTokenEnd;
+            this.tokenizer.pendingToken = pendingToken;
+
             return null;
         }
     }
@@ -360,7 +375,7 @@ export class Parser {
                     break;
 
                 case TOKEN_OPEN_BRACKET: {
-                    expr = this.maybe(this.parseSliceNotation) || this.parseBracketAccess(expr);
+                    expr = this.maybe(() => this.parseSliceNotation(expr)) || this.parseBracketAccess(expr);
                     break;
                 }
 
@@ -392,9 +407,14 @@ export class Parser {
         // Handle assertion terms
         switch (this.current.type) {
             case TOKEN_IDENT:
-            case TOKEN_$IDENT:
             case TOKEN_LITERAL:
                 return build.Assertion(this.parseIdentifierOrReference(), negate);
+
+            case TOKEN_$IDENT:
+                // In assertion context, $variable becomes Method with empty arguments
+                const reference = this.parseIdentifierOrReference();
+                const method = build.Method(reference, []);
+                return build.Assertion(method, negate);
 
             default:
                 this.throwError('Expected assertion term');
@@ -574,18 +594,18 @@ export class Parser {
 
     parseParentheses() {
         this.advance(TOKEN_OPEN_PAREN);
-        
+
         // Try to parse definitions first (like legacy parser)
         const definitions = this.parseDefinitions();
         const expression = this.parseExpression() || build.Placeholder();
-        
+
         this.advance(TOKEN_CLOSE_PAREN);
-        
+
         // If we have definitions, wrap in a Block, otherwise just return the expression
-        const body = definitions.length > 0 
+        const body = definitions.length > 0
             ? build.Block(definitions, expression)
             : expression;
-            
+
         return build.Parentheses(body);
     }
 
@@ -621,7 +641,7 @@ export class Parser {
         return this.parseExpression();
     }
 
-    parseSliceNotation() {
+    parseSliceNotation(expr = null) {
         this.advance(TOKEN_OPEN_BRACKET);
 
         const args = [this.parseExpression()];
@@ -636,7 +656,7 @@ export class Parser {
 
         this.advance(TOKEN_CLOSE_BRACKET);
 
-        return build.SliceNotation(null, args);
+        return build.SliceNotation(expr, args);
     }
 
     parseObject() {
@@ -688,7 +708,7 @@ export class Parser {
             case TOKEN_$IDENT: {
                 // $variables in object context depend on whether it's shorthand or explicit
                 const tokenValue = this.consumeValue();
-                
+
                 if (this.match(TOKEN_COLON)) {
                     // Explicit property: treat as identifier with $ preserved
                     key = build.Identifier(tokenValue);
@@ -793,7 +813,9 @@ export class Parser {
         this.advance(TOKEN_QUESTION);
         const consequent = this.parseExpression(prec + (rightAssoc ? 0 : 1)) || build.Placeholder();
         const alternate = this.advanceIf(TOKEN_COLON)
-            ? this.parseExpression(prec + (rightAssoc ? 0 : 1))
+            // Colon is present, parse alternate or use Placeholder if missing
+            ? this.parseExpression(prec + (rightAssoc ? 0 : 1)) || build.Placeholder()
+            // No colon, use null for alternate
             : null;
 
         return build.Conditional(condition, consequent, alternate);
@@ -816,12 +838,14 @@ export class Parser {
     }
 
     parseUnaryPrefix() {
+        const prec = this.getPrecedence(this.current.type);
         const operator = this.consumeValue();
+
         return build.Prefix(
             operator,
             operator === 'is'
                 ? this.parseAssertion()
-                : this.parseUnary()
+                : this.parseExpression(prec + 1)  // Parse with higher precedence to avoid self-binding
         );
     }
 

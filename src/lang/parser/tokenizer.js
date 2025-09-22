@@ -14,6 +14,7 @@ import {
     TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA, TOKEN_COLON, TOKEN_SEMICOLON,
     TOKEN_EOF, tokenNames
 } from './tokens.js';
+import { TOLERANT_TOKEN_PAIRS } from './tokenizer-tolerant-token-pairs.js';
 
 // Regular expressions that are actually used
 const ORDER_RE = /^(asc|desc)(NA?|AN?)?$/;
@@ -96,10 +97,6 @@ const OPEN_BRACKET_MAP = new Map([
 const CLOSE_BRACKET_SET = new Set([TOKEN_CLOSE_PAREN, TOKEN_CLOSE_BRACKET, TOKEN_CLOSE_BRACE, TOKEN_TPL_END]);
 
 // Helper functions for character classification
-function isNewline(code) {
-    // \n, \r, \u2028, \u2029
-    return code === 10 || code === 13 || code === 0x2028 || code === 0x2029;
-}
 
 function isDigit(code) {
     return code >= 48 && code <= 57; // 0-9
@@ -147,7 +144,7 @@ export class Token {
 }
 
 export class Tokenizer {
-    constructor(input) {
+    constructor(input, tolerantMode = false) {
         this.input = input;
         this.pos = 0;
         this.length = input.length;
@@ -155,6 +152,11 @@ export class Tokenizer {
         // Simple boolean flags for single-token state (like jison/bison behavior)
         this.preventPrimitive = false;
         this.preventKeyword = false;
+
+        // Tolerant mode support
+        this.tolerantMode = tolerantMode;
+        this.prevToken = null;
+        this.prevTokenEnd = 0;
     }
 
     // Optimized bracket balance tracking
@@ -166,6 +168,21 @@ export class Tokenizer {
         if (OPEN_BRACKET_MAP.has(tokenType)) {
             this.bracketStack.push(OPEN_BRACKET_MAP.get(tokenType));
         }
+    }
+
+    // Check if we need to insert an empty IDENT in tolerant mode
+    shouldInsertEmptyIdent(nextTokenType) {
+        if (!this.tolerantMode) {
+            return false;
+        }
+
+        return TOLERANT_TOKEN_PAIRS.has(this.prevToken) &&
+               TOLERANT_TOKEN_PAIRS.get(this.prevToken).has(nextTokenType);
+    }
+
+    // Check if an identifier value should be treated as a keyword for tolerant mode purposes
+    isKeywordLikeIdent(tokenType, tokenValue) {
+        return tokenType === TOKEN_IDENT && KEYWORDS.has(tokenValue);
     }
 
     // Optimized character access (avoid method calls)
@@ -445,10 +462,11 @@ export class Tokenizer {
                 this.advance(); // Skip closing `
             }
 
-            // Return raw template including backticks (like legacy)
+            // Process template content like legacy (strip backticks and process escapes)
             const rawValue = this.input.slice(origPos, this.pos);
+            const processedValue = this.toStringLiteral(rawValue, true, 1);
             this.preventPrimitive = true; // Set state for next token
-            return new Token(TOKEN_TEMPLATE, rawValue, start);
+            return new Token(TOKEN_TEMPLATE, processedValue, start);
         } else {
             // Template with interpolation - read until ${
             this.advance(); // Skip `
@@ -467,10 +485,11 @@ export class Tokenizer {
 
             this.advance(2); // Skip ${
 
-            // Return raw value including delimiters (like legacy: "`temp${")
+            // Process template start like legacy (strip ` and ${ - so end=2)
             const rawValue = this.input.slice(origPos, this.pos);
+            const processedValue = this.toStringLiteral(rawValue, true, 2);
             this.trackBracketBalance(TOKEN_TPL_START);
-            return new Token(TOKEN_TPL_START, rawValue, start);
+            return new Token(TOKEN_TPL_START, processedValue, start);
         }
     }
 
@@ -483,9 +502,10 @@ export class Tokenizer {
                 // Continue template
                 this.advance(2);
 
-                // Return raw value including delimiters (like legacy: "}more${")
+                // Process template continue like legacy (strip } and ${ - so end=2)
                 const rawValue = this.input.slice(origPos, this.pos);
-                return new Token(TOKEN_TPL_CONTINUE, rawValue, start);
+                const processedValue = this.toStringLiteral(rawValue, true, 2);
+                return new Token(TOKEN_TPL_CONTINUE, processedValue, start);
             }
             if (this.input[this.pos] === '\\') {
                 this.advance();
@@ -503,11 +523,12 @@ export class Tokenizer {
             this.advance(); // Skip closing `
         }
 
-        // Return raw value including delimiters (like legacy: "}late`")
+        // Process template end like legacy (strip } and ` - so end=1)
         const rawValue = this.input.slice(origPos, this.pos);
+        const processedValue = this.toStringLiteral(rawValue, true, 1);
         this.preventPrimitive = true; // Set state for next token
         this.trackBracketBalance(TOKEN_TPL_END);
-        return new Token(TOKEN_TPL_END, rawValue, start);
+        return new Token(TOKEN_TPL_END, processedValue, start);
     }
 
     readRegExp() {
@@ -559,10 +580,10 @@ export class Tokenizer {
 
         // Store the raw string value including delimiters and flags
         const rawValue = this.input.slice(rawStart, this.pos);
-        
+
         // Convert to actual RegExp object using the same logic as legacy
         const convertedValue = this.toRegExp(rawValue);
-        
+
         return new Token(TOKEN_REGEXP, convertedValue, start);
     }
 
@@ -642,6 +663,85 @@ export class Tokenizer {
 
     // Optimized main tokenization method
     nextToken() {
+        return this.tolerantMode
+            ? this.nextTokenTolerant()
+            : this.nextTokenStrict();
+    }
+
+    // Tolerant mode tokenization wrapper
+    nextTokenTolerant() {
+        // If there's a pending token from a previous empty IDENT insertion, return it directly
+        if (this.hasPendingToken()) {
+            return this.getPendingToken();
+        }
+
+        const token = this.nextTokenStrict();
+
+        // Check if we need to insert an empty IDENT before this token
+        // Handle keyword-like identifiers specially in tolerant mode
+        let effectiveTokenType = token.type;
+        let actualToken = token;
+
+        if (this.isKeywordLikeIdent(token.type, token.value)) {
+            effectiveTokenType = KEYWORDS.get(token.value);
+            // If this would trigger empty IDENT insertion, reprocess as keyword
+            if (this.shouldInsertEmptyIdent(effectiveTokenType)) {
+                actualToken = new Token(effectiveTokenType, token.value, token.offset);
+            }
+        }
+
+        if (this.shouldInsertEmptyIdent(effectiveTokenType)) {
+            // Save current token state
+            const currentPos = this.pos;
+
+            // Create empty IDENT token at the position where the previous token ended
+            const emptyIdent = new Token(TOKEN_IDENT, '', this.prevTokenEnd);
+
+            // Set up to return the actual token (possibly converted to keyword) on next call
+            this.pendingToken = actualToken;
+            this.pos = currentPos;
+
+            // Update previous token tracking for empty ident
+            this.prevToken = TOKEN_IDENT;
+            this.prevTokenEnd = this.prevTokenEnd; // empty token doesn't advance position
+
+            // Reset preventKeyword state since we're inserting an identifier
+            this.preventKeyword = false;
+
+            return emptyIdent;
+        }
+
+        // Normal token processing
+        this.updatePreviousToken(token);
+        return token;
+    }
+
+    // Check for pending token from tolerant mode
+    hasPendingToken() {
+        return this.pendingToken !== undefined;
+    }
+
+    // Get and clear pending token
+    getPendingToken() {
+        const token = this.pendingToken;
+        this.pendingToken = undefined;
+        this.updatePreviousToken(token);
+        return token;
+    }
+
+    // Update previous token tracking
+    updatePreviousToken(token) {
+        this.prevToken = token.type;
+        this.prevTokenEnd = this.pos;
+    }
+
+    // Strict mode tokenization (original logic)
+    nextTokenStrict() {
+        // Check for pending token first
+        if (this.hasPendingToken()) {
+            return this.getPendingToken();
+        }
+
         // Skip whitespace and comments first
         do {
             this.skipWhitespace();
@@ -700,6 +800,22 @@ export class Tokenizer {
                 this.advance();
                 return new Token(TOKEN_DIVIDE, '/', start);
             } else {
+                // In tolerant mode, check if this looks like a division context
+                // by checking if we would insert empty identifiers AND
+                // the content doesn't look like a regex pattern
+                if (this.shouldInsertEmptyIdent(TOKEN_DIVIDE)) {
+                    // Peek ahead to see if this looks like a regex pattern
+                    // Simple heuristic: if the next char after '/' is alphanumeric, it might be regex
+                    const nextChar = this.peekChar(1);
+                    const looksLikeRegex = nextChar && /[a-zA-Z0-9]/.test(nextChar);
+
+                    if (!looksLikeRegex) {
+                        // Treat as division if it doesn't look like regex
+                        this.advance();
+                        return new Token(TOKEN_DIVIDE, '/', start);
+                    }
+                }
+
                 // Otherwise treat as regex and set preventPrimitive for next token
                 this.preventPrimitive = true; // Set state for next token
                 return this.readRegExp();
@@ -821,10 +937,12 @@ export class Tokenizer {
                 this.preventPrimitive = true;
             }
 
-            // Set preventKeyword state for DOT tokens
+            // Configure state for DOT tokens (property access)
             if (tokenType === TOKEN_DOT) {
                 this.preventPrimitive = true;
-                this.preventKeyword = true;
+                // Note: preventKeyword is NOT set for TOKEN_DOT to allow keyword recognition
+                // This enables compound keywords like ". has no" and ". not in" to work correctly
+                // while single keywords follow the tolerant token pair rules
             }
 
             // Track bracket balance for bracket tokens

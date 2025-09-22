@@ -11,7 +11,7 @@ import { TOKEN_EOF } from './tokens.js';
 const parser = {
     parse(source, tolerantMode = false) {
         try {
-            const tokenizer = new Tokenizer(source);
+            const tokenizer = new Tokenizer(source, tolerantMode);
             const joraParser = new Parser(tokenizer);
             const ast = joraParser.parse();
 
@@ -38,10 +38,10 @@ const parser = {
         }
     },
 
-    tokenize(source) {
+    tokenize(source, tolerantMode = false) {
         // For backward compatibility, provide tokenization
         // This is used by the debug/introspection features
-        const tokenizer = new Tokenizer(source);
+        const tokenizer = new Tokenizer(source, tolerantMode);
         const tokens = [];
 
         let token;
