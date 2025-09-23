@@ -2,7 +2,6 @@
  * Production-ready Jora parser - Compact, performant, extensible
  * Based on recursive descent with precedence climbing for operators
  */
-import { Tokenizer } from './tokenizer.js';
 import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
     TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$,
@@ -839,23 +838,4 @@ export class Parser {
         this.advance(TOKEN_CLOSE_BRACKET);
         return build.Pick(expr, getter);
     }
-}
-
-// Main parser class
-export class JoraParser {
-    constructor(options = {}) {
-        this.options = options;
-    }
-
-    parse(input) {
-        const tokenizer = new Tokenizer(input);
-        const parser = new Parser(tokenizer);
-        return parser.parse();
-    }
-}
-
-// Export for compatibility
-export default function createParser(options) {
-    const parser = new JoraParser(options);
-    return (input) => parser.parse(input);
 }

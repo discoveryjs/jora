@@ -54,309 +54,69 @@ export class Token {
     }
 }
 
-export class Tokenizer {
-    constructor(input, tolerantMode = false) {
-        this.input = input;
-        this.pos = 0;
-        this.length = input.length;
+export function createTokenizer(input, tolerantMode = false) {
+    const length = input.length;
+    let pos = 0;
+    let bracketStack = [];
+    let preventPrimitive = false;
+    let preventKeyword = false;
+    let pendingToken = null;
+    let prevToken = null;
 
-        this.bracketStack = [];
-        this.preventPrimitive = false;
-        this.preventKeyword = false;
-
-        // Tolerant mode support
-        this.tolerantMode = tolerantMode;
-        this.pendingToken = null;
-        this.prevToken = null;
+    function advance(count = 1) {
+        pos = Math.min(pos + count, length);
     }
 
-    advance(count = 1) {
-        this.pos = Math.min(this.pos + count, this.length);
-    }
-
-    match(regexp) {
-        regexp.lastIndex = this.pos;
-        const match = regexp.exec(this.input);
+    function match(regexp) {
+        regexp.lastIndex = pos;
+        const match = regexp.exec(input);
 
         if (match) {
             const value = match[0];
-            this.advance(value.length);
+            advance(value.length);
             return value;
         }
 
         return null;
     }
 
-    peek(offset = 0) {
-        const index = this.pos + offset;
-        return index < this.length ? this.input[index] : '';
+    function peek(offset = 0) {
+        const index = pos + offset;
+        return index < length ? input[index] : '';
     }
 
-    isIdentStart(ch) {
+    function isIdentStart(ch) {
         return (
             (ch >= 'A' && ch <= 'Z') || // A-Z
             (ch >= 'a' && ch <= 'z') || // a-z
             (ch === '_')              || /* _ */
-            (ch === '\\' && this.peek(1) === 'u')
+            (ch === '\\' && peek(1) === 'u')
         );
     }
 
-    isNumberStart(ch) {
+    function isNumberStart(ch) {
         return (
             isDigit(ch) ||
-            (ch === '.' && (isDigit(this.peek(1)) || this.peek(1) === '_'))
+            (ch === '.' && (isDigit(peek(1)) || peek(1) === '_'))
         );
     }
 
-    trackBracketBalance(tokenType) {
+    function trackBracketBalance(tokenType) {
         if (OPEN_CLOSE_TOKEN_PAIR.has(tokenType)) {
-            this.bracketStack.push(OPEN_CLOSE_TOKEN_PAIR.get(tokenType));
-        } else if (this.bracketBalanceTop() === tokenType) {
-            this.bracketStack.pop();
+            bracketStack.push(OPEN_CLOSE_TOKEN_PAIR.get(tokenType));
+        } else if (bracketBalanceTop() === tokenType) {
+            bracketStack.pop();
         }
     }
 
-    bracketBalanceTop() {
-        return this.bracketStack.length > 0
-            ? this.bracketStack[this.bracketStack.length - 1]
+    function bracketBalanceTop() {
+        return bracketStack.length > 0
+            ? bracketStack[bracketStack.length - 1]
             : -1;
     }
 
-    // createToken(tokenType) {}
-
-    // Main tokenization method
-    nextToken() {
-        // Check for pending token first
-        if (this.pendingToken) {
-            // Get and clear pending token
-            const token = this.pendingToken;
-
-            this.pendingToken = null;
-            this.prevToken = token.type;
-
-            return token;
-        }
-
-        return this.tolerantMode
-            ? this.nextTokenTolerant()
-            : this.nextTokenStrict();
-    }
-
-    // Tolerant mode tokenization wrapper
-    nextTokenTolerant() {
-        const token = this.nextTokenStrict();
-
-        // Check if we need to insert an empty IDENT in tolerant mode
-        const shouldInsertEmptyIdent =
-            this.tolerantMode &&
-            TOLERANT_TOKEN_PAIRS.has(this.prevToken) &&
-            TOLERANT_TOKEN_PAIRS.get(this.prevToken).has(token.type);
-
-        if (shouldInsertEmptyIdent) {
-            // Store new token as pending
-            this.pendingToken = token;
-
-            // Create empty IDENT token at the position where the previous token ended
-            return new Token(TOKEN_IDENT, '', this.pos);
-        }
-
-        // Normal token processing
-        this.prevToken = token.type;
-        return token;
-    }
-
-    // Strict mode tokenization
-    nextTokenStrict() {
-        // Skip whitespace and comments first
-        do {
-            if (this.match(WHITESPACE_RX)) {
-                this.preventKeyword = false;
-            }
-        } while (this.match(COMMENT_RX));
-
-        // Check and consume state flags (they affect current token only)
-        const preventPrimitive = this.preventPrimitive;
-        const preventKeyword = this.preventKeyword;
-
-        // Clear flags after reading them (single-use)
-        this.preventPrimitive = false;
-        this.preventKeyword = false;
-
-        if (this.pos >= this.length) {
-            return new Token(TOKEN_EOF, '', this.pos);
-        }
-
-        const input = this.input;
-        const ch = input[this.pos];
-        const start = this.pos;
-
-        // Numbers (optimized character code check)
-        if (this.isNumberStart(ch)) {
-            const num = this.match(NUMBER_RX) || this.match(HEX_NUMBER_RX);
-
-            if (num !== null) {
-                this.preventPrimitive = true;
-
-                return new Token(TOKEN_NUMBER, this.toNumberLiteral(num), start);
-            }
-        }
-
-        // Strings
-        if (ch === '"' || ch === "'") {
-            const str = this.match(STRING_RX);
-
-            if (str !== null) {
-                this.preventPrimitive = true;
-
-                return new Token(TOKEN_STRING, this.toStringLiteral(str), start);
-            }
-        }
-
-        // Template literal/template start
-        if (ch === '`') {
-            const template = this.match(TEMPLATE_START_RX);
-
-            if (template) {
-                // Check if this is a simple template (ends with `) or start of complex one (${)
-                if (template.endsWith('`')) {
-                    this.preventPrimitive = true;
-                    return new Token(TOKEN_TEMPLATE, this.toStringLiteral(template, true, 1), start);
-                }
-
-                // This is the start of a template with interpolation
-                this.trackBracketBalance(TOKEN_TPL_START);
-                return new Token(TOKEN_TPL_START, this.toStringLiteral(template, true, 2), start);
-            }
-        }
-
-        // Template continuation/end
-        if (ch === '}' && this.bracketBalanceTop() === TOKEN_TPL_END) {
-            const template = this.match(TEMPLATE_CONT_END_RX);
-
-            if (template) {
-                if (template.endsWith('`')) {
-                    // This is the end of the template
-                    this.trackBracketBalance(TOKEN_TPL_END);
-                    this.preventPrimitive = true;
-                    return new Token(TOKEN_TPL_END, this.toStringLiteral(template, true, 1), start);
-                }
-
-                // This is a continuation of the template
-                return new Token(TOKEN_TPL_CONTINUE, this.toStringLiteral(template, true, 2), start);
-            }
-        }
-
-        // Regular expressions (context-aware using state)
-        if (ch === '/') {
-            // If preventPrimitive state is active, treat as division
-            if (!preventPrimitive) {
-                const regexp = this.match(REGEXP_RX);
-
-                if (regexp !== null) {
-                    this.preventPrimitive = true; // Set state for next token
-
-                    return new Token(
-                        TOKEN_REGEXP,
-                        this.toRegExp(regexp),
-                        start
-                    );
-                }
-            }
-
-            // Treat as division if it doesn't look like regex
-            this.advance();
-            return new Token(TOKEN_DIVIDE, '/', start);
-        }
-
-        // Keywords (unified processing)
-        if (!preventKeyword && this.isIdentStart(ch)) {
-            const keyword = this.match(KEYWORD_RX);
-
-            if (keyword) {
-                return new Token(KEYWORDS.get(keyword), keyword, start);
-            }
-        }
-
-        // Identifiers and method calls
-        if (this.isIdentStart(ch)) {
-            const value = this.match(IDENTIFIER_RX);
-
-            // Check for literals using Map lookup
-            if (!preventKeyword && LITERALS.has(value)) {
-                this.preventPrimitive = true; // Set state for next token
-                // Convert literal to actual value
-                return new Token(TOKEN_LITERAL, LITERALS.get(value), start);
-            }
-
-            // Check for method call
-            if (this.peek() === '(') {
-                this.advance(); // consume the (
-                this.trackBracketBalance(TOKEN_METHOD_OPEN);
-                return new Token(TOKEN_METHOD_OPEN, value + '(', start);
-            }
-
-            this.preventPrimitive = true; // Set state for next token
-            return new Token(TOKEN_IDENT, value, start);
-        }
-
-        // Variable references and special symbols
-        if (ch === '$') {
-            this.advance();
-
-            if (this.peek() === '$') {
-                this.advance(1);
-                this.preventPrimitive = true; // Set state for next token
-
-                return new Token(TOKEN_$$, '$$', start);
-            }
-
-            const ident = this.match(IDENTIFIER_RX);
-
-            if (ident) {
-                // Check for $method(
-                if (this.peek() === '(') {
-                    this.advance(); // consume the (
-                    this.trackBracketBalance(TOKEN_$METHOD_OPEN);
-
-                    return new Token(TOKEN_$METHOD_OPEN, '$' + ident + '(', start);
-                }
-
-                this.preventPrimitive = true; // Set state for next token
-                return new Token(TOKEN_$IDENT, '$' + ident, start);
-            }
-
-            this.preventPrimitive = true; // Set state for next token
-            return new Token(TOKEN_$, '$', start);
-        }
-
-        // Rest tokens check
-        const restToken = this.match(REST_TOKENS_RX);
-
-        if (restToken) {
-            const tokenType = STR_TO_TOKEN.get(restToken);
-
-            // Set preventPrimitive state for tokens that should trigger it
-            if (tokenType === TOKEN_AT || tokenType === TOKEN_HASH ||
-                tokenType === TOKEN_CLOSE_PAREN || tokenType === TOKEN_CLOSE_BRACKET ||
-                tokenType === TOKEN_CLOSE_BRACE || tokenType === TOKEN_DOT) {
-                this.preventPrimitive = true;
-            }
-
-            // Set preventKeyword state for DOT_DOT tokens
-            if (tokenType === TOKEN_DOT || tokenType === TOKEN_DOT_DOT) {
-                this.preventKeyword = true;
-            }
-
-            this.trackBracketBalance(tokenType);
-
-            return new Token(tokenType, restToken, start);
-        }
-
-        throw new Error(`Unexpected character '${ch}' at position ${this.pos}`);
-    }
-
     // Conversion methods (matching legacy parser)
-    toNumberLiteral(value) {
+    function toNumberLiteral(value) {
         const hex = value.startsWith('0x') || value.startsWith('0X');
 
         if (value.includes('_')) {
@@ -382,7 +142,7 @@ export class Tokenizer {
             : parseFloat(value);
     }
 
-    toStringLiteral(value, multiline = false, end = 1) {
+    function toStringLiteral(value, multiline = false, end = 1) {
         const valueEnd = value.length - end;
 
         if (!/[\\\r\n\u2028\u2029]/.test(value)) {
@@ -460,7 +220,7 @@ export class Tokenizer {
         return result;
     }
 
-    toRegExp(value) {
+    function toRegExp(value) {
         const flags = value.match(/[^/]*$/)[0];
 
         for (let i = 0; i < flags.length; i++) {
@@ -472,24 +232,258 @@ export class Tokenizer {
         return new RegExp(value.slice(1, -flags.length - 1), flags);
     }
 
-    // State management methods for parser backtracking
-    saveState() {
+    // Tolerant mode tokenization wrapper
+    function nextTokenTolerant() {
+        const token = nextTokenStrict();
+
+        // Check if we need to insert an empty IDENT in tolerant mode
+        const shouldInsertEmptyIdent =
+            tolerantMode &&
+            TOLERANT_TOKEN_PAIRS.has(prevToken) &&
+            TOLERANT_TOKEN_PAIRS.get(prevToken).has(token.type);
+
+        if (shouldInsertEmptyIdent) {
+            // Store new token as pending
+            pendingToken = token;
+
+            // Create empty IDENT token at the position where the previous token ended
+            return new Token(TOKEN_IDENT, '', pos);
+        }
+
+        // Normal token processing
+        prevToken = token.type;
+        return token;
+    }
+
+    // Strict mode tokenization
+    function nextTokenStrict() {
+        // Skip whitespace and comments first
+        do {
+            if (match(WHITESPACE_RX)) {
+                preventKeyword = false;
+            }
+        } while (match(COMMENT_RX));
+
+        // Check and consume state flags (they affect current token only)
+        const currentPreventPrimitive = preventPrimitive;
+        const currentPreventKeyword = preventKeyword;
+
+        // Clear flags after reading them (single-use)
+        preventPrimitive = false;
+        preventKeyword = false;
+
+        if (pos >= length) {
+            return new Token(TOKEN_EOF, '', pos);
+        }
+
+        const ch = input[pos];
+        const start = pos;
+
+        // Numbers (optimized character code check)
+        if (isNumberStart(ch)) {
+            const num = match(NUMBER_RX) || match(HEX_NUMBER_RX);
+
+            if (num !== null) {
+                preventPrimitive = true;
+
+                return new Token(TOKEN_NUMBER, toNumberLiteral(num), start);
+            }
+        }
+
+        // Strings
+        if (ch === '"' || ch === "'") {
+            const str = match(STRING_RX);
+
+            if (str !== null) {
+                preventPrimitive = true;
+
+                return new Token(TOKEN_STRING, toStringLiteral(str), start);
+            }
+        }
+
+        // Template literal/template start
+        if (ch === '`') {
+            const template = match(TEMPLATE_START_RX);
+
+            if (template) {
+                // Check if this is a simple template (ends with `) or start of complex one (${)
+                if (template.endsWith('`')) {
+                    preventPrimitive = true;
+                    return new Token(TOKEN_TEMPLATE, toStringLiteral(template, true, 1), start);
+                }
+
+                // This is the start of a template with interpolation
+                trackBracketBalance(TOKEN_TPL_START);
+                return new Token(TOKEN_TPL_START, toStringLiteral(template, true, 2), start);
+            }
+        }
+
+        // Template continuation/end
+        if (ch === '}' && bracketBalanceTop() === TOKEN_TPL_END) {
+            const template = match(TEMPLATE_CONT_END_RX);
+
+            if (template) {
+                if (template.endsWith('`')) {
+                    // This is the end of the template
+                    trackBracketBalance(TOKEN_TPL_END);
+                    preventPrimitive = true;
+                    return new Token(TOKEN_TPL_END, toStringLiteral(template, true, 1), start);
+                }
+
+                // This is a continuation of the template
+                return new Token(TOKEN_TPL_CONTINUE, toStringLiteral(template, true, 2), start);
+            }
+        }
+
+        // Regular expressions (context-aware using state)
+        if (ch === '/') {
+            // If preventPrimitive state is active, treat as division
+            if (!currentPreventPrimitive) {
+                const regexp = match(REGEXP_RX);
+
+                if (regexp !== null) {
+                    preventPrimitive = true; // Set state for next token
+
+                    return new Token(
+                        TOKEN_REGEXP,
+                        toRegExp(regexp),
+                        start
+                    );
+                }
+            }
+
+            // Treat as division if it doesn't look like regex
+            advance();
+            return new Token(TOKEN_DIVIDE, '/', start);
+        }
+
+        // Keywords (unified processing)
+        if (!currentPreventKeyword && isIdentStart(ch)) {
+            const keyword = match(KEYWORD_RX);
+
+            if (keyword) {
+                return new Token(KEYWORDS.get(keyword), keyword, start);
+            }
+        }
+
+        // Identifiers and method calls
+        if (isIdentStart(ch)) {
+            const value = match(IDENTIFIER_RX);
+
+            // Check for literals using Map lookup
+            if (!currentPreventKeyword && LITERALS.has(value)) {
+                preventPrimitive = true; // Set state for next token
+                // Convert literal to actual value
+                return new Token(TOKEN_LITERAL, LITERALS.get(value), start);
+            }
+
+            // Check for method call
+            if (peek() === '(') {
+                advance(); // consume the (
+                trackBracketBalance(TOKEN_METHOD_OPEN);
+                return new Token(TOKEN_METHOD_OPEN, value + '(', start);
+            }
+
+            preventPrimitive = true; // Set state for next token
+            return new Token(TOKEN_IDENT, value, start);
+        }
+
+        // Variable references and special symbols
+        if (ch === '$') {
+            advance();
+
+            if (peek() === '$') {
+                advance();
+                preventPrimitive = true; // Set state for next token
+
+                return new Token(TOKEN_$$, '$$', start);
+            }
+
+            const ident = match(IDENTIFIER_RX);
+
+            if (ident) {
+                // Check for $method(
+                if (peek() === '(') {
+                    advance(); // consume the (
+                    trackBracketBalance(TOKEN_$METHOD_OPEN);
+
+                    return new Token(TOKEN_$METHOD_OPEN, '$' + ident + '(', start);
+                }
+
+                preventPrimitive = true; // Set state for next token
+                return new Token(TOKEN_$IDENT, '$' + ident, start);
+            }
+
+            preventPrimitive = true; // Set state for next token
+            return new Token(TOKEN_$, '$', start);
+        }
+
+        // Rest tokens check
+        const restToken = match(REST_TOKENS_RX);
+
+        if (restToken) {
+            const tokenType = STR_TO_TOKEN.get(restToken);
+
+            // Set preventPrimitive state for tokens that should trigger it
+            if (tokenType === TOKEN_AT || tokenType === TOKEN_HASH ||
+                tokenType === TOKEN_CLOSE_PAREN || tokenType === TOKEN_CLOSE_BRACKET ||
+                tokenType === TOKEN_CLOSE_BRACE || tokenType === TOKEN_DOT) {
+                preventPrimitive = true;
+            }
+
+            // Set preventKeyword state for DOT_DOT tokens
+            if (tokenType === TOKEN_DOT || tokenType === TOKEN_DOT_DOT) {
+                preventKeyword = true;
+            }
+
+            trackBracketBalance(tokenType);
+
+            return new Token(tokenType, restToken, start);
+        }
+
+        throw new Error(`Unexpected character '${ch}' at position ${pos}`);
+    }
+
+    function nextToken() {
+        // Check for pending token first
+        if (pendingToken) {
+            // Get and clear pending token
+            const token = pendingToken;
+
+            pendingToken = null;
+            prevToken = token.type;
+
+            return token;
+        }
+
+        return tolerantMode
+            ? nextTokenTolerant()
+            : nextTokenStrict();
+    }
+
+    function saveState() {
         return {
-            pos: this.pos,
-            bracketStack: [...this.bracketStack],
-            preventPrimitive: this.preventPrimitive,
-            preventKeyword: this.preventKeyword,
-            pendingToken: this.pendingToken,
-            prevToken: this.prevToken
+            pos,
+            bracketStack: [...bracketStack],
+            preventPrimitive,
+            preventKeyword,
+            pendingToken,
+            prevToken
         };
     }
 
-    restoreState(state) {
-        this.pos = state.pos;
-        this.bracketStack = state.bracketStack;
-        this.preventPrimitive = state.preventPrimitive;
-        this.preventKeyword = state.preventKeyword;
-        this.pendingToken = state.pendingToken;
-        this.prevToken = state.prevToken;
+    function restoreState(state) {
+        pos = state.pos;
+        bracketStack = state.bracketStack;
+        preventPrimitive = state.preventPrimitive;
+        preventKeyword = state.preventKeyword;
+        pendingToken = state.pendingToken;
+        prevToken = state.prevToken;
     }
+
+    return {
+        nextToken,
+        saveState,
+        restoreState
+    };
 }
