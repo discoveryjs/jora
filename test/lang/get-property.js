@@ -1,5 +1,6 @@
 import assert from 'assert';
 import query from 'jora';
+import { allSpecialIdentifiers } from '../helpers/const.js';
 
 describe('lang/get-property', () => {
     it('should return all values', () => {
@@ -67,6 +68,19 @@ describe('lang/get-property', () => {
             ]),
             []
         );
+    });
+
+    describe('should not fails on special identifiers', () => {
+        for (const keyword of allSpecialIdentifiers) {
+            const queryStr = `.${keyword}`;
+
+            it(queryStr, () => {
+                assert.strictEqual(
+                    query(queryStr)({ [keyword]: 42 }),
+                    42
+                );
+            });
+        }
     });
 
     it('should allow unicode escapes', () => {

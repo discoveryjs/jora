@@ -133,3 +133,76 @@ export const tokenNames = {
     [TOKEN_SEMICOLON]: ';',
     [TOKEN_EOF]: 'EOF'
 };
+
+// Bracket balance mappings
+export const OPEN_CLOSE_TOKEN_PAIR = new Map([
+    [TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN],
+    [TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
+    [TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
+    [TOKEN_METHOD_OPEN, TOKEN_CLOSE_PAREN],
+    [TOKEN_$METHOD_OPEN, TOKEN_CLOSE_PAREN],
+    [TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET],
+    [TOKEN_DOT_OPEN_BRACKET, TOKEN_CLOSE_BRACKET],
+    [TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE],
+    [TOKEN_TPL_START, TOKEN_TPL_END]
+]);
+
+// Keyword lookup
+export const KEYWORDS = new Map([
+    ['has no', TOKEN_HASNO],
+    ['not in', TOKEN_NOTIN],
+    ['and', TOKEN_AND],
+    ['or', TOKEN_OR],
+    ['not', TOKEN_NOT],
+    ['has', TOKEN_HAS],
+    ['is', TOKEN_IS],
+    ['in', TOKEN_IN],
+    ['no', TOKEN_NO],
+    ['asc', TOKEN_ORDER],
+    ['ascN', TOKEN_ORDER],
+    ['ascA', TOKEN_ORDER],
+    ['ascNA', TOKEN_ORDER],
+    ['ascAN', TOKEN_ORDER],
+    ['desc', TOKEN_ORDER],
+    ['descN', TOKEN_ORDER],
+    ['descA', TOKEN_ORDER],
+    ['descNA', TOKEN_ORDER],
+    ['descAN', TOKEN_ORDER]
+]);
+
+// String to token mapping
+export const STR_TO_TOKEN = new Map([
+    ['...', TOKEN_DOT_DOT_DOT],
+    ['..(', TOKEN_DOT_DOT_OPEN_PAREN],
+    ['..', TOKEN_DOT_DOT],
+    ['.(', TOKEN_DOT_OPEN_PAREN],
+    ['.[', TOKEN_DOT_OPEN_BRACKET],
+    ['=>', TOKEN_ARROW],
+    ['!=', TOKEN_NOT_EQUALS],
+    ['~=', TOKEN_MATCH],
+    ['<=', TOKEN_LESS_THAN_EQUALS],
+    ['>=', TOKEN_GREATER_THAN_EQUALS],
+    ['??', TOKEN_NULLISH_COALESCING],
+    ['@', TOKEN_AT],
+    ['#', TOKEN_HASH],
+    ['.', TOKEN_DOT],
+    ['|', TOKEN_PIPE],
+    ['=', TOKEN_EQUALS],
+    ['<', TOKEN_LESS_THAN],
+    ['>', TOKEN_GREATER_THAN],
+    ['+', TOKEN_PLUS],
+    ['-', TOKEN_MINUS],
+    ['*', TOKEN_MULTIPLY],
+    ['/', TOKEN_DIVIDE],
+    ['%', TOKEN_MODULO],
+    ['?', TOKEN_QUESTION],
+    ['(', TOKEN_OPEN_PAREN],
+    [')', TOKEN_CLOSE_PAREN],
+    ['[', TOKEN_OPEN_BRACKET],
+    [']', TOKEN_CLOSE_BRACKET],
+    ['{', TOKEN_OPEN_BRACE],
+    ['}', TOKEN_CLOSE_BRACE],
+    [',', TOKEN_COMMA],
+    [':', TOKEN_COLON],
+    [';', TOKEN_SEMICOLON]
+]);

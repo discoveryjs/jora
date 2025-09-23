@@ -1,6 +1,7 @@
 import assert from 'assert';
 import query from 'jora';
 import data from '../helpers/fixture.js';
+import { allSpecialIdentifiers } from '../helpers/const.js';
 
 function addUnique(arr, items) {
     for (let i = 0; i < items.length; i++) {
@@ -192,6 +193,19 @@ describe('lang/recursive', () => {
             query('deep..($name:"refs";$[$name].expr)')({ deep: data }),
             expected
         );
+    });
+
+    describe('should not fails on special identifiers', () => {
+        for (const keyword of allSpecialIdentifiers) {
+            const queryStr = `..${keyword}`;
+
+            it(queryStr, () => {
+                assert.deepEqual(
+                    query(queryStr)({ [String(keyword)]: 42 }),
+                    [42]
+                );
+            });
+        }
     });
 
     it('TypedArray support', () => {
