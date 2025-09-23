@@ -5,57 +5,24 @@
 
 import { Parser } from './parser.js';
 import { createTokenizer } from './tokenizer.js';
-import { TOKEN_EOF } from './tokens.js';
 
 // Create a compatible parser interface
-const parser = {
-    parse(source, tolerantMode = false) {
-        try {
-            const tokenizer = createTokenizer(source, tolerantMode);
-            const joraParser = new Parser(tokenizer);
-            const ast = joraParser.parse();
+export default {
+    parse(source, tolerant = false) {
+        const tokenizer = createTokenizer(source, tolerant);
+        const joraParser = new Parser(tokenizer);
 
-            return {
-                ast: ast,
-                error: null
-            };
-        } catch (error) {
-            if (tolerantMode) {
-                // In tolerant mode, return a placeholder AST with error info
-                return {
-                    ast: {
-                        type: 'Block',
-                        definitions: [],
-                        body: {
-                            type: 'Literal',
-                            value: null
-                        }
-                    },
-                    error: error
-                };
-            }
-            throw error;
-        }
+        return {
+            ast: joraParser.parse(),
+            commentRanges: []
+        };
     },
 
-    tokenize(source, tolerantMode = false) {
-        // For backward compatibility, provide tokenization
-        // This is used by the debug/introspection features
-        const tokenizer = createTokenizer(source, tolerantMode);
-        const tokens = [];
+    *tokenize(source, tolerant = false) {
+        const tokenizer = createTokenizer(source, tolerant);
 
-        let token;
-        do {
-            token = tokenizer.nextToken();
-            tokens.push({
-                type: token.name,  // Use token.name for compatibility with legacy interface
-                value: token.value,
-                offset: token.offset
-            });
-        } while (token.type !== TOKEN_EOF);
-
-        return tokens;
+        while (!tokenizer.done) {
+            yield tokenizer.nextToken();
+        }
     }
 };
-
-export default parser;

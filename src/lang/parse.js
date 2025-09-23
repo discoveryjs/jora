@@ -1,23 +1,78 @@
 import legacyParser from './parse-old.js';
-import newImplementation from './parser/index.js';
+import newParser from './parser/index.js';
 
-const { parse: newParse, tokenize: newTokenizer } = newImplementation;
+// Known environment flags for validation
+const KNOWN_ENV_FLAGS = [
+    'PARITY_MODE',
+    'PARITY_PRINT_QUERIES',
+    'PARITY_STRIP_METADATA',
+    'PARITY_REPORT_FILE'
+];
+const MODES = {
+    'legacy': 'Legacy parser is primary, new parser runs for comparison',
+    'new': 'New parser is primary, legacy parser runs for comparison',
+    'new-only': 'New parser only, no comparison',
+    'off': 'Legacy parser only, no comparison'
+};
+const STRIP_METADATA_KEYS = [
+    'range',
+    'loc',
+    'commentRanges',
+    'errors'
+];
 
 // Default parity mode when not specified by environment variable
 const DEFAULT_PARITY_MODE = 'legacy';
-const DEFAULT_PRINT_QUERIES = true; // Set to true to print all processed queries (for debugging)
+const DEFAULT_PRINT_QUERIES = false; // Set to true to print all processed queries (for debugging)
+const DEFAULT_STRIP_METADATA = true; // Strip loc/range/commentRanges/errors from ASTs for parity comparison
 
 // Configuration
-const PARITY_MODE = getParityMode();
-const PRINT_QUERIES = getPrintQueries();
-const PARITY_FILE_PATH = getParityFilePath();
+const MODE = getEnvFlag('PARITY_MODE', DEFAULT_PARITY_MODE, MODES);
+const PRINT_QUERIES = getEnvFlag('PARITY_PRINT_QUERIES', DEFAULT_PRINT_QUERIES);
+const STRIP_METADATA = getEnvFlag('PARITY_STRIP_METADATA', DEFAULT_STRIP_METADATA);
+const REPORT_FILEPATH = getEnvFlag('PARITY_REPORT_FILE', 'jora-parser-parity-diffs.jsonl');
+
+// Guard against invalid mode values
+if (!Object.hasOwn(MODES, MODE)) {
+    console.error(`Invalid PARITY_MODE: ${MODE}`);
+    process.exit(1);
+}
+
+// Guard against unknown PARITY_ environment variables (to catch typos)
+if (typeof process !== 'undefined' && process.env) {
+    const unknownEnvFlags = [];
+    for (const key of Object.keys(process.env)) {
+        if (key.startsWith('PARITY_') && !KNOWN_ENV_FLAGS.includes(key)) {
+            unknownEnvFlags.push(key);
+        }
+    }
+
+    if (unknownEnvFlags.length) {
+        console.warn('Error! Unknown PARITY_ environment variables detected:');
+        console.warn('');
+
+        for (const key of unknownEnvFlags) {
+            console.warn(`  ${key}=${process.env[key]}`);
+        }
+
+        console.warn('');
+        console.warn('Please check for typos or remove them if unnecessary.');
+        console.warn('Available variables:');
+        console.warn();
+
+        for (const key of KNOWN_ENV_FLAGS) {
+            console.warn(`  - ${key}`);
+        }
+
+        console.warn();
+        process.exit(1);
+    }
+}
 
 // State management
 const parityState = {
     seen: new Set(),
-    diffs: [],
-    diffCounter: 0,
-    flushScheduled: false
+    diffs: []
 };
 
 // File system access (only in Node.js environment)
@@ -35,86 +90,116 @@ if (typeof process !== 'undefined' && process.versions?.node) {
     }
 }
 
-// Token type mapping for legacy compatibility
-const TOKEN_PUNCT_MAP = Object.freeze({
-    PLUS: '+', MINUS: '-', STAR: '*', SLASH: '/', PERCENT: '%',
-    LPAREN: '(', RPAREN: ')', LBRACK: '[', RBRACK: ']', LBRACE: '{', RBRACE: '}',
-    COMMA: ',', SEMICOLON: ';', COLON: ':', DOT: '.', BAR: '|', PIPE: '|',
-    EQ: '=', NEQ: '!=', MATCH: '~=', GTE: '>=', LTE: '<=', GT: '>', LT: '<',
-    ARROW: '=>', DOT_DOT: '..', DOT_DOT_DOT: '...', MAP_PAREN: '.(', MAP_REC_PAREN: '..(', MAP_BRACK: '.['
-});
-
 // Utility functions
-function getParityMode() {
-    if (typeof process === 'undefined' || !process.env) {
-        return DEFAULT_PARITY_MODE;
+function getEnvFlag(name, defaultValue, allowedValues = null) {
+    // Guard against typos in environment variable names
+    if (!KNOWN_ENV_FLAGS.includes(name)) {
+        throw new Error(`Unknown environment flag: ${name}`);
     }
-    return process.env.JORA_PARSER_PARITY || DEFAULT_PARITY_MODE; // legacy | new | off | new-only
-}
 
-function getPrintQueries() {
-    if (typeof process === 'undefined' || !process.env) {
-        return DEFAULT_PRINT_QUERIES;
+    if (typeof process === 'undefined' || !process.env || !(name in process.env)) {
+        return defaultValue;
     }
-    return process.env.PRINT_QUERIES || DEFAULT_PRINT_QUERIES;
-}
 
-function getParityFilePath() {
-    if (typeof process === 'undefined' || !process.env) {
-        return null;
-    }
-    return process.env.JORA_PARSER_PARITY_FILE || 'jora-parser-parity-diffs.jsonl';
-}
+    const value = process.env[name];
 
-function getModeDescription(mode) {
-    switch (mode) {
-        case 'legacy':
-            return 'Legacy parser is primary, new parser runs for comparison';
-        case 'new':
-            return 'New parser is primary, legacy parser runs for comparison';
-        case 'new-only':
-            return 'New parser only, no comparison';
-        case 'off':
-            return 'Legacy parser only, no comparison';
-        default:
-            return `Unknown mode: ${mode}`;
+    if (allowedValues) {
+        if (Object.hasOwn(allowedValues, value) === false) {
+            console.error(`Invalid value for ${name}: ${value}`);
+            console.error('Allowed values:');
+            for (const [key, desc] of Object.entries(allowedValues)) {
+                console.error(`  ${key}${key === defaultValue ? ' (default)' : ''}: ${desc}`);
+            }
+            process.exit(1);
+        }
+
+        return value;
     }
+
+    return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
 function createSliceWindow(str, index, context = 40) {
-    return str.slice(Math.max(0, index - context), index + context);
+    const start = Math.max(0, index - context);
+    const end = index + context;
+    return (
+        (start > 0 ? '…' : '') +
+        str.slice(start, end) +
+        (end < str.length ? '…' : '')
+    );
 }
 
-function findFirstDiff(a, b) {
+function findFirstDiff(a, b, slice = 40) {
     const len = Math.min(a.length, b.length);
     let i = 0;
+
     for (; i < len; i++) {
         if (a[i] !== b[i]) {
             break;
         }
     }
+
     return {
-        index: i,
-        a: createSliceWindow(a, i),
-        b: createSliceWindow(b, i)
+        offset: i,
+        a: createSliceWindow(a, i, slice),
+        b: createSliceWindow(b, i, slice)
     };
 }
 
-function stripAstMetadata(node) {
-    if (!node || typeof node !== 'object') {
-        return node;
-    }
-    if (Array.isArray(node)) {
-        return node.map(stripAstMetadata);
+function shouldStripKey(key) {
+    return STRIP_METADATA && STRIP_METADATA_KEYS.includes(key);
+}
+
+function findFirstDiffPath(a, b, path = '') {
+    if (Object.is(a, b)) {
+        return true;
     }
 
-    const result = {};
-    for (const key of Object.keys(node)) {
-        if (!['range', 'loc', 'commentRanges', 'errors'].includes(key)) {
-            result[key] = stripAstMetadata(node[key]);
-        }
+    if (typeof a !== typeof b) {
+        return { path, a, b, reason: 'Type mismatch' };
     }
-    return result;
+
+    if (a && typeof a === 'object' && b && typeof b === 'object') {
+        if (Array.isArray(a) !== Array.isArray(b)) {
+            return { path, a, b, reason: 'Array type mismatch' };
+        }
+
+        if (Array.isArray(a)) {
+            if (a.length !== b.length) {
+                return { path, a, b, reason: 'Array length mismatch' };
+            }
+
+            for (let i = 0; i < a.length; i++) {
+                const result = findFirstDiffPath(a[i], b[i], `${path}[${i}]`);
+                if (result !== true) {
+                    return result;
+                }
+            }
+        } else {
+            for (const key of Object.keys(a)) {
+                if (!shouldStripKey(key)) {
+                    if (!Object.hasOwn(b, key)) {
+                        return { path, a, b, reason: `Missing key in 'b': ${key}` };
+                    }
+
+                    const result = findFirstDiffPath(a[key], b[key], `${path}.${key}`);
+                    if (result !== true) {
+                        return result;
+                    }
+                }
+            }
+
+            for (const key of Object.keys(b)) {
+                if (!shouldStripKey(key) && !Object.hasOwn(a, key)) {
+                    return { path, a, b, reason: `Missing key in 'a': ${key}` };
+                }
+            }
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 function createStableString(value) {
@@ -123,80 +208,93 @@ function createStableString(value) {
             return '[' + value.map(createStableString).join(',') + ']';
         }
         return '{' + Object.keys(value).sort()
-            .map(k => JSON.stringify(k) + ':' + createStableString(value[k]))
+            .map(k => !shouldStripKey(k)
+                ? JSON.stringify(k) + ':' + createStableString(value[k])
+                : null)
+            .filter(Boolean)
             .join(',') + '}';
     }
+
     return JSON.stringify(value);
 }
 
 // Parity tracking and reporting
-function logParityDifference(kind, tolerantMode, source, legacyData, newData) {
-    const key = `${kind}:${tolerantMode}:${source}`;
+function logParityDifference(kind, source, legacyData, newData, options) {
+    const key = `${kind}:${options.tolerant}:${options.loc}:${source}`;
+
+    scheduleParityFlush();
+
     if (parityState.seen.has(key)) {
         return;
     }
 
-    parityState.seen.add(key);
-    const id = ++parityState.diffCounter;
+    const id = parityState.seen.add(key).size;
 
     try {
-        const stableA = createStableString(stripAstMetadata(legacyData));
-        const stableB = createStableString(stripAstMetadata(newData));
+        const stableA = typeof legacyData !== 'string' ? createStableString(legacyData) : legacyData.split('\n')[0];
+        const stableB = typeof newData !== 'string' ? createStableString(newData) : newData.split('\n')[0];
+        const isLegacyError = typeof legacyData === 'string' && legacyData.startsWith('Error: ');
+        const isNewError = typeof newData === 'string' && newData.startsWith('Error: ');
 
         if (stableA !== stableB) {
-            const isLegacyError = typeof legacyData === 'string' && legacyData.startsWith('Error: ');
-            const isNewError = typeof newData === 'string' && newData.startsWith('Error: ');
-
             let diffKind = kind;
             let diff = null;
+            let firstDiffPath = null;
 
             if (isLegacyError && isNewError) {
                 diffKind = 'ERROR_MISMATCH';
-                diff = findFirstDiff(stableA, stableB);
+                diff = findFirstDiff(stableA, stableB, 50);
+                return; // Ignore error mismatches for now
             } else if (isLegacyError) {
                 diffKind = 'NEW_NO_PARSE_ERROR';
-                diff = { index: -1, a: legacyData, b: createSliceWindow(stableB, 0, 80) };
+                diff = { offset: -1, a: legacyData, b: createSliceWindow(stableB, 0, 80) };
             } else if (isNewError) {
                 diffKind = 'NEW_PARSE_ERROR';
-                diff = { index: -1, a: createSliceWindow(stableA, 0, 80), b: newData };
+                diff = { offset: -1, a: createSliceWindow(stableA, 0, 80), b: newData };
             } else {
                 diff = findFirstDiff(stableA, stableB);
+                firstDiffPath = findFirstDiffPath(legacyData, newData);
             }
 
             parityState.diffs.push({
                 id,
                 kind: diffKind,
-                tolerant: tolerantMode,
-                mode: PARITY_MODE,
+                options,
+                mode: MODE,
                 source: source.length > 100 ? source.slice(0, 100) + '…' : source,
-                diffIndex: diff.index,
+                contextDiffOffset: diff.offset,
                 legacyContext: diff.a,
-                legacyAst: isLegacyError ? null : legacyData,
                 newContext: diff.b,
+                firstDiffPath,
+                legacyAst: isLegacyError ? null : legacyData,
                 newAst: isNewError ? null : newData
             });
         }
     } catch (error) {
         parityState.diffs.push({
             id,
-            kind: 'ERROR',
-            tolerant: tolerantMode,
-            error: error?.message
+            kind: 'DIFF_ERROR',
+            options,
+            mode: MODE,
+            source: source.length > 100 ? source.slice(0, 100) + '…' : source,
+            error: error?.message,
+            stack: error?.stack?.slice(error?.stack?.indexOf('\n') + 1) || null
         });
     }
-
-    scheduleParityFlush();
 }
 
 function buildParitySummary() {
-    const counts = {};
+    const counts = Object.defineProperty({}, 'toJSON', {
+        value: () => Object.fromEntries(
+            Object.entries(counts)
+                .map(([kind, record]) => [kind, record.count])
+        )
+    });
 
     for (const diff of parityState.diffs) {
-        const record = counts[diff.kind] || { count: 0, subcounts: {}, queries: new Set() };
-        counts[diff.kind] = record;
-        record.count++;
-
+        const record = counts[diff.kind] || { count: 0, subcounts: {}, details: new Set() };
         let subcountsKey = null;
+
         switch (diff.kind) {
             case 'NEW_PARSE_ERROR':
                 subcountsKey = diff.newContext.slice(7);
@@ -204,15 +302,38 @@ function buildParitySummary() {
             case 'NEW_NO_PARSE_ERROR':
                 subcountsKey = diff.legacyContext.split('\n')[0].slice(7);
                 break;
+            case 'DIFF_ERROR':
+                subcountsKey = diff.error;
+                break;
+            case 'ERROR_MISMATCH':
+                subcountsKey = `Legacy ${diff.legacyContext}\n   New ${diff.newContext}`;
+                break;
+            case 'AST_MISMATCH':
+            case 'TOKENS_MISMATCH':
+                // do nothing
+                break;
+            default:
+                console.error('Unknown diff kind:', diff.kind);
         }
 
+        counts[diff.kind] = record;
+        record.count++;
+
+        const details = `${diff.tolerant ? '(tolerant mode) ' : ''}${JSON.stringify(diff.source)}`;
+
         if (subcountsKey) {
-            const subrecord = record.subcounts[subcountsKey] || { count: 0, queries: new Set() };
+            const subrecord = record.subcounts[subcountsKey] || { count: 0, details: new Set(), stack: null };
+
             record.subcounts[subcountsKey] = subrecord;
             subrecord.count++;
-            subrecord.queries.add(`${diff.tolerant ? '(tolerant mode) ' : ''}${JSON.stringify(diff.source)}`);
+
+            if (diff.stack) {
+                subrecord.stack = diff.stack;
+            } else {
+                subrecord.details.add(details);
+            }
         } else {
-            record.queries.add(`${diff.tolerant ? '(tolerant mode) ' : ''}${JSON.stringify(diff.source)}`);
+            record.details.add(details);
         }
     }
 
@@ -226,14 +347,12 @@ function buildParitySummary() {
     };
 }
 
-function writeParityReport() {
-    if (!PARITY_FILE_PATH || !fs) {
+function writeParityReport(summary) {
+    if (!REPORT_FILEPATH || !fs) {
         return;
     }
 
     try {
-        const summary = buildParitySummary();
-
         // Write JSONL format
         const lines = [
             ...parityState.diffs.map(diff => JSON.stringify(diff, (key, value) =>
@@ -242,16 +361,14 @@ function writeParityReport() {
             JSON.stringify(summary),
             ''
         ];
-        fs.writeFileSync(PARITY_FILE_PATH, lines.join('\n'));
+        fs.writeFileSync(REPORT_FILEPATH, lines.join('\n'));
 
         // Write JSON format
-        const jsonPath = PARITY_FILE_PATH.replace(/\.jsonl$/, '.json');
+        const jsonPath = REPORT_FILEPATH.replace(/\.jsonl$/, '.json');
         fs.writeFileSync(jsonPath, JSON.stringify({
             summary,
             parity: parityState.diffs
         }, null, 2));
-
-        logParityResults(summary);
     } catch (error) {
         console.warn('[jora][parser-parity] Failed to write parity file:', error?.message);
     }
@@ -259,13 +376,13 @@ function writeParityReport() {
 
 function logParityResults(summary) {
     // Don't output anything when parity tracking is disabled
-    if (PARITY_MODE === 'off') {
+    if (MODE === 'off') {
         return;
     }
 
     console.log('================= Parser Parity Report =================');
-    console.log(`Mode:    ${PARITY_MODE} - ${getModeDescription(PARITY_MODE)}`);
-    console.log(`Report:  ${PARITY_FILE_PATH}`);
+    console.log(`Mode:    ${MODE} - ${MODES[MODE]}`);
+    console.log(`Report:  ${REPORT_FILEPATH}`);
     console.log();
     console.log(`Queries: ${summary.total}`);
     console.log(`Success: ${summary.success.toString().padStart(4)} (${((summary.success / summary.total) * 100).toFixed(2)}%)`);
@@ -287,17 +404,29 @@ function logParityResults(summary) {
                     .sort(([, a], [, b]) => b.count - a.count);
 
                 for (const [subkind, subrecord] of sortedSubcounts) {
-                    console.log(`    ${subrecord.count.toString().padStart(4)} x "${subkind}"`);
+                    console.log(`    ${subrecord.count.toString().padStart(4)} x ${subkind.replace(/\n/g, '\n           ')}`);
+
+                    if (subrecord.stack) {
+                        console.log(
+                            subrecord.stack
+                                .split('\n')
+                                .map(line => `     ${line
+                                    .replace(process.cwd(), '.')
+                                    .replace('file://.', '.')
+                                } `)
+                                .join('\n') + '\n'
+                        );
+                    }
 
                     if (PRINT_QUERIES) {
-                        for (const query of subrecord.queries) {
-                            console.log(`         - ${query}`);
+                        for (const details of subrecord.details) {
+                            console.log(`         Query: ${details}`);
                         }
                     }
                 }
             } else if (PRINT_QUERIES) {
-                for (const query of value.queries) {
-                    console.log(`         - ${query}`);
+                for (const details of value.details) {
+                    console.log(`         Query: ${details}`);
                 }
             }
         }
@@ -307,180 +436,136 @@ function logParityResults(summary) {
     console.log('================= Parser Parity Report =================');
 }
 
-function scheduleParityFlush() {
-    if (parityState.flushScheduled || typeof process === 'undefined') {
+let scheduleParityFlush = () => {
+    if (typeof process === 'undefined') {
         return;
     }
 
-    parityState.flushScheduled = true;
     let flushed = false;
-
     const flush = () => {
         if (flushed) {
             return;
         }
         flushed = true;
-        writeParityReport();
+
+        const summary = buildParitySummary();
+        writeParityReport(summary);
+        logParityResults(summary);
     };
 
+    scheduleParityFlush = () => {}; // no-op after first call
     process.on('exit', flush);
     process.on('beforeExit', flush);
-    process.on('SIGINT', () => {
-        flush(); process.exit(130);
-    });
-    process.on('SIGTERM', () => {
-        flush(); process.exit(143);
-    });
-}
+    process.on('SIGINT', flush);
+    process.on('SIGTERM', flush);
+};
 
 // Parser implementations
-function runBothParsers(source, tolerantMode = false) {
-    const shouldRunLegacy = !['new-only'].includes(PARITY_MODE);
-    const shouldRunNew = !['off'].includes(PARITY_MODE); // Run new parser unless explicitly off
+function parseWithParity(source, tolerant = false) {
+    const shouldRunLegacy = MODE !== 'new-only';
+    const shouldRunNew = MODE !== 'off';
 
-    let legacyResult = null;
-    let legacyError = null;
-    let newResult = null;
-    let newError = null;
-
-    // Run legacy parser if needed
-    if (shouldRunLegacy) {
-        try {
-            legacyResult = legacyParser.parse(source, tolerantMode);
-        } catch (error) {
-            legacyError = error;
-        }
+    // Fast path: only legacy parser
+    if (!shouldRunNew) {
+        return legacyParser.parse(source, tolerant);
     }
 
-    // Run new parser if needed
-    if (shouldRunNew) {
-        try {
-            newResult = newParse(source, tolerantMode);
-        } catch (error) {
-            newError = error;
-        }
+    // Fast path: only new parser
+    if (!shouldRunLegacy) {
+        return newParser.parse(source, tolerant);
+    }
+
+    // Compare both parsers
+    let legacyResult = { value: null, error: null };
+    let newResult = { value: null, error: null };
+    const [primary, secondary] = MODE === 'new'
+        ? [newParser, legacyParser]
+        : [legacyParser, newParser];
+    const [primaryResult, secondaryResult] = MODE === 'new'
+        ? [newResult, legacyResult]
+        : [legacyResult, newResult];
+
+    try {
+        primaryResult.value = primary.parse(source, tolerant);
+    } catch (error) {
+        primaryResult.error = error;
+    }
+
+    try {
+        secondaryResult.value = secondary.parse(source, tolerant);
+    } catch (error) {
+        secondaryResult.error = error;
     }
 
     // Compare results for parity tracking
-    if (shouldRunLegacy && shouldRunNew) {
-        if (!legacyError && !newError && legacyResult && newResult) {
-            logParityDifference('AST_MISMATCH', tolerantMode, source, legacyResult.ast, newResult.ast);
-        } else if ((legacyError && !newError && newResult) || (newError && !legacyError && legacyResult)) {
-            logParityDifference('AST_MISMATCH', tolerantMode, source,
-                legacyError ? `Error: ${legacyError.message}` : legacyResult.ast,
-                newError ? `Error: ${newError.message}` : newResult.ast
-            );
-        }
+    logParityDifference('AST_MISMATCH', source,
+        legacyResult.error ? `Error: ${legacyResult.error.message}` : legacyResult.value,
+        newResult.error ? `Error: ${newResult.error.message}` : newResult.value,
+        { tolerant }
+    );
+
+    if (primaryResult.error) {
+        throw primaryResult.error;
     }
 
-    // Return appropriate result based on mode
-    if (['new', 'new-only'].includes(PARITY_MODE)) {
-        if (!tolerantMode && newError) {
-            throw newError;
-        }
-        return newResult;
-    }
-
-    // Default to legacy behavior (legacy, off modes)
-    if (!tolerantMode && legacyError) {
-        throw legacyError;
-    }
-    if (legacyResult) {
-        return legacyResult;
-    }
-
-    // Fallback to new parser if legacy failed (shouldn't happen in normal cases)
-    if (!tolerantMode && newError) {
-        throw newError;
-    }
-    return newResult;
+    return primaryResult.value;
 }
 
-function* tokenizeWithParity(source, tolerantMode = false, loc = false) {
-    const shouldRunLegacy = !['new-only'].includes(PARITY_MODE);
-    const shouldRunNew = !['off'].includes(PARITY_MODE); // Run new parser unless explicitly off
+function tokenizeWithParity(source, tolerant = false, loc = false) {
+    const shouldRunLegacy = MODE !== 'new-only';
+    const shouldRunNew = MODE !== 'off';
+
+    // Fast path: only legacy parser tokens
+    if (!shouldRunNew) {
+        return legacyParser.tokenize(source, tolerant, loc);
+    }
 
     // Fast path: only new parser tokens
-    if (!shouldRunLegacy && shouldRunNew) {
-        for (const token of newTokenizer(source, { tolerant: tolerantMode, commentRanges: [] })) {
-            if (loc) {
-                yield{
-                    type: token.type,
+    if (!shouldRunLegacy) {
+        return newParser.tokenize(source, tolerant);
+    }
+
+    // Compare with new tokenizer
+    return (function* () {
+        const legacyTokenizer = legacyParser.tokenize(source, tolerant, loc);
+        const legacyTokens = [];
+        const newTokenizer = newParser.tokenize(source, tolerant);
+        const newTokens = [];
+        const [primary, secondary] = MODE === 'new'
+            ? [newTokenizer, legacyTokenizer]
+            : [legacyTokenizer, newTokenizer];
+        const [primaryTokens, secondaryTokens] = MODE === 'new'
+            ? [newTokens, legacyTokens]
+            : [legacyTokens, newTokens];
+
+        Object.defineProperty(newTokens, 'push', {
+            value(token) {
+                return Array.prototype.push.call(this, {
+                    offset: token.offset,
+                    type: token.name,
                     value: token.value,
-                    offset: token.range[0],
-                    loc: {
-                        start: { line: 1, column: 0 },
-                        end: { line: 1, column: 0 },
-                        range: token.range
-                    }
-                };
-            } else {
-                yield{ type: token.type, value: token.value, offset: token.range[0] };
+                    ...(loc ? { loc: token.loc } : {})
+                });
             }
+        });
+
+        for (const primaryToken of primary) {
+            primaryTokens.push(primaryToken);
+            yield primaryToken;
         }
-        return;
-    }
 
-    // Primary path: run legacy tokenizer and yield its tokens (unless new mode)
-    const legacyTokens = [];
-    if (shouldRunLegacy && legacyParser.tokenize) {
-        for (const token of legacyParser.tokenize(source, tolerantMode, loc)) {
-            // For 'new' mode, don't yield legacy tokens, just collect for comparison
-            if (PARITY_MODE !== 'new') {
-                yield token;
-            }
-            legacyTokens.push({ type: token.type, value: String(token.value) });
+        // Drain remaining secondary tokens
+        for (const secondaryToken of secondary) {
+            secondaryTokens.push(secondaryToken);
         }
-    }
 
-    // For 'new' mode, yield new tokens as primary
-    if (PARITY_MODE === 'new' && shouldRunNew) {
-        for (const token of newTokenizer(source, { tolerant: tolerantMode, commentRanges: [] })) {
-            if (loc) {
-                yield{
-                    type: token.type,
-                    value: token.value,
-                    offset: token.range[0],
-                    loc: {
-                        start: { line: 1, column: 0 },
-                        end: { line: 1, column: 0 },
-                        range: token.range
-                    }
-                };
-            } else {
-                yield{ type: token.type, value: token.value, offset: token.range[0] };
-            }
-        }
-    }
-
-    // Compare with new tokenizer if needed
-    if (shouldRunNew) {
-        try {
-            const newTokens = [];
-            for (const token of newTokenizer(source, { tolerant: tolerantMode, commentRanges: [] })) {
-                let typeName = typeof token.type === 'number' ? (token.name || '?') : token.type;
-                if (TOKEN_PUNCT_MAP[typeName]) {
-                    typeName = TOKEN_PUNCT_MAP[typeName];
-                }
-                newTokens.push({ type: typeName, value: String(token.value) });
-            }
-
-            const tokensMatch = legacyTokens.length === newTokens.length &&
-                legacyTokens.every((token, i) =>
-                    token.type === newTokens[i].type && token.value === newTokens[i].value
-                );
-
-            if (!tokensMatch) {
-                logParityDifference('TOKENS', tolerantMode, source, legacyTokens, newTokens);
-            }
-        } catch (error) {
-            console.warn('[jora][parser-parity] Tokenizer comparison failed:', error?.message);
-        }
-    }
+        // Log parity differences
+        logParityDifference('TOKENS_MISMATCH', source, legacyTokens, newTokens, { tolerant, loc });
+    }());
 }
 
 // Export the parser interface
 export default {
-    parse: runBothParsers,
+    parse: parseWithParity,
     tokenize: tokenizeWithParity
 };

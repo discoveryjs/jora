@@ -57,6 +57,7 @@ export class Token {
 export function createTokenizer(input, tolerantMode = false) {
     const length = input.length;
     let pos = 0;
+    let done = false;
     let bracketStack = [];
     let preventPrimitive = false;
     let preventKeyword = false;
@@ -273,6 +274,7 @@ export function createTokenizer(input, tolerantMode = false) {
         preventKeyword = false;
 
         if (pos >= length) {
+            done = true;
             return new Token(TOKEN_EOF, '', pos);
         }
 
@@ -456,6 +458,10 @@ export function createTokenizer(input, tolerantMode = false) {
             return token;
         }
 
+        if (done) {
+            return null;
+        }
+
         return tolerantMode
             ? nextTokenTolerant()
             : nextTokenStrict();
@@ -464,6 +470,7 @@ export function createTokenizer(input, tolerantMode = false) {
     function saveState() {
         return {
             pos,
+            done,
             bracketStack: [...bracketStack],
             preventPrimitive,
             preventKeyword,
@@ -474,6 +481,7 @@ export function createTokenizer(input, tolerantMode = false) {
 
     function restoreState(state) {
         pos = state.pos;
+        done = state.done;
         bracketStack = state.bracketStack;
         preventPrimitive = state.preventPrimitive;
         preventKeyword = state.preventKeyword;
@@ -484,6 +492,9 @@ export function createTokenizer(input, tolerantMode = false) {
     return {
         nextToken,
         saveState,
-        restoreState
+        restoreState,
+        get done() {
+            return done;
+        }
     };
 }
