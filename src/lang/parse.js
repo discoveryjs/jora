@@ -5,9 +5,11 @@ const { parse: newParse, tokenize: newTokenizer } = newImplementation;
 
 // Default parity mode when not specified by environment variable
 const DEFAULT_PARITY_MODE = 'legacy';
+const DEFAULT_PRINT_QUERIES = true; // Set to true to print all processed queries (for debugging)
 
 // Configuration
 const PARITY_MODE = getParityMode();
+const PRINT_QUERIES = getPrintQueries();
 const PARITY_FILE_PATH = getParityFilePath();
 
 // State management
@@ -48,6 +50,13 @@ function getParityMode() {
         return DEFAULT_PARITY_MODE;
     }
     return process.env.JORA_PARSER_PARITY || DEFAULT_PARITY_MODE; // legacy | new | off | new-only
+}
+
+function getPrintQueries() {
+    if (typeof process === 'undefined' || !process.env) {
+        return DEFAULT_PRINT_QUERIES;
+    }
+    return process.env.PRINT_QUERIES || DEFAULT_PRINT_QUERIES;
 }
 
 function getParityFilePath() {
@@ -254,30 +263,48 @@ function logParityResults(summary) {
         return;
     }
 
-    console.log(`[jora][parser-parity] Mode: ${PARITY_MODE} - ${getModeDescription(PARITY_MODE)}`);
-    console.log(`[jora][parser-parity] Queries: ${summary.total}, Failed: ${summary.failed}`);
+    console.log('================= Parser Parity Report =================');
+    console.log(`Mode:    ${PARITY_MODE} - ${getModeDescription(PARITY_MODE)}`);
+    console.log(`Report:  ${PARITY_FILE_PATH}`);
+    console.log();
+    console.log(`Queries: ${summary.total}`);
+    console.log(`Success: ${summary.success.toString().padStart(4)} (${((summary.success / summary.total) * 100).toFixed(2)}%)`);
+    console.log(`Failed:  ${summary.failed.toString().padStart(4)} (${((summary.failed / summary.total) * 100).toFixed(2)}%)`);
+    console.log();
 
     if (summary.failed === 0) {
         console.log('🎉 No differences found!');
-        return;
-    }
+    } else {
+        console.log('Issues by type:');
+        const sortedCounts = Object.entries(summary.failedCounts)
+            .sort(([a], [b]) => a.localeCompare(b));
 
-    console.log('[jora][parser-parity] Failed by type:');
-    const sortedCounts = Object.entries(summary.failedCounts)
-        .sort(([a], [b]) => a.localeCompare(b));
+        for (const [kind, value] of sortedCounts) {
+            console.log(`   ${kind}: ${value.count}`);
 
-    for (const [kind, value] of sortedCounts) {
-        console.log(`   ${kind}: ${value.count}`);
+            if (value.subcounts && Object.keys(value.subcounts).length) {
+                const sortedSubcounts = Object.entries(value.subcounts)
+                    .sort(([, a], [, b]) => b.count - a.count);
 
-        if (value.subcounts && Object.keys(value.subcounts).length) {
-            const sortedSubcounts = Object.entries(value.subcounts)
-                .sort(([, a], [, b]) => b.count - a.count);
+                for (const [subkind, subrecord] of sortedSubcounts) {
+                    console.log(`    ${subrecord.count.toString().padStart(4)} x "${subkind}"`);
 
-            for (const [subkind, subrecord] of sortedSubcounts) {
-                console.log(`    ${subrecord.count.toString().padStart(4)} x "${subkind}"`);
+                    if (PRINT_QUERIES) {
+                        for (const query of subrecord.queries) {
+                            console.log(`         - ${query}`);
+                        }
+                    }
+                }
+            } else if (PRINT_QUERIES) {
+                for (const query of value.queries) {
+                    console.log(`         - ${query}`);
+                }
             }
         }
     }
+
+    console.log();
+    console.log('================= Parser Parity Report =================');
 }
 
 function scheduleParityFlush() {
