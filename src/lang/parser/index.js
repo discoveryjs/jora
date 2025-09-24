@@ -1,28 +1,21 @@
-/**
- * New parser integration wrapper
- * Provides compatibility with the existing jison parser interface
- */
-
-import { Parser } from './parser.js';
+import { parse } from './parser.js';
 import { createTokenizer } from './tokenizer.js';
 
-// Create a compatible parser interface
 export default {
     parse(source, tolerant = false) {
-        const tokenizer = createTokenizer(source, tolerant);
-        const joraParser = new Parser(tokenizer);
-
         return {
-            ast: joraParser.parse(),
+            ast: parse(createTokenizer(source, tolerant)),
             commentRanges: []
         };
     },
 
     *tokenize(source, tolerant = false) {
         const tokenizer = createTokenizer(source, tolerant);
+        let token;
 
-        while (!tokenizer.done) {
-            yield tokenizer.nextToken();
-        }
+        do {
+            token = tokenizer.nextToken();
+            yield token;
+        } while (token.type !== 57); // TOKEN_EOF
     }
 };
