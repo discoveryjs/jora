@@ -236,7 +236,7 @@ export function createTokenizer(input, tolerantMode = false) {
         throw new Error(`Unexpected character '${ch}' at position ${pos}`);
     }
 
-    function nextToken() {
+    return function nextToken() {
         // Check for pending token first
         if (pendingToken) {
             // Get and clear pending token
@@ -271,36 +271,5 @@ export function createTokenizer(input, tolerantMode = false) {
         return tolerantMode
             ? nextTokenTolerant(token)
             : token;
-    }
-
-    function saveState() {
-        return {
-            pos,
-            done,
-            bracketStack: [...bracketStack],
-            preventPrimitive,
-            preventKeyword,
-            pendingToken,
-            prevToken: prevTokenType
-        };
-    }
-
-    function restoreState(state) {
-        pos = state.pos;
-        done = state.done;
-        bracketStack = state.bracketStack;
-        preventPrimitive = state.preventPrimitive;
-        preventKeyword = state.preventKeyword;
-        pendingToken = state.pendingToken;
-        prevTokenType = state.prevToken;
-    }
-
-    return {
-        nextToken,
-        saveState,
-        restoreState,
-        get done() {
-            return done;
-        }
     };
 }

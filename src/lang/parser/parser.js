@@ -58,13 +58,11 @@ const PRECEDENCE = new Map([
     [TOKEN_DOT_DOT_OPEN_PAREN, 14]
 ]);
 
-export function parse(tokenizer) {
-    let current = null;
+export function parse(tokens) {
+    let index = 0;
+    let current = tokens[0];
 
     try {
-        // Initialize by advancing to first token
-        advance();
-
         return parseBlock();
     } finally {
         // Ensure nothing left after parsing
@@ -72,15 +70,13 @@ export function parse(tokenizer) {
     }
 
     function maybe(fn) {
-        const tokenizerState = tokenizer.saveState();
-        const currentToken = current;
+        const savedIndex = index;
 
         try {
             return fn();
         } catch (error) {
-            tokenizer.restoreState(tokenizerState);
-            current = currentToken;
-
+            index = savedIndex;
+            current = tokens[index];
             return null;
         }
     }
@@ -100,7 +96,13 @@ export function parse(tokenizer) {
         }
 
         const token = current;
-        current = tokenizer.nextToken();
+
+        // Stay on EOF if at end
+        if (index < tokens.length - 1) {
+            index++;
+            current = tokens[index];
+        }
+
         return token;
     }
 
