@@ -28,7 +28,7 @@
   },
   "scripts": {
     "lint": "eslint src test docs",
-    "test": "mocha --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
+    "test": "NODE_OPTIONS=\"--import=./scripts/parser-parity-register.js\" mocha --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
     "test:cjs": "mocha cjs-test --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",
     "compile-modules": "node scripts/compile-modules.cjs",

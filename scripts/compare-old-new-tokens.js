@@ -1,6 +1,5 @@
-import legacyParser from './src/lang/parse-old.js';
-import { Tokenizer } from './src/lang/parser/tokenizer.js';
-import { TOKEN_EOF } from './src/lang/parser/tokens.js';
+import legacyParser from '../src/lang/parse-old.js';
+import newParser from '../src/lang/parser/index.js';
 
 // Test comprehensive query from user request
 const query = '$foo:true;$a:false;$c;$;$d:d.e;$f:$["f"];bar([#,@,null,undefined,Infinity,NaN,not $,no $,1,"2\'\\""' +
@@ -18,15 +17,8 @@ function compareTokenizers() {
     console.log('Query length:', query.length);
 
     // Get tokens from both tokenizers
-    const legacyTokens = Array.from(legacyParser.tokenize(query));
-
-    const tokenizer = new Tokenizer(query);
-    const newTokens = [];
-    let token;
-    do {
-        token = tokenizer.nextToken();
-        newTokens.push(token);
-    } while (token.type !== TOKEN_EOF);
+    const legacyTokens = [...legacyParser.tokenize(query)];
+    const newTokens = [...newParser.tokenize(query)];
 
     console.log(`Legacy tokens: ${legacyTokens.length}`);
     console.log(`New tokens: ${newTokens.length}`);

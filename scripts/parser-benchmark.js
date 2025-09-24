@@ -2,8 +2,8 @@
  * Performance benchmark comparing original jison parser vs new pure JS parser
  */
 
-const originalPath = './src/lang/parse-old.js';
-const newParserPath = './src/lang/parser/index.js';
+const originalPath = '../src/lang/parse-old.js';
+const newParserPath = '../src/lang/parser/index.js';
 
 // Test queries of varying complexity
 const testQueries = [
@@ -12,10 +12,10 @@ const testQueries = [
     '@[name]',
     '@.items.size()',
     '@.items[value > 10]',
-    '@.items.group(<type>)',
     '@.items.sort(value desc).slice(0, 5)',
     '@.items.[value > threshold].map({ key: name, val: value * 2 })',
     '@.data | { users: .users.size(), posts: .posts.size(), total: (.users.size() + .posts.size()) }',
+    '$a: 10; $b: 20; `template${$a + $b * 2} continue ${value.group(=>something) | sort(value.size() desc).size() |? ($ * 100 / 123.123) + "%" : "nono"}`',
     '$ in @.items ? @ : null'
 ];
 
@@ -34,18 +34,21 @@ async function benchmarkParser(parserName, modulePath) {
 
         for (let i = 0; i < iterations; i++) {
             try {
-                jora.default(query);
-            } catch (error) {
-                // Some queries might fail parsing, that's ok for benchmarking
+                jora.default.parse(query);
+            } catch (e) {
+                console.error('===============================');
+                console.error('Bad query:', query);
+                console.error(e);
+                console.error('===============================');
+                break;
             }
         }
 
-        const end = performance.now();
-        const time = end - start;
+        const time = performance.now() - start;
         times.push(time);
 
         console.log(
-            `  ${query.padEnd(40)} : ${time.toFixed(2)}ms (${(
+            `  ${query.replace(/^(.{39}).+/, '$1…').padEnd(40)} : ${time.toFixed(2)}ms (${(
                 time / iterations
             ).toFixed(4)}ms/op)`
         );
