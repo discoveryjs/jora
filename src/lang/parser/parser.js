@@ -1,7 +1,6 @@
-/**
- * Production-ready Jora parser - Compact, performant, extensible
- * Based on recursive descent with precedence climbing for operators
- */
+import * as build from './nodes.js';
+import { toNumberLiteral, toRegExpLiteral, toStringLiteral } from './convert-to-literal.js';
+import { LITERALS } from './tokenizer.js';
 import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
     TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$,
@@ -17,13 +16,13 @@ import {
     TOKEN_EOF,
     tokenNames
 } from './tokens.js';
-import * as build from './nodes.js';
 
 // Spread type constants
 const SPREAD_ARRAY = true;
 const SPREAD_OBJECT = false;
 
 // Operator precedence table (higher = higher precedence)
+const RIGHT_ASSOCIATIVE = new Set([TOKEN_ARROW, TOKEN_QUESTION]);
 const PRECEDENCE = new Map([
     [TOKEN_ARROW, 1],
     [TOKEN_ORDER, 2],  // ORDER has lower precedence than PIPE
@@ -58,8 +57,6 @@ const PRECEDENCE = new Map([
     [TOKEN_DOT_OPEN_BRACKET, 14],
     [TOKEN_DOT_DOT_OPEN_PAREN, 14]
 ]);
-
-const RIGHT_ASSOCIATIVE = new Set([TOKEN_ARROW, TOKEN_QUESTION]);
 
 export class Parser {
     constructor(tokenizer) {
@@ -114,7 +111,7 @@ export class Parser {
     }
 
     getPrecedence(type) {
-        return PRECEDENCE.get(type) || 0;
+        return PRECEDENCE.get(type);
     }
 
     isOperator(type) {
@@ -231,23 +228,40 @@ export class Parser {
     }
 
     parseLiteralValue() {
+        let value;
+
         switch (this.current.type) {
             case TOKEN_NUMBER:
-            case TOKEN_LITERAL:
+                value = toNumberLiteral(this.consumeValue());
+                break;
+
             case TOKEN_STRING:
-            case TOKEN_REGEXP:
-                // Tokenizer already converted these values
-                return build.Literal(this.consumeValue());
+                value = toStringLiteral(this.consumeValue(), false, 1);
+                break;
 
             case TOKEN_TEMPLATE:
+            case TOKEN_TPL_END:
+                value = toStringLiteral(this.consumeValue(), true, 1);
+                break;
+
             case TOKEN_TPL_START:
             case TOKEN_TPL_CONTINUE:
-            case TOKEN_TPL_END:
-                return build.Literal(this.consumeValue());
+                value = toStringLiteral(this.consumeValue(), true, 2);
+                break;
+
+            case TOKEN_REGEXP:
+                value = toRegExpLiteral(this.consumeValue());
+                break;
+
+            case TOKEN_LITERAL:
+                value = LITERALS.get(this.consumeValue());
+                break;
 
             default:
                 this.throwError('Expected literal value');
         }
+
+        return build.Literal(value);
     }
 
     parseExpression(minPrec = 0) {
@@ -257,34 +271,27 @@ export class Parser {
                this.getPrecedence(this.current.type) >= minPrec &&
                !this.match(TOKEN_EOF)) {
             const op = this.current;
-            const prec = this.getPrecedence(op.type);
-            const rightAssoc = this.isRightAssociative(op.type);
+            const prec = this.getPrecedence(op.type) + !this.isRightAssociative(op.type);
 
             switch (op.type) {
-                case TOKEN_QUESTION: {
-                    // Ternary operator
-                    left = this.parseTernaryConditional(left, prec, rightAssoc);
+                case TOKEN_QUESTION:
+                    left = this.parseTernaryConditional(left, prec);
                     break;
-                }
-                case TOKEN_PIPE: {
-                    // Pipeline operator
+
+                case TOKEN_PIPE:
                     left = this.parsePipeline(left);
                     break;
-                }
-                case TOKEN_IS: {
-                    // Assertion operator
+
+                case TOKEN_IS:
                     left = this.parseAssertionPostfix(left);
                     break;
-                }
-                case TOKEN_ORDER: {
-                    // Compare function
+
+                case TOKEN_ORDER:
                     left = this.parseCompareFunction(left);
                     break;
-                }
-                default: {
-                    // Binary operators
-                    left = this.parseBinaryOperator(left, prec, rightAssoc);
-                }
+
+                default:
+                    left = this.parseBinaryOperator(left, prec);
             }
         }
 
@@ -792,12 +799,12 @@ export class Parser {
         return build.Pipeline(left, right);
     }
 
-    parseTernaryConditional(condition, prec, rightAssoc) {
+    parseTernaryConditional(condition, prec) {
         this.advance(TOKEN_QUESTION);
-        const consequent = this.parseExpression(prec + (rightAssoc ? 0 : 1)) || build.Placeholder();
+        const consequent = this.parseExpression(prec) || build.Placeholder();
         const alternate = this.advanceIf(TOKEN_COLON)
             // Colon is present, parse alternate or use Placeholder if missing
-            ? this.parseExpression(prec + (rightAssoc ? 0 : 1)) || build.Placeholder()
+            ? this.parseExpression(prec) || build.Placeholder()
             // No colon, use null for alternate
             : null;
 
@@ -809,9 +816,9 @@ export class Parser {
         return build.Postfix(left, this.parseAssertion());
     }
 
-    parseBinaryOperator(left, prec, rightAssoc) {
+    parseBinaryOperator(left, prec) {
         const operator = this.consumeValue();
-        const right = this.parseExpression(prec + (rightAssoc ? 0 : 1));
+        const right = this.parseExpression(prec);
 
         if (!right) {
             this.throwError('Expected expression after operator');

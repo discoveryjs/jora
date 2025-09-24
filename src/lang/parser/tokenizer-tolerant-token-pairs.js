@@ -85,11 +85,3 @@ dollarCompoundKeywords.forEach(token => dollarPairs.delete(token));
 // Closing brackets - expressions like "[ ] has $]" should end with $ directly
 const dollarClosingBrackets = [TOKEN_CLOSE_BRACKET, TOKEN_CLOSE_PAREN, TOKEN_CLOSE_BRACE];
 dollarClosingBrackets.forEach(token => dollarPairs.delete(token));
-
-// Configure DOT token exclusions for proper keyword recognition
-const dotPairs = TOLERANT_TOKEN_PAIRS.get(TOKEN_DOT);
-
-// TOKEN_NOT should not trigger empty identifier insertion after DOT
-// because ". not 5" should produce DOT + NOT directly (legacy behavior)
-// while ". has 5" should produce DOT + IDENT("") + HAS (legacy behavior)
-dotPairs.delete(TOKEN_NOT);

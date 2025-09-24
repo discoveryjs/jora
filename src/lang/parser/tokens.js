@@ -69,7 +69,7 @@ export const TOKEN_COMMA = 54;
 export const TOKEN_COLON = 55;
 export const TOKEN_SEMICOLON = 56;
 
-// Special
+// Special - must be last
 export const TOKEN_EOF = 57;
 
 // Token names for debugging and error messages
@@ -135,7 +135,7 @@ export const tokenNames = {
 };
 
 // Bracket balance mappings
-export const OPEN_CLOSE_TOKEN_PAIR = new Map([
+export const BALANCE_TOKEN_PAIR = new Map([
     [TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN],
     [TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
     [TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
@@ -205,4 +205,28 @@ export const STR_TO_TOKEN = new Map([
     [',', TOKEN_COMMA],
     [':', TOKEN_COLON],
     [';', TOKEN_SEMICOLON]
+]);
+
+export const PREVENT_KEYWORD = new Set([
+    TOKEN_DOT,
+    TOKEN_DOT_DOT
+]);
+
+export const PREVENT_PRIMITIVE = new Set([
+    TOKEN_NUMBER,
+    TOKEN_STRING,
+    TOKEN_TEMPLATE,
+    TOKEN_TPL_END,
+    TOKEN_REGEXP,
+    TOKEN_LITERAL,
+    TOKEN_IDENT,
+    TOKEN_$$,
+    TOKEN_$IDENT,
+    TOKEN_$,
+    TOKEN_AT,
+    TOKEN_HASH,
+    TOKEN_CLOSE_PAREN,
+    TOKEN_CLOSE_BRACKET,
+    TOKEN_CLOSE_BRACE,
+    TOKEN_DOT
 ]);

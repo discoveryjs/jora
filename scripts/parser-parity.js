@@ -552,7 +552,12 @@ function tokenizeWithParity(source, tolerant = false, loc = false) {
 
         // Normalize token types for comparison
         for (let i = 0; i < newTokens.length; i++) {
-            newTokens[i] = { ...newTokens[i], type: newTokens[i].name };
+            newTokens[i] = {
+                offset: newTokens[i].start,
+                type: newTokens[i].name,
+                value: newTokens[i].value,
+                ...(loc ? { loc: newTokens[i].loc } : {})
+            };
         }
 
         // Log parity differences
