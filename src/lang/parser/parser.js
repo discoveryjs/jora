@@ -15,46 +15,37 @@ import {
 } from './tokens.js';
 
 const TOKEN_ANY = -1;
-
-// Spread type constants
 const SPREAD_ARRAY = true;
 const SPREAD_OBJECT = false;
 
 // Operator precedence table (higher = higher precedence)
 const RIGHT_ASSOCIATIVE = createTokenSet(TOKEN_QUESTION);
 const PRECEDENCE = createTokenTable(
-    TOKEN_ARROW, 1,
-    TOKEN_ORDER, 2,  // ORDER has lower precedence than PIPE
-    TOKEN_PIPE, 3,   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
-    TOKEN_QUESTION, 4,
-    TOKEN_IS, 5,
-    TOKEN_OR, 6,
-    TOKEN_AND, 7,
-    TOKEN_NULLISH_COALESCING, 8,
-    TOKEN_NOT, 9,
-    TOKEN_NO, 9,
-    TOKEN_IN, 10,
-    TOKEN_NOTIN, 10,
-    TOKEN_HAS, 10,
-    TOKEN_HASNO, 10,
-    TOKEN_EQUALS, 11,
-    TOKEN_NOT_EQUALS, 11,
-    TOKEN_MATCH, 11,
-    TOKEN_LESS_THAN, 12,
-    TOKEN_LESS_THAN_EQUALS, 12,
-    TOKEN_GREATER_THAN, 12,
-    TOKEN_GREATER_THAN_EQUALS, 12,
-    TOKEN_PLUS, 13,
-    TOKEN_MINUS, 13,
-    TOKEN_MULTIPLY, 13,
-    TOKEN_DIVIDE, 13,
-    TOKEN_MODULO, 13,
-    TOKEN_DOT, 14,
-    TOKEN_DOT_DOT, 14,
-    TOKEN_DOT_DOT_DOT, 14,
-    TOKEN_DOT_OPEN_PAREN, 14,
-    TOKEN_DOT_OPEN_BRACKET, 14,
-    TOKEN_DOT_DOT_OPEN_PAREN, 14,
+    TOKEN_ORDER, 1,  // ORDER has lower precedence than PIPE
+    TOKEN_PIPE, 2,   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
+    TOKEN_QUESTION, 3,
+    TOKEN_IS, 4,
+    TOKEN_OR, 5,
+    TOKEN_AND, 6,
+    TOKEN_NULLISH_COALESCING, 7,
+    TOKEN_NOT, 8,
+    TOKEN_NO, 8,
+    TOKEN_IN, 9,
+    TOKEN_NOTIN, 9,
+    TOKEN_HAS, 9,
+    TOKEN_HASNO, 9,
+    TOKEN_EQUALS, 10,
+    TOKEN_NOT_EQUALS, 10,
+    TOKEN_MATCH, 10,
+    TOKEN_LESS_THAN, 11,
+    TOKEN_LESS_THAN_EQUALS, 11,
+    TOKEN_GREATER_THAN, 11,
+    TOKEN_GREATER_THAN_EQUALS, 11,
+    TOKEN_PLUS, 12,
+    TOKEN_MINUS, 12,
+    TOKEN_MULTIPLY, 12,
+    TOKEN_DIVIDE, 12,
+    TOKEN_MODULO, 12,
     -1
 );
 
@@ -284,8 +275,6 @@ export function parse(tokens) {
     function parseReference() {
         const name = parseIdentifier();
 
-        // TOKEN_$IDENT
-        // TOKEN_$METHOD_OPEN
         return {
             type: 'Reference',
             name,
@@ -372,7 +361,11 @@ export function parse(tokens) {
     function parseExpression(minPrec = 0) {
         let left = parseUnary();
 
+        // Precedence climbing: for non-operator tokens PRECEDENCE is -1, so they never pass the >= minPrec test.
+        // This efficiently combines operator detection with precedence checking in one condition.
         while (PRECEDENCE[current.type] >= minPrec && !match(TOKEN_EOF)) {
+            // For left-associative operators, increase precedence to prevent same-level operators from binding left-to-right
+            // For right-associative operators (like ?:), keep the same precedence to allow right-to-left binding
             const prec = PRECEDENCE[current.type] + !RIGHT_ASSOCIATIVE[current.type];
 
             switch (current.type) {
