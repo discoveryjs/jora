@@ -18,7 +18,11 @@ const TOKEN_ANY = -1;
 const SPREAD_ARRAY = true;
 const SPREAD_OBJECT = false;
 
-// Operator precedence table (higher = higher precedence)
+// --- Operator precedence ---------------------------------------------------
+// Numeric precedence values (higher number = binds tighter). Non-operator
+// tokens implicitly have precedence -1 (see createTokenTable implementation),
+// allowing a single numeric comparison to both detect an operator and decide
+// whether it should bind at the current recursion depth (precedence climbing).
 const RIGHT_ASSOCIATIVE = createTokenSet(TOKEN_QUESTION);
 const PRECEDENCE = createTokenTable(
     TOKEN_ORDER, 1,  // ORDER has lower precedence than PIPE
@@ -49,6 +53,13 @@ const PRECEDENCE = createTokenTable(
     -1
 );
 
+// ----------------------------------------------------------------------------
+// Hand‑written recursive descent + precedence climbing parser that consumes a
+// token stream produced by the new tokenizer. Whitespace and comments are
+// currently skipped at tokenization time; range tracking therefore relies on
+// previous meaningful token's end (see endRange()). This is a parity-oriented
+// implementation mirroring legacy quirks (notably some range spans and Block
+// wrappers) before subsequent cleanups.
 export function parse(tokens) {
     let index = 0;
     let current = tokens[index];
@@ -60,7 +71,7 @@ export function parse(tokens) {
         advance(TOKEN_EOF);
     }
 
-    // Error handling helpers
+    // ---- Error helpers ------------------------------------------------------
     function throwError(message) {
         throw new Error(message); // TODO: Add position tracking later
     }
@@ -87,7 +98,7 @@ export function parse(tokens) {
         }
     }
 
-    // Advance helpers
+    // ---- Token consumption helpers -----------------------------------------
     function advance(expectedType) {
         const token = current;
 
@@ -126,7 +137,7 @@ export function parse(tokens) {
         return value;
     }
 
-    // Match helpers
+    // ---- Lookahead helpers --------------------------------------------------
     function match(type) {
         return current.type === type;
     }
@@ -138,7 +149,7 @@ export function parse(tokens) {
         return nextTokenType === type;
     }
 
-    // Range tracking helpers
+    // ---- Range tracking -----------------------------------------------------
     function startRange() {
         return current.start;
     }
@@ -154,19 +165,17 @@ export function parse(tokens) {
         return [start, index > 0 ? tokens[index - 1].end : 0];
     }
 
-    // The legacy parser included the left-hand node's range in the production of postfix operators,
-    // e.g., in expr.[], the expr's range is part of the filter's range, which is questionable.
-    // Currently, the parser follows the same logic to maintain parity.
+    // Legacy quirk: postfix constructs (property access, map, filter, etc.) inherit
+    // the left expression's start for their own range. This inflates node ranges.
+    // Retained strictly for parity; will be removed once range normalization lands.
     //
-    // FIXME: The parser should not include the left-hand node's range in postfix nodes.
-    // In general, parse methods should not rely on other nodes' structure and values.
-    // This would simplify the implementation and follow the single responsibility principle.
+    // FIXME: Postfix nodes should own only their syntactic span.
     function legacyPrefixStartRange(node) {
         return node?.range[0] ?? startRange();
     }
 
-    // AST node creators called from several places
-    // Delete once only one callsite remains
+    // Minimal helpers for small repeated constructions. These remain until
+    // structural changes eliminate their few remaining multi-call sites.
     function createPlaceholder() {
         return {
             type: 'Placeholder',
@@ -192,7 +201,18 @@ export function parse(tokens) {
         };
     }
 
-    // Parser methods
+    // ============================= PARSER ====================================
+    // Grammar (simplified / informal):
+    //   Query          -> Block
+    //   Block          -> Definition* Expression? (wrapped in Block node)
+    //   Definition     -> Declarator (':' Expression)? ';'
+    //   Expression     -> precedence climbing over binary / pipeline / order / ternary
+    //   Primary        -> literals | references | special refs | arrays | objects | fn | templates | parentheses
+    //   Postfix chain  -> property / method / map / mapRecursive / filter / slice / bracket access (left associative)
+    //   Assertion      -> ( 'not'? ( IDENT | LITERAL | '(' Assertion (('and'|'or') Assertion )* ')' | $ident-as-empty-call ) )
+    // The parser intentionally preserves certain legacy AST shapes (e.g., Block
+    // wrappers inside Parentheses / Pipeline when definitions precede an expr).
+    // TODO: Remove those wrappers after downstream tooling migrates.
     function parseBlock() {
         const start = startRange();
         const definitions = parseDefinitions();
@@ -361,11 +381,12 @@ export function parse(tokens) {
     function parseExpression(minPrec = 0) {
         let left = parseUnary();
 
-        // Precedence climbing: for non-operator tokens PRECEDENCE is -1, so they never pass the >= minPrec test.
-        // This efficiently combines operator detection with precedence checking in one condition.
+        // Precedence climbing loop. For non-operators PRECEDENCE[...] is -1, so the
+        // condition fails quickly without extra operator-type checks.
         while (PRECEDENCE[current.type] >= minPrec && !match(TOKEN_EOF)) {
-            // For left-associative operators, increase precedence to prevent same-level operators from binding left-to-right
-            // For right-associative operators (like ?:), keep the same precedence to allow right-to-left binding
+            // Associativity tweak: left-associative ops parse RHS with (prec + 1)
+            // so same-precedence operators group left; right-associative (currently '?')
+            // reuse the same precedence value for right grouping.
             const prec = PRECEDENCE[current.type] + !RIGHT_ASSOCIATIVE[current.type];
 
             switch (current.type) {
@@ -409,8 +430,8 @@ export function parse(tokens) {
         const operator = getValueAndAdvance();
 
         const argument = operator === 'is'
-            ? parseAssertion()
-            : parseExpression(prec + 1);  // Parse with higher precedence to avoid self-binding
+            ? parseAssertion()            // 'is <assertion>' is syntactically distinct
+            : parseExpression(prec + 1);  // Avoid self-binding by raising minimal precedence
 
         return {
             type: 'Prefix',
@@ -422,7 +443,7 @@ export function parse(tokens) {
 
     function parsePostfix() {
         let expr = parsePrimary();
-
+        // Postfix chain: consume as long as the next token starts a postfix form.
         while (!match(TOKEN_EOF)) {
             switch (current.type) {
                 case TOKEN_IS:
@@ -451,6 +472,8 @@ export function parse(tokens) {
                     break;
 
                 case TOKEN_OPEN_BRACKET:
+                    // Ambiguity: either slice notation or bracket access. Try slice
+                    // first (backtracks on failure) otherwise treat as access.
                     expr = maybe(() => parseSliceNotation(expr)) || parseBracketAccess(expr);
                     break;
 
@@ -525,7 +548,9 @@ export function parse(tokens) {
         const negation = advanceIfMatch(TOKEN_NOT) !== null;
         let assertion = [];
 
-        // Handle assertion terms
+        // Assertion grammar allows nested parenthesized boolean combinations
+        // joined by 'and' / 'or', plus identifiers, literals, and a legacy quirk
+        // where $ident becomes an empty Method call (FIXME below).
         switch (current.type) {
             case TOKEN_OPEN_PAREN:
                 advance(TOKEN_OPEN_PAREN);
@@ -550,8 +575,8 @@ export function parse(tokens) {
                 break;
 
             case TOKEN_$IDENT:
-                // In assertion context, $variable becomes Method with empty arguments
-                // FIXME: Wrapping into Method looks as a bug, should be just Reference instead
+                // Legacy: $variable in assertion context -> Method node with no args.
+                // FIXME: Should be a simple Reference; adjust after parity phase.
                 assertion = createMethod(parseReference(), [], endRange(start));
                 break;
 
@@ -628,12 +653,10 @@ export function parse(tokens) {
         if (match(TOKEN_TEMPLATE)) {
             values.push(parseLiteralValue());
         } else {
-            // Start with TPL_START token
+            // Token sequence: TPL_START ( expr TPL_CONTINUE )* TPL_END
             values.push(parseLiteralValue(TOKEN_TPL_START));
 
-            // Parse template expressions and continuations
             while (true) {
-                // Parse the expression inside ${}
                 values.push(parseExpression());
 
                 if (!match(TOKEN_TPL_CONTINUE)) {
@@ -643,7 +666,6 @@ export function parse(tokens) {
                 values.push(parseLiteralValue(TOKEN_TPL_CONTINUE));
             }
 
-            // End with TPL_END token
             values.push(parseLiteralValue(TOKEN_TPL_END));
         }
 
@@ -659,7 +681,7 @@ export function parse(tokens) {
         const args = [];
 
         if (advanceIfMatch(TOKEN_OPEN_PAREN)) {
-            // Parse parameter list
+            // Parameter list (standard form)
             if (!match(TOKEN_CLOSE_PAREN)) {
                 do {
                     args.push(parseIdentifier());
@@ -673,7 +695,7 @@ export function parse(tokens) {
 
         advance(TOKEN_ARROW);
 
-        const body = parseExpression() || createPlaceholder();
+        const body = parseExpression() || throwError('Expected non-empty expression');
         return {
             type: 'Function',
             arguments: args,
@@ -687,7 +709,8 @@ export function parse(tokens) {
         const compares = [parseCompare(expr)];
 
         while (advanceIfMatch(TOKEN_COMMA)) {
-            // Parse the next expression with precedence higher than ORDER to avoid nested CompareFunction
+            // Ensure we don't nest CompareFunction nodes by parsing RHS with
+            // tighter precedence than ORDER itself.
             compares.push(
                 parseCompare(parseExpression(PRECEDENCE[TOKEN_ORDER] + 1))
             );
@@ -721,7 +744,7 @@ export function parse(tokens) {
 
         advance(TOKEN_CLOSE_PAREN);
 
-        // If we have definitions, wrap in a Block, otherwise just return the expression
+        // Legacy: definitions inside parentheses produce a Block node wrapper.
         return {
             type: 'Parentheses',
             body: definitions.length > 0
@@ -764,7 +787,7 @@ export function parse(tokens) {
     function parseSliceNotation(expr = null) {
         const start = legacyPrefixStartRange(expr);
         const args = [
-            consumeSurrounded(             // "[ e :"
+            consumeSurrounded(             // first expression before ':'
                 TOKEN_OPEN_BRACKET,
                 parseExpression,
                 TOKEN_COLON
@@ -772,7 +795,7 @@ export function parse(tokens) {
             parseExpression()              // "e"
         ];
 
-        // Optional third part
+        // Optional third expression
         if (advanceIfMatch(TOKEN_COLON)) { // ":"
             args.push(parseExpression());  // "e"
         }
@@ -792,12 +815,12 @@ export function parse(tokens) {
 
         advance(TOKEN_OPEN_BRACE);
 
-        // First, try to parse any definitions (like parseBlock does)
+        // Allow leading local definitions (mirrors Block behavior)
         const definitions = parseDefinitions();
         const properties = [];
 
         if (!match(TOKEN_CLOSE_BRACE)) {
-            // allow trailing comma
+            // Allow trailing comma
             do {
                 properties.push(
                     match(TOKEN_DOT_DOT_DOT)
@@ -815,8 +838,7 @@ export function parse(tokens) {
             range: endRange(start)
         };
 
-        // If we found definitions, wrap the object in a Block (like legacy parser does)
-        // FIXME: This behavior is questionable, block wrapper should be removed
+        // Legacy: wrap with Block when definitions present (FIXME to remove)
         return definitions.length > 0
             ? createBlock(definitions, object, endRange(start))
             : object;
@@ -826,7 +848,7 @@ export function parse(tokens) {
         const start = startRange();
         let key;
 
-        // Parse object key using existing methods
+        // Key forms: ident | literal | $ / $$ special | $ident (shorthand or explicit) | [expr]
         switch (current.type) {
             case TOKEN_IDENT:
                 key = parseIdentifier();
@@ -843,7 +865,9 @@ export function parse(tokens) {
                 break;
 
             case TOKEN_$IDENT:
-                // $variables in object context depend on whether it's shorthand or explicit
+                // Distinguish shorthand vs explicit ($foo vs $foo:). For shorthand we
+                // produce Reference (value) with plain "foo" key; for explicit we
+                // keep the leading $ in the key lexically then strip later (preserveDollar=true).
                 key = nextMatch(TOKEN_COLON)
                     // Explicit property: treat as identifier with $ preserved, e.g. {$foo: 1}
                     ? parseIdentifier(true)
@@ -923,6 +947,9 @@ export function parse(tokens) {
 
     function parseMapRecursive(value) {
         const start = legacyPrefixStartRange(value);
+        // Two syntactic forms:
+        //   ..ident / ..method(...)
+        //   ..( <block> )
         const query = advanceIfMatch(TOKEN_DOT_DOT)
             ? match(TOKEN_IDENT)
                 ? parseGetProperty()
@@ -962,12 +989,12 @@ export function parse(tokens) {
 
         advance(TOKEN_PIPE);
 
-        // Parse right side: definitions + expression with proper precedence
+        // Right side may start with local definitions (mirrors top-level Block).
         const definitions = parseDefinitions();
         const body = parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder();
 
-        // If we have definitions, wrap in a Block like parseBlock does
-        // FIXME: This behavior is questionable, block wrapper should be removed
+        // If we have definitions, wrap in a Block like legacy parser does
+        // FIXME: The block wrapper should be removed
         const right = definitions.length > 0
             ? createBlock(definitions, body, endRange(start))
             : body;
@@ -987,10 +1014,8 @@ export function parse(tokens) {
 
         const consequent = parseExpression(prec) || createPlaceholder();
         const alternate = advanceIfMatch(TOKEN_COLON)
-            // Colon is present, parse alternate or use Placeholder if missing
-            ? parseExpression(prec) || createPlaceholder()
-            // No colon, use null for alternate
-            : null;
+            ? parseExpression(prec) || createPlaceholder() // '? a :' -> Placeholder
+            : null;                                        // '? a'   -> null
 
         return {
             type: 'Conditional',
