@@ -8,6 +8,7 @@
         - `off`: Legacy parser only, no comparison
     - `PARITY_PRINT_QUERIES` (default: false) - print failed queries
     - `PARITY_STRIP_METADATA` (default: true) - strip metadata from ASTs (like `loc`, `range`, etc) for parity comparison
+- Use `npm lint -- --fix` to fix linting issues
 - Use the `./tmp` folder, if you need to experiment or test something with a temporary script
 - Use `scripts/compare-old-new-tokens.js` to test parity of tokenizers
 - Use `scripts/parser-benchmark.js` to benchmark performance of old vs new parser

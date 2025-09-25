@@ -2,10 +2,10 @@ import { parse } from './parser.js';
 import { createTokenizer } from './tokenizer.js';
 
 function* tokenize(source, tolerant = false) {
-    const tokenizer = createTokenizer(source, tolerant);
+    const nextToken = createTokenizer(source, tolerant);
     let token;
 
-    while (token = tokenizer()) {
+    while (token = nextToken()) {
         yield token;
     }
 }

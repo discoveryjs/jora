@@ -15,7 +15,7 @@ const MODES = {
     'off': 'Legacy parser only, no comparison'
 };
 const STRIP_METADATA_KEYS = [
-    'range',
+    // 'range',
     'loc',
     'commentRanges',
     'errors'
@@ -72,7 +72,8 @@ if (typeof process !== 'undefined' && process.env) {
 // State management
 const parityState = {
     seen: new Set(),
-    diffs: []
+    diffs: [],
+    improvements: []
 };
 
 // File system access (only in Node.js environment)
@@ -150,58 +151,49 @@ function shouldStripKey(key) {
     return STRIP_METADATA && STRIP_METADATA_KEYS.includes(key);
 }
 
-function findFirstDiffPath(a, b, path = '') {
+function findAllDiffsWithPath(a, b, path = '', diffs = []) {
     if (Object.is(a, b)) {
-        return null;
+        return diffs;
     }
 
     if (typeof a !== typeof b) {
-        return { path, legacy: a, new: b, reason: 'Type mismatch' };
+        diffs.push({ path, legacy: a, new: b, reason: 'Type mismatch' });
     }
 
     if (a && typeof a === 'object' && b && typeof b === 'object') {
         if (Array.isArray(a) !== Array.isArray(b)) {
-            return { path, legacy: a, new: b, reason: 'Array type mismatch' };
-        }
-
-        if (Array.isArray(a)) {
+            diffs.push({ path, reason: 'Array type mismatch' });
+        } else if (Array.isArray(a)) {
             if (a.length !== b.length) {
-                return { path, legacy: a, new: b, reason: 'Array length mismatch' };
-            }
-
-            for (let i = 0; i < a.length; i++) {
-                const result = findFirstDiffPath(a[i], b[i], `${path}[${i}]`);
-
-                if (result !== null) {
-                    return result;
+                diffs.push({ path, reason: 'Array length mismatch' });
+            } else {
+                for (let i = 0; i < a.length; i++) {
+                    findAllDiffsWithPath(a[i], b[i], `${path}[${i}]`, diffs);
                 }
             }
         } else {
             for (const key of Object.keys(a)) {
                 if (!shouldStripKey(key)) {
                     if (!Object.hasOwn(b, key)) {
-                        return { path, legacy: a, new: b, reason: `Missing key in 'new': ${key}` };
-                    }
-
-                    const result = findFirstDiffPath(a[key], b[key], `${path}.${key}`);
-
-                    if (result !== null) {
-                        return result;
+                        diffs.push({ path, reason: `Missing key in 'new': ${key}` });
+                    } else {
+                        findAllDiffsWithPath(a[key], b[key], `${path}.${key}`, diffs);
                     }
                 }
             }
 
             for (const key of Object.keys(b)) {
                 if (!shouldStripKey(key) && !Object.hasOwn(a, key)) {
-                    return { path, legacy: a, new: b, reason: `Missing key in 'legacy': ${key}` };
+                    diffs.push({ path, nodeType: b.type, reason: `Missing key in 'legacy': ${key}` });
                 }
             }
         }
 
-        return null;
+        return diffs;
     }
 
-    return { path, legacy: a, new: b, reason: 'Value mismatch' };
+    diffs.push({ path, legacy: a, new: b, reason: 'Value mismatch' });
+    return diffs;
 }
 
 function createStableString(value) {
@@ -254,8 +246,29 @@ function logParityDifference(kind, source, legacyData, newData, options) {
                 diffKind = 'NEW_PARSE_ERROR';
                 diff = { offset: -1, a: createSliceWindow(stableA, 0, 80), b: newData };
             } else {
+                const astDiffs = findAllDiffsWithPath(legacyData, newData);
+                const isDiffImprovement = diff => diff.reason === 'Missing key in \'legacy\': range';
+                const astDiffsImprovement = astDiffs.filter(isDiffImprovement);
+
+                // Log improvements
+                if (astDiffsImprovement.length > 0) {
+                    parityState.improvements.push({
+                        id,
+                        kind: 'FIXED_MISSED_RANGE',
+                        options,
+                        mode: MODE,
+                        source: source.length > 100 ? source.slice(0, 100) + '…' : source,
+                        details: astDiffsImprovement
+                    });
+                }
+
                 diff = findFirstDiff(stableA, stableB);
-                firstDiffPath = findFirstDiffPath(legacyData, newData);
+                firstDiffPath = astDiffs.find(diff => !isDiffImprovement(diff)) || null;
+
+                // Exit if differences are improvement only (e.g. missing range info)
+                if (!firstDiffPath) {
+                    return;
+                }
             }
 
             parityState.diffs.push({
@@ -263,7 +276,7 @@ function logParityDifference(kind, source, legacyData, newData, options) {
                 kind: diffKind,
                 options,
                 mode: MODE,
-                source: source.length > 100 ? source.slice(0, 100) + '…' : source,
+                source,
                 contextDiffOffset: diff.offset,
                 legacyContext: diff.a,
                 newContext: diff.b,
@@ -278,7 +291,7 @@ function logParityDifference(kind, source, legacyData, newData, options) {
             kind: 'DIFF_ERROR',
             options,
             mode: MODE,
-            source: source.length > 100 ? source.slice(0, 100) + '…' : source,
+            source,
             error: error?.message,
             stack: error?.stack?.slice(error?.stack?.indexOf('\n') + 1) || null
         });
@@ -367,11 +380,16 @@ function writeParityReport(summary) {
         // Write JSON format
         fs.writeFileSync(REPORT_FILEPATH, JSON.stringify({
             summary,
-            parity: parityState.diffs
+            parity: parityState.diffs,
+            improvements: parityState.improvements
         }, null, 4));
     } catch (error) {
         console.warn('[jora][parser-parity] Failed to write parity file:', error?.message);
     }
+}
+
+function truncateString(str, maxLength = 100) {
+    return str.length > maxLength ? str.slice(0, maxLength) + '…' : str;
 }
 
 function logParityResults(summary) {
@@ -422,13 +440,13 @@ function logParityResults(summary) {
 
                     if (PRINT_QUERIES) {
                         for (const details of subrecord.details) {
-                            console.log(`         Query: ${details}`);
+                            console.log(`         Query: ${truncateString(details)}`);
                         }
                     }
                 }
             } else if (PRINT_QUERIES) {
                 for (const details of value.details) {
-                    console.log(`         Query: ${details}`);
+                    console.log(`         Query: ${truncateString(details)}`);
                 }
             }
         }

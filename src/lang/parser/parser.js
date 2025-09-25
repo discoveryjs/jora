@@ -60,7 +60,7 @@ const PRECEDENCE = new Map([
 
 export function parse(tokens) {
     let index = 0;
-    let current = tokens[0];
+    let current = tokens[index];
 
     try {
         return parseBlock();
@@ -90,6 +90,13 @@ export function parse(tokens) {
         return current.type === type;
     }
 
+    function nextMatch(type) {
+        const nextTokenType = index < tokens.length - 1
+            ? tokens[index + 1].type
+            : TOKEN_EOF;
+        return nextTokenType === type;
+    }
+
     function advance(expectedType) {
         if (expectedType !== undefined && current.type !== expectedType) {
             throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[current.type]}\``);
@@ -112,12 +119,54 @@ export function parse(tokens) {
             : null;
     }
 
-    function consumeValue(expectedType) {
+    function getValueAndAdvance(expectedType) {
         const value = current.value;
         advance(expectedType);
         return value;
     }
 
+    function consumeSurrounded(typeOpen, fn, typeClose) {
+        advance(typeOpen);
+        const value = fn();
+        advance(typeClose);
+        return value;
+    }
+
+    // Range tracking helpers
+    function startRange() {
+        return current.start;
+    }
+
+    function endRange(start) {
+        // Use the previous token's end, because we iterate over meaningful tokens,
+        // i.e. skipping whitespace and comment tokens.
+        // There may be skipped tokens between meaningful ones, so we need to end the range
+        // at the previous token's end, excluding the skipped whitespace/comment tokens.
+        return [start, index > 0 ? tokens[index - 1].end : 0];
+    }
+
+    function getRangeAndAdvance(expectedType) {
+        const range = [current.start, current.end];
+        advance(expectedType);
+        return range;
+    }
+
+    // AST node creators called from several places
+    // Delete once only one callsite remains
+    function createPlaceholder() {
+        return build.Placeholder([current.start, current.start]);
+    }
+
+    function createBlock(definitions, body, range) {
+        return build.Block(definitions, body, range);
+    }
+
+    function createMethod(reference, args, range) {
+        return build.Method(reference, args, range);
+    }
+
+    // Precedence helpers
+    // TODO: Remove
     function getPrecedence(type) {
         return PRECEDENCE.get(type);
     }
@@ -130,18 +179,23 @@ export function parse(tokens) {
         return RIGHT_ASSOCIATIVE.has(type);
     }
 
+    // Parser methods
     function parseBlock() {
-        return build.Block(
-            parseDefinitions(),
-            parseExpression() || build.Placeholder()
+        const start = startRange();
+        const definitions = parseDefinitions();
+        const body = parseExpression() || createPlaceholder();
+
+        return createBlock(
+            definitions,
+            body,
+            endRange(start)
         );
     }
 
     function parseDefinitions() {
         const definitions = [];
-        let definition;
 
-        while (definition = maybe(parseDefinition)) {
+        for (let definition; definition = maybe(parseDefinition);) {
             definitions.push(definition);
         }
 
@@ -149,75 +203,70 @@ export function parse(tokens) {
     }
 
     function parseDefinition() {
+        const start = startRange();
         const declarator = parseDeclarator();
         const value = advanceIf(TOKEN_COLON)
             ? parseExpression()
             : null;
 
-        advance(TOKEN_SEMICOLON); // consume ';'
+        advance(TOKEN_SEMICOLON);
 
-        return build.Definition(declarator, value);
+        return build.Definition(declarator, value, endRange(start));
     }
 
     function parseDeclarator() {
+        const start = startRange();
         const name = match(TOKEN_$IDENT)
-            ? consumeValue().slice(1)
+            ? getValueAndAdvance().slice(1)
             : advanceIf(TOKEN_$)
                 ? null
                 : throwError('Expected declarator');
 
-        return build.Declarator(name);
+        return build.Declarator(name, endRange(start));
     }
 
-    function parseIdentifier(refAsIdentifier = false) {
-        return build.Identifier(
-            refAsIdentifier
-                ? consumeValue(TOKEN_$IDENT).slice(1)
-                : consumeValue(TOKEN_IDENT)
-        );
-    }
+    function parseIdentifier(preserveDollar = false) {
+        const { start, end, type } = current;
+        let name = getValueAndAdvance();
+        let suffix = 0;
 
-    // Multi-build helper methods
-    function parseIdentifierOrReference() {
-        switch (current.type) {
-            case TOKEN_IDENT:
-            case TOKEN_LITERAL:
-                return build.Identifier(consumeValue());
-
-            case TOKEN_METHOD_OPEN:
-                // Remove ( suffix only
-                return build.Identifier(consumeValue().slice(0, -1));
-
-            case TOKEN_$IDENT:
-                // Remove $ prefix
-                return build.Reference(parseIdentifier(true));
-
-            case TOKEN_$METHOD_OPEN:
-                // Remove $ prefix and ( suffix
-                return build.Reference(build.Identifier(consumeValue().slice(1, -1)));
-
-            default:
-                throwError('Expected identifier or reference');
+        if (!preserveDollar) {
+            // Remove $ prefix
+            if (type === TOKEN_$IDENT || type === TOKEN_$METHOD_OPEN) {
+                name = name.slice(1);
+            }
         }
+
+        // Remove "(" suffix and adjust range to exclude the parenthesis
+        if (type === TOKEN_METHOD_OPEN || type === TOKEN_$METHOD_OPEN) {
+            name = name.slice(0, -1);
+            suffix = 1;
+        }
+
+        return build.Identifier(name, [start, end - suffix]);
+    }
+
+    function parseReference() {
+        const identifier = parseIdentifier();
+
+        // TOKEN_$IDENT
+        // TOKEN_$METHOD_OPEN
+        return build.Reference(identifier, identifier.range.slice());
     }
 
     function parseSpecialReference() {
         switch (current.type) {
             case TOKEN_AT:
-                advance();
-                return build.Data();
+                return build.Data(getRangeAndAdvance());
 
             case TOKEN_HASH:
-                advance();
-                return build.Context();
+                return build.Context(getRangeAndAdvance());
 
             case TOKEN_$:
-                advance();
-                return build.Current();
+                return build.Current(getRangeAndAdvance());
 
             case TOKEN_$$:
-                advance();
-                return build.Arg1();
+                return build.Arg1(getRangeAndAdvance());
 
             default:
                 throwError('Expected special reference');
@@ -225,40 +274,41 @@ export function parse(tokens) {
     }
 
     function parseLiteralValue() {
+        const start = startRange();
         let value;
 
         switch (current.type) {
             case TOKEN_NUMBER:
-                value = toNumberLiteral(consumeValue());
+                value = toNumberLiteral(getValueAndAdvance());
                 break;
 
             case TOKEN_STRING:
-                value = toStringLiteral(consumeValue(), false, 1);
+                value = toStringLiteral(getValueAndAdvance(), false, 1);
                 break;
 
             case TOKEN_TEMPLATE:
             case TOKEN_TPL_END:
-                value = toStringLiteral(consumeValue(), true, 1);
+                value = toStringLiteral(getValueAndAdvance(), true, 1);
                 break;
 
             case TOKEN_TPL_START:
             case TOKEN_TPL_CONTINUE:
-                value = toStringLiteral(consumeValue(), true, 2);
+                value = toStringLiteral(getValueAndAdvance(), true, 2);
                 break;
 
             case TOKEN_REGEXP:
-                value = toRegExpLiteral(consumeValue());
+                value = toRegExpLiteral(getValueAndAdvance());
                 break;
 
             case TOKEN_LITERAL:
-                value = LITERALS.get(consumeValue());
+                value = LITERALS.get(getValueAndAdvance());
                 break;
 
             default:
                 throwError('Expected literal value');
         }
 
-        return build.Literal(value);
+        return build.Literal(value, endRange(start));
     }
 
     function parseExpression(minPrec = 0) {
@@ -277,10 +327,6 @@ export function parse(tokens) {
 
                 case TOKEN_PIPE:
                     left = parsePipeline(left);
-                    break;
-
-                case TOKEN_IS:
-                    left = parseAssertionPostfix(left);
                     break;
 
                 case TOKEN_ORDER:
@@ -304,30 +350,51 @@ export function parse(tokens) {
             case TOKEN_IS:
                 return parseUnaryPrefix();
 
-            case TOKEN_ARROW:
-                return parseFunction();
-
             default:
                 return parsePostfix();
         }
+    }
+
+    function parseUnaryPrefix() {
+        const start = startRange();
+        const prec = getPrecedence(current.type);
+        const operator = getValueAndAdvance();
+
+        const argument = operator === 'is'
+            ? parseAssertion()
+            : parseExpression(prec + 1);  // Parse with higher precedence to avoid self-binding
+
+        return build.Prefix(
+            operator,
+            argument,
+            endRange(start)
+        );
     }
 
     function parsePostfix() {
         let expr = parsePrimary();
 
         while (!match(TOKEN_EOF)) {
+            const start = startRange();
+
             switch (current.type) {
+                case TOKEN_IS:
+                    expr = parseAssertionPostfix(expr);
+                    break;
+
                 case TOKEN_DOT:
                     advanceIf(TOKEN_DOT);
 
                     switch (current.type) {
                         case TOKEN_IDENT:
-                            expr = parseGetProperty(expr);
+                            expr = parseGetProperty(expr, start);
                             break;
+
                         case TOKEN_METHOD_OPEN:
                         case TOKEN_$METHOD_OPEN:
-                            expr = parseMethodCall(expr);
+                            expr = parseMethodCall(expr, start);
                             break;
+
                         default:
                             throwError('Expected property name or method call after dot');
                     }
@@ -341,26 +408,26 @@ export function parse(tokens) {
                     expr = parseFilter(expr);
                     break;
 
-                case TOKEN_DOT_DOT_OPEN_PAREN:
-                    expr = parseMapRecursive(expr);
-                    break;
-
                 case TOKEN_DOT_DOT:
-                    advanceIf(TOKEN_DOT_DOT);
+                    advance(TOKEN_DOT_DOT);
 
                     switch (current.type) {
                         case TOKEN_IDENT:
-                            expr = parseMapRecursive(expr, parseGetProperty(null));
+                            expr = parseMapRecursive(expr, parseGetProperty(null, start), start);
                             break;
 
                         case TOKEN_METHOD_OPEN:
                         case TOKEN_$METHOD_OPEN:
-                            expr = parseMapRecursive(expr, parseMethodCall(null));
+                            expr = parseMapRecursive(expr, parseMethodCall(null), start);
                             break;
 
                         default:
                             throwError('Expected property name or method call after ..');
                     }
+                    break;
+
+                case TOKEN_DOT_DOT_OPEN_PAREN:
+                    expr = parseMapRecursive(expr);
                     break;
 
                 case TOKEN_OPEN_BRACKET: {
@@ -376,65 +443,113 @@ export function parse(tokens) {
         return expr;
     }
 
+    function parsePrimary() {
+        switch (current.type) {
+            case TOKEN_NUMBER:
+            case TOKEN_STRING:
+            case TOKEN_REGEXP:
+            case TOKEN_LITERAL:
+                return parseLiteralValue();
+
+            case TOKEN_TEMPLATE:
+            case TOKEN_TPL_START:
+                return parseTemplate();
+
+            case TOKEN_AT:
+            case TOKEN_HASH:
+            case TOKEN_$:
+            case TOKEN_$$:
+                return parseSpecialReference();
+
+            case TOKEN_$IDENT:
+                return maybe(parseFunction) || parseReference();
+
+            case TOKEN_IDENT:
+                return parseGetProperty(null);
+
+            case TOKEN_METHOD_OPEN:
+            case TOKEN_$METHOD_OPEN:
+                return parseMethodCall(null);
+
+            case TOKEN_OPEN_BRACKET:
+                return maybe(parseSliceNotation) || parseArray();
+
+            case TOKEN_OPEN_BRACE:
+                return parseObject();
+
+            case TOKEN_OPEN_PAREN:
+                return maybe(parseFunction) || parseParentheses();
+
+            case TOKEN_ARROW:
+                return parseFunction();
+
+            default:
+                return null;
+        }
+    }
+
     function parseAssertionPostfix(left) {
+        const start = left?.range[0] ?? startRange(); // FIXME: ???
+
         advance(TOKEN_IS);
 
-        return build.Postfix(left, parseAssertion());
+        return build.Postfix(left, parseAssertion(), endRange(start));
     }
 
     function parseAssertion() {
-        const negate = Boolean(advanceIf(TOKEN_NOT));
-
-        // Handle parentheses
-        if (advanceIf(TOKEN_OPEN_PAREN)) {
-            const terms = [];
-
-            while (!advanceIf(TOKEN_CLOSE_PAREN)) {
-                terms.push(parseAssertion());
-
-                if (match(TOKEN_AND) || match(TOKEN_OR)) {
-                    terms.push(consumeValue());
-                }
-            }
-
-            return build.Assertion(terms, negate);
-        }
-
-        // Handle method calls with arguments
-        if (match(TOKEN_METHOD_OPEN) || match(TOKEN_$METHOD_OPEN)) {
-            return build.Assertion(parseMethod(), negate);
-        }
+        const start = startRange();
+        const negate = advanceIf(TOKEN_NOT) !== null;
+        let expr = [];
 
         // Handle assertion terms
         switch (current.type) {
+            case TOKEN_OPEN_PAREN:
+                advance();
+
+                while (!advanceIf(TOKEN_CLOSE_PAREN)) {
+                    expr.push(parseAssertion());
+
+                    if (match(TOKEN_AND) || match(TOKEN_OR)) {
+                        expr.push(getValueAndAdvance());
+                    }
+                }
+
+                break;
+
             case TOKEN_IDENT:
             case TOKEN_LITERAL:
-                return build.Assertion(parseIdentifierOrReference(), negate);
+                expr = parseIdentifier();
+                break;
 
             case TOKEN_$IDENT:
                 // In assertion context, $variable becomes Method with empty arguments
                 // FIXME: Wrapping into Method looks as a bug, should be just Reference instead
-                const reference = parseIdentifierOrReference();
-                const method = build.Method(reference, []);
-
-                return build.Assertion(method, negate);
+                expr = createMethod(parseReference(), [], endRange(start));
+                break;
 
             default:
                 throwError('Expected assertion term');
         }
+
+        return build.Assertion(expr, negate, endRange(start));
     }
 
-    function parseGetProperty(expr = null) {
-        return build.GetProperty(expr, parseIdentifier());
+    function parseGetProperty(expr = null, start = startRange()) {
+        start = expr?.range[0] ?? start; // FIXME: ???
+        // console.log('start parseGetProperty', start, current.start, expr?.range[0], expr);
+        // console.log(Error().stack);
+        const property = parseIdentifier();
+
+        return build.GetProperty(expr, property, endRange(start));
     }
 
     function parseMethod() {
-        if (!match(TOKEN_METHOD_OPEN) && !match(TOKEN_$METHOD_OPEN)) {
-            throwError('Expected token type for method call');
-        }
-
-        // Extract method name based on token type
-        const methodRef = parseIdentifierOrReference();
+        const start = startRange();
+        const methodRef = match(TOKEN_METHOD_OPEN)
+            ? parseIdentifier()
+            : match(TOKEN_$METHOD_OPEN)
+                ? parseReference()
+                : throwError('Expected token type for method call');
 
         const args = [];
         if (!match(TOKEN_CLOSE_PAREN)) {
@@ -445,14 +560,18 @@ export function parse(tokens) {
 
         advance(TOKEN_CLOSE_PAREN);
 
-        return build.Method(methodRef, args);
+        return createMethod(methodRef, args, endRange(start));
     }
 
-    function parseMethodCall(value = null) {
-        return build.MethodCall(value, parseMethod());
+    function parseMethodCall(value = null, start = startRange()) {
+        start = value?.range[0] ?? start;
+        const method = parseMethod();
+
+        return build.MethodCall(value, method, endRange(start));
     }
 
     function parseTemplate() {
+        const start = startRange();
         const parts = [];
 
         if (match(TOKEN_TEMPLATE)) {
@@ -477,113 +596,34 @@ export function parse(tokens) {
             parts.push(parseLiteralValue(TOKEN_TPL_END));
         }
 
-        return build.Template(parts);
-    }
-
-    function parsePrimary() {
-        switch (current.type) {
-            case TOKEN_NUMBER:
-            case TOKEN_STRING:
-            case TOKEN_REGEXP:
-            case TOKEN_LITERAL:
-                return parseLiteralValue();
-
-            case TOKEN_TEMPLATE:
-            case TOKEN_TPL_START:
-                return parseTemplate();
-
-            case TOKEN_AT:
-            case TOKEN_HASH:
-            case TOKEN_$:
-            case TOKEN_$$:
-                return parseSpecialReference();
-
-            case TOKEN_$IDENT:
-                return maybe(parseFunction) || parseIdentifierOrReference();
-
-            case TOKEN_IDENT:
-                return parseGetProperty();
-
-            case TOKEN_METHOD_OPEN:
-            case TOKEN_$METHOD_OPEN:
-                return parseMethodCall(null);
-
-            case TOKEN_DOT:
-                advance(TOKEN_DOT); // consume '.'
-
-                switch (current.type) {
-                    case TOKEN_IDENT:
-                        return parseGetProperty(null);
-
-                    case TOKEN_METHOD_OPEN:
-                    case TOKEN_$METHOD_OPEN:
-                        return parseMethodCall(null);
-
-                    default:
-                        throwError('Expected property name or method call after dot');
-                }
-
-            case TOKEN_DOT_OPEN_PAREN:
-                return parseMap(null);
-
-            case TOKEN_DOT_OPEN_BRACKET:
-                return parseFilter(null);
-
-            case TOKEN_DOT_DOT: {
-                advanceIf(TOKEN_DOT_DOT); // consume '..'
-
-                switch (current.type) {
-                    case TOKEN_IDENT:
-                        return parseMapRecursive(null, parseGetProperty(null));
-
-                    case TOKEN_METHOD_OPEN:
-                    case TOKEN_$METHOD_OPEN:
-                        return parseMapRecursive(null, parseMethodCall(null));
-
-                    default:
-                        throwError('Expected property name after ..');
-                }
-            }
-
-            case TOKEN_OPEN_BRACKET:
-                return maybe(parseSliceNotation) || parseArray();
-
-            case TOKEN_OPEN_BRACE:
-                return parseObject();
-
-            case TOKEN_OPEN_PAREN:
-                return maybe(parseFunction) || parseParentheses();
-
-            case TOKEN_PIPE:
-                return parsePipeline(null);
-
-            default:
-                return null;
-        }
+        return build.Template(parts, endRange(start));
     }
 
     function parseFunction() {
+        const start = startRange();
         const params = [];
 
         if (advanceIf(TOKEN_OPEN_PAREN)) {
             // Parse parameter list
             if (!match(TOKEN_CLOSE_PAREN)) {
                 do {
-                    params.push(parseIdentifier(true));
+                    params.push(parseIdentifier());
                 } while (advanceIf(TOKEN_COMMA));
             }
 
             advance(TOKEN_CLOSE_PAREN);
         } else if (match(TOKEN_$IDENT)) {
-            params.push(parseIdentifier(true));
+            params.push(parseIdentifier());
         }
 
         advance(TOKEN_ARROW);
 
-        return build.Function(params, parseExpression() || build.Placeholder());
+        const body = parseExpression() || createPlaceholder();
+        return build.Function(params, body, endRange(start));
     }
 
     function parseCompareFunction(expr) {
+        const start = expr?.range[0] ?? startRange();
         const compares = [parseCompare(expr)];
 
         while (advanceIf(TOKEN_COMMA)) {
@@ -593,33 +633,39 @@ export function parse(tokens) {
             );
         }
 
-        return build.CompareFunction(compares);
+        return build.CompareFunction(compares, endRange(start));
     }
 
     function parseCompare(expr) {
-        return build.Compare(expr, consumeValue(TOKEN_ORDER));
+        const start = expr?.range[0] ?? startRange();
+        const order = getValueAndAdvance(TOKEN_ORDER);
+
+        return build.Compare(expr, order, endRange(start));
     }
 
     function parseParentheses() {
+        const start = startRange();
         advance(TOKEN_OPEN_PAREN);
 
         const definitions = parseDefinitions();
-        const expression = parseExpression() || build.Placeholder();
+        const expression = parseExpression() || createPlaceholder();
 
         advance(TOKEN_CLOSE_PAREN);
 
         // If we have definitions, wrap in a Block, otherwise just return the expression
         return build.Parentheses(
             definitions.length > 0
-                ? build.Block(definitions, expression)
-                : expression
+                ? createBlock(definitions, expression, endRange(start))
+                : expression,
+            endRange(start)
         );
     }
 
     function parseArray() {
-        advance(TOKEN_OPEN_BRACKET);
-
+        const start = startRange();
         const elements = [];
+
+        advance(TOKEN_OPEN_BRACKET);
 
         if (!advanceIf(TOKEN_CLOSE_BRACKET)) {
             do {
@@ -637,28 +683,33 @@ export function parse(tokens) {
             advance(TOKEN_CLOSE_BRACKET);
         }
 
-        return build.Array(elements);
+        return build.Array(elements, endRange(start));
     }
 
     function parseSliceNotation(expr = null) {
-        advance(TOKEN_OPEN_BRACKET);
+        const start = expr?.range[0] ?? startRange();
+        const args = [
+            consumeSurrounded(
+                TOKEN_OPEN_BRACKET,
+                parseExpression,
+                TOKEN_COLON
+            ),
+            parseExpression()
+        ];
 
-        const args = [parseExpression()];
-
-        // Parse first argument (might be empty for [:end] notation)
-        advance(TOKEN_COLON);
-        args.push(parseExpression());
-
+        // Optional third argument, already consumed "[ e : e"
         if (advanceIf(TOKEN_COLON)) {
             args.push(parseExpression());
         }
 
         advance(TOKEN_CLOSE_BRACKET);
 
-        return build.SliceNotation(expr, args);
+        return build.SliceNotation(expr, args, endRange(start));
     }
 
     function parseObject() {
+        const start = startRange();
+
         advance(TOKEN_OPEN_BRACE);
 
         // First, try to parse any definitions (like parseBlock does)
@@ -666,175 +717,168 @@ export function parse(tokens) {
         const entries = [];
 
         if (!match(TOKEN_CLOSE_BRACE)) {
-            entries.push(parseObjectEntry());
-
-            while (advanceIf(TOKEN_COMMA)) {
-                if (!match(TOKEN_CLOSE_BRACE)) { // allow trailing comma
-                    entries.push(parseObjectEntry());
-                }
-            }
+            // allow trailing comma
+            do {
+                entries.push(
+                    match(TOKEN_DOT_DOT_DOT)
+                        ? parseSpread(SPREAD_OBJECT)
+                        : parseObjectEntry()
+                );
+            } while (advanceIf(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACE));
         }
 
         advance(TOKEN_CLOSE_BRACE);
 
-        // If we found definitions, wrap the object in a Block (like legacy parser does)
-        if (definitions.length > 0) {
-            return build.Block(definitions, build.Object(entries));
-        }
+        const object = build.Object(entries, endRange(start));
 
-        return build.Object(entries);
+        // If we found definitions, wrap the object in a Block (like legacy parser does)
+        // FIXME: This behavior is questionable, block wrapper should be removed
+        return definitions.length > 0
+            ? createBlock(definitions, object, endRange(start))
+            : object;
     }
 
     function parseObjectEntry() {
-        // Handle spread syntax: ...expression
-        if (match(TOKEN_DOT_DOT_DOT)) {
-            return parseSpread(SPREAD_OBJECT);
-        }
-
+        const start = startRange();
         let key;
 
         // Parse object key using existing methods
         switch (current.type) {
             case TOKEN_IDENT:
-                key = parseIdentifierOrReference();
+                key = parseIdentifier();
                 break;
 
             case TOKEN_LITERAL:
-                // Literal values (true, false, null, etc.) should be treated as literals in object keys
+            case TOKEN_STRING:
+            case TOKEN_NUMBER:
                 key = parseLiteralValue();
                 break;
-
-            case TOKEN_$IDENT: {
-                // $variables in object context depend on whether it's shorthand or explicit
-                const tokenValue = consumeValue();
-
-                if (match(TOKEN_COLON)) {
-                    // Explicit property: treat as identifier with $ preserved
-                    key = build.Identifier(tokenValue);
-                } else {
-                    // Shorthand property: treat as reference
-                    key = build.Reference(build.Identifier(tokenValue.slice(1)));
-                }
-                break;
-            }
 
             case TOKEN_$:
                 key = parseSpecialReference();
                 break;
 
-            case TOKEN_STRING:
-            case TOKEN_NUMBER:
-            case TOKEN_REGEXP:
-                key = parseLiteralValue();
+            case TOKEN_$IDENT:
+                // $variables in object context depend on whether it's shorthand or explicit
+                key = nextMatch(TOKEN_COLON)
+                    // Explicit property: treat as identifier with $ preserved, e.g. {$foo: 1}
+                    ? parseIdentifier(true)
+                    // Shorthand property: treat as reference, e.g. {$foo} becomes {foo: $foo}
+                    : parseReference();
                 break;
 
-            case TOKEN_OPEN_BRACKET:
-                // Computed property name: [expression]
-                advance();
-                key = parseExpression();
-                advance(TOKEN_CLOSE_BRACKET);
+            case TOKEN_OPEN_BRACKET: // Computed property name: [expression]
+                key = consumeSurrounded(
+                    TOKEN_OPEN_BRACKET,
+                    parseExpression,
+                    TOKEN_CLOSE_BRACKET
+                );
                 break;
 
             default:
                 throwError('Expected object property name');
         }
 
+        const value = advanceIf(TOKEN_COLON) && parseExpression();
+
         return build.ObjectEntry(
             key,
-            advanceIf(TOKEN_COLON) && parseExpression()
+            value,
+            endRange(start)
         );
     }
 
-    function parseBracketAccess(expr) {
-        advance(TOKEN_OPEN_BRACKET);
-        const getter = parseExpression();
-        advance(TOKEN_CLOSE_BRACKET);
+    function parseSpread(isArray) {
+        const start = startRange();
+        const expression = advance(TOKEN_DOT_DOT_DOT) && parseExpression();
 
-        return build.Pick(expr, getter);
+        return build.Spread(expression, isArray, endRange(start));
+    }
+
+
+    function parseBracketAccess(expr) {
+        const start = expr?.range[0] ?? startRange();
+        const getter = consumeSurrounded(
+            TOKEN_OPEN_BRACKET,
+            parseExpression,
+            TOKEN_CLOSE_BRACKET
+        );
+
+        return build.Pick(expr, getter, endRange(start));
     }
 
     function parseMap(value) {
-        advance(TOKEN_DOT_OPEN_PAREN);
-        const query = parseBlock();
-        advance(TOKEN_CLOSE_PAREN);
+        const start = value?.range[0] ?? startRange();
+        const query = consumeSurrounded(
+            TOKEN_DOT_OPEN_PAREN,
+            parseBlock,
+            TOKEN_CLOSE_PAREN
+        );
 
-        return build.Map(value, query);
+        return build.Map(value, query, endRange(start));
     }
 
-    function parseMapRecursive(value, property = null) {
-        if (property) {
-            return build.MapRecursive(value, property);
-        }
+    function parseMapRecursive(value, property = null, start = startRange()) {
+        start = value?.range[0] ?? start;
 
-        advance(TOKEN_DOT_DOT_OPEN_PAREN);
-        const query = parseBlock();
-        advance(TOKEN_CLOSE_PAREN);
+        const query = property || consumeSurrounded(
+            TOKEN_DOT_DOT_OPEN_PAREN,
+            parseBlock,
+            TOKEN_CLOSE_PAREN
+        );
 
-        return build.MapRecursive(value, query);
+        return build.MapRecursive(value, query, endRange(start));
     }
 
     function parseFilter(value) {
-        advance(TOKEN_DOT_OPEN_BRACKET);
-        const query = parseBlock();
-        advance(TOKEN_CLOSE_BRACKET);
+        const start = value?.range[0] ?? startRange();
+        const query = consumeSurrounded(
+            TOKEN_DOT_OPEN_BRACKET,
+            parseBlock,
+            TOKEN_CLOSE_BRACKET
+        );
 
-        return build.Filter(value, query);
-    }
-
-    function parseSpread(isArray) {
-        advance(TOKEN_DOT_DOT_DOT);
-
-        return build.Spread(parseExpression(), isArray);
+        return build.Filter(value, query, endRange(start));
     }
 
     function parsePipeline(left) {
+        const start = left?.range[0] ?? startRange();
+
         advance(TOKEN_PIPE);
 
         // Parse right side: definitions + expression with proper precedence
         const definitions = parseDefinitions();
-        const body = parseExpression(getPrecedence(TOKEN_PIPE) + 1) || build.Placeholder();
+        const body = parseExpression(getPrecedence(TOKEN_PIPE) + 1) || createPlaceholder();
 
         // If we have definitions, wrap in a Block like parseBlock does
+        // FIXME: This behavior is questionable, block wrapper should be removed
         const right = definitions.length > 0
-            ? build.Block(definitions, body)
+            ? createBlock(definitions, body, endRange(start))
             : body;
 
-        return build.Pipeline(left, right);
+        return build.Pipeline(left, right, endRange(start));
     }
 
     function parseTernaryConditional(condition, prec) {
+        const start = condition?.range[0] ?? startRange();
+
         advance(TOKEN_QUESTION);
 
-        const consequent = parseExpression(prec) || build.Placeholder();
+        const consequent = parseExpression(prec) || createPlaceholder();
         const alternate = advanceIf(TOKEN_COLON)
             // Colon is present, parse alternate or use Placeholder if missing
-            ? parseExpression(prec) || build.Placeholder()
+            ? parseExpression(prec) || createPlaceholder()
             // No colon, use null for alternate
             : null;
 
-        return build.Conditional(condition, consequent, alternate);
+        return build.Conditional(condition, consequent, alternate, endRange(start));
     }
 
     function parseBinaryOperator(left, prec) {
-        const operator = consumeValue();
-        const right = parseExpression(prec);
+        const start = left.range[0] ?? startRange();
+        const operator = getValueAndAdvance();
+        const right = parseExpression(prec) || throwError('Expected expression');
 
-        if (!right) {
-            throwError('Expected expression after operator');
-        }
-
-        return build.Binary(operator, left, right);
-    }
-
-    function parseUnaryPrefix() {
-        const prec = getPrecedence(current.type);
-        const operator = consumeValue();
-
-        return build.Prefix(
-            operator,
-            operator === 'is'
-                ? parseAssertion()
-                : parseExpression(prec + 1)  // Parse with higher precedence to avoid self-binding
-        );
+        return build.Binary(operator, left, right, endRange(start));
     }
 }

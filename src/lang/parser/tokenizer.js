@@ -129,7 +129,7 @@ export function createTokenizer(input, tolerantMode = false) {
             pendingToken = token;
 
             // Create empty IDENT token at the position where the previous token ended
-            return new Token(TOKEN_IDENT, pos, pos, input);
+            return new Token(TOKEN_IDENT, token.start, token.start, input);
         }
 
         // Normal token processing

@@ -1,8 +1,8 @@
 export function toNumberLiteral(value) {
-    const hex = value.startsWith('0x') || value.startsWith('0X');
+    const isHex = value.startsWith('0x') || value.startsWith('0X');
 
     if (value.includes('_')) {
-        const errorMatch = value.match(hex
+        const errorMatch = value.match(isHex
             ? /(?:^|[^0-9a-fA-F])_|_(?:[^0-9a-fA-F]|$)/
             : /(?:^|\D)_|_(?:\D|$)/
         );
@@ -19,91 +19,58 @@ export function toNumberLiteral(value) {
         value = value.replace(/_/g, '');
     }
 
-    return hex
+    return isHex
         ? parseInt(value, 16)
         : parseFloat(value);
 }
 
-function isLineTerminator(ch) {
-    return ch === '\n' || ch === '\r' || ch === '\u2028' || ch === '\u2029';
-}
+const ESCAPE_REPLACE = {
+    '0': '\0',
+    'b': '\b',
+    'n': '\n',
+    'r': '\r',
+    'f': '\f',
+    't': '\t',
+    'v': '\v'
+};
 
 export function toStringLiteral(value, multiline = false, end = 1) {
-    const valueEnd = value.length - end;
-
-    if (!/[\\\r\n\u2028\u2029]/.test(value)) {
-        return value.slice(1, valueEnd);
-    }
-
-    let result = '';
-
-    for (let i = 1; i < valueEnd; i++) {
-        const ch = value[i];
-
-        if (!multiline && isLineTerminator(ch)) {
-            throw new Error('Invalid line terminator');
-        }
-
-        if (ch !== '\\') {
-            result += ch;
-            continue;
-        }
-
-        if (i === valueEnd - 1) {
-            throw new Error('Invalid backslash');
-        }
-
-        const next = value[++i];
-        switch (next) {
-            case '\r':
-                // ignore line terminator
-                i += value[i + 1] === '\n';  // \r\n
-                break;
-
-            case '\n':
-            case '\u2028':
-            case '\u2029':
-                // ignore line terminator
-                break;
-
-            case '0': result += '\0'; break;
-            case 'b': result += '\b'; break;
-            case 'n': result += '\n'; break;
-            case 'r': result += '\r'; break;
-            case 'f': result += '\f'; break;
-            case 't': result += '\t'; break;
-            case 'v': result += '\v'; break;
-
-            case 'u': {
-                const [hex = ''] = value.slice(i + 1, i + 5).match(/^[0-9a-f]*/i) || [];
-
-                if (hex.length === 4) {
-                    result += String.fromCharCode(parseInt(hex, 16));
-                    i += 4;
-                    break;
-                }
-
-                throw new Error('Invalid Unicode escape sequence');
+    return value
+        .slice(1, value.length - end)
+        .replace(/\\(?:(\r\n?|\n|\u2028|\u2029)|([xu][0-9a-fA-F]*)|$|(.))|[\r\n\u2028\u2029]/g, (match, lineTerminator, escapeHex, other) => {
+            // Handle escaped line terminators
+            if (lineTerminator) {
+                return '';  // ignore escaped line terminators
             }
 
-            case 'x': {
-                const [hex = ''] = value.slice(i + 1, i + 3).match(/^[0-9a-f]*/i) || [];
+            // Handle unicode/hex escapes
+            if (escapeHex) {
+                const isUnicode = escapeHex[0] === 'u';
 
-                if (hex.length === 2) {
-                    result += String.fromCharCode(parseInt(hex, 16));
-                    i += 2;
-                    break;
+                if (escapeHex.length === (isUnicode ? 5 : 3)) {
+                    return String.fromCharCode(parseInt(escapeHex.slice(1), 16));
                 }
 
-                throw new Error('Invalid hexadecimal escape sequence');
+                throw new Error(`Invalid ${isUnicode ? 'Unicode' : 'hexadecimal'} escape sequence`);
             }
 
-            default:
-                result += next;
-        }
-    }
+            // Handle backslash at end
+            if (match === '\\') {
+                throw new Error('Invalid backslash');
+            }
 
-    return result;
+            // Handle other escaped characters
+            if (other) {
+                return ESCAPE_REPLACE[other] || other;
+            }
+
+            // Handle unescaped line terminators
+            if (!multiline && /[\r\n\u2028\u2029]/.test(match)) {
+                throw new Error('Invalid line terminator');
+            }
+
+            return match; // unescaped line terminator in multiline mode
+        });
 }
 
 export function toRegExpLiteral(value) {
