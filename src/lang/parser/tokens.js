@@ -71,6 +71,7 @@ export const TOKEN_SEMICOLON = 56;
 
 // Special - must be last
 export const TOKEN_EOF = 57;
+const TOKEN_MAX = 58;
 
 // Token names for debugging and error messages
 export const tokenNames = {
@@ -135,84 +136,85 @@ export const tokenNames = {
 };
 
 // Bracket balance mappings
-export const BALANCE_TOKEN_PAIR = new Map([
-    [TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN],
-    [TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
-    [TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN],
-    [TOKEN_METHOD_OPEN, TOKEN_CLOSE_PAREN],
-    [TOKEN_$METHOD_OPEN, TOKEN_CLOSE_PAREN],
-    [TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET],
-    [TOKEN_DOT_OPEN_BRACKET, TOKEN_CLOSE_BRACKET],
-    [TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE],
-    [TOKEN_TPL_START, TOKEN_TPL_END]
-]);
+export const BALANCE_TOKEN_PAIR = createTokenTable(
+    TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,
+    TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,
+    TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,
+    TOKEN_METHOD_OPEN, TOKEN_CLOSE_PAREN,
+    TOKEN_$METHOD_OPEN, TOKEN_CLOSE_PAREN,
+    TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
+    TOKEN_DOT_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
+    TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE,
+    TOKEN_TPL_START, TOKEN_TPL_END,
+    -1
+);
 
 // Keyword lookup
-export const KEYWORDS = new Map([
-    ['has no', TOKEN_HASNO],
-    ['not in', TOKEN_NOTIN],
-    ['and', TOKEN_AND],
-    ['or', TOKEN_OR],
-    ['not', TOKEN_NOT],
-    ['has', TOKEN_HAS],
-    ['is', TOKEN_IS],
-    ['in', TOKEN_IN],
-    ['no', TOKEN_NO],
-    ['asc', TOKEN_ORDER],
-    ['ascN', TOKEN_ORDER],
-    ['ascA', TOKEN_ORDER],
-    ['ascNA', TOKEN_ORDER],
-    ['ascAN', TOKEN_ORDER],
-    ['desc', TOKEN_ORDER],
-    ['descN', TOKEN_ORDER],
-    ['descA', TOKEN_ORDER],
-    ['descNA', TOKEN_ORDER],
-    ['descAN', TOKEN_ORDER]
-]);
+export const KEYWORDS = {
+    'has no': TOKEN_HASNO,
+    'not in': TOKEN_NOTIN,
+    'and': TOKEN_AND,
+    'or': TOKEN_OR,
+    'not': TOKEN_NOT,
+    'has': TOKEN_HAS,
+    'is': TOKEN_IS,
+    'in': TOKEN_IN,
+    'no': TOKEN_NO,
+    'asc': TOKEN_ORDER,
+    'ascN': TOKEN_ORDER,
+    'ascA': TOKEN_ORDER,
+    'ascNA': TOKEN_ORDER,
+    'ascAN': TOKEN_ORDER,
+    'desc': TOKEN_ORDER,
+    'descN': TOKEN_ORDER,
+    'descA': TOKEN_ORDER,
+    'descNA': TOKEN_ORDER,
+    'descAN': TOKEN_ORDER
+};
 
 // String to token mapping
-export const STR_TO_TOKEN = new Map([
-    ['...', TOKEN_DOT_DOT_DOT],
-    ['..(', TOKEN_DOT_DOT_OPEN_PAREN],
-    ['..', TOKEN_DOT_DOT],
-    ['.(', TOKEN_DOT_OPEN_PAREN],
-    ['.[', TOKEN_DOT_OPEN_BRACKET],
-    ['=>', TOKEN_ARROW],
-    ['!=', TOKEN_NOT_EQUALS],
-    ['~=', TOKEN_MATCH],
-    ['<=', TOKEN_LESS_THAN_EQUALS],
-    ['>=', TOKEN_GREATER_THAN_EQUALS],
-    ['??', TOKEN_NULLISH_COALESCING],
-    ['@', TOKEN_AT],
-    ['#', TOKEN_HASH],
-    ['.', TOKEN_DOT],
-    ['|', TOKEN_PIPE],
-    ['=', TOKEN_EQUALS],
-    ['<', TOKEN_LESS_THAN],
-    ['>', TOKEN_GREATER_THAN],
-    ['+', TOKEN_PLUS],
-    ['-', TOKEN_MINUS],
-    ['*', TOKEN_MULTIPLY],
-    ['/', TOKEN_DIVIDE],
-    ['%', TOKEN_MODULO],
-    ['?', TOKEN_QUESTION],
-    ['(', TOKEN_OPEN_PAREN],
-    [')', TOKEN_CLOSE_PAREN],
-    ['[', TOKEN_OPEN_BRACKET],
-    [']', TOKEN_CLOSE_BRACKET],
-    ['{', TOKEN_OPEN_BRACE],
-    ['}', TOKEN_CLOSE_BRACE],
-    [',', TOKEN_COMMA],
-    [':', TOKEN_COLON],
-    [';', TOKEN_SEMICOLON]
-]);
+export const STR_TO_TOKEN = {
+    '...': TOKEN_DOT_DOT_DOT,
+    '..(': TOKEN_DOT_DOT_OPEN_PAREN,
+    '..': TOKEN_DOT_DOT,
+    '.(': TOKEN_DOT_OPEN_PAREN,
+    '.[': TOKEN_DOT_OPEN_BRACKET,
+    '=>': TOKEN_ARROW,
+    '!=': TOKEN_NOT_EQUALS,
+    '~=': TOKEN_MATCH,
+    '<=': TOKEN_LESS_THAN_EQUALS,
+    '>=': TOKEN_GREATER_THAN_EQUALS,
+    '??': TOKEN_NULLISH_COALESCING,
+    '@': TOKEN_AT,
+    '#': TOKEN_HASH,
+    '.': TOKEN_DOT,
+    '|': TOKEN_PIPE,
+    '=': TOKEN_EQUALS,
+    '<': TOKEN_LESS_THAN,
+    '>': TOKEN_GREATER_THAN,
+    '+': TOKEN_PLUS,
+    '-': TOKEN_MINUS,
+    '*': TOKEN_MULTIPLY,
+    '/': TOKEN_DIVIDE,
+    '%': TOKEN_MODULO,
+    '?': TOKEN_QUESTION,
+    '(': TOKEN_OPEN_PAREN,
+    ')': TOKEN_CLOSE_PAREN,
+    '[': TOKEN_OPEN_BRACKET,
+    ']': TOKEN_CLOSE_BRACKET,
+    '{': TOKEN_OPEN_BRACE,
+    '}': TOKEN_CLOSE_BRACE,
+    ',': TOKEN_COMMA,
+    ':': TOKEN_COLON,
+    ';': TOKEN_SEMICOLON
+};
 
-export const PREVENT_KEYWORD = new Set([
+export const PREVENT_KEYWORD = createTokenSet(
     TOKEN_DOT,
     TOKEN_DOT_DOT
-]);
+);
 
-export const PREVENT_PRIMITIVE = new Set([
+export const PREVENT_PRIMITIVE = createTokenSet(
     TOKEN_NUMBER,
     TOKEN_STRING,
     TOKEN_TEMPLATE,
@@ -229,4 +231,24 @@ export const PREVENT_PRIMITIVE = new Set([
     TOKEN_CLOSE_BRACKET,
     TOKEN_CLOSE_BRACE,
     TOKEN_DOT
-]);
+);
+
+function createTokenSet(...tokens) {
+    return createTokenTable(...Array.from(tokens, token => [token, 1]).flat());
+}
+
+function createTokenTable(...pairs) {
+    const table = new Int32Array(TOKEN_MAX);
+
+    if (pairs.length % 2) {
+        table.fill(pairs.pop());
+    }
+
+    for (let i = 0; i < pairs.length; i += 2) {
+        table[pairs[i]] = pairs[i + 1];
+    }
+
+    return table;
+}
+
+export { createTokenSet, createTokenTable };

@@ -3,60 +3,61 @@ import { toNumberLiteral, toRegExpLiteral, toStringLiteral } from './convert-to-
 import { LITERALS } from './tokenizer.js';
 import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
-    TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$,
-    TOKEN_AND, TOKEN_OR, TOKEN_NOT, TOKEN_NO, TOKEN_IS, TOKEN_IN, TOKEN_NOTIN, TOKEN_HAS, TOKEN_HASNO, TOKEN_ORDER,
-    TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN,
-    TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END,
-    TOKEN_DOT, TOKEN_DOT_DOT, TOKEN_DOT_DOT_DOT, TOKEN_DOT_OPEN_PAREN, TOKEN_DOT_OPEN_BRACKET, TOKEN_DOT_DOT_OPEN_PAREN,
-    TOKEN_PIPE, TOKEN_ARROW, TOKEN_EQUALS, TOKEN_NOT_EQUALS, TOKEN_MATCH,
-    TOKEN_LESS_THAN, TOKEN_LESS_THAN_EQUALS, TOKEN_GREATER_THAN, TOKEN_GREATER_THAN_EQUALS,
-    TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE, TOKEN_MODULO, TOKEN_NULLISH_COALESCING, TOKEN_QUESTION,
-    TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN, TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
-    TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA, TOKEN_COLON, TOKEN_SEMICOLON,
-    TOKEN_EOF,
-    tokenNames
+    TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$, TOKEN_AND, TOKEN_OR, TOKEN_NOT, TOKEN_NO,
+    TOKEN_IS, TOKEN_IN, TOKEN_NOTIN, TOKEN_HAS, TOKEN_HASNO, TOKEN_ORDER, TOKEN_METHOD_OPEN,
+    TOKEN_$METHOD_OPEN, TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END,
+    TOKEN_DOT, TOKEN_DOT_DOT, TOKEN_DOT_DOT_DOT, TOKEN_DOT_OPEN_PAREN, TOKEN_DOT_OPEN_BRACKET,
+    TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_PIPE, TOKEN_ARROW, TOKEN_EQUALS, TOKEN_NOT_EQUALS,
+    TOKEN_MATCH, TOKEN_LESS_THAN, TOKEN_LESS_THAN_EQUALS, TOKEN_GREATER_THAN,
+    TOKEN_GREATER_THAN_EQUALS, TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
+    TOKEN_MODULO, TOKEN_NULLISH_COALESCING, TOKEN_QUESTION, TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,
+    TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET, TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA,
+    TOKEN_COLON, TOKEN_SEMICOLON, TOKEN_EOF, tokenNames, createTokenTable, createTokenSet
 } from './tokens.js';
+
+const TOKEN_ANY = -1;
 
 // Spread type constants
 const SPREAD_ARRAY = true;
 const SPREAD_OBJECT = false;
 
 // Operator precedence table (higher = higher precedence)
-const RIGHT_ASSOCIATIVE = new Set([TOKEN_ARROW, TOKEN_QUESTION]);
-const PRECEDENCE = new Map([
-    [TOKEN_ARROW, 1],
-    [TOKEN_ORDER, 2],  // ORDER has lower precedence than PIPE
-    [TOKEN_PIPE, 3],   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
-    [TOKEN_QUESTION, 4],
-    [TOKEN_IS, 5],
-    [TOKEN_OR, 6],
-    [TOKEN_AND, 7],
-    [TOKEN_NULLISH_COALESCING, 8],
-    [TOKEN_NOT, 9],
-    [TOKEN_NO, 9],
-    [TOKEN_IN, 10],
-    [TOKEN_NOTIN, 10],
-    [TOKEN_HAS, 10],
-    [TOKEN_HASNO, 10],
-    [TOKEN_EQUALS, 11],
-    [TOKEN_NOT_EQUALS, 11],
-    [TOKEN_MATCH, 11],
-    [TOKEN_LESS_THAN, 12],
-    [TOKEN_LESS_THAN_EQUALS, 12],
-    [TOKEN_GREATER_THAN, 12],
-    [TOKEN_GREATER_THAN_EQUALS, 12],
-    [TOKEN_PLUS, 13],
-    [TOKEN_MINUS, 13],
-    [TOKEN_MULTIPLY, 13],
-    [TOKEN_DIVIDE, 13],
-    [TOKEN_MODULO, 13],
-    [TOKEN_DOT, 14],
-    [TOKEN_DOT_DOT, 14],
-    [TOKEN_DOT_DOT_DOT, 14],
-    [TOKEN_DOT_OPEN_PAREN, 14],
-    [TOKEN_DOT_OPEN_BRACKET, 14],
-    [TOKEN_DOT_DOT_OPEN_PAREN, 14]
-]);
+const RIGHT_ASSOCIATIVE = createTokenSet(TOKEN_QUESTION);
+const PRECEDENCE = createTokenTable(
+    TOKEN_ARROW, 1,
+    TOKEN_ORDER, 2,  // ORDER has lower precedence than PIPE
+    TOKEN_PIPE, 3,   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
+    TOKEN_QUESTION, 4,
+    TOKEN_IS, 5,
+    TOKEN_OR, 6,
+    TOKEN_AND, 7,
+    TOKEN_NULLISH_COALESCING, 8,
+    TOKEN_NOT, 9,
+    TOKEN_NO, 9,
+    TOKEN_IN, 10,
+    TOKEN_NOTIN, 10,
+    TOKEN_HAS, 10,
+    TOKEN_HASNO, 10,
+    TOKEN_EQUALS, 11,
+    TOKEN_NOT_EQUALS, 11,
+    TOKEN_MATCH, 11,
+    TOKEN_LESS_THAN, 12,
+    TOKEN_LESS_THAN_EQUALS, 12,
+    TOKEN_GREATER_THAN, 12,
+    TOKEN_GREATER_THAN_EQUALS, 12,
+    TOKEN_PLUS, 13,
+    TOKEN_MINUS, 13,
+    TOKEN_MULTIPLY, 13,
+    TOKEN_DIVIDE, 13,
+    TOKEN_MODULO, 13,
+    TOKEN_DOT, 14,
+    TOKEN_DOT_DOT, 14,
+    TOKEN_DOT_DOT_DOT, 14,
+    TOKEN_DOT_OPEN_PAREN, 14,
+    TOKEN_DOT_OPEN_BRACKET, 14,
+    TOKEN_DOT_DOT_OPEN_PAREN, 14,
+    -1
+);
 
 export function parse(tokens) {
     let index = 0;
@@ -67,6 +68,21 @@ export function parse(tokens) {
     } finally {
         // Ensure nothing left after parsing
         advance(TOKEN_EOF);
+    }
+
+    // Error handling helpers
+    function throwError(message) {
+        throw new Error(message); // TODO: Add position tracking later
+    }
+
+    function throwExpected(...tokens) {
+        throwError(`Expecting ${tokens.map(t => `'${tokenNames[t]}'`).join(', ')}, got \`${tokenNames[current.type]}\``);
+    }
+
+    function throwInNoMatch(expectedType = TOKEN_ANY) {
+        if (expectedType !== TOKEN_ANY && current.type !== expectedType) {
+            throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[current.type]}\``);
+        }
     }
 
     function maybe(fn) {
@@ -81,40 +97,22 @@ export function parse(tokens) {
         }
     }
 
-    // Helper to throw parsing errors with position tracking
-    function throwError(message) {
-        throw new Error(message); // TODO: Add position tracking later
-    }
-
-    function match(type) {
-        return current.type === type;
-    }
-
-    function nextMatch(type) {
-        const nextTokenType = index < tokens.length - 1
-            ? tokens[index + 1].type
-            : TOKEN_EOF;
-        return nextTokenType === type;
-    }
-
+    // Advance helpers
     function advance(expectedType) {
-        if (expectedType !== undefined && current.type !== expectedType) {
-            throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[current.type]}\``);
-        }
-
         const token = current;
 
+        // assert expected type
+        throwInNoMatch(expectedType);
+
         // Stay on EOF if at end
-        if (index < tokens.length - 1) {
-            index++;
-            current = tokens[index];
-        }
+        index = Math.min(index + 1, tokens.length - 1);
+        current = tokens[index];
 
         return token;
     }
 
-    function advanceIf(type) {
-        return current.type === type
+    function advanceIfMatch(type) {
+        return match(type)
             ? advance()
             : null;
     }
@@ -125,11 +123,29 @@ export function parse(tokens) {
         return value;
     }
 
+    function getRangeAndAdvance(expectedType) {
+        const range = [current.start, current.end];
+        advance(expectedType);
+        return range;
+    }
+
     function consumeSurrounded(typeOpen, fn, typeClose) {
         advance(typeOpen);
         const value = fn();
         advance(typeClose);
         return value;
+    }
+
+    // Match helpers
+    function match(type) {
+        return current.type === type;
+    }
+
+    function nextMatch(type) {
+        const nextTokenType = index < tokens.length - 1
+            ? tokens[index + 1].type
+            : TOKEN_EOF;
+        return nextTokenType === type;
     }
 
     // Range tracking helpers
@@ -142,13 +158,21 @@ export function parse(tokens) {
         // i.e. skipping whitespace and comment tokens.
         // There may be skipped tokens between meaningful ones, so we need to end the range
         // at the previous token's end, excluding the skipped whitespace/comment tokens.
+        //
+        // FIXME: Tokenizer should emit all the tokens, including whitespaces and comments,
+        // this will allow to avoid hacks with previous token's end
         return [start, index > 0 ? tokens[index - 1].end : 0];
     }
 
-    function getRangeAndAdvance(expectedType) {
-        const range = [current.start, current.end];
-        advance(expectedType);
-        return range;
+    // The legacy parser included the left-hand node's range in the production of postfix operators,
+    // e.g., in expr.[], the expr's range is part of the filter's range, which is questionable.
+    // Currently, the parser follows the same logic to maintain parity.
+    //
+    // FIXME: The parser should not include the left-hand node's range in postfix nodes.
+    // In general, parse methods should not rely on other nodes' structure and values.
+    // This would simplify the implementation and follow the single responsibility principle.
+    function legacyPrefixStartRange(node) {
+        return node?.range[0] ?? startRange();
     }
 
     // AST node creators called from several places
@@ -163,20 +187,6 @@ export function parse(tokens) {
 
     function createMethod(reference, args, range) {
         return build.Method(reference, args, range);
-    }
-
-    // Precedence helpers
-    // TODO: Remove
-    function getPrecedence(type) {
-        return PRECEDENCE.get(type);
-    }
-
-    function isOperator(type) {
-        return PRECEDENCE.has(type);
-    }
-
-    function isRightAssociative(type) {
-        return RIGHT_ASSOCIATIVE.has(type);
     }
 
     // Parser methods
@@ -205,7 +215,7 @@ export function parse(tokens) {
     function parseDefinition() {
         const start = startRange();
         const declarator = parseDeclarator();
-        const value = advanceIf(TOKEN_COLON)
+        const value = advanceIfMatch(TOKEN_COLON)
             ? parseExpression()
             : null;
 
@@ -218,9 +228,9 @@ export function parse(tokens) {
         const start = startRange();
         const name = match(TOKEN_$IDENT)
             ? getValueAndAdvance().slice(1)
-            : advanceIf(TOKEN_$)
+            : advanceIfMatch(TOKEN_$)
                 ? null
-                : throwError('Expected declarator');
+                : throwExpected(TOKEN_$IDENT, TOKEN_$);
 
         return build.Declarator(name, endRange(start));
     }
@@ -269,7 +279,7 @@ export function parse(tokens) {
                 return build.Arg1(getRangeAndAdvance());
 
             default:
-                throwError('Expected special reference');
+                throwExpected(TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$);
         }
     }
 
@@ -305,7 +315,10 @@ export function parse(tokens) {
                 break;
 
             default:
-                throwError('Expected literal value');
+                throwExpected(
+                    TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL,
+                    TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END
+                );
         }
 
         return build.Literal(value, endRange(start));
@@ -314,11 +327,8 @@ export function parse(tokens) {
     function parseExpression(minPrec = 0) {
         let left = parseUnary();
 
-        while (isOperator(current.type) &&
-               getPrecedence(current.type) >= minPrec &&
-               !match(TOKEN_EOF)) {
-            const type = current.type;
-            const prec = getPrecedence(type) + !isRightAssociative(type);
+        while (PRECEDENCE[current.type] >= minPrec && !match(TOKEN_EOF)) {
+            const prec = PRECEDENCE[current.type] + !RIGHT_ASSOCIATIVE[current.type];
 
             switch (current.type) {
                 case TOKEN_QUESTION:
@@ -357,7 +367,7 @@ export function parse(tokens) {
 
     function parseUnaryPrefix() {
         const start = startRange();
-        const prec = getPrecedence(current.type);
+        const prec = PRECEDENCE[current.type];
         const operator = getValueAndAdvance();
 
         const argument = operator === 'is'
@@ -375,29 +385,17 @@ export function parse(tokens) {
         let expr = parsePrimary();
 
         while (!match(TOKEN_EOF)) {
-            const start = startRange();
-
             switch (current.type) {
                 case TOKEN_IS:
                     expr = parseAssertionPostfix(expr);
                     break;
 
                 case TOKEN_DOT:
-                    advanceIf(TOKEN_DOT);
-
-                    switch (current.type) {
-                        case TOKEN_IDENT:
-                            expr = parseGetProperty(expr, start);
-                            break;
-
-                        case TOKEN_METHOD_OPEN:
-                        case TOKEN_$METHOD_OPEN:
-                            expr = parseMethodCall(expr, start);
-                            break;
-
-                        default:
-                            throwError('Expected property name or method call after dot');
-                    }
+                    expr = nextMatch(TOKEN_IDENT)
+                        ? parseGetProperty(expr, true)
+                        : nextMatch(TOKEN_METHOD_OPEN) || nextMatch(TOKEN_$METHOD_OPEN)
+                            ? parseMethodCall(expr, true)
+                            : throwExpected(TOKEN_IDENT, TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN);
                     break;
 
                 case TOKEN_DOT_OPEN_PAREN:
@@ -409,31 +407,13 @@ export function parse(tokens) {
                     break;
 
                 case TOKEN_DOT_DOT:
-                    advance(TOKEN_DOT_DOT);
-
-                    switch (current.type) {
-                        case TOKEN_IDENT:
-                            expr = parseMapRecursive(expr, parseGetProperty(null, start), start);
-                            break;
-
-                        case TOKEN_METHOD_OPEN:
-                        case TOKEN_$METHOD_OPEN:
-                            expr = parseMapRecursive(expr, parseMethodCall(null), start);
-                            break;
-
-                        default:
-                            throwError('Expected property name or method call after ..');
-                    }
-                    break;
-
                 case TOKEN_DOT_DOT_OPEN_PAREN:
                     expr = parseMapRecursive(expr);
                     break;
 
-                case TOKEN_OPEN_BRACKET: {
+                case TOKEN_OPEN_BRACKET:
                     expr = maybe(() => parseSliceNotation(expr)) || parseBracketAccess(expr);
                     break;
-                }
 
                 default:
                     return expr;
@@ -465,11 +445,11 @@ export function parse(tokens) {
                 return maybe(parseFunction) || parseReference();
 
             case TOKEN_IDENT:
-                return parseGetProperty(null);
+                return parseGetProperty();
 
             case TOKEN_METHOD_OPEN:
             case TOKEN_$METHOD_OPEN:
-                return parseMethodCall(null);
+                return parseMethodCall();
 
             case TOKEN_OPEN_BRACKET:
                 return maybe(parseSliceNotation) || parseArray();
@@ -489,7 +469,7 @@ export function parse(tokens) {
     }
 
     function parseAssertionPostfix(left) {
-        const start = left?.range[0] ?? startRange(); // FIXME: ???
+        const start = legacyPrefixStartRange(left);
 
         advance(TOKEN_IS);
 
@@ -498,46 +478,53 @@ export function parse(tokens) {
 
     function parseAssertion() {
         const start = startRange();
-        const negate = advanceIf(TOKEN_NOT) !== null;
-        let expr = [];
+        const negate = advanceIfMatch(TOKEN_NOT) !== null;
+        let assertion = [];
 
         // Handle assertion terms
         switch (current.type) {
             case TOKEN_OPEN_PAREN:
-                advance();
+                advance(TOKEN_OPEN_PAREN);
 
-                while (!advanceIf(TOKEN_CLOSE_PAREN)) {
-                    expr.push(parseAssertion());
-
-                    if (match(TOKEN_AND) || match(TOKEN_OR)) {
-                        expr.push(getValueAndAdvance());
+                do {
+                    if (assertion.length) {
+                        assertion.push(
+                            match(TOKEN_AND) || match(TOKEN_OR)
+                                ? getValueAndAdvance()
+                                : throwExpected(TOKEN_AND, TOKEN_OR)
+                        );
                     }
-                }
+
+                    assertion.push(parseAssertion());
+                } while (!advanceIfMatch(TOKEN_CLOSE_PAREN));
 
                 break;
 
             case TOKEN_IDENT:
             case TOKEN_LITERAL:
-                expr = parseIdentifier();
+                assertion = parseIdentifier();
                 break;
 
             case TOKEN_$IDENT:
                 // In assertion context, $variable becomes Method with empty arguments
                 // FIXME: Wrapping into Method looks as a bug, should be just Reference instead
-                expr = createMethod(parseReference(), [], endRange(start));
+                assertion = createMethod(parseReference(), [], endRange(start));
                 break;
 
             default:
-                throwError('Expected assertion term');
+                throwExpected(TOKEN_OPEN_PAREN, TOKEN_IDENT, TOKEN_LITERAL, TOKEN_$IDENT);
         }
 
-        return build.Assertion(expr, negate, endRange(start));
+        return build.Assertion(assertion, negate, endRange(start));
     }
 
-    function parseGetProperty(expr = null, start = startRange()) {
-        start = expr?.range[0] ?? start; // FIXME: ???
-        // console.log('start parseGetProperty', start, current.start, expr?.range[0], expr);
-        // console.log(Error().stack);
+    function parseGetProperty(expr = null, prefixed = false) {
+        const start = legacyPrefixStartRange(expr);
+
+        if (prefixed) {
+            advance(TOKEN_DOT);
+        }
+
         const property = parseIdentifier();
 
         return build.GetProperty(expr, property, endRange(start));
@@ -549,13 +536,13 @@ export function parse(tokens) {
             ? parseIdentifier()
             : match(TOKEN_$METHOD_OPEN)
                 ? parseReference()
-                : throwError('Expected token type for method call');
+                : throwExpected(TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN);
 
         const args = [];
         if (!match(TOKEN_CLOSE_PAREN)) {
             do {
                 args.push(parseExpression());
-            } while (advanceIf(TOKEN_COMMA));
+            } while (advanceIfMatch(TOKEN_COMMA));
         }
 
         advance(TOKEN_CLOSE_PAREN);
@@ -563,8 +550,13 @@ export function parse(tokens) {
         return createMethod(methodRef, args, endRange(start));
     }
 
-    function parseMethodCall(value = null, start = startRange()) {
-        start = value?.range[0] ?? start;
+    function parseMethodCall(value = null, prefixed = false) {
+        const start = legacyPrefixStartRange(value);
+
+        if (prefixed) {
+            advance(TOKEN_DOT);
+        }
+
         const method = parseMethod();
 
         return build.MethodCall(value, method, endRange(start));
@@ -603,12 +595,12 @@ export function parse(tokens) {
         const start = startRange();
         const params = [];
 
-        if (advanceIf(TOKEN_OPEN_PAREN)) {
+        if (advanceIfMatch(TOKEN_OPEN_PAREN)) {
             // Parse parameter list
             if (!match(TOKEN_CLOSE_PAREN)) {
                 do {
                     params.push(parseIdentifier());
-                } while (advanceIf(TOKEN_COMMA));
+                } while (advanceIfMatch(TOKEN_COMMA));
             }
 
             advance(TOKEN_CLOSE_PAREN);
@@ -623,13 +615,13 @@ export function parse(tokens) {
     }
 
     function parseCompareFunction(expr) {
-        const start = expr?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(expr);
         const compares = [parseCompare(expr)];
 
-        while (advanceIf(TOKEN_COMMA)) {
+        while (advanceIfMatch(TOKEN_COMMA)) {
             // Parse the next expression with precedence higher than ORDER to avoid nested CompareFunction
             compares.push(
-                parseCompare(parseExpression(getPrecedence(TOKEN_ORDER) + 1))
+                parseCompare(parseExpression(PRECEDENCE[TOKEN_ORDER] + 1))
             );
         }
 
@@ -637,7 +629,7 @@ export function parse(tokens) {
     }
 
     function parseCompare(expr) {
-        const start = expr?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(expr);
         const order = getValueAndAdvance(TOKEN_ORDER);
 
         return build.Compare(expr, order, endRange(start));
@@ -667,10 +659,10 @@ export function parse(tokens) {
 
         advance(TOKEN_OPEN_BRACKET);
 
-        if (!advanceIf(TOKEN_CLOSE_BRACKET)) {
+        if (!advanceIfMatch(TOKEN_CLOSE_BRACKET)) {
             do {
                 if (match(TOKEN_COMMA)) {
-                    throwError('Expected expression before comma in array literal');
+                    throwError('Expected expression before comma');
                 }
 
                 elements.push(
@@ -678,7 +670,7 @@ export function parse(tokens) {
                         ? parseSpread(SPREAD_ARRAY)
                         : parseExpression()
                 );
-            } while (advanceIf(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACKET));
+            } while (advanceIfMatch(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACKET));
 
             advance(TOKEN_CLOSE_BRACKET);
         }
@@ -686,22 +678,27 @@ export function parse(tokens) {
         return build.Array(elements, endRange(start));
     }
 
+    // Slice notation: [ e : e (: e)? ]
     function parseSliceNotation(expr = null) {
-        const start = expr?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(expr);
         const args = [
+            // "[ e :"
             consumeSurrounded(
                 TOKEN_OPEN_BRACKET,
                 parseExpression,
                 TOKEN_COLON
             ),
+            // "e"
             parseExpression()
         ];
 
         // Optional third argument, already consumed "[ e : e"
-        if (advanceIf(TOKEN_COLON)) {
+        if (advanceIfMatch(TOKEN_COLON)) {
+            // ": e"
             args.push(parseExpression());
         }
 
+        // "]"
         advance(TOKEN_CLOSE_BRACKET);
 
         return build.SliceNotation(expr, args, endRange(start));
@@ -724,7 +721,7 @@ export function parse(tokens) {
                         ? parseSpread(SPREAD_OBJECT)
                         : parseObjectEntry()
                 );
-            } while (advanceIf(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACE));
+            } while (advanceIfMatch(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACE));
         }
 
         advance(TOKEN_CLOSE_BRACE);
@@ -776,10 +773,13 @@ export function parse(tokens) {
                 break;
 
             default:
-                throwError('Expected object property name');
+                throwExpected(
+                    TOKEN_IDENT, TOKEN_LITERAL, TOKEN_STRING, TOKEN_NUMBER,
+                    TOKEN_$, TOKEN_$IDENT, TOKEN_OPEN_BRACKET
+                );
         }
 
-        const value = advanceIf(TOKEN_COLON) && parseExpression();
+        const value = advanceIfMatch(TOKEN_COLON) && parseExpression();
 
         return build.ObjectEntry(
             key,
@@ -797,7 +797,7 @@ export function parse(tokens) {
 
 
     function parseBracketAccess(expr) {
-        const start = expr?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(expr);
         const getter = consumeSurrounded(
             TOKEN_OPEN_BRACKET,
             parseExpression,
@@ -808,7 +808,7 @@ export function parse(tokens) {
     }
 
     function parseMap(value) {
-        const start = value?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(value);
         const query = consumeSurrounded(
             TOKEN_DOT_OPEN_PAREN,
             parseBlock,
@@ -818,20 +818,23 @@ export function parse(tokens) {
         return build.Map(value, query, endRange(start));
     }
 
-    function parseMapRecursive(value, property = null, start = startRange()) {
-        start = value?.range[0] ?? start;
-
-        const query = property || consumeSurrounded(
-            TOKEN_DOT_DOT_OPEN_PAREN,
-            parseBlock,
-            TOKEN_CLOSE_PAREN
-        );
+    function parseMapRecursive(value) {
+        const start = legacyPrefixStartRange(value);
+        const query = advanceIfMatch(TOKEN_DOT_DOT)
+            ? match(TOKEN_IDENT)
+                ? parseGetProperty()
+                : parseMethodCall()
+            : consumeSurrounded(
+                TOKEN_DOT_DOT_OPEN_PAREN,
+                parseBlock,
+                TOKEN_CLOSE_PAREN
+            );
 
         return build.MapRecursive(value, query, endRange(start));
     }
 
     function parseFilter(value) {
-        const start = value?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(value);
         const query = consumeSurrounded(
             TOKEN_DOT_OPEN_BRACKET,
             parseBlock,
@@ -842,13 +845,13 @@ export function parse(tokens) {
     }
 
     function parsePipeline(left) {
-        const start = left?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(left);
 
         advance(TOKEN_PIPE);
 
         // Parse right side: definitions + expression with proper precedence
         const definitions = parseDefinitions();
-        const body = parseExpression(getPrecedence(TOKEN_PIPE) + 1) || createPlaceholder();
+        const body = parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder();
 
         // If we have definitions, wrap in a Block like parseBlock does
         // FIXME: This behavior is questionable, block wrapper should be removed
@@ -860,12 +863,12 @@ export function parse(tokens) {
     }
 
     function parseTernaryConditional(condition, prec) {
-        const start = condition?.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(condition);
 
         advance(TOKEN_QUESTION);
 
         const consequent = parseExpression(prec) || createPlaceholder();
-        const alternate = advanceIf(TOKEN_COLON)
+        const alternate = advanceIfMatch(TOKEN_COLON)
             // Colon is present, parse alternate or use Placeholder if missing
             ? parseExpression(prec) || createPlaceholder()
             // No colon, use null for alternate
@@ -875,7 +878,7 @@ export function parse(tokens) {
     }
 
     function parseBinaryOperator(left, prec) {
-        const start = left.range[0] ?? startRange();
+        const start = legacyPrefixStartRange(left);
         const operator = getValueAndAdvance();
         const right = parseExpression(prec) || throwError('Expected expression');
 

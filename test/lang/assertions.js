@@ -27,6 +27,42 @@ describe('lang/assertions', () => {
         assert.strictEqual(query('is not (not number)')('123'), false);
     });
 
+    describe('parse errors', () => {
+        const cases = [
+            'is',
+            'is number number',
+            'is ()',
+            'is (and)',
+            'is (or)',
+            'is (not)',
+            'is (number number)',
+            'is (number and)',
+            'is (number or)',
+            'is (and number)',
+            'is (or number)',
+            'is (number and or number)',
+            'is (number or and number)',
+            'is (number or not)',
+            'is (number and or)',
+            'is (number and not)',
+            'is (not number or)',
+            'is (number and not)',
+            'is (not number and)'
+        ];
+
+        for (const queryString of cases) {
+            it(queryString, () => {
+                assert.throws(
+                    () => query(queryString)(),
+                    {
+                        name: 'SyntaxError',
+                        message: /Parse error/
+                    }
+                );
+            });
+        }
+    });
+
     describe('built-in assertions', () => {
         const untested = new Set(Object.keys(query.assertions));
         const testcases = {

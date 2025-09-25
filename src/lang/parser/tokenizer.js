@@ -12,7 +12,7 @@ import {
 // Predefined regex for efficient identifier reading
 const COMMENT_RX = /\/\/.*?(?:\n|\r\n?|\u2028|\u2029|$)|\/\*(?:.|\s)*?(?:\*\/|$)/y;
 const WHITESPACE_RX = /\s+/y;
-const REST_TOKENS_RX = new RegExp([...STR_TO_TOKEN.keys()].map(s => s.replace(/[\[\]{}()^$|?*+.]/g, '\\$&')).join('|'), 'y');
+const REST_TOKENS_RX = new RegExp(Object.keys(STR_TO_TOKEN).map(s => s.replace(/[\[\]{}()^$|?*+.]/g, '\\$&')).join('|'), 'y');
 const IDENTIFIER_RX = /(?:(?:[a-zA-Z_]|\\u[0-9a-fA-F]{4})(?:[a-zA-Z_$0-9]|\\u[0-9a-fA-F]{4})*)\b/y;
 const KEYWORD_RX = /(?:has no|not in|and|or|not|has|is|in|no|(?:asc|desc)(?:NA?|AN?)?)\b/y;
 const REGEXP_RX = /\/(?:\\.|[^/])+\/[gimsu]*/y;
@@ -104,8 +104,8 @@ export function createTokenizer(input, tolerantMode = false) {
     }
 
     function trackBracketBalance(tokenType) {
-        if (BALANCE_TOKEN_PAIR.has(tokenType)) {
-            bracketStack.push(BALANCE_TOKEN_PAIR.get(tokenType));
+        if (BALANCE_TOKEN_PAIR[tokenType] !== -1) {
+            bracketStack.push(BALANCE_TOKEN_PAIR[tokenType]);
         } else if (bracketBalanceTop() === tokenType) {
             bracketStack.pop();
         }
@@ -122,7 +122,7 @@ export function createTokenizer(input, tolerantMode = false) {
         // Check if we need to insert an empty IDENT in tolerant mode
         const shouldInsertEmptyIdent =
             tolerantMode &&
-            TOLERANT_TOKEN_PAIRS.get(prevTokenType)?.has(token.type);
+            TOLERANT_TOKEN_PAIRS.get(prevTokenType)?.[token.type];
 
         if (shouldInsertEmptyIdent) {
             // Store new token as pending
@@ -187,7 +187,7 @@ export function createTokenizer(input, tolerantMode = false) {
         if (isIdentStart(ch)) {
             // Keywords
             if (!preventKeyword && match(KEYWORD_RX)) {
-                return KEYWORDS.get(input.slice(start, pos));
+                return KEYWORDS[input.slice(start, pos)];
             }
 
             if (match(IDENTIFIER_RX)) {
@@ -230,7 +230,7 @@ export function createTokenizer(input, tolerantMode = false) {
 
         // Rest tokens check
         if (match(REST_TOKENS_RX)) {
-            return STR_TO_TOKEN.get(input.slice(start, pos));
+            return STR_TO_TOKEN[input.slice(start, pos)];
         }
 
         throw new Error(`Unexpected character '${ch}' at position ${pos}`);
@@ -264,8 +264,8 @@ export function createTokenizer(input, tolerantMode = false) {
         const nextTokenType = nextTokenStrict();
         const token = new Token(nextTokenType, start, pos, input);
 
-        preventPrimitive = PREVENT_PRIMITIVE.has(nextTokenType);
-        preventKeyword = PREVENT_KEYWORD.has(nextTokenType);
+        preventPrimitive = PREVENT_PRIMITIVE[nextTokenType];
+        preventKeyword = PREVENT_KEYWORD[nextTokenType];
         trackBracketBalance(nextTokenType);
 
         return tolerantMode
