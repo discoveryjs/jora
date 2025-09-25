@@ -1,4 +1,4 @@
-import { GetProperty, Identifier } from '../parser/nodes.js';
+import { GetProperty, Identifier } from '../../compile-modules/lang/nodes.js';
 
 const noBracketKeyType = new Set([
     'Literal',

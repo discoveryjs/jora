@@ -1,4 +1,3 @@
-import * as build from './nodes.js';
 import { toNumberLiteral, toRegExpLiteral, toStringLiteral } from './convert-to-literal.js';
 import { LITERALS } from './tokenizer.js';
 import {
@@ -178,15 +177,28 @@ export function parse(tokens) {
     // AST node creators called from several places
     // Delete once only one callsite remains
     function createPlaceholder() {
-        return build.Placeholder([current.start, current.start]);
+        return {
+            type: 'Placeholder',
+            range: [current.start, current.start]
+        };
     }
 
     function createBlock(definitions, body, range) {
-        return build.Block(definitions, body, range);
+        return {
+            type: 'Block',
+            definitions,
+            body,
+            range
+        };
     }
 
     function createMethod(reference, args, range) {
-        return build.Method(reference, args, range);
+        return {
+            type: 'Method',
+            reference,
+            arguments: args,
+            range
+        };
     }
 
     // Parser methods
@@ -221,7 +233,12 @@ export function parse(tokens) {
 
         advance(TOKEN_SEMICOLON);
 
-        return build.Definition(declarator, value, endRange(start));
+        return {
+            type: 'Definition',
+            declarator,
+            value,
+            range: endRange(start)
+        };
     }
 
     function parseDeclarator() {
@@ -232,7 +249,11 @@ export function parse(tokens) {
                 ? null
                 : throwExpected(TOKEN_$IDENT, TOKEN_$);
 
-        return build.Declarator(name, endRange(start));
+        return {
+            type: 'Declarator',
+            name,
+            range: endRange(start)
+        };
     }
 
     function parseIdentifier(preserveDollar = false) {
@@ -253,30 +274,50 @@ export function parse(tokens) {
             suffix = 1;
         }
 
-        return build.Identifier(name, [start, end - suffix]);
+        return {
+            type: 'Identifier',
+            name,
+            range: [start, end - suffix]
+        };
     }
 
     function parseReference() {
-        const identifier = parseIdentifier();
+        const name = parseIdentifier();
 
         // TOKEN_$IDENT
         // TOKEN_$METHOD_OPEN
-        return build.Reference(identifier, identifier.range.slice());
+        return {
+            type: 'Reference',
+            name,
+            range: name.range.slice()
+        };
     }
 
     function parseSpecialReference() {
         switch (current.type) {
             case TOKEN_AT:
-                return build.Data(getRangeAndAdvance());
+                return {
+                    type: 'Data',
+                    range: getRangeAndAdvance()
+                };
 
             case TOKEN_HASH:
-                return build.Context(getRangeAndAdvance());
+                return {
+                    type: 'Context',
+                    range: getRangeAndAdvance()
+                };
 
             case TOKEN_$:
-                return build.Current(getRangeAndAdvance());
+                return {
+                    type: 'Current',
+                    range: getRangeAndAdvance()
+                };
 
             case TOKEN_$$:
-                return build.Arg1(getRangeAndAdvance());
+                return {
+                    type: 'Arg1',
+                    range: getRangeAndAdvance()
+                };
 
             default:
                 throwExpected(TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$);
@@ -321,7 +362,11 @@ export function parse(tokens) {
                 );
         }
 
-        return build.Literal(value, endRange(start));
+        return {
+            type: 'Literal',
+            value,
+            range: endRange(start)
+        };
     }
 
     function parseExpression(minPrec = 0) {
@@ -374,11 +419,12 @@ export function parse(tokens) {
             ? parseAssertion()
             : parseExpression(prec + 1);  // Parse with higher precedence to avoid self-binding
 
-        return build.Prefix(
+        return {
+            type: 'Prefix',
             operator,
             argument,
-            endRange(start)
-        );
+            range: endRange(start)
+        };
     }
 
     function parsePostfix() {
@@ -468,17 +514,22 @@ export function parse(tokens) {
         }
     }
 
-    function parseAssertionPostfix(left) {
-        const start = legacyPrefixStartRange(left);
+    function parseAssertionPostfix(argument) {
+        const start = legacyPrefixStartRange(argument);
 
         advance(TOKEN_IS);
 
-        return build.Postfix(left, parseAssertion(), endRange(start));
+        return {
+            type: 'Postfix',
+            operator: parseAssertion(),
+            argument,
+            range: endRange(start)
+        };
     }
 
     function parseAssertion() {
         const start = startRange();
-        const negate = advanceIfMatch(TOKEN_NOT) !== null;
+        const negation = advanceIfMatch(TOKEN_NOT) !== null;
         let assertion = [];
 
         // Handle assertion terms
@@ -515,11 +566,16 @@ export function parse(tokens) {
                 throwExpected(TOKEN_OPEN_PAREN, TOKEN_IDENT, TOKEN_LITERAL, TOKEN_$IDENT);
         }
 
-        return build.Assertion(assertion, negate, endRange(start));
+        return {
+            type: 'Assertion',
+            negation,
+            assertion,
+            range: endRange(start)
+        };
     }
 
-    function parseGetProperty(expr = null, prefixed = false) {
-        const start = legacyPrefixStartRange(expr);
+    function parseGetProperty(value = null, prefixed = false) {
+        const start = legacyPrefixStartRange(value);
 
         if (prefixed) {
             advance(TOKEN_DOT);
@@ -527,7 +583,12 @@ export function parse(tokens) {
 
         const property = parseIdentifier();
 
-        return build.GetProperty(expr, property, endRange(start));
+        return {
+            type: 'GetProperty',
+            value,
+            property,
+            range: endRange(start)
+        };
     }
 
     function parseMethod() {
@@ -559,59 +620,73 @@ export function parse(tokens) {
 
         const method = parseMethod();
 
-        return build.MethodCall(value, method, endRange(start));
+        return {
+            type: 'MethodCall',
+            value,
+            method,
+            range: endRange(start)
+        };
     }
 
     function parseTemplate() {
         const start = startRange();
-        const parts = [];
+        const values = [];
 
         if (match(TOKEN_TEMPLATE)) {
-            parts.push(parseLiteralValue());
+            values.push(parseLiteralValue());
         } else {
             // Start with TPL_START token
-            parts.push(parseLiteralValue(TOKEN_TPL_START));
+            values.push(parseLiteralValue(TOKEN_TPL_START));
 
             // Parse template expressions and continuations
             while (true) {
                 // Parse the expression inside ${}
-                parts.push(parseExpression());
+                values.push(parseExpression());
 
                 if (!match(TOKEN_TPL_CONTINUE)) {
                     break;
                 }
 
-                parts.push(parseLiteralValue(TOKEN_TPL_CONTINUE));
+                values.push(parseLiteralValue(TOKEN_TPL_CONTINUE));
             }
 
             // End with TPL_END token
-            parts.push(parseLiteralValue(TOKEN_TPL_END));
+            values.push(parseLiteralValue(TOKEN_TPL_END));
         }
 
-        return build.Template(parts, endRange(start));
+        return {
+            type: 'Template',
+            values,
+            range: endRange(start)
+        };
     }
 
     function parseFunction() {
         const start = startRange();
-        const params = [];
+        const args = [];
 
         if (advanceIfMatch(TOKEN_OPEN_PAREN)) {
             // Parse parameter list
             if (!match(TOKEN_CLOSE_PAREN)) {
                 do {
-                    params.push(parseIdentifier());
+                    args.push(parseIdentifier());
                 } while (advanceIfMatch(TOKEN_COMMA));
             }
 
             advance(TOKEN_CLOSE_PAREN);
         } else if (match(TOKEN_$IDENT)) {
-            params.push(parseIdentifier());
+            args.push(parseIdentifier());
         }
 
         advance(TOKEN_ARROW);
 
         const body = parseExpression() || createPlaceholder();
-        return build.Function(params, body, endRange(start));
+        return {
+            type: 'Function',
+            arguments: args,
+            body,
+            range: endRange(start)
+        };
     }
 
     function parseCompareFunction(expr) {
@@ -625,14 +700,23 @@ export function parse(tokens) {
             );
         }
 
-        return build.CompareFunction(compares, endRange(start));
+        return {
+            type: 'CompareFunction',
+            compares,
+            range: endRange(start)
+        };
     }
 
-    function parseCompare(expr) {
-        const start = legacyPrefixStartRange(expr);
+    function parseCompare(query) {
+        const start = legacyPrefixStartRange(query);
         const order = getValueAndAdvance(TOKEN_ORDER);
 
-        return build.Compare(expr, order, endRange(start));
+        return {
+            type: 'Compare',
+            query,
+            order,
+            range: endRange(start)
+        };
     }
 
     function parseParentheses() {
@@ -645,12 +729,13 @@ export function parse(tokens) {
         advance(TOKEN_CLOSE_PAREN);
 
         // If we have definitions, wrap in a Block, otherwise just return the expression
-        return build.Parentheses(
-            definitions.length > 0
+        return {
+            type: 'Parentheses',
+            body: definitions.length > 0
                 ? createBlock(definitions, expression, endRange(start))
                 : expression,
-            endRange(start)
-        );
+            range: endRange(start)
+        };
     }
 
     function parseArray() {
@@ -675,33 +760,38 @@ export function parse(tokens) {
             advance(TOKEN_CLOSE_BRACKET);
         }
 
-        return build.Array(elements, endRange(start));
+        return {
+            type: 'Array',
+            elements,
+            range: endRange(start)
+        };
     }
 
     // Slice notation: [ e : e (: e)? ]
     function parseSliceNotation(expr = null) {
         const start = legacyPrefixStartRange(expr);
         const args = [
-            // "[ e :"
-            consumeSurrounded(
+            consumeSurrounded(             // "[ e :"
                 TOKEN_OPEN_BRACKET,
                 parseExpression,
                 TOKEN_COLON
             ),
-            // "e"
-            parseExpression()
+            parseExpression()              // "e"
         ];
 
-        // Optional third argument, already consumed "[ e : e"
-        if (advanceIfMatch(TOKEN_COLON)) {
-            // ": e"
-            args.push(parseExpression());
+        // Optional third part
+        if (advanceIfMatch(TOKEN_COLON)) { // ":"
+            args.push(parseExpression());  // "e"
         }
 
-        // "]"
-        advance(TOKEN_CLOSE_BRACKET);
+        advance(TOKEN_CLOSE_BRACKET);      // "]"
 
-        return build.SliceNotation(expr, args, endRange(start));
+        return {
+            type: 'SliceNotation',
+            value: expr,
+            arguments: args,
+            range: endRange(start)
+        };
     }
 
     function parseObject() {
@@ -711,12 +801,12 @@ export function parse(tokens) {
 
         // First, try to parse any definitions (like parseBlock does)
         const definitions = parseDefinitions();
-        const entries = [];
+        const properties = [];
 
         if (!match(TOKEN_CLOSE_BRACE)) {
             // allow trailing comma
             do {
-                entries.push(
+                properties.push(
                     match(TOKEN_DOT_DOT_DOT)
                         ? parseSpread(SPREAD_OBJECT)
                         : parseObjectEntry()
@@ -726,7 +816,11 @@ export function parse(tokens) {
 
         advance(TOKEN_CLOSE_BRACE);
 
-        const object = build.Object(entries, endRange(start));
+        const object = {
+            type: 'Object',
+            properties,  // FIXME: rename to entries
+            range: endRange(start)
+        };
 
         // If we found definitions, wrap the object in a Block (like legacy parser does)
         // FIXME: This behavior is questionable, block wrapper should be removed
@@ -781,30 +875,41 @@ export function parse(tokens) {
 
         const value = advanceIfMatch(TOKEN_COLON) && parseExpression();
 
-        return build.ObjectEntry(
+        return {
+            type: 'ObjectEntry',
             key,
             value,
-            endRange(start)
-        );
+            range: endRange(start)
+        };
     }
 
-    function parseSpread(isArray) {
+    function parseSpread(array) {
         const start = startRange();
-        const expression = advance(TOKEN_DOT_DOT_DOT) && parseExpression();
+        const query = advance(TOKEN_DOT_DOT_DOT) && parseExpression();
 
-        return build.Spread(expression, isArray, endRange(start));
+        return {
+            type: 'Spread',
+            query,
+            array,
+            range: endRange(start)
+        };
     }
 
 
-    function parseBracketAccess(expr) {
-        const start = legacyPrefixStartRange(expr);
+    function parseBracketAccess(value) {
+        const start = legacyPrefixStartRange(value);
         const getter = consumeSurrounded(
             TOKEN_OPEN_BRACKET,
             parseExpression,
             TOKEN_CLOSE_BRACKET
         );
 
-        return build.Pick(expr, getter, endRange(start));
+        return {
+            type: 'Pick',
+            value,
+            getter,
+            range: endRange(start)
+        };
     }
 
     function parseMap(value) {
@@ -815,7 +920,12 @@ export function parse(tokens) {
             TOKEN_CLOSE_PAREN
         );
 
-        return build.Map(value, query, endRange(start));
+        return {
+            type: 'Map',
+            value,
+            query,
+            range: endRange(start)
+        };
     }
 
     function parseMapRecursive(value) {
@@ -830,7 +940,12 @@ export function parse(tokens) {
                 TOKEN_CLOSE_PAREN
             );
 
-        return build.MapRecursive(value, query, endRange(start));
+        return {
+            type: 'MapRecursive',
+            value,
+            query,
+            range: endRange(start)
+        };
     }
 
     function parseFilter(value) {
@@ -841,7 +956,12 @@ export function parse(tokens) {
             TOKEN_CLOSE_BRACKET
         );
 
-        return build.Filter(value, query, endRange(start));
+        return {
+            type: 'Filter',
+            value,
+            query,
+            range: endRange(start)
+        };
     }
 
     function parsePipeline(left) {
@@ -859,11 +979,16 @@ export function parse(tokens) {
             ? createBlock(definitions, body, endRange(start))
             : body;
 
-        return build.Pipeline(left, right, endRange(start));
+        return {
+            type: 'Pipeline',
+            left,
+            right,
+            range: endRange(start)
+        };
     }
 
-    function parseTernaryConditional(condition, prec) {
-        const start = legacyPrefixStartRange(condition);
+    function parseTernaryConditional(test, prec) {
+        const start = legacyPrefixStartRange(test);
 
         advance(TOKEN_QUESTION);
 
@@ -874,7 +999,13 @@ export function parse(tokens) {
             // No colon, use null for alternate
             : null;
 
-        return build.Conditional(condition, consequent, alternate, endRange(start));
+        return {
+            type: 'Conditional',
+            test,
+            consequent,
+            alternate,
+            range: endRange(start)
+        };
     }
 
     function parseBinaryOperator(left, prec) {
@@ -882,6 +1013,12 @@ export function parse(tokens) {
         const operator = getValueAndAdvance();
         const right = parseExpression(prec) || throwError('Expected expression');
 
-        return build.Binary(operator, left, right, endRange(start));
+        return {
+            type: 'Binary',
+            operator,
+            left,
+            right,
+            range: endRange(start)
+        };
     }
 }
