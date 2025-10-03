@@ -238,7 +238,7 @@ function logParityDifference(kind, source, legacyData, newData, options) {
             if (isLegacyError && isNewError) {
                 diffKind = 'ERROR_MISMATCH';
                 diff = findFirstDiff(stableA, stableB, 50);
-                return; // Ignore error mismatches for now
+                // return; // Ignore error mismatches for now
             } else if (isLegacyError) {
                 diffKind = 'NEW_NO_PARSE_ERROR';
                 diff = { offset: -1, a: legacyData, b: createSliceWindow(stableB, 0, 80) };

@@ -3,10 +3,9 @@ import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
     TOKEN_$, TOKEN_$$, TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN,
     TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END,
-    TOKEN_DIVIDE, TOKEN_EOF, BALANCE_TOKEN_PAIR, KEYWORDS, STR_TO_TOKEN,
-    tokenNames,
-    PREVENT_PRIMITIVE,
-    PREVENT_KEYWORD
+    TOKEN_DIVIDE, TOKEN_BAD, TOKEN_EOF,
+    BALANCE_TOKEN_PAIR, KEYWORDS, STR_TO_TOKEN, PREVENT_PRIMITIVE, PREVENT_KEYWORD,
+    tokenNames
 } from './tokens.js';
 
 // Predefined regex for efficient identifier reading
@@ -46,6 +45,15 @@ export class Token {
     }
     get value() {
         return this.#input.slice(this.start, this.end);
+    }
+}
+
+export function* tokenize(input, tolerant = false) {
+    const nextToken = createTokenizer(input, tolerant);
+    let token;
+
+    while (token = nextToken()) {
+        yield token;
     }
 }
 
@@ -233,7 +241,8 @@ export function createTokenizer(input, tolerantMode = false) {
             return STR_TO_TOKEN[input.slice(start, pos)];
         }
 
-        throw new Error(`Unexpected character '${ch}' at position ${pos}`);
+        pos++;
+        return TOKEN_BAD;
     }
 
     return function nextToken() {

@@ -70,8 +70,9 @@ export const TOKEN_COLON = 55;
 export const TOKEN_SEMICOLON = 56;
 
 // Special - must be last
-export const TOKEN_EOF = 57;
-const TOKEN_MAX = 58;
+export const TOKEN_BAD = 57;
+export const TOKEN_EOF = 58;
+const TOKEN_MAX = 59;
 
 // Token names for debugging and error messages
 export const tokenNames = {
@@ -132,6 +133,7 @@ export const tokenNames = {
     [TOKEN_COMMA]: ',',
     [TOKEN_COLON]: ':',
     [TOKEN_SEMICOLON]: ';',
+    [TOKEN_BAD]: 'BAD_TOKEN',
     [TOKEN_EOF]: 'EOF'
 };
 

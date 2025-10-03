@@ -1,5 +1,6 @@
 import { toNumberLiteral, toRegExpLiteral, toStringLiteral } from './convert-to-literal.js';
-import { LITERALS } from './tokenizer.js';
+import { offsetToLoc, showPosition } from './error.js';
+import { LITERALS, tokenize } from './tokenizer.js';
 import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
     TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$, TOKEN_AND, TOKEN_OR, TOKEN_NOT, TOKEN_NO,
@@ -11,9 +12,11 @@ import {
     TOKEN_GREATER_THAN_EQUALS, TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
     TOKEN_MODULO, TOKEN_NULLISH_COALESCING, TOKEN_QUESTION, TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,
     TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET, TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA,
-    TOKEN_COLON, TOKEN_SEMICOLON, TOKEN_EOF, tokenNames, createTokenTable, createTokenSet
+    TOKEN_COLON, TOKEN_SEMICOLON, TOKEN_EOF, tokenNames, createTokenTable, createTokenSet,
+    TOKEN_BAD
 } from './tokens.js';
 
+const RECOVERABLE_ERROR = Symbol('RECOVERABLE_ERROR');
 const TOKEN_ANY = -1;
 const SPREAD_ARRAY = true;
 const SPREAD_OBJECT = false;
@@ -60,9 +63,11 @@ const PRECEDENCE = createTokenTable(
 // previous meaningful token's end (see endRange()). This is a parity-oriented
 // implementation mirroring legacy quirks (notably some range spans and Block
 // wrappers) before subsequent cleanups.
-export function parse(tokens) {
+export function parse(input, tolerant) {
+    const tokens = [...tokenize(input, tolerant)];
     let index = 0;
     let current = tokens[index];
+    let recoverable = false;
 
     try {
         return parseBlock();
@@ -72,8 +77,58 @@ export function parse(tokens) {
     }
 
     // ---- Error helpers ------------------------------------------------------
-    function throwError(message) {
-        throw new Error(message); // TODO: Add position tracking later
+    function throwError(rawMessage, details) {
+        if (recoverable) {
+            // console.log(current, Error().stack+'');
+            throw RECOVERABLE_ERROR;
+        }
+
+        if (current.type === TOKEN_BAD) {
+            const loc = offsetToLoc(input, current.start);
+            throw new Error(`Bad input on line ${loc.line} column ${loc.column}`);
+        }
+
+        let start = current.start;
+        let end = current.end;
+        details ??= {};
+
+        if (Array.isArray(details?.inside)) {
+            start += details.inside[0];
+            end += details.inside[1];
+        }
+
+        const startLoc = offsetToLoc(input, start);
+        const message = [
+            `Parse error on line ${startLoc.line}:`,
+            '',
+            showPosition(input, start),
+            '',
+            rawMessage
+        ];
+        const expected = !Array.isArray(details?.expected) ? null : [...new Set([].concat(
+            ...details.expected
+        ))];
+
+        if (expected) {
+            message.push(
+                '',
+                'Expecting ' + expected.join(', ') + ' got ' + tokenNames(current.type)
+            );
+        }
+
+        throw Object.assign(new SyntaxError(message.join('\n')), {
+            details: {
+                rawMessage: rawMessage,
+                text: current.value,
+                token: current.name,
+                expected,
+                loc: {
+                    range: [start, end],
+                    start: startLoc,
+                    end: offsetToLoc(input, end)
+                }
+            }
+        });
     }
 
     function throwExpected(...tokens) {
@@ -86,15 +141,33 @@ export function parse(tokens) {
         }
     }
 
-    function maybe(fn) {
+    function disableRecovery(fn) {
+        const savedRecoverable = recoverable;
+
+        recoverable = false;
+        const result = fn();
+        recoverable = savedRecoverable;
+        return result;
+    }
+
+    function maybe(fn, ...args) {
+        const savedRecoverable = recoverable;
         const savedIndex = index;
 
         try {
-            return fn();
+            recoverable = true;
+            return fn(...args);
         } catch (error) {
+            if (error !== RECOVERABLE_ERROR) {
+                throw error;
+            }
+
             index = savedIndex;
             current = tokens[index];
+
             return null;
+        } finally {
+            recoverable = savedRecoverable;
         }
     }
 
@@ -239,7 +312,7 @@ export function parse(tokens) {
         const start = startRange();
         const declarator = parseDeclarator();
         const value = advanceIfMatch(TOKEN_COLON)
-            ? parseExpression()
+            ? disableRecovery(parseExpression)
             : null;
 
         advance(TOKEN_SEMICOLON);
@@ -474,7 +547,7 @@ export function parse(tokens) {
                 case TOKEN_OPEN_BRACKET:
                     // Ambiguity: either slice notation or bracket access. Try slice
                     // first (backtracks on failure) otherwise treat as access.
-                    expr = maybe(() => parseSliceNotation(expr)) || parseBracketAccess(expr);
+                    expr = maybe(parseSliceNotation, expr) || parseBracketAccess(expr);
                     break;
 
                 default:
