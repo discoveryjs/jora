@@ -107,6 +107,57 @@ describe('lang/object', () => {
         );
     });
 
+    describe('shorthand entries', () => {
+        it('method call', () => {
+            assert.deepEqual(
+                query('{ size() }')({ foo: 'bar', bar: 1 }),
+                { size: 2 }
+            );
+        });
+
+        it('method call with following expression', () => {
+            assert.deepEqual(
+                query('{ size().($ * 5).[] }')({ foo: 'bar', bar: 1 }),
+                { size: 10 }
+            );
+        });
+
+        it('method call with following method call', () => {
+            assert.deepEqual(
+                query('{ size() bool() }')({ foo: 'bar', bar: 1 }),
+                { size: true }
+            );
+        });
+
+        it('variable method call', () => {
+            assert.deepEqual(
+                query('$length: => size(); { $length() }')({ foo: 'bar', bar: 1 }),
+                { length: 2 }
+            );
+        });
+
+        it('variable method call with following expression', () => {
+            assert.deepEqual(
+                query('$length: => size(); { $length() bool() }')({ foo: 'bar', bar: 1 }),
+                { length: true }
+            );
+        });
+
+        it('expression', () => {
+            assert.deepEqual(
+                query('{ foo.[$ > 5] }')({ foo: [1, 6, 10] }),
+                { foo: [6, 10] }
+            );
+        });
+
+        it('variable with expression', () => {
+            assert.deepEqual(
+                query('{ $var: foo; $var.size() }')({ foo: [1, 6, 10] }),
+                { var: 3 }
+            );
+        });
+    });
+
     it('spread object', () => {
         assert.deepEqual(
             query('{ foo: 1, ...bar }')({ bar: { baz: 1 } }),

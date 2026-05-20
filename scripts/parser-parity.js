@@ -22,7 +22,7 @@ const STRIP_METADATA_KEYS = [
 ];
 
 // Default parity mode when not specified by environment variable
-const DEFAULT_PARITY_MODE = 'new';
+const DEFAULT_PARITY_MODE = 'legacy';
 const DEFAULT_PRINT_QUERIES = true; // Set to true to print all processed queries (for debugging)
 const DEFAULT_STRIP_METADATA = true; // Strip loc/range/commentRanges/errors from ASTs for parity comparison
 

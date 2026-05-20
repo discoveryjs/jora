@@ -49,7 +49,7 @@ const $r1 = { code: '@1.range' };
 const $ri1 = { code: '[@1.range[0]+1,@1.range[1]]' };
 const $rm1 = { code: '[@1.range[0],@1.range[1]-1]' };
 const $rr = { code: '[@1.range[1],@1.range[1]]' };
-const $methodName = { code: 'this._mn' };
+const $methodName = { code: '$1.reference.name.name||$1.reference.name' };
 const $placeholder = { code: { ...Placeholder(), range: $rr } };
 const refs = new Set([$0, $1, $1string, $1name, $$1name, $methodName, $2, $3, $4, $5, $6, $r0, $r1, $ri1, $rm1, $rr, $placeholder]);
 const asis = '';
@@ -109,10 +109,6 @@ function MethodIdentifier(name) {
 
 function MethodReference(name) {
     return withRange(Reference(name), $rm1);
-}
-
-function $$methodName(name) {
-    return ';this._mn=' + stringify(name);
 }
 
 function createCommaList(name, element) {
@@ -466,10 +462,10 @@ exports.bnf = {
     ],
 
     'method()': [
-        ['METHOD( )', $$(Method(MethodIdentifier($1), [])) + $$methodName($1)],
-        ['METHOD( arguments )', $$(Method(MethodIdentifier($1), $2)) + $$methodName($1)],
-        ['$METHOD( )', $$(Method(MethodReference(MethodIdentifier($1)), [])) + $$methodName($1)],
-        ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2)) + $$methodName($1)]
+        ['METHOD( )', $$(Method(MethodIdentifier($1), []))],
+        ['METHOD( arguments )', $$(Method(MethodIdentifier($1), $2))],
+        ['$METHOD( )', $$(Method(MethodReference(MethodIdentifier($1)), []))],
+        ['$METHOD( arguments )', $$(Method(MethodReference(MethodIdentifier($1)), $2))]
     ],
     arguments: createCommaList('arguments', 'e'),
 
