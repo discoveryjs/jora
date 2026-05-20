@@ -3,9 +3,14 @@ import { createTokenizer, tokenize } from './tokenizer.js';
 
 export default {
     parse(input, tolerant = false) {
+        const commentRanges = [];
+
         return {
-            ast: parse(input, tolerant),
-            commentRanges: []
+            ast: parse(input, {
+                tolerant,
+                onComment: commentRanges
+            }),
+            commentRanges
         };
     },
 

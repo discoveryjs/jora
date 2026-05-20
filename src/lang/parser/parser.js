@@ -63,8 +63,8 @@ const PRECEDENCE = createTokenTable(
 // previous meaningful token's end (see endRange()). This is a parity-oriented
 // implementation mirroring legacy quirks (notably some range spans and Block
 // wrappers) before subsequent cleanups.
-export function parse(input, tolerant) {
-    const tokens = [...tokenize(input, tolerant)];
+export function parse(input, options) {
+    const tokens = [...tokenize(input, options)];
     let index = 0;
     let current = tokens[index];
     let recoverable = false;
@@ -235,7 +235,15 @@ export function parse(input, tolerant) {
         //
         // FIXME: Tokenizer should emit all the tokens, including whitespaces and comments,
         // this will allow to avoid hacks with previous token's end
-        return [start, index > 0 ? tokens[index - 1].end : 0];
+        const end = index > 0 ? tokens[index - 1].end : 0;
+
+        // When no tokens were consumed within a construct (empty block/expression),
+        // start may exceed end due to whitespace skipping. Collapse to [end, end].
+        if (start > end) {
+            return [end, end];
+        }
+
+        return [start, end];
     }
 
     // Legacy quirk: postfix constructs (property access, map, filter, etc.) inherit
@@ -250,9 +258,13 @@ export function parse(input, tolerant) {
     // Minimal helpers for small repeated constructions. These remain until
     // structural changes eliminate their few remaining multi-call sites.
     function createPlaceholder() {
+        // When no tokens have been consumed (index=0), the placeholder represents
+        // an empty top-level expression (e.g., comment-only input). Use [0,0].
+        const pos = index > 0 ? current.start : 0;
+
         return {
             type: 'Placeholder',
-            range: [current.start, current.start]
+            range: [pos, pos]
         };
     }
 

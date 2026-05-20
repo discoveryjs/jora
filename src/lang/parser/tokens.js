@@ -211,6 +211,19 @@ export const STR_TO_TOKEN = {
     ';': TOKEN_SEMICOLON
 };
 
+// Keyword tokens — used to determine empty ident range behavior in tolerant mode
+export const KEYWORD_TOKENS = createTokenSet(
+    TOKEN_AND,
+    TOKEN_OR,
+    TOKEN_NOT,
+    TOKEN_NO,
+    TOKEN_IN,
+    TOKEN_NOTIN,
+    TOKEN_HAS,
+    TOKEN_HASNO,
+    TOKEN_IS
+);
+
 export const PREVENT_KEYWORD = createTokenSet(
     TOKEN_DOT,
     TOKEN_DOT_DOT

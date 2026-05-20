@@ -4,7 +4,7 @@ import {
     TOKEN_$, TOKEN_$$, TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN,
     TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END,
     TOKEN_DIVIDE, TOKEN_BAD, TOKEN_EOF,
-    BALANCE_TOKEN_PAIR, KEYWORDS, STR_TO_TOKEN, PREVENT_PRIMITIVE, PREVENT_KEYWORD,
+    BALANCE_TOKEN_PAIR, KEYWORDS, STR_TO_TOKEN, PREVENT_PRIMITIVE, PREVENT_KEYWORD, KEYWORD_TOKENS,
     tokenNames
 } from './tokens.js';
 
@@ -34,17 +34,19 @@ export const LITERALS = new Map([
 
 export class Token {
     #input;
-    constructor(type, start, end, input) {
+    #value;
+    constructor(type, start, end, input, value = null) {
         this.type = type;
-        this.#input = input;
         this.start = start;
         this.end = end;
+        this.#input = input;
+        this.#value = value;
     }
     get name() {
         return tokenNames[this.type];
     }
     get value() {
-        return this.#input.slice(this.start, this.end);
+        return this.#value ?? this.#input.slice(this.start, this.end);
     }
 }
 
@@ -57,7 +59,19 @@ export function* tokenize(input, tolerant = false) {
     }
 }
 
-export function createTokenizer(input, tolerantMode = false) {
+export function createTokenizer(input, options) {
+    const {
+        tolerant: tolerantMode = false,
+        onComment: onCommentHandler = []
+    } = typeof options === 'boolean'
+        ? { tolerant: options }
+        : options || {};
+    const onComment = typeof onCommentHandler === 'function'
+        ? onCommentHandler
+        : Array.isArray(onCommentHandler)
+            ? (start, end) => onCommentHandler.push([start, end])
+            : () => {};
+
     const length = input.length;
     let pos = 0;
     let done = false;
@@ -66,6 +80,7 @@ export function createTokenizer(input, tolerantMode = false) {
     let preventKeyword = false;
     let pendingToken = null;
     let prevTokenType = null;
+    let prevTokenEnd = 0;
 
     function advance(count = 1) {
         pos = Math.min(pos + count, length);
@@ -136,12 +151,32 @@ export function createTokenizer(input, tolerantMode = false) {
             // Store new token as pending
             pendingToken = token;
 
-            // Create empty IDENT token at the position where the previous token ended
-            return new Token(TOKEN_IDENT, token.start, token.start, input);
+            // Determine empty IDENT range based on surrounding token types:
+            // - After keyword or before keyword: zero-width range
+            // - Otherwise (after dot/operator, before operator/EOF): spans the gap
+            let emptyStart;
+            let emptyEnd;
+
+            if (prevTokenType === null || KEYWORD_TOKENS[prevTokenType]) {
+                // No previous token or previous is a keyword: zero-width at next token
+                emptyStart = token.start;
+                emptyEnd = token.start;
+            } else if (KEYWORD_TOKENS[token.type]) {
+                // Next token is a keyword: zero-width at previous token's end
+                emptyStart = prevTokenEnd;
+                emptyEnd = prevTokenEnd;
+            } else {
+                // Normal case: span from previous token's end to next token's start
+                emptyStart = prevTokenEnd;
+                emptyEnd = token.start;
+            }
+
+            return new Token(TOKEN_IDENT, emptyStart, emptyEnd, input, '');
         }
 
         // Normal token processing
         prevTokenType = token.type;
+        prevTokenEnd = token.end;
         return token;
     }
 
@@ -245,6 +280,17 @@ export function createTokenizer(input, tolerantMode = false) {
         return TOKEN_BAD;
     }
 
+    function scanComment() {
+        const start = pos;
+
+        if (match(COMMENT_RX)) {
+            onComment(start, pos, input);
+            return true;
+        }
+
+        return false;
+    }
+
     return function nextToken() {
         // Check for pending token first
         if (pendingToken) {
@@ -253,6 +299,7 @@ export function createTokenizer(input, tolerantMode = false) {
 
             pendingToken = null;
             prevTokenType = token.type;
+            prevTokenEnd = token.end;
 
             return token;
         }
@@ -266,7 +313,7 @@ export function createTokenizer(input, tolerantMode = false) {
             if (match(WHITESPACE_RX)) {
                 preventKeyword = false;
             }
-        } while (match(COMMENT_RX));
+        } while (scanComment());
 
         // Read next token
         const start = pos;
