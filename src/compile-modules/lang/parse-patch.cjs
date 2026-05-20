@@ -211,6 +211,8 @@ module.exports = function buildParsers(strictParser) {
                 const duplicateIndex = array.indexOf(flag, idx + 1);
                 if (duplicateIndex !== -1) {
                     this.parseError('Duplicate flag in regexp', {
+                        token: 'REGEXP',
+                        text: value,
                         inside: [flagsIndex + duplicateIndex, flagsIndex + duplicateIndex + 1]
                     });
                 }

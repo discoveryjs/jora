@@ -157,14 +157,21 @@ export function createTokenizer(input, options) {
             let emptyStart;
             let emptyEnd;
 
-            if (prevTokenType === null || KEYWORD_TOKENS[prevTokenType]) {
-                // No previous token or previous is a keyword: zero-width at next token
+            if (prevTokenType === null) {
+                // First injected ident (no previous token): starts at input beginning
+                emptyStart = 0;
+                emptyEnd = KEYWORD_TOKENS[token.type]
+                    ? Math.max(0, token.start - 1)
+                    : token.start;
+            } else if (KEYWORD_TOKENS[prevTokenType]) {
+                // Previous is a keyword: zero-width at next token
                 emptyStart = token.start;
                 emptyEnd = token.start;
             } else if (KEYWORD_TOKENS[token.type]) {
-                // Next token is a keyword: zero-width at previous token's end
+                // Next token is a keyword: span from previous token's end
+                // to just before the keyword (absorb whitespace gap)
                 emptyStart = prevTokenEnd;
-                emptyEnd = prevTokenEnd;
+                emptyEnd = Math.max(prevTokenEnd, token.start - 1);
             } else {
                 // Normal case: span from previous token's end to next token's start
                 emptyStart = prevTokenEnd;

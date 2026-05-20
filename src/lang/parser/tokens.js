@@ -221,7 +221,8 @@ export const KEYWORD_TOKENS = createTokenSet(
     TOKEN_NOTIN,
     TOKEN_HAS,
     TOKEN_HASNO,
-    TOKEN_IS
+    TOKEN_IS,
+    TOKEN_ORDER
 );
 
 export const PREVENT_KEYWORD = createTokenSet(

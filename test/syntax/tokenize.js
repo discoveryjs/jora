@@ -6,29 +6,39 @@ const { syntax: { tokenize }} = jora;
 describe('syntax/tokenize', () => {
     it('tokenize', () => {
         const generator = tokenize('foo + 123');
-
-        assert.strictEqual(typeof generator, 'object');
-        assert.deepStrictEqual([...generator], [
+        const actual = [...generator];
+        const isLegacy = typeof actual[0].offset === 'number'; // FIXME: Legacy tokens have `offset` instead of `start`/`end`
+        const expected = [
             {
                 type: 'IDENT',
                 value: 'foo',
-                offset: 0
+                start: 0,
+                end: 3
             },
             {
                 type: '+',
                 value: '+',
-                offset: 4
+                start: 4,
+                end: 5
             },
             {
                 type: 'NUMBER',
                 value: '123',
-                offset: 6
+                start: 6,
+                end: 9
             },
             {
                 type: 'EOF',
                 value: '',
-                offset: 9
+                start: 9,
+                end: 9
             }
-        ]);
+        ].map(token => (isLegacy
+            ? { type: token.type, value: token.value, offset: token.start }
+            : token)
+        );
+
+        assert.strictEqual(typeof generator, 'object');
+        assert.deepStrictEqual(actual, expected);
     });
 });

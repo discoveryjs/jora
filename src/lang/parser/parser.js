@@ -68,12 +68,15 @@ export function parse(input, options) {
     let index = 0;
     let current = tokens[index];
     let recoverable = false;
+    let result = null;
 
     try {
-        return parseBlock();
+        return result = parseBlock();
     } finally {
         // Ensure nothing left after parsing
-        advance(TOKEN_EOF);
+        if (result) {
+            advance(TOKEN_EOF);
+        }
     }
 
     // ---- Error helpers ------------------------------------------------------
@@ -83,28 +86,35 @@ export function parse(input, options) {
             throw RECOVERABLE_ERROR;
         }
 
-        if (current.type === TOKEN_BAD) {
-            const loc = offsetToLoc(input, current.start);
-            throw new Error(`Bad input on line ${loc.line} column ${loc.column}`);
-        }
-
         let start = current.start;
         let end = current.end;
         details ??= {};
 
         if (Array.isArray(details?.inside)) {
             start += details.inside[0];
-            end += details.inside[1];
+            end = start + details.inside[1];
+        }
+
+        // FIXME: To match legacy error reporting
+        if (current.type === TOKEN_BAD) {
+            rawMessage = `Bad input on line ${offsetToLoc(input, start).line} column ${offsetToLoc(input, start).column}`;
         }
 
         const startLoc = offsetToLoc(input, start);
-        const message = [
-            `Parse error on line ${startLoc.line}:`,
-            '',
-            showPosition(input, start),
-            '',
-            rawMessage
-        ];
+        const message = current.type === TOKEN_BAD || details?.inside
+            ? [ // FIXME: To match legacy error reporting
+                rawMessage,
+                '',
+                showPosition(input, start)
+            ]
+            : [
+                `Parse error on line ${startLoc.line}:`,
+                '',
+                showPosition(input, start),
+                '',
+                rawMessage
+            ];
+
         const expected = !Array.isArray(details?.expected) ? null : [...new Set([].concat(
             ...details.expected
         ))];
@@ -118,7 +128,7 @@ export function parse(input, options) {
 
         throw Object.assign(new SyntaxError(message.join('\n')), {
             details: {
-                rawMessage: rawMessage,
+                rawMessage,
                 text: current.value,
                 token: current.name,
                 expected,
@@ -258,9 +268,9 @@ export function parse(input, options) {
     // Minimal helpers for small repeated constructions. These remain until
     // structural changes eliminate their few remaining multi-call sites.
     function createPlaceholder() {
-        // When no tokens have been consumed (index=0), the placeholder represents
-        // an empty top-level expression (e.g., comment-only input). Use [0,0].
-        const pos = index > 0 ? current.start : 0;
+        // Use the end of the last consumed token as the placeholder position.
+        // When no tokens have been consumed (index=0), use 0.
+        const pos = index > 0 ? tokens[index - 1].end : 0;
 
         return {
             type: 'Placeholder',
@@ -424,29 +434,29 @@ export function parse(input, options) {
 
         switch (current.type) {
             case TOKEN_NUMBER:
-                value = toNumberLiteral(getValueAndAdvance());
+                value = toNumberLiteral(current.value, throwError);
                 break;
 
             case TOKEN_STRING:
-                value = toStringLiteral(getValueAndAdvance(), false, 1);
+                value = toStringLiteral(current.value, false, 1, throwError);
                 break;
 
             case TOKEN_TEMPLATE:
             case TOKEN_TPL_END:
-                value = toStringLiteral(getValueAndAdvance(), true, 1);
+                value = toStringLiteral(current.value, true, 1, throwError);
                 break;
 
             case TOKEN_TPL_START:
             case TOKEN_TPL_CONTINUE:
-                value = toStringLiteral(getValueAndAdvance(), true, 2);
+                value = toStringLiteral(current.value, true, 2, throwError);
                 break;
 
             case TOKEN_REGEXP:
-                value = toRegExpLiteral(getValueAndAdvance());
+                value = toRegExpLiteral(current.value, throwError);
                 break;
 
             case TOKEN_LITERAL:
-                value = LITERALS.get(getValueAndAdvance());
+                value = LITERALS.get(current.value);
                 break;
 
             default:
@@ -455,6 +465,8 @@ export function parse(input, options) {
                     TOKEN_TEMPLATE, TOKEN_TPL_START, TOKEN_TPL_CONTINUE, TOKEN_TPL_END
                 );
         }
+
+        advance();
 
         return {
             type: 'Literal',

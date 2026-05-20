@@ -16,14 +16,14 @@ const MODES = {
 };
 const STRIP_METADATA_KEYS = [
     // 'range',
-    'loc',
-    'commentRanges',
-    'errors'
+    // 'loc',
+    // 'commentRanges',
+    // 'errors'
 ];
 
 // Default parity mode when not specified by environment variable
-const DEFAULT_PARITY_MODE = 'legacy';
-const DEFAULT_PRINT_QUERIES = false; // Set to true to print all processed queries (for debugging)
+const DEFAULT_PARITY_MODE = 'new';
+const DEFAULT_PRINT_QUERIES = true; // Set to true to print all processed queries (for debugging)
 const DEFAULT_STRIP_METADATA = true; // Strip loc/range/commentRanges/errors from ASTs for parity comparison
 
 // Configuration
@@ -158,6 +158,7 @@ function findAllDiffsWithPath(a, b, path = '', diffs = []) {
 
     if (typeof a !== typeof b) {
         diffs.push({ path, legacy: a, new: b, reason: 'Type mismatch' });
+        return diffs;
     }
 
     if (a && typeof a === 'object' && b && typeof b === 'object') {
@@ -247,7 +248,14 @@ function logParityDifference(kind, source, legacyData, newData, options) {
                 diff = { offset: -1, a: createSliceWindow(stableA, 0, 80), b: newData };
             } else {
                 const astDiffs = findAllDiffsWithPath(legacyData, newData);
-                const isDiffImprovement = diff => diff.reason === 'Missing key in \'legacy\': range';
+                const isDiffImprovement = diff => (
+                    diff.reason === 'Missing key in \'legacy\': range' ||
+                    (diff.reason === 'Type mismatch' &&
+                        diff.path.endsWith('.range') &&
+                        Array.isArray(diff.new) &&
+                        typeof diff.legacy === 'undefined'
+                    )
+                );
                 const astDiffsImprovement = astDiffs.filter(isDiffImprovement);
 
                 // Log improvements
@@ -560,7 +568,7 @@ function tokenizeWithParity(source, tolerant = false, loc = false) {
 
         for (const primaryToken of primary) {
             primaryTokens.push(primaryToken);
-            yield{ ...primaryToken, type: primaryToken.name || primaryToken.type };
+            yield{ ...primaryToken, value: primaryToken.value, type: primaryToken.name || primaryToken.type };
         }
 
         // Drain remaining secondary tokens

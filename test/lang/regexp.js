@@ -42,8 +42,8 @@ describe('lang/regexp', () => {
             error => {
                 assert.deepEqual(error.details, {
                     rawMessage: 'Duplicate flag in regexp',
-                    text: undefined,
-                    token: undefined,
+                    text: '/test/gigm',
+                    token: 'REGEXP',
                     expected: null,
                     loc: {
                         range: [8, 9],

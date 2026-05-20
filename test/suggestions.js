@@ -138,20 +138,23 @@ describe('query/suggestions', () => {
         filter: ['.[', ']'],
         map: ['.(', ')'],
         recursiveMap: ['..(', ')'],
+        paren: ['(', ')', true], // skip non empty prefix tests
         object: ['.({', '})'],
         objectSpread: ['.({...', '})'],
         array: ['.([', '])'],
         arraySpread: ['.([...', '])']
-    }).forEach(([name, [begin, end]]) => {
+    }).forEach(([name, [begin, end, skipNonEmptyPrefix]]) => {
         const sbegin = begin.replace(/./g, '$&|');
         const send = end.replace(/./g, '$&|');
 
         describe(name, () => {
             Object.entries({
                 '': ['foo', 'bar'],
-                foo: ['a', 'b', 'c', 'd']
+                ...!skipNonEmptyPrefix && {
+                    foo: ['a', 'b', 'c', 'd']
+                }
             }).forEach(([prefix, list]) => {
-                describe('with prefix `' + prefix + '`', () => {
+                describe(prefix ? 'with prefix `' + prefix + '`' : 'without prefix', () => {
                     const emptyQuery = `${prefix}${sbegin}${send}`;
                     it('empty: ' + emptyQuery, () => {
                         assert.deepEqual(

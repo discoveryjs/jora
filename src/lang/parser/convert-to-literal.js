@@ -1,4 +1,4 @@
-export function toNumberLiteral(value) {
+export function toNumberLiteral(value, throwError) {
     const isHex = value.startsWith('0x') || value.startsWith('0X');
 
     if (value.includes('_')) {
@@ -9,11 +9,15 @@ export function toNumberLiteral(value) {
 
         if (errorMatch) {
             const m = errorMatch[0];
+            const index = errorMatch.index + Number(m[1] === '_');
             const message = m === '__'
                 ? 'Only one underscore is allowed'
                 : 'Wrong underscore';
 
-            throw new Error(`${message} as numeric separator`);
+            throwError(
+                `${message} as numeric separator`,
+                { inside: [index, 1] }
+            );
         }
 
         value = value.replace(/_/g, '');
@@ -34,10 +38,10 @@ const ESCAPE_REPLACE = {
     'v': '\v'
 };
 
-export function toStringLiteral(value, multiline = false, end = 1) {
+export function toStringLiteral(value, multiline = false, end = 1, throwError) {
     return value
         .slice(1, value.length - end)
-        .replace(/\\(?:(\r\n?|\n|\u2028|\u2029)|([xu][0-9a-fA-F]*)|$|(.))|[\r\n\u2028\u2029]/g, (match, lineTerminator, escapeHex, other) => {
+        .replace(/\\(?:(\r\n?|\n|\u2028|\u2029)|([xu][0-9a-fA-F]*)|$|(.))|[\r\n\u2028\u2029]/g, (match, lineTerminator, escapeHex, other, offset) => {
             // Handle escaped line terminators
             if (lineTerminator) {
                 return '';  // ignore escaped line terminators
@@ -51,12 +55,17 @@ export function toStringLiteral(value, multiline = false, end = 1) {
                     return String.fromCharCode(parseInt(escapeHex.slice(1), 16));
                 }
 
-                throw new Error(`Invalid ${isUnicode ? 'Unicode' : 'hexadecimal'} escape sequence`);
+                throwError(
+                    `Invalid ${isUnicode ? 'Unicode' : 'hexadecimal'} escape sequence`,
+                    { inside: [offset + 1, match.length] }
+                );
             }
 
             // Handle backslash at end
             if (match === '\\') {
-                throw new Error('Invalid backslash');
+                throwError('Invalid backslash',
+                    { inside: [offset + 1, 1] }
+                );
             }
 
             // Handle other escaped characters
@@ -66,21 +75,31 @@ export function toStringLiteral(value, multiline = false, end = 1) {
 
             // Handle unescaped line terminators
             if (!multiline && /[\r\n\u2028\u2029]/.test(match)) {
-                throw new Error('Invalid line terminator');
+                throwError(
+                    'Invalid line terminator',
+                    { inside: [offset + 1, 1] }
+                );
             }
 
             return match; // unescaped line terminator in multiline mode
         });
 }
 
-export function toRegExpLiteral(value) {
-    const flags = value.match(/[^/]*$/)[0];
+export function toRegExpLiteral(value, throwError) {
+    const flagsMatch = value.match(/[^/]*$/) || { index: value.length };
 
-    for (let i = 0; i < flags.length; i++) {
-        if (flags.includes(flags[i], i + 1)) {
-            throw new Error('Duplicate flag in regexp');
+    for (let i = flagsMatch.index; i < value.length; i++) {
+        const duplicateIndex = value.indexOf(value[i], i + 1);
+        if (duplicateIndex !== -1) {
+            throwError(
+                'Duplicate flag in regexp',
+                { inside: [duplicateIndex, 1] }
+            );
         }
     }
 
-    return new RegExp(value.slice(1, -flags.length - 1), flags);
+    return new RegExp(
+        value.slice(1, flagsMatch.index - 1),
+        value.slice(flagsMatch.index)
+    );
 }

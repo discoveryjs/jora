@@ -90,7 +90,7 @@ function stringify(value) {
 }
 
 function $$(node) {
-    if (isPlainObject(node)) {
+    if (isPlainObject(node) && !node.range) {
         withRange(node);
     }
 
@@ -299,7 +299,7 @@ exports.lex = {
 
         // bad token
         ['.', function(yylloc, yytext) {
-            this.parseError(`Bad input on line ${yylloc.first_line} column ${yylloc.first_column}\n` + this.showPosition(), {
+            this.parseError(`Bad input on line ${yylloc.first_line} column ${yylloc.first_column}`, {
                 text: yytext,
                 token: 'BAD_TOKEN'
             });
@@ -341,7 +341,7 @@ exports.bnf = {
         ['definitions e', $$(Block($1, $2))],
         ['definitions', $$(Block($1, $placeholder))],
         ['e', $$(Block([], $1))],
-        ['', $$(Block([], $placeholder))]
+        ['', $$(Block([], $placeholder, $rr))]
     ],
     definitions: [
         ['def', $$([$1])],
