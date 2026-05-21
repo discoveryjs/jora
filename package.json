@@ -52,9 +52,9 @@
   "devDependencies": {
     "@discoveryjs/cli": "^2.14.3",
     "@discoveryjs/discovery": "^1.0.0-beta.98",
-    "c8": "^11.0.0",
+    "c8": "^10.0.0",
     "esbuild": "~0.28.0",
-    "eslint": "^10.4.0",
+    "eslint": "^8.7.0",
     "jora": ".",
     "js-beautify": "^1.15.1",
     "marked": "^5.1.0",
