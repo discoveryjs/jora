@@ -1,4 +1,18 @@
-import { GetProperty, Identifier } from '../../compile-modules/lang/nodes.js';
+const GetProperty = function(value, property, range) {
+    return {
+        type: 'GetProperty',
+        value,
+        property,
+        range
+    };
+};
+const Identifier = function(name, range) {
+    return {
+        type: 'Identifier',
+        name,
+        range
+    };
+};
 
 const noBracketKeyType = new Set([
     'Literal',

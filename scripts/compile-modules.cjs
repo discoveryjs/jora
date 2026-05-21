@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 
 const files = [
     {
@@ -11,32 +10,6 @@ const files = [
             const { version } = JSON.parse(fs.readFileSync(fn));
 
             return `export const version = '${version}';\n`;
-        }
-    },
-    // {
-    //     input: [
-    //         'src/lang/parser/nodes.js'
-    //     ],
-    //     output: 'src/lang/build.js',
-    //     content([fn]) {
-    //         return fs.readFileSync(fn, 'utf8')
-    //             .replace(/exports.(\S+) = function/g, 'export function $1');
-    //     }
-    // },
-    {
-        input: [
-            'src/compile-modules/lang/grammar.cjs',
-            'src/compile-modules/lang/parse-patch.cjs',
-            'src/compile-modules/lang/parse.cjs',
-            'src/lang/parser/nodes.js'
-        ],
-        output: 'src/lang/parse-old.js',
-        content(input) {
-            for (const fn of input) {
-                delete require.cache[path.resolve(fn)];
-            }
-
-            return require(path.resolve(input[2]))();
         }
     }
 ];

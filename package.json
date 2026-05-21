@@ -28,7 +28,7 @@
   },
   "scripts": {
     "lint": "eslint src test docs",
-    "test": "NODE_OPTIONS=\"--import=./scripts/parser-parity-register.js\" mocha --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
+    "test": "mocha --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
     "test:cjs": "mocha cjs-test --recursive --exclude '**/helpers/*' --reporter ${REPORTER:-progress}",
     "test:dist": "mocha dist/test --reporter ${REPORTER:-progress}",
     "compile-modules": "node scripts/compile-modules.cjs",
@@ -39,7 +39,6 @@
     "esm-to-cjs-and-test": "npm run esm-to-cjs && npm run test:cjs",
     "build": "npm run compile-modules && npm run esm-to-cjs && npm run bundle",
     "build-and-test": "npm run compile-modules && npm run esm-to-cjs-and-test && npm run bundle-and-test",
-    "watch": "node scripts/watch.cjs",
     "start": "discovery",
     "build-gh-pages": "discovery-build -o .gh-pages --clean --single-file",
     "prepare": "npm run compile-modules && npm run esm-to-cjs",

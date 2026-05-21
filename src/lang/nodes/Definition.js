@@ -1,6 +1,19 @@
-import { GetProperty, Identifier } from '../../compile-modules/lang/nodes.js';
-
 const reservedVars = ['$data', '$context', '$ctx', '$array', '$idx', '$index'];
+const GetProperty = function(value, property, range) {
+    return {
+        type: 'GetProperty',
+        value,
+        property,
+        range
+    };
+};
+const Identifier = function(name, range) {
+    return {
+        type: 'Identifier',
+        name,
+        range
+    };
+};
 
 export function suggest(node, ctx) {
     if (node.value === null) {
