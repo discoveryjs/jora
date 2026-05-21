@@ -139,16 +139,15 @@ export const tokenNames = {
 
 // Bracket balance mappings
 export const BALANCE_TOKEN_PAIR = createTokenTable(
-    TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,
-    TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,
-    TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,
-    TOKEN_METHOD_OPEN, TOKEN_CLOSE_PAREN,
-    TOKEN_$METHOD_OPEN, TOKEN_CLOSE_PAREN,
-    TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
-    TOKEN_DOT_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,
-    TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE,
-    TOKEN_TPL_START, TOKEN_TPL_END,
-    -1
+    TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,          // "(" -> ")"
+    TOKEN_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,      // ".(" -> ")"
+    TOKEN_DOT_DOT_OPEN_PAREN, TOKEN_CLOSE_PAREN,  // "..(" -> ")"
+    TOKEN_METHOD_OPEN, TOKEN_CLOSE_PAREN,         // "METHOD(" -> ")"
+    TOKEN_$METHOD_OPEN, TOKEN_CLOSE_PAREN,        // "$METHOD(" -> ")"
+    TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,      // "[" -> "]"
+    TOKEN_DOT_OPEN_BRACKET, TOKEN_CLOSE_BRACKET,  // ".[" -> "]"
+    TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE,          // "{" -> "}"
+    TOKEN_TPL_START, TOKEN_TPL_END                // "`{" -> "}`"
 );
 
 // Keyword lookup
@@ -250,15 +249,17 @@ export const PREVENT_PRIMITIVE = createTokenSet(
 );
 
 function createTokenSet(...tokens) {
-    return createTokenTable(...Array.from(tokens, token => [token, 1]).flat());
+    const set = new Int8Array(TOKEN_MAX);
+
+    for (const token of tokens) {
+        set[token] = 1;
+    }
+
+    return set;
 }
 
 function createTokenTable(...pairs) {
-    const table = new Int32Array(TOKEN_MAX);
-
-    if (pairs.length % 2) {
-        table.fill(pairs.pop());
-    }
+    const table = new Int8Array(TOKEN_MAX).fill(-1);
 
     for (let i = 0; i < pairs.length; i += 2) {
         table[pairs[i]] = pairs[i + 1];

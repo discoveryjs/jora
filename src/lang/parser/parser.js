@@ -12,8 +12,8 @@ import {
     TOKEN_GREATER_THAN_EQUALS, TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
     TOKEN_MODULO, TOKEN_NULLISH_COALESCING, TOKEN_QUESTION, TOKEN_OPEN_PAREN, TOKEN_CLOSE_PAREN,
     TOKEN_OPEN_BRACKET, TOKEN_CLOSE_BRACKET, TOKEN_OPEN_BRACE, TOKEN_CLOSE_BRACE, TOKEN_COMMA,
-    TOKEN_COLON, TOKEN_SEMICOLON, TOKEN_EOF, tokenNames, createTokenTable, createTokenSet,
-    TOKEN_BAD
+    TOKEN_COLON, TOKEN_SEMICOLON, TOKEN_EOF, TOKEN_BAD,
+    tokenNames, createTokenTable, createTokenSet
 } from './tokens.js';
 
 const RECOVERABLE_ERROR = Symbol('RECOVERABLE_ERROR');
@@ -29,7 +29,7 @@ const SPREAD_OBJECT = false;
 const RIGHT_ASSOCIATIVE = createTokenSet(TOKEN_QUESTION);
 const PRECEDENCE = createTokenTable(
     TOKEN_ORDER, 1,  // ORDER has lower precedence than PIPE
-    TOKEN_PIPE, 2,   // So pipeline binds tighter: foo | bar desc -> (foo | bar) desc
+    TOKEN_PIPE, 2,   // So pipeline binds tighter: `foo | bar desc` === `(foo | bar) desc`
     TOKEN_QUESTION, 3,
     TOKEN_IS, 4,
     TOKEN_OR, 5,
@@ -52,17 +52,16 @@ const PRECEDENCE = createTokenTable(
     TOKEN_MINUS, 12,
     TOKEN_MULTIPLY, 12,
     TOKEN_DIVIDE, 12,
-    TOKEN_MODULO, 12,
-    -1
+    TOKEN_MODULO, 12
 );
 
 // ----------------------------------------------------------------------------
 // Hand‑written recursive descent + precedence climbing parser that consumes a
-// token stream produced by the new tokenizer. Whitespace and comments are
+// token stream produced by the tokenizer. Whitespace and comments are
 // currently skipped at tokenization time; range tracking therefore relies on
-// previous meaningful token's end (see endRange()). This is a parity-oriented
-// implementation mirroring legacy quirks (notably some range spans and Block
-// wrappers) before subsequent cleanups.
+// previous meaningful token's end (see endRange()).
+// FIXME: This is a parity-oriented implementation mirroring legacy quirks
+// (notably some range spans and Block wrappers) before subsequent cleanups.
 export function parse(input, options) {
     const tokens = [...tokenize(input, options)];
     let index = 0;
@@ -363,9 +362,8 @@ export function parse(input, options) {
     }
 
     function parseIdentifier(preserveDollar = false) {
-        const { start, end, type } = current;
+        const { start, end, type, value } = current;
         let name = getValueAndAdvance();
-        let suffix = 0;
 
         if (!preserveDollar) {
             // Remove $ prefix
@@ -377,13 +375,12 @@ export function parse(input, options) {
         // Remove "(" suffix and adjust range to exclude the parenthesis
         if (type === TOKEN_METHOD_OPEN || type === TOKEN_$METHOD_OPEN) {
             name = name.slice(0, -1);
-            suffix = 1;
         }
 
         return {
             type: 'Identifier',
             name,
-            range: [start, end - suffix]
+            range: [start, end - !value.endsWith(name)]
         };
     }
 
@@ -428,6 +425,7 @@ export function parse(input, options) {
         }
     }
 
+    // FIXME: Should not convert to literals on parse, but this is needed for parity with legacy parser
     function parseLiteralValue() {
         const start = startRange();
         let value;
@@ -941,15 +939,68 @@ export function parse(input, options) {
             : object;
     }
 
+    // FIXME: The shape of ObjectEntry should be changed to allow string values as key
+    // and pipeline property to avoid building Pipeline nodes
     function parseObjectEntry() {
         const start = startRange();
         let key;
+        let value = null;
+        let pipeline = null;
 
-        // Key forms: ident | literal | $ / $$ special | $ident (shorthand or explicit) | [expr]
         switch (current.type) {
-            case TOKEN_IDENT:
-                key = parseIdentifier();
+            case TOKEN_METHOD_OPEN:
+            case TOKEN_$METHOD_OPEN: {
+                // Shorthand method entry: { size() } or { $length() }
+                const method = parseMethod();
+
+                // FIXME: Parity with legacy parser
+                key = {
+                    type: 'Literal',
+                    value: method.reference.type === 'Identifier'
+                        ? method.reference.name
+                        : method.reference.name.name,
+                    range: undefined
+                };
+                value = method;
+
+                // Check for continuation: { size() bool() } or { size().(expr) }
+                if (!match(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACE) && !match(TOKEN_EOF)) {
+                    pipeline = value;
+                    // FIXME: Parity with legacy parser
+                    value = parsePipeline(pipeline, true);
+                }
                 break;
+            }
+
+            case TOKEN_IDENT: {
+                if (nextMatch(TOKEN_COLON) || nextMatch(TOKEN_COMMA) || nextMatch(TOKEN_CLOSE_BRACE) || nextMatch(TOKEN_EOF)) {
+                    key = parseIdentifier();
+                } else {
+                    // Shorthand with continuation: { foo .bar } or { foo .[x] }
+                    pipeline = parseGetProperty(null, false);
+                    key = pipeline.property;
+                    // FIXME: Parity with legacy parser
+                    value = parsePipeline(pipeline, true);
+                }
+                break;
+            }
+
+            case TOKEN_$IDENT: {
+                if (nextMatch(TOKEN_COLON)) {
+                    key = parseIdentifier(true);
+                } else {
+                    key = parseReference();
+
+                    if (!match(TOKEN_COMMA) && !match(TOKEN_CLOSE_BRACE) && !match(TOKEN_EOF)) {
+                        // Shorthand with continuation: { $var.size() }
+                        pipeline = key;
+                        key = key.name;
+                        // FIXME: Parity with legacy parser
+                        value = parsePipeline(pipeline, true);
+                    }
+                }
+                break;
+            }
 
             case TOKEN_LITERAL:
             case TOKEN_STRING:
@@ -961,33 +1012,27 @@ export function parse(input, options) {
                 key = parseSpecialReference();
                 break;
 
-            case TOKEN_$IDENT:
-                // Distinguish shorthand vs explicit ($foo vs $foo:). For shorthand we
-                // produce Reference (value) with plain "foo" key; for explicit we
-                // keep the leading $ in the key lexically then strip later (preserveDollar=true).
-                key = nextMatch(TOKEN_COLON)
-                    // Explicit property: treat as identifier with $ preserved, e.g. {$foo: 1}
-                    ? parseIdentifier(true)
-                    // Shorthand property: treat as reference, e.g. {$foo} becomes {foo: $foo}
-                    : parseReference();
-                break;
-
             case TOKEN_OPEN_BRACKET: // Computed property name: [expression]
                 key = consumeSurrounded(
                     TOKEN_OPEN_BRACKET,
                     parseExpression,
                     TOKEN_CLOSE_BRACKET
                 );
+                advance(TOKEN_COLON);
+                value = parseExpression();
                 break;
 
             default:
                 throwExpected(
                     TOKEN_IDENT, TOKEN_LITERAL, TOKEN_STRING, TOKEN_NUMBER,
-                    TOKEN_$, TOKEN_$IDENT, TOKEN_OPEN_BRACKET
+                    TOKEN_$, TOKEN_$IDENT, TOKEN_OPEN_BRACKET,
+                    TOKEN_METHOD_OPEN, TOKEN_$METHOD_OPEN
                 );
         }
 
-        const value = advanceIfMatch(TOKEN_COLON) && parseExpression();
+        if (!pipeline && !value) {
+            value = advanceIfMatch(TOKEN_COLON) ? parseExpression() : null;
+        }
 
         return {
             type: 'ObjectEntry',
@@ -1081,14 +1126,20 @@ export function parse(input, options) {
         };
     }
 
-    function parsePipeline(left) {
+    function parsePipeline(left, implicit = false) {
         const start = legacyPrefixStartRange(left);
 
-        advance(TOKEN_PIPE);
+        if (implicit) {
+            advanceIfMatch(TOKEN_PIPE);
+        } else {
+            advance(TOKEN_PIPE);
+        }
 
         // Right side may start with local definitions (mirrors top-level Block).
-        const definitions = parseDefinitions();
-        const body = parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder();
+        const definitions = !implicit ? parseDefinitions() : [];
+        const body = !implicit
+            ? parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder()
+            : parsePostfix();
 
         // If we have definitions, wrap in a Block like legacy parser does
         // FIXME: The block wrapper should be removed
