@@ -1,3 +1,8 @@
+## next
+
+- New parser implementation (from EBNF compiled with Jison to a custom hand-written parser) with full parity with the old one, but 3x times smaller and at least 7x times faster. This reduce the size of jora by ~20Kb (from 76KB to 56KB).
+- Fixed [shorthand entry syntax](https://discoveryjs.github.io/jora/#article:jora-syntax-object-literal&!anchor=shorthand-syntax-for-entries) in some edge cases, like `{ foo() bar() }` where value is stored as `bar` instead of `foo`
+
 ## 1.0.0-beta.15 (June 11, 2025)
 
 - Removed the mistakenly included `src/index.ts` from the package, as it could cause build warnings
