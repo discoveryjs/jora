@@ -21,6 +21,7 @@ const NUMBER_RX = /(?:[_\d]*\.)?[_\d]+(?:[eE][-+]?[_\d]+)?\b|0[xX][_0-9a-fA-F]+\
 const STRING_RX = /"(?:\\.|[^"])*"|'(?:\\.|[^'])*'/sy;
 const TEMPLATE_START_RX = /`(?:\\.|[^`\\$]|\$(?!\{))*(\$\{|`)/sy;
 const TEMPLATE_CONT_END_RX = /\}(?:\\.|[^`\\$]|\$(?!\{))*(\$\{|`)/sy;
+const NOOP = () => {};
 
 // Literal value lookup
 export const LITERALS = new Map([
@@ -46,7 +47,7 @@ export class Token {
         return tokenNames[this.type];
     }
     get value() {
-        return this.#value ?? this.#input.slice(this.start, this.end);
+        return this.#value ?? (this.#value = this.#input.slice(this.start, this.end));
     }
 }
 
@@ -59,10 +60,22 @@ export function* tokenize(input, tolerant = false) {
     }
 }
 
+export function tokenizeSync(input, tolerant = false) {
+    const nextToken = createTokenizer(input, tolerant);
+    const tokens = [];
+    let token;
+
+    while (token = nextToken()) {
+        tokens.push(token);
+    }
+
+    return tokens;
+}
+
 export function createTokenizer(input, options) {
     const {
         tolerant: tolerantMode = false,
-        onComment: onCommentHandler = []
+        onComment: onCommentHandler
     } = typeof options === 'boolean'
         ? { tolerant: options }
         : options || {};
@@ -70,7 +83,7 @@ export function createTokenizer(input, options) {
         ? onCommentHandler
         : Array.isArray(onCommentHandler)
             ? (start, end) => onCommentHandler.push([start, end])
-            : () => {};
+            : NOOP;
 
     const length = input.length;
     let pos = 0;
@@ -99,8 +112,12 @@ export function createTokenizer(input, options) {
         return null;
     }
 
-    function peek(offset = 0) {
-        const index = pos + offset;
+    function peek() {
+        return pos < length ? input[pos] : '';
+    }
+
+    function peekNext() {
+        const index = pos + 1;
         return index < length ? input[index] : '';
     }
 
@@ -109,7 +126,7 @@ export function createTokenizer(input, options) {
             (ch >= 'A' && ch <= 'Z') || // A-Z
             (ch >= 'a' && ch <= 'z') || // a-z
             (ch === '_')              || /* _ */
-            (ch === '\\' && peek(1) === 'u')
+            (ch === '\\' && peekNext() === 'u')
         );
     }
 
@@ -119,7 +136,7 @@ export function createTokenizer(input, options) {
         }
 
         if (ch === '.') {
-            const next = peek(1);
+            const next = peekNext();
             return (next >= '0' && next <= '9') || next === '_';
         }
 
@@ -143,9 +160,7 @@ export function createTokenizer(input, options) {
     // Tolerant mode tokenization wrapper
     function nextTokenTolerant(token) {
         // Check if we need to insert an empty IDENT in tolerant mode
-        const shouldInsertEmptyIdent =
-            tolerantMode &&
-            TOLERANT_TOKEN_PAIRS.get(prevTokenType)?.[token.type];
+        const shouldInsertEmptyIdent = TOLERANT_TOKEN_PAIRS.get(prevTokenType)?.[token.type];
 
         if (shouldInsertEmptyIdent) {
             // Store new token as pending
@@ -290,7 +305,11 @@ export function createTokenizer(input, options) {
     function scanComment() {
         const start = pos;
 
-        if (match(COMMENT_RX)) {
+        // Both single-line and multi-line comments are starting with '/',
+        // so we can check for it first before running the more expensive regex match.
+        // This optimization is especially beneficial because comments are rare in typical queries,
+        // but checking each position with regex would be costly.
+        if (peek() === '/' && match(COMMENT_RX)) {
             onComment(start, pos, input);
             return true;
         }

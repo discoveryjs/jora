@@ -1,6 +1,6 @@
 import { toNumberLiteral, toRegExpLiteral, toStringLiteral } from './convert-to-literal.js';
 import { offsetToLoc, showPosition } from './error.js';
-import { LITERALS, tokenize } from './tokenizer.js';
+import { LITERALS, tokenizeSync } from './tokenizer.js';
 import {
     TOKEN_NUMBER, TOKEN_STRING, TOKEN_REGEXP, TOKEN_LITERAL, TOKEN_IDENT, TOKEN_$IDENT,
     TOKEN_AT, TOKEN_HASH, TOKEN_$, TOKEN_$$, TOKEN_AND, TOKEN_OR, TOKEN_NOT, TOKEN_NO,
@@ -63,7 +63,7 @@ const PRECEDENCE = createTokenTable(
 // FIXME: This is a parity-oriented implementation mirroring legacy quirks
 // (notably some range spans and Block wrappers) before subsequent cleanups.
 export function parse(input, options) {
-    const tokens = [...tokenize(input, options)];
+    const tokens = tokenizeSync(input, options);
     let index = 0;
     let current = tokens[index];
     let recoverable = false;
