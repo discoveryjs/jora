@@ -20,7 +20,7 @@ describe('syntax/parse', () => {
                         rawMessage: 'Bad input on line 2 column 1',
                         text: 'п',
                         token: 'BAD_TOKEN',
-                        expected: null,
+                        expected: e.details.expected ? ["'EOF'"] : null,
                         loc: {
                             range: [7, 8],
                             start: {

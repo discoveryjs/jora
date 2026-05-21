@@ -110,18 +110,17 @@ export function parse(input, options) {
                 `Parse error on line ${startLoc.line}:`,
                 '',
                 showPosition(input, start),
-                '',
-                rawMessage
+                ...rawMessage ? ['', rawMessage] : []
             ];
 
-        const expected = !Array.isArray(details?.expected) ? null : [...new Set([].concat(
+        const expected = current.type === TOKEN_BAD || !Array.isArray(details?.expected) ? null : [...new Set([].concat(
             ...details.expected
-        ))];
+        ).map(t => `'${tokenNames[t]}'`))];
 
         if (expected) {
             message.push(
                 '',
-                'Expecting ' + expected.join(', ') + ' got ' + tokenNames(current.type)
+                'Expecting ' + expected.join(', ') + ' got ' + tokenNames[current.type]
             );
         }
 
@@ -140,13 +139,15 @@ export function parse(input, options) {
         });
     }
 
-    function throwExpected(...tokens) {
-        throwError(`Expecting ${tokens.map(t => `'${tokenNames[t]}'`).join(', ')}, got \`${tokenNames[current.type]}\``);
+    function throwExpected(...expected) {
+        throwError(null, {
+            expected
+        });
     }
 
-    function throwInNoMatch(expectedType = TOKEN_ANY) {
+    function throwIfNoMatch(expectedType = TOKEN_ANY) {
         if (expectedType !== TOKEN_ANY && current.type !== expectedType) {
-            throwError(`Expected \`${tokenNames[expectedType]}\`, got \`${tokenNames[current.type]}\``);
+            throwExpected(expectedType);
         }
     }
 
@@ -185,7 +186,7 @@ export function parse(input, options) {
         const token = current;
 
         // assert expected type
-        throwInNoMatch(expectedType);
+        throwIfNoMatch(expectedType);
 
         // Stay on EOF if at end
         index = Math.min(index + 1, tokens.length - 1);
@@ -277,6 +278,12 @@ export function parse(input, options) {
         };
     }
 
+    function maybeBlock(definitions, body, start) {
+        return definitions !== null
+            ? createBlock(definitions, body, endRange(start))
+            : body;
+    }
+
     function createBlock(definitions, body, range) {
         return {
             type: 'Block',
@@ -309,7 +316,7 @@ export function parse(input, options) {
     // TODO: Remove those wrappers after downstream tooling migrates.
     function parseBlock() {
         const start = startRange();
-        const definitions = parseDefinitions();
+        const definitions = parseDefinitions() || [];
         const body = parseExpression() || createPlaceholder();
 
         return createBlock(
@@ -320,13 +327,27 @@ export function parse(input, options) {
     }
 
     function parseDefinitions() {
-        const definitions = [];
+        let definitions = null;
 
-        for (let definition; definition = maybe(parseDefinition);) {
-            definitions.push(definition);
+        for (let definition; definition = maybeDefinition();) {
+            if (definitions === null) {
+                definitions = [definition];
+            } else {
+                definitions.push(definition);
+            }
         }
 
         return definitions;
+    }
+
+    function maybeDefinition() {
+        // Fast check for definition start. This allow to avoid maybe() calls
+        // which involve try/catch/rollback for non-definition expressions and downgrades performance.
+        if (match(TOKEN_$) || match(TOKEN_$IDENT)) {
+            return maybe(parseDefinition);
+        }
+
+        return null;
     }
 
     function parseDefinition() {
@@ -599,7 +620,7 @@ export function parse(input, options) {
                 return parseSpecialReference();
 
             case TOKEN_$IDENT:
-                return maybe(parseFunction) || parseReference();
+                return maybeFunction() || parseReference();
 
             case TOKEN_IDENT:
                 return parseGetProperty();
@@ -615,7 +636,7 @@ export function parse(input, options) {
                 return parseObject();
 
             case TOKEN_OPEN_PAREN:
-                return maybe(parseFunction) || parseParentheses();
+                return maybeFunction() || parseParentheses();
 
             case TOKEN_ARROW:
                 return parseFunction();
@@ -771,6 +792,22 @@ export function parse(input, options) {
         };
     }
 
+    function maybeFunction() {
+        // Fast check for function start. This allow to avoid maybe() calls
+        // which involve try/catch/rollback for non-definition expressions and downgrades performance.
+        // Here we suppose that function start already matched to TOKEN_$IDENT or TOKEN_OPEN_PAREN,
+        // so we just check possible continuation tokens before falling back to maybe(parseFunction).
+        if (match(TOKEN_OPEN_PAREN)) {
+            if (!nextMatch(TOKEN_$IDENT) && !nextMatch(TOKEN_ARROW) && !nextMatch(TOKEN_CLOSE_PAREN)) {
+                return null;
+            }
+        } else if (!nextMatch(TOKEN_ARROW)) {
+            return null;
+        }
+
+        return maybe(parseFunction);
+    }
+
     function parseFunction() {
         const start = startRange();
         const args = [];
@@ -779,6 +816,8 @@ export function parse(input, options) {
             // Parameter list (standard form)
             if (!match(TOKEN_CLOSE_PAREN)) {
                 do {
+                    // Disallow any identifiers except for $ident
+                    throwIfNoMatch(TOKEN_$IDENT);
                     args.push(parseIdentifier());
                 } while (advanceIfMatch(TOKEN_COMMA));
             }
@@ -839,12 +878,11 @@ export function parse(input, options) {
 
         advance(TOKEN_CLOSE_PAREN);
 
-        // Legacy: definitions inside parentheses produce a Block node wrapper.
+        // Definitions inside parentheses produce a Block node wrapper when definitions are present.
+        // FIXME: The block wrapper should be removed
         return {
             type: 'Parentheses',
-            body: definitions.length > 0
-                ? createBlock(definitions, expression, endRange(start))
-                : expression,
+            body: maybeBlock(definitions, expression, start),
             range: endRange(start)
         };
     }
@@ -933,10 +971,9 @@ export function parse(input, options) {
             range: endRange(start)
         };
 
-        // Legacy: wrap with Block when definitions present (FIXME to remove)
-        return definitions.length > 0
-            ? createBlock(definitions, object, endRange(start))
-            : object;
+        // If we have definitions, wrap in a Block like legacy parser does
+        // FIXME: The block wrapper should be removed
+        return maybeBlock(definitions, object, start);
     }
 
     // FIXME: The shape of ObjectEntry should be changed to allow string values as key
@@ -1136,16 +1173,14 @@ export function parse(input, options) {
         }
 
         // Right side may start with local definitions (mirrors top-level Block).
-        const definitions = !implicit ? parseDefinitions() : [];
+        const definitions = !implicit ? parseDefinitions() : null;
         const body = !implicit
             ? parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder()
             : parsePostfix();
 
         // If we have definitions, wrap in a Block like legacy parser does
         // FIXME: The block wrapper should be removed
-        const right = definitions.length > 0
-            ? createBlock(definitions, body, endRange(start))
-            : body;
+        const right = maybeBlock(definitions, body, start);
 
         return {
             type: 'Pipeline',
