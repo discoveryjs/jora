@@ -22,26 +22,24 @@ const testQueries = [
 const iterations = 10000;
 
 async function benchmarkParser(parserName, modulePath) {
-    console.log(`\nBenchmarking ${parserName}...`);
+    console.log(`\nBenchmarking ${parserName} (${iterations} iterations per query)...`);
 
     // Dynamic import to get fresh module
     const jora = await import(modulePath);
-
     const times = [];
 
     for (const query of testQueries) {
         const start = performance.now();
 
-        for (let i = 0; i < iterations; i++) {
-            try {
+        try {
+            for (let i = 0; i < iterations; i++) {
                 jora.default.parse(query);
-            } catch (e) {
-                console.error('===============================');
-                console.error('Bad query:', query);
-                console.error(e);
-                console.error('===============================');
-                break;
             }
+        } catch (e) {
+            console.error('===============================');
+            console.error('Bad query:', query);
+            console.error(e);
+            console.error('===============================');
         }
 
         const time = performance.now() - start;
@@ -76,6 +74,9 @@ async function runBenchmark() {
 
     // Calculate improvement
     const improvement = ((originalTime - newTime) / originalTime) * 100;
+    const improvementTimes = improvement > 0
+        ? (originalTime / newTime).toFixed(1)
+        : (newTime / originalTime).toFixed(1);
 
     console.log('\n' + '='.repeat(60));
     console.log('BENCHMARK RESULTS:');
@@ -83,10 +84,10 @@ async function runBenchmark() {
     console.log(`New Parser:      ${newTime.toFixed(2)}ms`);
 
     if (improvement > 0) {
-        console.log(`Improvement:     ${improvement.toFixed(1)}% faster`);
+        console.log(`Improvement:     ${improvement.toFixed(1)}% / ${improvementTimes}x faster`);
     } else {
         console.log(
-            `Difference:      ${Math.abs(improvement).toFixed(1)}% slower`
+            `Difference:      ${Math.abs(improvement).toFixed(1)}% / ${improvementTimes}x slower`
         );
     }
 }
