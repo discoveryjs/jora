@@ -1176,7 +1176,7 @@ export function parse(input, options) {
         const definitions = !implicit ? parseDefinitions() : null;
         const body = !implicit
             ? parseExpression(PRECEDENCE[TOKEN_PIPE] + 1) || createPlaceholder()
-            : parsePostfix();
+            : parseExpression();
 
         // If we have definitions, wrap in a Block like legacy parser does
         // FIXME: The block wrapper should be removed

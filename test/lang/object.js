@@ -156,6 +156,13 @@ describe('lang/object', () => {
                 { var: 3 }
             );
         });
+
+        it('', () => {
+            assert.deepEqual(
+                query('{ foo is function ?: is not undefined ? bool() : true}')({ foo: [1, 6, 10] }),
+                { foo: true }
+            );
+        });
     });
 
     it('spread object', () => {
