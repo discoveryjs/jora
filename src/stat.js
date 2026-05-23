@@ -1,6 +1,6 @@
 import buildin from './lang/compile-buildin.js';
 import { MaxHeap } from './utils/heap.js';
-import { isArray, isPlainObject } from './utils/misc.js';
+import { isArray } from './utils/misc.js';
 
 const contextToType = {
     'path': 'property',
@@ -13,7 +13,9 @@ const contextToType = {
 };
 
 function addObjectKeysToSet(object, set) {
-    Object.keys(object).forEach(set.add, set);
+    if (object !== null && typeof object === 'object' && !isArray(object)) {
+        Reflect.ownKeys(object).forEach(set.add, set);
+    }
 }
 
 function valuesToSuggestions(context, values, related, suggestions = new Set()) {
@@ -34,11 +36,9 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
             for (const value of values) {
                 if (Array.isArray(value)) {
                     for (const item of value) {
-                        if (isPlainObject(item)) {
-                            addObjectKeysToSet(item, keys);
-                        }
+                        addObjectKeysToSet(item, keys);
                     }
-                } else if (isPlainObject(value)) {
+                } else {
                     addObjectKeysToSet(value, keys);
                 }
             }
@@ -53,9 +53,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
             const keys = new Set();
 
             for (const value of values) {
-                if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-                    addObjectKeysToSet(value, keys);
-                }
+                addObjectKeysToSet(value, keys);
             }
 
             keys.forEach(suggestions.add, suggestions);
@@ -76,7 +74,7 @@ function valuesToSuggestions(context, values, related, suggestions = new Set()) 
             for (const value of values) {
                 if (isArray(value)) {
                     value.forEach(addValue);
-                } else if (isPlainObject(value)) {
+                } else {
                     addObjectKeysToSet(value, keys);
                 }
             }

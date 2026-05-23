@@ -134,6 +134,62 @@ describe('query/suggestions', () => {
         );
     });
 
+    describe('non-iterable own keys', () => {
+        const Entity = class {
+            constructor(custom) {
+                this.foo = 1;
+                Object.defineProperty(this, custom, {
+                    value: 2
+                });
+            }
+        };
+
+        it('object', () => {
+            assert.deepEqual(
+                suggestQuery('|', new Entity('bar')),
+                [
+                    suggestion('', ['foo', 'bar'], 0, 0)
+                ]
+            );
+        });
+
+        it('object key', () => {
+            assert.deepEqual(
+                suggestQuery('$[|]', new Entity('bar')),
+                [
+                    suggestion('', ['"foo":value', '"bar":value', 'foo', 'bar'], 2, 2)
+                ]
+            );
+        });
+
+        it('object', () => {
+            assert.deepEqual(
+                suggestQuery('|', [new Entity('bar'), new Entity('baz')]),
+                [
+                    suggestion('', ['foo', 'bar', 'baz'], 0, 0)
+                ]
+            );
+        });
+
+        it('has', () => {
+            assert.deepEqual(
+                suggestQuery('$ has |_', new Entity('bar')),
+                [
+                    suggestion('_', ['"foo":value', '"bar":value', 'foo', 'bar'], 6, 7)
+                ]
+            );
+        });
+
+        it('in', () => {
+            assert.deepEqual(
+                suggestQuery('|_ in $', new Entity('bar')),
+                [
+                    suggestion('_', ['"foo":value', '"bar":value', 'foo', 'bar'], 0, 1)
+                ]
+            );
+        });
+    });
+
     Object.entries({
         filter: ['.[', ']'],
         map: ['.(', ')'],
