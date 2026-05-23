@@ -92,16 +92,27 @@
 
 .view-source__postlude {
     margin-top: -4px;
+    padding: 0 1px;
 }
 .view-struct_code-postlude {
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
     padding-left: 30px;
+    transition: padding 0.25s, background-color 0.25s;
 
     @media (width < 768px) {
         padding-top: 6px;
         padding-bottom: 6px;
     }
+}
+.view-struct_code-postlude:hover {
+    background-color: rgb(0 0 0 / 20%) !important;
+}
+.view-struct_code-postlude.struct-expanded-value {
+    padding-top: 6px;
+    padding-bottom: 4px;
+    border-radius: 2px;
+    background-color: rgb(0 0 0 / 33%);
 }
 .view-struct_code-postlude:not(.struct-expanded-value, :hover) {
     background-color: transparent;
